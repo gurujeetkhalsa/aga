@@ -1,0 +1,2 @@
+Batch_Name,Requested_By,Notes,Game_ID,Tournament_Code,Round,Pin_Player_1,Pin_Player_2,Game_Date,Sgf_File,Replace_Existing,Sgf_Code
+staging-smoke-test,admin,"Validated example row for the safe staging test game. Duplicate this row shape for additional games.",1294321,nyigadl20260307,3,15784,30533,2026-03-07,C:\Users\guruj\OneDrive\Documents\Playground\sgf-phase1-test-20260407-204723.sgf,true,

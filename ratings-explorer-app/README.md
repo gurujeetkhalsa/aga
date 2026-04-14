@@ -1,15 +1,22 @@
 # Ratings Explorer App
 
-This app will contain:
+This app contains:
 
 - Ratings Explorer HTML shell
 - player and tournament APIs
 - filter options API
 - SGF upload and viewing support
-- snapshot refresh/status endpoints
-- snapshot timers
+- snapshot refresh and status endpoints
+- snapshot timer jobs
+- SGF bulk upload helper scripts and viewer assets
 
-Migration source:
+Current migration source:
 
-- `C:\Users\guruj\aga-functions\ratings-explorer-app\`
+- `C:\Users\guruj\aga-functions-sgf-phase1\ratings-explorer-app\`
 
+Intentionally not copied into git:
+
+- `local.settings.json`
+- runtime caches like `.python_packages/` and `__pycache__/`
+- generated snapshot data under `data/`
+- temporary scratch CSV/result files
