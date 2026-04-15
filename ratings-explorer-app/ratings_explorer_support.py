@@ -20,6 +20,10 @@ try:
     import pyodbc
 except Exception:
     pyodbc = None
+try:
+    import wgo_embedded_assets
+except Exception:
+    wgo_embedded_assets = None
 
 MAX_MEMBER_AGAID = 50000
 SNAPSHOT_DIRNAME = "data"
@@ -32,6 +36,7 @@ PLAYER_SEARCH_SNAPSHOT_FILENAME = "ratings_explorer_player_search_snapshot.json"
 SNAPSHOT_TOURNAMENT_DETAIL_DIRNAME = "ratings_explorer_tournament_details"
 SNAPSHOT_CONTAINER = "ratings-explorer"
 SGF_CONTAINER = os.environ.get("RATINGS_SGF_CONTAINER") or "ratings-game-sgf"
+SGF_VIEWER_REV = "20260415b"
 SNAPSHOT_BLOB_NAME = "ratings-explorer-snapshot.json"
 SNAPSHOT_STATUS_BLOB_NAME = "ratings-explorer-snapshot-status.json"
 SNAPSHOT_REQUEST_BLOB_NAME = "ratings-explorer-snapshot-request.json"
@@ -176,29 +181,74 @@ def _app_root() -> Path:
     return Path(__file__).resolve().parent
 
 
-def _asset_root() -> Path:
-    return _app_root() / ASSETS_DIRNAME
+def _candidate_app_roots() -> list[Path]:
+    candidates: list[Path] = [_app_root()]
+    cwd = Path.cwd()
+    if cwd not in candidates:
+        candidates.append(cwd)
+    home = (os.environ.get("HOME") or "").strip()
+    if home:
+        wwwroot = Path(home) / "site" / "wwwroot"
+        if wwwroot not in candidates:
+            candidates.append(wwwroot)
+    linux_wwwroot = Path("/home/site/wwwroot")
+    if linux_wwwroot not in candidates:
+        candidates.append(linux_wwwroot)
+    parent = _app_root().parent
+    if parent not in candidates:
+        candidates.append(parent)
+    return candidates
+
+
+def _embedded_asset_text(relative_path: str) -> str | None:
+    if wgo_embedded_assets is None:
+        return None
+    normalized = str(Path(relative_path)).replace("\\", "/").strip().lower()
+    lookup = {
+        "wgo/wgo.min.js": getattr(wgo_embedded_assets, "WGO_MIN_JS", None),
+        "wgo/wgo.player.min.js": getattr(wgo_embedded_assets, "WGO_PLAYER_MIN_JS", None),
+        "wgo/wgo.player.css": getattr(wgo_embedded_assets, "WGO_PLAYER_CSS", None),
+    }
+    value = lookup.get(normalized)
+    return value if isinstance(value, str) and value else None
 
 
 def get_asset_bytes(relative_path: str) -> tuple[bytes | None, str | None]:
     parts = [part for part in Path(relative_path).parts if part not in {"", "."}]
     if not parts or any(part == ".." for part in parts):
         return None, None
-    path = _asset_root().joinpath(*parts)
+    embedded_text = _embedded_asset_text("/".join(parts))
+    if embedded_text is not None:
+        content_type = mimetypes.guess_type(parts[-1])[0] or "application/octet-stream"
+        return embedded_text.encode("utf-8"), content_type
+    for app_root in _candidate_app_roots():
+        asset_root = app_root / ASSETS_DIRNAME
+        path = asset_root.joinpath(*parts)
+        try:
+            resolved = path.resolve()
+            resolved_asset_root = asset_root.resolve()
+        except OSError:
+            continue
+        if resolved_asset_root not in resolved.parents and resolved != resolved_asset_root:
+            continue
+        if not resolved.is_file():
+            continue
+        content_type = mimetypes.guess_type(resolved.name)[0] or "application/octet-stream"
+        try:
+            return resolved.read_bytes(), content_type
+        except OSError:
+            continue
+    return None, None
+
+
+def get_asset_text(relative_path: str) -> str | None:
+    payload, _ = get_asset_bytes(relative_path)
+    if payload is None:
+        return None
     try:
-        resolved = path.resolve()
-        asset_root = _asset_root().resolve()
-    except OSError:
-        return None, None
-    if asset_root not in resolved.parents and resolved != asset_root:
-        return None, None
-    if not resolved.is_file():
-        return None, None
-    content_type = mimetypes.guess_type(resolved.name)[0] or "application/octet-stream"
-    try:
-        return resolved.read_bytes(), content_type
-    except OSError:
-        return None, None
+        return payload.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
@@ -697,7 +747,7 @@ def game_has_sgf(row: dict[str, Any]) -> bool:
 def game_sgf_viewer_url(game_id: Any, has_sgf: bool) -> str | None:
     if not has_sgf or game_id is None:
         return None
-    return f"/api/ratings-explorer/game-sgf-viewer?game_id={game_id}"
+    return f"/api/ratings-explorer/game-sgf-viewer?game_id={game_id}&rev={SGF_VIEWER_REV}"
 
 
 def tournament_game_payload(row: dict[str, Any]) -> dict[str, Any]:
@@ -1864,7 +1914,12 @@ def render_single_history_svg(
 
 
 def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
-    wgo_base = "/api/ratings-explorer/assets/wgo"
+    wgo_css = get_asset_text("wgo/wgo.player.css") or ""
+    wgo_core_js = get_asset_text("wgo/wgo.min.js") or ""
+    wgo_player_js = get_asset_text("wgo/wgo.player.min.js") or ""
+    escaped_wgo_css = wgo_css.replace("</style>", "<\\/style>")
+    escaped_wgo_core_js = wgo_core_js.replace("</script>", "<\\/script>")
+    escaped_wgo_player_js = wgo_player_js.replace("</script>", "<\\/script>")
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -1941,7 +1996,7 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
     pre {{ margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 480px; overflow: auto; background: #f6fbff; border-radius: 12px; border: 1px solid var(--line); padding: 12px; font-size: 0.82rem; }}
     .hidden {{ display: none; }}
   </style>
-  <link rel="stylesheet" href="{wgo_base}/wgo.player.css" />
+  <style>{escaped_wgo_css}</style>
 </head>
 <body>
   <div class="shell">
@@ -1955,17 +2010,21 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
       <pre id="raw" class="hidden"></pre>
     </div>
   </div>
-  <script src="{wgo_base}/wgo.min.js"></script>
+  <script>{escaped_wgo_core_js}</script>
   <script>
     if (window.WGo) {{
-      window.WGo.DIR = "{wgo_base}/";
+      window.WGo.DIR = "";
       window.WGo.ERROR_REPORT = true;
+      if (window.WGo.Board && window.WGo.Board.default) {{
+        window.WGo.Board.default.background = "";
+      }}
     }}
   </script>
-  <script src="{wgo_base}/wgo.player.min.js"></script>
+  <script>{escaped_wgo_player_js}</script>
   <script>
     const statusEl = document.getElementById('status');
     const viewerShellEl = document.getElementById('viewer-shell');
+    const viewerEl = document.getElementById('viewer');
     const rawEl = document.getElementById('raw');
     const sgfDownloadUrl = {json.dumps(sgf_url)};
     const sgfDownloadName = {json.dumps(f"game-{game_id}.sgf")};
@@ -2049,9 +2108,18 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
       const sgf = await response.text();
       try {{
         if (window.WGo && typeof window.WGo.BasicPlayer === 'function') {{
+          if (!viewerEl._wgo_player) {{
+            viewerEl.textContent = '';
+            const player = new window.WGo.BasicPlayer(viewerEl, {{ sgf }});
+            viewerEl._wgo_player = player;
+            window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); }}, 0);
+          }}
           return;
         }}
       }} catch (error) {{
+        const message = error && error.message ? error.message : 'Interactive SGF viewer unavailable here.';
+        showRawFallback(`${{message}} Showing raw SGF instead.`, sgf);
+        return;
       }}
       showRawFallback('Interactive SGF viewer unavailable here. Showing raw SGF instead.', sgf);
     }}
