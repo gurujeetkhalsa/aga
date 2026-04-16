@@ -438,14 +438,21 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
         return error
     agaid_text = (req.params.get("agaid") or "").strip()
     recent_games_sgf_only = (req.params.get("recent_games_sgf_only") or "").strip().lower() in {"1", "true", "yes", "on"}
+    recent_tournaments_page_text = (req.params.get("recent_tournaments_page") or "0").strip()
+    recent_games_page_text = (req.params.get("recent_games_page") or "0").strip()
     if not agaid_text.isdigit():
         return func.HttpResponse("Query parameter 'agaid' must be numeric.", status_code=400)
+    if not recent_tournaments_page_text.isdigit() or not recent_games_page_text.isdigit():
+        return func.HttpResponse("Paging parameters must be non-negative integers.", status_code=400)
     try:
         history_points = None
         data_source = None
+        recent_tournaments_page = int(recent_tournaments_page_text)
+        recent_games_page = int(recent_games_page_text)
+        use_default_player_pages = recent_tournaments_page == 0 and recent_games_page == 0
         payload = (
             explorer.get_player_detail_from_snapshot(snapshot, int(agaid_text))
-            if snapshot and explorer.snapshot_supports_player_member_type(snapshot) and not recent_games_sgf_only
+            if snapshot and explorer.snapshot_supports_player_member_type(snapshot) and not recent_games_sgf_only and use_default_player_pages
             else None
         )
         payload_from_snapshot = bool(payload)
@@ -466,6 +473,8 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
                 conn_str,
                 int(agaid_text),
                 recent_games_sgf_only=recent_games_sgf_only,
+                recent_tournaments_page=recent_tournaments_page,
+                recent_games_page=recent_games_page,
                 include_context=False,
             )
             history_points = explorer.load_sql_rating_history(int(agaid_text))
@@ -476,6 +485,24 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
         if payload_from_snapshot:
             history_points = explorer.load_rating_history_from_snapshot(snapshot, int(agaid_text))
         payload = dict(payload)
+        if payload_from_snapshot:
+            player_meta = payload.get("player") or {}
+            recent_tournaments = payload.get("recent_tournaments") or []
+            recent_games = payload.get("recent_games") or []
+            payload["recent_tournaments_paging"] = {
+                "page": recent_tournaments_page,
+                "page_size": 12,
+                "total_count": int(player_meta.get("tournament_count") or 0),
+                "has_previous": recent_tournaments_page > 0,
+                "has_next": len(recent_tournaments) < int(player_meta.get("tournament_count") or 0),
+            }
+            payload["recent_games_paging"] = {
+                "page": recent_games_page,
+                "page_size": 20,
+                "total_count": int(player_meta.get("game_count") or 0),
+                "has_previous": recent_games_page > 0,
+                "has_next": len(recent_games) < int(player_meta.get("game_count") or 0),
+            }
         payload["rating_history"] = payload.get("rating_history") or _history_payload_from_points(history_points or [])
         payload["news_articles"] = []
         payload["review_videos"] = []

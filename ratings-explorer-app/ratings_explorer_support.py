@@ -1124,8 +1124,16 @@ def get_player_detail(
     conn_str: str,
     agaid: int,
     recent_games_sgf_only: bool = False,
+    recent_tournaments_page: int = 0,
+    recent_games_page: int = 0,
     include_context: bool = False,
 ) -> dict[str, Any] | None:
+    recent_tournaments_page = max(0, int(recent_tournaments_page or 0))
+    recent_games_page = max(0, int(recent_games_page or 0))
+    tournaments_page_size = 12
+    games_page_size = 20
+    tournaments_offset = recent_tournaments_page * tournaments_page_size
+    games_offset = recent_games_page * games_page_size
     summary_query = (
         current_ratings_cte()
         + """
@@ -1195,7 +1203,7 @@ WHERE m.[AGAID] = ?
         return None
 
     tournaments_query = """
-SELECT TOP 12
+SELECT
     t.[Tournament_Code],
     t.[Tournament_Descr],
     t.[Tournament_Date],
@@ -1241,6 +1249,7 @@ FROM
 LEFT JOIN [ratings].[tournaments] AS t
     ON t.[Tournament_Code] = tournament_games.[Tournament_Code]
 ORDER BY tournament_games.[LatestDate] DESC, tournament_games.[Tournament_Code]
+OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
     opponents_query = """
 SELECT TOP 16
@@ -1299,7 +1308,7 @@ ORDER BY opponent_stats.[GamesPlayed] DESC, opponent_stats.[LatestDate] DESC, op
     recent_games_query = (
         current_ratings_cte()
         + f"""
-SELECT TOP 20
+SELECT
     player_games.[Game_ID],
     player_games.[Game_Date],
     player_games.[Round],
@@ -1363,6 +1372,28 @@ LEFT JOIN [membership].[members] AS m
     ON m.[AGAID] = player_games.[OpponentAGAID]
 {sgf_only_filter}
 ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_games.[Round]
+OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+"""
+    )
+    recent_games_count_query = (
+        current_ratings_cte()
+        + f"""
+SELECT COUNT(*) AS [GameCount]
+FROM
+(
+    SELECT
+        g.[Game_ID],
+        g.[Sgf_Code]
+    FROM [ratings].[games] AS g
+    WHERE g.[Pin_Player_1] = ?
+    UNION ALL
+    SELECT
+        g.[Game_ID],
+        g.[Sgf_Code]
+    FROM [ratings].[games] AS g
+    WHERE g.[Pin_Player_2] = ?
+) AS player_games
+{sgf_only_filter}
 """
     )
 
@@ -1377,7 +1408,7 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
             "wins": tournament.get("Wins") or 0,
             "losses": tournament.get("Losses") or 0,
         }
-        for tournament in query_rows(conn_str, tournaments_query, [agaid, agaid])
+        for tournament in query_rows(conn_str, tournaments_query, [agaid, agaid, tournaments_offset, tournaments_page_size])
     ]
     opponents = [
         {
@@ -1417,9 +1448,13 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
             "tournament_code": game.get("Tournament_Code"),
             "tournament_description": game.get("Tournament_Descr"),
         }
-        for game in query_rows(conn_str, recent_games_query, [agaid, agaid])
+        for game in query_rows(conn_str, recent_games_query, [agaid, agaid, games_offset, games_page_size])
     ]
     history_points = serialize_rating_history(load_sql_rating_history(agaid))
+    total_recent_tournaments = int(row.get("TournamentCount") or 0)
+    total_recent_games = int(row.get("GameCount") or 0)
+    if recent_games_sgf_only:
+        total_recent_games = int((query_one(conn_str, recent_games_count_query, [agaid, agaid]) or {}).get("GameCount") or 0)
 
     summary = player_summary_payload(row)
     summary.update(
@@ -1434,8 +1469,22 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
         "player": summary,
         "rating_history": history_points,
         "recent_tournaments": tournaments,
+        "recent_tournaments_paging": {
+            "page": recent_tournaments_page,
+            "page_size": tournaments_page_size,
+            "total_count": total_recent_tournaments,
+            "has_previous": recent_tournaments_page > 0,
+            "has_next": (tournaments_offset + len(tournaments)) < total_recent_tournaments,
+        },
         "opponents": opponents,
         "recent_games": recent_games,
+        "recent_games_paging": {
+            "page": recent_games_page,
+            "page_size": games_page_size,
+            "total_count": total_recent_games,
+            "has_previous": recent_games_page > 0,
+            "has_next": (games_offset + len(recent_games)) < total_recent_games,
+        },
     }
     return attach_player_articles(conn_str, payload, agaid) if include_context else payload
 
