@@ -441,10 +441,13 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
     recent_tournaments_page_text = (req.params.get("recent_tournaments_page") or "0").strip()
     recent_games_page_text = (req.params.get("recent_games_page") or "0").strip()
     opponents_page_text = (req.params.get("opponents_page") or "0").strip()
+    opponents_sort = (req.params.get("opponents_sort") or "games").strip().lower()
     if not agaid_text.isdigit():
         return func.HttpResponse("Query parameter 'agaid' must be numeric.", status_code=400)
     if not recent_tournaments_page_text.isdigit() or not recent_games_page_text.isdigit() or not opponents_page_text.isdigit():
         return func.HttpResponse("Paging parameters must be non-negative integers.", status_code=400)
+    if opponents_sort not in {"games", "latest"}:
+        return func.HttpResponse("Query parameter 'opponents_sort' must be 'games' or 'latest'.", status_code=400)
     try:
         history_points = None
         data_source = None
@@ -478,6 +481,7 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
                 recent_tournaments_page=recent_tournaments_page,
                 recent_games_page=recent_games_page,
                 opponents_page=opponents_page,
+                opponents_sort=opponents_sort,
                 include_context=False,
             )
             history_points = explorer.load_sql_rating_history(int(agaid_text))
@@ -513,6 +517,7 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
                 "has_previous": opponents_page > 0,
                 "has_next": len(payload.get("opponents") or []) < int(player_meta.get("opponent_count") or 0),
             }
+            payload["opponents_sort"] = opponents_sort
         payload["rating_history"] = payload.get("rating_history") or _history_payload_from_points(history_points or [])
         payload["news_articles"] = []
         payload["review_videos"] = []

@@ -987,6 +987,7 @@
       playerRecentTournamentsPage: 0,
       playerRecentGamesPage: 0,
       playerOpponentsPage: 0,
+      playerOpponentsSort: "games",
       currentPlayerName: "",
       currentTournamentDescription: "",
       playerContextRequestId: 0,
@@ -1425,7 +1426,8 @@
         sgfOnly: Boolean(snapshot.playerRecentGamesSgfOnly),
         tournamentsPage: Number(snapshot.playerRecentTournamentsPage || 0),
         gamesPage: Number(snapshot.playerRecentGamesPage || 0),
-        opponentsPage: Number(snapshot.playerOpponentsPage || 0)
+        opponentsPage: Number(snapshot.playerOpponentsPage || 0),
+        opponentsSort: String(snapshot.playerOpponentsSort || "games")
       });
     }
 
@@ -1439,6 +1441,7 @@
         playerRecentTournamentsPage: state.playerRecentTournamentsPage,
         playerRecentGamesPage: state.playerRecentGamesPage,
         playerOpponentsPage: state.playerOpponentsPage,
+        playerOpponentsSort: state.playerOpponentsSort,
         currentPlayerName: state.currentPlayerName,
         currentTournamentDescription: state.currentTournamentDescription,
         resultsSubtitle: els.resultsSubtitle.textContent,
@@ -1494,6 +1497,7 @@
       state.playerRecentTournamentsPage = Number(snapshot.playerRecentTournamentsPage || 0);
       state.playerRecentGamesPage = Number(snapshot.playerRecentGamesPage || 0);
       state.playerOpponentsPage = Number(snapshot.playerOpponentsPage || 0);
+      state.playerOpponentsSort = String(snapshot.playerOpponentsSort || "games");
       state.currentPlayerName = snapshot.currentPlayerName || "";
       state.currentTournamentDescription = snapshot.currentTournamentDescription || "";
       restoreResultsSnapshot(snapshot);
@@ -1516,7 +1520,8 @@
           playerRecentGamesSgfOnly: snapshot.playerRecentGamesSgfOnly,
           playerRecentTournamentsPage: snapshot.playerRecentTournamentsPage,
           playerRecentGamesPage: snapshot.playerRecentGamesPage,
-          playerOpponentsPage: snapshot.playerOpponentsPage
+          playerOpponentsPage: snapshot.playerOpponentsPage,
+          playerOpponentsSort: snapshot.playerOpponentsSort
         });
         return;
       }
@@ -2514,13 +2519,15 @@
         playerRecentGamesSgfOnly = state.playerRecentGamesSgfOnly,
         playerRecentTournamentsPage = 0,
         playerRecentGamesPage = 0,
-        playerOpponentsPage = 0
+        playerOpponentsPage = 0,
+        playerOpponentsSort = state.playerOpponentsSort
       } = options;
       if (pushHistory) pushNavigationSnapshot();
       state.playerRecentGamesSgfOnly = Boolean(playerRecentGamesSgfOnly);
       state.playerRecentTournamentsPage = Math.max(0, Number(playerRecentTournamentsPage || 0));
       state.playerRecentGamesPage = Math.max(0, Number(playerRecentGamesPage || 0));
       state.playerOpponentsPage = Math.max(0, Number(playerOpponentsPage || 0));
+      state.playerOpponentsSort = String(playerOpponentsSort || "games") === "latest" ? "latest" : "games";
       state.selected = agaid;
       state.selectedType = "player";
       setStatus(`Loading player ${agaid}...`);
@@ -2530,7 +2537,8 @@
           recent_games_sgf_only: state.playerRecentGamesSgfOnly ? "1" : "",
           recent_tournaments_page: state.playerRecentTournamentsPage,
           recent_games_page: state.playerRecentGamesPage,
-          opponents_page: state.playerOpponentsPage
+          opponents_page: state.playerOpponentsPage,
+          opponents_sort: state.playerOpponentsSort
         }, { signal: controller.signal });
         const player = payload.player;
         state.currentPlayerName = player?.display_name || `AGAID ${agaid}`;
@@ -2551,6 +2559,7 @@
           has_previous: state.playerOpponentsPage > 0,
           has_next: false
         };
+        const opponentsSort = String(payload.opponents_sort || state.playerOpponentsSort || "games") === "latest" ? "latest" : "games";
         const recentGames = payload.recent_games || [];
         const recentGamesPaging = payload.recent_games_paging || {
           page: state.playerRecentGamesPage,
@@ -2565,13 +2574,15 @@
         state.playerRecentTournamentsPage = Number(recentTournamentsPaging.page || 0);
         state.playerRecentGamesPage = Number(recentGamesPaging.page || 0);
         state.playerOpponentsPage = Number(opponentsPaging.page || 0);
+        state.playerOpponentsSort = opponentsSort;
         state.activeGames = recentGames;
         state.selectedSgfGame = selectedSgfGameFromList(recentGames) || sgfGames[0] || null;
         const contextSection = renderPlayerContextCard("", true);
         const chartHtml = buildInteractiveHistoryChart(player, ratingHistory);
         const recentGamesTools = `${pagerControlsHtml("games", recentGamesPaging, state.playerRecentGamesSgfOnly ? "SGF games" : "games")}<label class="inline-field" style="margin-left:auto"><input type="checkbox" id="recent-games-sgf-only"${state.playerRecentGamesSgfOnly ? " checked" : ""} /> <span>Games with SGF only?</span></label>`;
         const recentTournamentsTools = recentTournamentsPaging.total_count ? `<div class="section-tools">${pagerControlsHtml("tournaments", recentTournamentsPaging, "tournaments")}</div>` : "";
-        const opponentsTools = opponentsPaging.total_count ? `<div class="section-tools">${pagerControlsHtml("opponents", opponentsPaging, "opponents")}</div>` : "";
+        const opponentsSortControls = `<label class="inline-field"><span>Sort</span><select id="opponents-sort"><option value="games"${opponentsSort === "games" ? " selected" : ""}>Games</option><option value="latest"${opponentsSort === "latest" ? " selected" : ""}>Latest</option></select></label>`;
+        const opponentsTools = `<div class="section-tools">${opponentsPaging.total_count ? pagerControlsHtml("opponents", opponentsPaging, "opponents") : ""}${opponentsSortControls}</div>`;
         if (preserveResultsSnapshot) {
           restoreResultsSnapshot({
             mode: modeOverride,
@@ -2598,7 +2609,19 @@
             pushHistory: false,
             playerRecentTournamentsPage: state.playerRecentTournamentsPage,
             playerRecentGamesPage: 0,
-            playerOpponentsPage: state.playerOpponentsPage
+            playerOpponentsPage: state.playerOpponentsPage,
+            playerOpponentsSort: state.playerOpponentsSort
+          }).catch(handleError);
+        });
+        host.querySelector("#opponents-sort")?.addEventListener("change", (event) => {
+          loadPlayer(agaid, {
+            focusResult: false,
+            pushHistory: false,
+            playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
+            playerRecentTournamentsPage: state.playerRecentTournamentsPage,
+            playerRecentGamesPage: state.playerRecentGamesPage,
+            playerOpponentsPage: 0,
+            playerOpponentsSort: event.target.value
           }).catch(handleError);
         });
         host.querySelectorAll("[data-page-nav]").forEach((button) => {
@@ -2621,7 +2644,8 @@
               playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
               playerRecentTournamentsPage: nextTournamentPage,
               playerRecentGamesPage: nextGamesPage,
-              playerOpponentsPage: nextOpponentsPage
+              playerOpponentsPage: nextOpponentsPage,
+              playerOpponentsSort: state.playerOpponentsSort
             }).catch(handleError);
           });
         });

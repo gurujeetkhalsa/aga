@@ -1127,11 +1127,15 @@ def get_player_detail(
     recent_tournaments_page: int = 0,
     recent_games_page: int = 0,
     opponents_page: int = 0,
+    opponents_sort: str = "games",
     include_context: bool = False,
 ) -> dict[str, Any] | None:
     recent_tournaments_page = max(0, int(recent_tournaments_page or 0))
     recent_games_page = max(0, int(recent_games_page or 0))
     opponents_page = max(0, int(opponents_page or 0))
+    opponents_sort = str(opponents_sort or "games").strip().lower()
+    if opponents_sort not in {"games", "latest"}:
+        opponents_sort = "games"
     tournaments_page_size = 12
     games_page_size = 20
     opponents_page_size = 16
@@ -1255,7 +1259,12 @@ LEFT JOIN [ratings].[tournaments] AS t
 ORDER BY tournament_games.[LatestDate] DESC, tournament_games.[Tournament_Code]
 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
-    opponents_query = """
+    opponents_order_by = (
+        "ORDER BY opponent_stats.[LatestDate] DESC, opponent_stats.[GamesPlayed] DESC, opponent_stats.[OpponentAGAID]"
+        if opponents_sort == "latest"
+        else "ORDER BY opponent_stats.[GamesPlayed] DESC, opponent_stats.[LatestDate] DESC, opponent_stats.[OpponentAGAID]"
+    )
+    opponents_query = f"""
 SELECT
     opponent_stats.[OpponentAGAID] AS [AGAID],
     m.[FirstName],
@@ -1306,7 +1315,7 @@ LEFT JOIN [membership].[members] AS m
     ON m.[AGAID] = opponent_stats.[OpponentAGAID]
 LEFT JOIN [membership].[chapters] AS c
     ON c.[ChapterID] = m.[ChapterID]
-ORDER BY opponent_stats.[GamesPlayed] DESC, opponent_stats.[LatestDate] DESC, opponent_stats.[OpponentAGAID]
+{opponents_order_by}
 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
     sgf_only_filter = "WHERE COALESCE(LTRIM(RTRIM(player_games.[Sgf_Code])), '') <> ''" if recent_games_sgf_only else ""
@@ -1489,6 +1498,7 @@ FROM
             "has_previous": opponents_page > 0,
             "has_next": (opponents_offset + len(opponents)) < int(row.get("OpponentCount") or 0),
         },
+        "opponents_sort": opponents_sort,
         "recent_games": recent_games,
         "recent_games_paging": {
             "page": recent_games_page,
