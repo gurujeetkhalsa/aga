@@ -1126,14 +1126,18 @@ def get_player_detail(
     recent_games_sgf_only: bool = False,
     recent_tournaments_page: int = 0,
     recent_games_page: int = 0,
+    opponents_page: int = 0,
     include_context: bool = False,
 ) -> dict[str, Any] | None:
     recent_tournaments_page = max(0, int(recent_tournaments_page or 0))
     recent_games_page = max(0, int(recent_games_page or 0))
+    opponents_page = max(0, int(opponents_page or 0))
     tournaments_page_size = 12
     games_page_size = 20
+    opponents_page_size = 16
     tournaments_offset = recent_tournaments_page * tournaments_page_size
     games_offset = recent_games_page * games_page_size
+    opponents_offset = opponents_page * opponents_page_size
     summary_query = (
         current_ratings_cte()
         + """
@@ -1252,7 +1256,7 @@ ORDER BY tournament_games.[LatestDate] DESC, tournament_games.[Tournament_Code]
 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
     opponents_query = """
-SELECT TOP 16
+SELECT
     opponent_stats.[OpponentAGAID] AS [AGAID],
     m.[FirstName],
     m.[LastName],
@@ -1303,6 +1307,7 @@ LEFT JOIN [membership].[members] AS m
 LEFT JOIN [membership].[chapters] AS c
     ON c.[ChapterID] = m.[ChapterID]
 ORDER BY opponent_stats.[GamesPlayed] DESC, opponent_stats.[LatestDate] DESC, opponent_stats.[OpponentAGAID]
+OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
     sgf_only_filter = "WHERE COALESCE(LTRIM(RTRIM(player_games.[Sgf_Code])), '') <> ''" if recent_games_sgf_only else ""
     recent_games_query = (
@@ -1421,7 +1426,7 @@ FROM
             "losses": opponent.get("Losses") or 0,
             "latest_game_date": json_safe_value(opponent.get("LatestDate")),
         }
-        for opponent in query_rows(conn_str, opponents_query, [agaid, agaid])
+        for opponent in query_rows(conn_str, opponents_query, [agaid, agaid, opponents_offset, opponents_page_size])
     ]
     recent_games = [
         {
@@ -1477,6 +1482,13 @@ FROM
             "has_next": (tournaments_offset + len(tournaments)) < total_recent_tournaments,
         },
         "opponents": opponents,
+        "opponents_paging": {
+            "page": opponents_page,
+            "page_size": opponents_page_size,
+            "total_count": int(row.get("OpponentCount") or 0),
+            "has_previous": opponents_page > 0,
+            "has_next": (opponents_offset + len(opponents)) < int(row.get("OpponentCount") or 0),
+        },
         "recent_games": recent_games,
         "recent_games_paging": {
             "page": recent_games_page,

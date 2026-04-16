@@ -986,6 +986,7 @@
       playerRecentGamesSgfOnly: false,
       playerRecentTournamentsPage: 0,
       playerRecentGamesPage: 0,
+      playerOpponentsPage: 0,
       currentPlayerName: "",
       currentTournamentDescription: "",
       playerContextRequestId: 0,
@@ -997,6 +998,7 @@
     };
     const PLAYER_RECENT_TOURNAMENTS_PAGE_SIZE = 12;
     const PLAYER_RECENT_GAMES_PAGE_SIZE = 20;
+    const PLAYER_OPPONENTS_PAGE_SIZE = 16;
     const searchControlsHost = document.getElementById("search-controls");
     searchControlsHost.innerHTML = `
       <div id="search-form">
@@ -1422,7 +1424,8 @@
         count: snapshot.resultCount,
         sgfOnly: Boolean(snapshot.playerRecentGamesSgfOnly),
         tournamentsPage: Number(snapshot.playerRecentTournamentsPage || 0),
-        gamesPage: Number(snapshot.playerRecentGamesPage || 0)
+        gamesPage: Number(snapshot.playerRecentGamesPage || 0),
+        opponentsPage: Number(snapshot.playerOpponentsPage || 0)
       });
     }
 
@@ -1435,6 +1438,7 @@
         playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
         playerRecentTournamentsPage: state.playerRecentTournamentsPage,
         playerRecentGamesPage: state.playerRecentGamesPage,
+        playerOpponentsPage: state.playerOpponentsPage,
         currentPlayerName: state.currentPlayerName,
         currentTournamentDescription: state.currentTournamentDescription,
         resultsSubtitle: els.resultsSubtitle.textContent,
@@ -1489,6 +1493,7 @@
       state.playerRecentGamesSgfOnly = Boolean(snapshot.playerRecentGamesSgfOnly);
       state.playerRecentTournamentsPage = Number(snapshot.playerRecentTournamentsPage || 0);
       state.playerRecentGamesPage = Number(snapshot.playerRecentGamesPage || 0);
+      state.playerOpponentsPage = Number(snapshot.playerOpponentsPage || 0);
       state.currentPlayerName = snapshot.currentPlayerName || "";
       state.currentTournamentDescription = snapshot.currentTournamentDescription || "";
       restoreResultsSnapshot(snapshot);
@@ -1510,7 +1515,8 @@
           resultCountLabel: snapshot.resultCount,
           playerRecentGamesSgfOnly: snapshot.playerRecentGamesSgfOnly,
           playerRecentTournamentsPage: snapshot.playerRecentTournamentsPage,
-          playerRecentGamesPage: snapshot.playerRecentGamesPage
+          playerRecentGamesPage: snapshot.playerRecentGamesPage,
+          playerOpponentsPage: snapshot.playerOpponentsPage
         });
         return;
       }
@@ -2507,12 +2513,14 @@
         resultCountLabel = "",
         playerRecentGamesSgfOnly = state.playerRecentGamesSgfOnly,
         playerRecentTournamentsPage = 0,
-        playerRecentGamesPage = 0
+        playerRecentGamesPage = 0,
+        playerOpponentsPage = 0
       } = options;
       if (pushHistory) pushNavigationSnapshot();
       state.playerRecentGamesSgfOnly = Boolean(playerRecentGamesSgfOnly);
       state.playerRecentTournamentsPage = Math.max(0, Number(playerRecentTournamentsPage || 0));
       state.playerRecentGamesPage = Math.max(0, Number(playerRecentGamesPage || 0));
+      state.playerOpponentsPage = Math.max(0, Number(playerOpponentsPage || 0));
       state.selected = agaid;
       state.selectedType = "player";
       setStatus(`Loading player ${agaid}...`);
@@ -2521,7 +2529,8 @@
           agaid,
           recent_games_sgf_only: state.playerRecentGamesSgfOnly ? "1" : "",
           recent_tournaments_page: state.playerRecentTournamentsPage,
-          recent_games_page: state.playerRecentGamesPage
+          recent_games_page: state.playerRecentGamesPage,
+          opponents_page: state.playerOpponentsPage
         }, { signal: controller.signal });
         const player = payload.player;
         state.currentPlayerName = player?.display_name || `AGAID ${agaid}`;
@@ -2535,6 +2544,13 @@
           has_next: false
         };
         const opponents = payload.opponents || [];
+        const opponentsPaging = payload.opponents_paging || {
+          page: state.playerOpponentsPage,
+          page_size: PLAYER_OPPONENTS_PAGE_SIZE,
+          total_count: opponents.length,
+          has_previous: state.playerOpponentsPage > 0,
+          has_next: false
+        };
         const recentGames = payload.recent_games || [];
         const recentGamesPaging = payload.recent_games_paging || {
           page: state.playerRecentGamesPage,
@@ -2548,12 +2564,14 @@
         const ratingHistory = payload.rating_history || [];
         state.playerRecentTournamentsPage = Number(recentTournamentsPaging.page || 0);
         state.playerRecentGamesPage = Number(recentGamesPaging.page || 0);
+        state.playerOpponentsPage = Number(opponentsPaging.page || 0);
         state.activeGames = recentGames;
         state.selectedSgfGame = selectedSgfGameFromList(recentGames) || sgfGames[0] || null;
         const contextSection = renderPlayerContextCard("", true);
         const chartHtml = buildInteractiveHistoryChart(player, ratingHistory);
         const recentGamesTools = `${pagerControlsHtml("games", recentGamesPaging, state.playerRecentGamesSgfOnly ? "SGF games" : "games")}<label class="inline-field" style="margin-left:auto"><input type="checkbox" id="recent-games-sgf-only"${state.playerRecentGamesSgfOnly ? " checked" : ""} /> <span>Games with SGF only?</span></label>`;
         const recentTournamentsTools = recentTournamentsPaging.total_count ? `<div class="section-tools">${pagerControlsHtml("tournaments", recentTournamentsPaging, "tournaments")}</div>` : "";
+        const opponentsTools = opponentsPaging.total_count ? `<div class="section-tools">${pagerControlsHtml("opponents", opponentsPaging, "opponents")}</div>` : "";
         if (preserveResultsSnapshot) {
           restoreResultsSnapshot({
             mode: modeOverride,
@@ -2567,7 +2585,7 @@
         updateLayoutMode();
         const host = document.createElement("div");
         host.className = "detail-grid";
-        host.innerHTML = `<section class="detail-card"><div class="headline"><div><div class="title">${escapeHtml(player.display_name)}</div><div class="subtitle">AGAID ${escapeHtml(player.agaid)}${player.chapter_label ? ` | ${escapeHtml(player.chapter_label)}` : ""}${player.state ? ` | ${escapeHtml(player.state)}` : ""}${player.expiration_date ? ` | Expiration ${formatShortDate(player.expiration_date)}` : ""}</div></div><div class="section-tools">${detailBackButtonHtml()}</div></div><div class="metric-grid"><div class="metric"><div class="label">Current Rating</div><div class="value">${formatRating(player.rating)}</div></div><div class="metric"><div class="label">Sigma</div><div class="value">${formatRating(player.sigma)}</div></div><div class="metric"><div class="label">Tournaments</div><div class="value">${player.tournament_count || 0}</div></div><div class="metric"><div class="label">Games</div><div class="value">${player.game_count || 0}</div></div><div class="metric"><div class="label">Opponents</div><div class="value">${player.opponent_count || 0}</div></div><div class="metric"><div class="label">Wins</div><div class="value">${player.wins || 0}</div></div><div class="metric"><div class="label">Losses</div><div class="value">${player.losses || 0}</div></div><div class="metric"><div class="label">Latest Event</div><div class="value" style="font-size:1rem">${formatDate(player.latest_event_date)}</div></div></div></section>${contextSection}<section class="detail-card"><div class="section-head"><div><h3>Rating History</h3></div></div>${chartHtml}</section><section class="detail-card mobile-secondary"><div class="section-head"><div><h3>Recent Tournaments</h3><div class="eyebrow">Click any event to pivot into tournament detail</div></div>${recentTournamentsTools}</div>${recentTournaments.length ? scrollTableHtml(["Tournament", "Date", "Record", "Games"], recentTournaments.map((item) => `<tr><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.description || item.tournament_code)}</a></td><td>${formatDate(item.tournament_date)}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${item.games_played || 0}</td></tr>`)) : '<div class="empty">No tournament history was found for this player.</div>'}</section><section class="detail-card"><div class="section-head"><div><h3>Recent Games</h3><div class="eyebrow">A game-by-game view with opponent and tournament links</div></div><div class="section-tools">${recentGamesTools}</div></div>${visibleRecentGames.length ? scrollTableHtml(["Date", "Opponent", "Tournament", "Rnd", "B/W", "Hcp", "W/L", "SGF"], visibleRecentGames.map((item) => `<tr><td>${formatDate(item.game_date)}</td><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></td><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></td><td>${escapeHtml(item.round || "")}</td><td>${escapeHtml(item.color || "")}</td><td>${escapeHtml(item.handicap ?? "")}</td><td>${escapeHtml(item.outcome || item.result_text || "")}</td><td>${gameHasSgf(item) && gameSgfViewerUrl(item) ? `<button type="button" class="sgf-link" data-game-id="${escapeHtml(item.game_id)}" data-sgf-viewer-url="${escapeHtml(gameSgfViewerUrl(item))}" title="${escapeHtml(item.sgf_code || "")}">View SGF</button>` : `<span class="sgf-link muted">None</span>`}</td></tr>`)) : `<div class="empty">${state.playerRecentGamesSgfOnly ? "No SGF-linked recent games were found for this player." : "No recent games were found for this player."}</div>`}</section><section class="detail-card mobile-secondary"><div class="section-head"><div><h3>Opponent Summary</h3><div class="eyebrow">Cross-link into any opponent from here</div></div></div>${opponents.length ? scrollTableHtml(["Opponent", "Games", "Record", "Latest"], opponents.map((item) => `<tr><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.agaid)}">${escapeHtml(item.display_name)}</a></td><td>${item.games_played || 0}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${formatDate(item.latest_game_date)}</td></tr>`)) : '<div class="empty">No opponent detail is available for this player yet.</div>'}</section>`;
+        host.innerHTML = `<section class="detail-card"><div class="headline"><div><div class="title">${escapeHtml(player.display_name)}</div><div class="subtitle">AGAID ${escapeHtml(player.agaid)}${player.chapter_label ? ` | ${escapeHtml(player.chapter_label)}` : ""}${player.state ? ` | ${escapeHtml(player.state)}` : ""}${player.expiration_date ? ` | Expiration ${formatShortDate(player.expiration_date)}` : ""}</div></div><div class="section-tools">${detailBackButtonHtml()}</div></div><div class="metric-grid"><div class="metric"><div class="label">Current Rating</div><div class="value">${formatRating(player.rating)}</div></div><div class="metric"><div class="label">Sigma</div><div class="value">${formatRating(player.sigma)}</div></div><div class="metric"><div class="label">Tournaments</div><div class="value">${player.tournament_count || 0}</div></div><div class="metric"><div class="label">Games</div><div class="value">${player.game_count || 0}</div></div><div class="metric"><div class="label">Opponents</div><div class="value">${player.opponent_count || 0}</div></div><div class="metric"><div class="label">Wins</div><div class="value">${player.wins || 0}</div></div><div class="metric"><div class="label">Losses</div><div class="value">${player.losses || 0}</div></div><div class="metric"><div class="label">Latest Event</div><div class="value" style="font-size:1rem">${formatDate(player.latest_event_date)}</div></div></div></section>${contextSection}<section class="detail-card"><div class="section-head"><div><h3>Rating History</h3></div></div>${chartHtml}</section><section class="detail-card mobile-secondary"><div class="section-head"><div><h3>Recent Tournaments</h3><div class="eyebrow">Click any event to pivot into tournament detail</div></div>${recentTournamentsTools}</div>${recentTournaments.length ? scrollTableHtml(["Tournament", "Date", "Record", "Games"], recentTournaments.map((item) => `<tr><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.description || item.tournament_code)}</a></td><td>${formatDate(item.tournament_date)}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${item.games_played || 0}</td></tr>`)) : '<div class="empty">No tournament history was found for this player.</div>'}</section><section class="detail-card"><div class="section-head"><div><h3>Recent Games</h3><div class="eyebrow">A game-by-game view with opponent and tournament links</div></div><div class="section-tools">${recentGamesTools}</div></div>${visibleRecentGames.length ? scrollTableHtml(["Date", "Opponent", "Tournament", "Rnd", "B/W", "Hcp", "W/L", "SGF"], visibleRecentGames.map((item) => `<tr><td>${formatDate(item.game_date)}</td><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></td><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></td><td>${escapeHtml(item.round || "")}</td><td>${escapeHtml(item.color || "")}</td><td>${escapeHtml(item.handicap ?? "")}</td><td>${escapeHtml(item.outcome || item.result_text || "")}</td><td>${gameHasSgf(item) && gameSgfViewerUrl(item) ? `<button type="button" class="sgf-link" data-game-id="${escapeHtml(item.game_id)}" data-sgf-viewer-url="${escapeHtml(gameSgfViewerUrl(item))}" title="${escapeHtml(item.sgf_code || "")}">View SGF</button>` : `<span class="sgf-link muted">None</span>`}</td></tr>`)) : `<div class="empty">${state.playerRecentGamesSgfOnly ? "No SGF-linked recent games were found for this player." : "No recent games were found for this player."}</div>`}</section><section class="detail-card mobile-secondary"><div class="section-head"><div><h3>Opponent Summary</h3><div class="eyebrow">Cross-link into any opponent from here</div></div>${opponentsTools}</div>${opponents.length ? scrollTableHtml(["Opponent", "Games", "Record", "Latest"], opponents.map((item) => `<tr><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.agaid)}">${escapeHtml(item.display_name)}</a></td><td>${item.games_played || 0}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${formatDate(item.latest_game_date)}</td></tr>`)) : '<div class="empty">No opponent detail is available for this player yet.</div>'}</section>`;
         els.detail.innerHTML = "";
         els.detail.appendChild(host);
         wireHistoryChart(host);
@@ -2579,7 +2597,8 @@
             focusResult,
             pushHistory: false,
             playerRecentTournamentsPage: state.playerRecentTournamentsPage,
-            playerRecentGamesPage: 0
+            playerRecentGamesPage: 0,
+            playerOpponentsPage: state.playerOpponentsPage
           }).catch(handleError);
         });
         host.querySelectorAll("[data-page-nav]").forEach((button) => {
@@ -2593,12 +2612,16 @@
             const nextGamesPage = kind === "games"
               ? Math.max(0, state.playerRecentGamesPage + delta)
               : state.playerRecentGamesPage;
+            const nextOpponentsPage = kind === "opponents"
+              ? Math.max(0, state.playerOpponentsPage + delta)
+              : state.playerOpponentsPage;
             loadPlayer(agaid, {
               focusResult: false,
               pushHistory: false,
               playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
               playerRecentTournamentsPage: nextTournamentPage,
-              playerRecentGamesPage: nextGamesPage
+              playerRecentGamesPage: nextGamesPage,
+              playerOpponentsPage: nextOpponentsPage
             }).catch(handleError);
           });
         });
