@@ -3127,16 +3127,16 @@ LEFT JOIN current_ratings AS cr
 OUTER APPLY
 (
     SELECT
-        COUNT(DISTINCT g.[Game_ID]) AS [GameCount],
+        COUNT(DISTINCT player_games.[Game_ID]) AS [GameCount],
         COUNT(DISTINCT player_games.[Tournament_Code]) AS [TournamentCount],
         MAX(player_games.[Game_Date]) AS [LatestEventDate]
     FROM
     (
-        SELECT g.[Tournament_Code], g.[Game_Date]
+        SELECT g.[Game_ID], g.[Tournament_Code], g.[Game_Date]
         FROM [ratings].[games] AS g
         WHERE g.[Pin_Player_1] = m.[AGAID]
         UNION ALL
-        SELECT g.[Tournament_Code], g.[Game_Date]
+        SELECT g.[Game_ID], g.[Tournament_Code], g.[Game_Date]
         FROM [ratings].[games] AS g
         WHERE g.[Pin_Player_2] = m.[AGAID]
     ) AS player_games
