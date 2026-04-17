@@ -908,9 +908,13 @@ def search_tournaments(
     date_from: str | None,
     date_before: str | None,
     limit: int,
-) -> list[dict[str, Any]]:
+    page: int = 0,
+) -> dict[str, Any]:
     filters: list[str] = ["1 = 1"]
     params: list[Any] = []
+    page = max(0, int(page or 0))
+    page_size = max(1, int(limit))
+    offset = page * page_size
     if description:
         filters.append("COALESCE(t.[Tournament_Descr], '') LIKE ?")
         params.append(f"%{description}%")
@@ -932,8 +936,34 @@ def search_tournaments(
         filters.append("t.[Tournament_Date] < ?")
         params.append(date_before)
 
+    where_clause = " AND ".join(filters)
+    total_count_query = f"""
+SELECT COUNT(*) AS [TotalCount]
+FROM [ratings].[tournaments] AS t
+WHERE {where_clause}
+"""
+    total_count_rows = query_rows(conn_str, total_count_query, params)
+    total_count = int((total_count_rows[0] or {}).get("TotalCount") or 0) if total_count_rows else 0
+
     query = f"""
-SELECT TOP {limit}
+WITH [paged_tournaments] AS
+(
+    SELECT
+        t.[Tournament_Code],
+        t.[Tournament_Descr],
+        t.[Tournament_Date],
+        t.[City],
+        t.[State_Code],
+        t.[Country_Code],
+        t.[Rounds],
+        t.[Total_Players],
+        t.[Wallist]
+    FROM [ratings].[tournaments] AS t
+    WHERE {where_clause}
+    ORDER BY t.[Tournament_Date] DESC, t.[Tournament_Code]
+    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+)
+SELECT
     t.[Tournament_Code],
     t.[Tournament_Descr],
     t.[Tournament_Date],
@@ -945,7 +975,7 @@ SELECT TOP {limit}
     t.[Wallist],
     stats.[ParticipantCount],
     stats.[GameCount]
-FROM [ratings].[tournaments] AS t
+FROM [paged_tournaments] AS t
 OUTER APPLY
 (
     SELECT
@@ -958,10 +988,19 @@ OUTER APPLY
     ) AS participant([AGAID])
     WHERE g.[Tournament_Code] = t.[Tournament_Code]
 ) AS stats
-WHERE {" AND ".join(filters)}
 ORDER BY t.[Tournament_Date] DESC, t.[Tournament_Code]
 """
-    return [tournament_summary_payload(row) for row in query_rows(conn_str, query, params)]
+    results = [tournament_summary_payload(row) for row in query_rows(conn_str, query, params + [offset, page_size])]
+    return {
+        "results": results,
+        "paging": {
+            "page": page,
+            "page_size": page_size,
+            "total_count": total_count,
+            "has_previous": page > 0,
+            "has_next": (offset + len(results)) < total_count,
+        },
+    }
 
 
 def build_filter_options(conn_str: str) -> dict[str, Any]:
@@ -1124,8 +1163,24 @@ def get_player_detail(
     conn_str: str,
     agaid: int,
     recent_games_sgf_only: bool = False,
+    recent_tournaments_page: int = 0,
+    recent_games_page: int = 0,
+    opponents_page: int = 0,
+    opponents_sort: str = "games",
     include_context: bool = False,
 ) -> dict[str, Any] | None:
+    recent_tournaments_page = max(0, int(recent_tournaments_page or 0))
+    recent_games_page = max(0, int(recent_games_page or 0))
+    opponents_page = max(0, int(opponents_page or 0))
+    opponents_sort = str(opponents_sort or "games").strip().lower()
+    if opponents_sort not in {"games", "latest"}:
+        opponents_sort = "games"
+    tournaments_page_size = 12
+    games_page_size = 20
+    opponents_page_size = 16
+    tournaments_offset = recent_tournaments_page * tournaments_page_size
+    games_offset = recent_games_page * games_page_size
+    opponents_offset = opponents_page * opponents_page_size
     summary_query = (
         current_ratings_cte()
         + """
@@ -1195,7 +1250,7 @@ WHERE m.[AGAID] = ?
         return None
 
     tournaments_query = """
-SELECT TOP 12
+SELECT
     t.[Tournament_Code],
     t.[Tournament_Descr],
     t.[Tournament_Date],
@@ -1241,9 +1296,15 @@ FROM
 LEFT JOIN [ratings].[tournaments] AS t
     ON t.[Tournament_Code] = tournament_games.[Tournament_Code]
 ORDER BY tournament_games.[LatestDate] DESC, tournament_games.[Tournament_Code]
+OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
-    opponents_query = """
-SELECT TOP 16
+    opponents_order_by = (
+        "ORDER BY opponent_stats.[LatestDate] DESC, opponent_stats.[GamesPlayed] DESC, opponent_stats.[OpponentAGAID]"
+        if opponents_sort == "latest"
+        else "ORDER BY opponent_stats.[GamesPlayed] DESC, opponent_stats.[LatestDate] DESC, opponent_stats.[OpponentAGAID]"
+    )
+    opponents_query = f"""
+SELECT
     opponent_stats.[OpponentAGAID] AS [AGAID],
     m.[FirstName],
     m.[LastName],
@@ -1293,13 +1354,14 @@ LEFT JOIN [membership].[members] AS m
     ON m.[AGAID] = opponent_stats.[OpponentAGAID]
 LEFT JOIN [membership].[chapters] AS c
     ON c.[ChapterID] = m.[ChapterID]
-ORDER BY opponent_stats.[GamesPlayed] DESC, opponent_stats.[LatestDate] DESC, opponent_stats.[OpponentAGAID]
+{opponents_order_by}
+OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
 """
     sgf_only_filter = "WHERE COALESCE(LTRIM(RTRIM(player_games.[Sgf_Code])), '') <> ''" if recent_games_sgf_only else ""
     recent_games_query = (
         current_ratings_cte()
         + f"""
-SELECT TOP 20
+SELECT
     player_games.[Game_ID],
     player_games.[Game_Date],
     player_games.[Round],
@@ -1363,6 +1425,28 @@ LEFT JOIN [membership].[members] AS m
     ON m.[AGAID] = player_games.[OpponentAGAID]
 {sgf_only_filter}
 ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_games.[Round]
+OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+"""
+    )
+    recent_games_count_query = (
+        current_ratings_cte()
+        + f"""
+SELECT COUNT(*) AS [GameCount]
+FROM
+(
+    SELECT
+        g.[Game_ID],
+        g.[Sgf_Code]
+    FROM [ratings].[games] AS g
+    WHERE g.[Pin_Player_1] = ?
+    UNION ALL
+    SELECT
+        g.[Game_ID],
+        g.[Sgf_Code]
+    FROM [ratings].[games] AS g
+    WHERE g.[Pin_Player_2] = ?
+) AS player_games
+{sgf_only_filter}
 """
     )
 
@@ -1377,7 +1461,7 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
             "wins": tournament.get("Wins") or 0,
             "losses": tournament.get("Losses") or 0,
         }
-        for tournament in query_rows(conn_str, tournaments_query, [agaid, agaid])
+        for tournament in query_rows(conn_str, tournaments_query, [agaid, agaid, tournaments_offset, tournaments_page_size])
     ]
     opponents = [
         {
@@ -1390,7 +1474,7 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
             "losses": opponent.get("Losses") or 0,
             "latest_game_date": json_safe_value(opponent.get("LatestDate")),
         }
-        for opponent in query_rows(conn_str, opponents_query, [agaid, agaid])
+        for opponent in query_rows(conn_str, opponents_query, [agaid, agaid, opponents_offset, opponents_page_size])
     ]
     recent_games = [
         {
@@ -1417,9 +1501,13 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
             "tournament_code": game.get("Tournament_Code"),
             "tournament_description": game.get("Tournament_Descr"),
         }
-        for game in query_rows(conn_str, recent_games_query, [agaid, agaid])
+        for game in query_rows(conn_str, recent_games_query, [agaid, agaid, games_offset, games_page_size])
     ]
     history_points = serialize_rating_history(load_sql_rating_history(agaid))
+    total_recent_tournaments = int(row.get("TournamentCount") or 0)
+    total_recent_games = int(row.get("GameCount") or 0)
+    if recent_games_sgf_only:
+        total_recent_games = int((query_one(conn_str, recent_games_count_query, [agaid, agaid]) or {}).get("GameCount") or 0)
 
     summary = player_summary_payload(row)
     summary.update(
@@ -1434,8 +1522,30 @@ ORDER BY player_games.[Game_Date] DESC, player_games.[Tournament_Code], player_g
         "player": summary,
         "rating_history": history_points,
         "recent_tournaments": tournaments,
+        "recent_tournaments_paging": {
+            "page": recent_tournaments_page,
+            "page_size": tournaments_page_size,
+            "total_count": total_recent_tournaments,
+            "has_previous": recent_tournaments_page > 0,
+            "has_next": (tournaments_offset + len(tournaments)) < total_recent_tournaments,
+        },
         "opponents": opponents,
+        "opponents_paging": {
+            "page": opponents_page,
+            "page_size": opponents_page_size,
+            "total_count": int(row.get("OpponentCount") or 0),
+            "has_previous": opponents_page > 0,
+            "has_next": (opponents_offset + len(opponents)) < int(row.get("OpponentCount") or 0),
+        },
+        "opponents_sort": opponents_sort,
         "recent_games": recent_games,
+        "recent_games_paging": {
+            "page": recent_games_page,
+            "page_size": games_page_size,
+            "total_count": total_recent_games,
+            "has_previous": recent_games_page > 0,
+            "has_next": (games_offset + len(recent_games)) < total_recent_games,
+        },
     }
     return attach_player_articles(conn_str, payload, agaid) if include_context else payload
 
@@ -2815,7 +2925,11 @@ def search_tournaments_from_snapshot(
     date_from: str | None,
     date_before: str | None,
     limit: int,
-) -> list[dict[str, Any]]:
+    page: int = 0,
+) -> dict[str, Any]:
+    page = max(0, int(page or 0))
+    page_size = max(1, int(limit))
+    offset = page * page_size
     description_text = (description or "").lower()
     tournament_code_text = (tournament_code or "").strip().lower()
     city_values = {value.lower() for value in (cities or []) if value}
@@ -2861,7 +2975,17 @@ def search_tournaments_from_snapshot(
             continue
         matches.append(item)
     matches.sort(key=_snapshot_sort_key_tournament, reverse=True)
-    return matches[:limit]
+    paged_matches = matches[offset : offset + page_size]
+    return {
+        "results": paged_matches,
+        "paging": {
+            "page": page,
+            "page_size": page_size,
+            "total_count": len(matches),
+            "has_previous": page > 0,
+            "has_next": (offset + len(paged_matches)) < len(matches),
+        },
+    }
 
 
 def build_filter_options_from_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
