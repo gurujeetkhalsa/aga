@@ -467,9 +467,16 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
         recent_games_page = int(recent_games_page_text)
         opponents_page = int(opponents_page_text)
         use_default_player_pages = recent_tournaments_page == 0 and recent_games_page == 0 and opponents_page == 0
+        can_use_snapshot_player_detail = (
+            bool(snapshot)
+            and explorer.snapshot_supports_player_member_type(snapshot)
+            and not recent_games_sgf_only
+            and use_default_player_pages
+            and opponents_sort == "games"
+        )
         payload = (
             explorer.get_player_detail_from_snapshot(snapshot, int(agaid_text))
-            if snapshot and explorer.snapshot_supports_player_member_type(snapshot) and not recent_games_sgf_only and use_default_player_pages
+            if can_use_snapshot_player_detail
             else None
         )
         payload_from_snapshot = bool(payload)
