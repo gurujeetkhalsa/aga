@@ -931,7 +931,7 @@
                 <h2 id="results-title">Players</h2>
                 <div class="eyebrow" id="results-subtitle">Search results and quick player summaries</div>
               </div>
-              <div class="eyebrow" id="result-count"></div>
+              <div class="section-tools" id="results-tools"><div class="eyebrow" id="result-count"></div></div>
             </div>
             <div id="results" class="result-list"></div>
           </div>
@@ -990,6 +990,8 @@
       playerOpponentsSort: "games",
       currentPlayerName: "",
       currentTournamentDescription: "",
+      tournamentSearchPage: 0,
+      tournamentSearchPaging: null,
       playerContextRequestId: 0,
       searchBusy: false,
       filterOptionsLoaded: false,
@@ -1031,6 +1033,7 @@
       resultsPanel: document.getElementById("results-panel"),
       results: document.getElementById("results"),
       resultCount: document.getElementById("result-count"),
+      resultsTools: document.getElementById("results-tools"),
       resultsTitle: document.getElementById("results-title"),
       resultsSubtitle: document.getElementById("results-subtitle"),
       layout: document.getElementById("layout"),
@@ -1427,7 +1430,8 @@
         tournamentsPage: Number(snapshot.playerRecentTournamentsPage || 0),
         gamesPage: Number(snapshot.playerRecentGamesPage || 0),
         opponentsPage: Number(snapshot.playerOpponentsPage || 0),
-        opponentsSort: String(snapshot.playerOpponentsSort || "games")
+        opponentsSort: String(snapshot.playerOpponentsSort || "games"),
+        tournamentSearchPage: Number(snapshot.tournamentSearchPage || 0)
       });
     }
 
@@ -1442,6 +1446,8 @@
         playerRecentGamesPage: state.playerRecentGamesPage,
         playerOpponentsPage: state.playerOpponentsPage,
         playerOpponentsSort: state.playerOpponentsSort,
+        tournamentSearchPage: state.tournamentSearchPage,
+        tournamentSearchPaging: state.tournamentSearchPaging ? { ...state.tournamentSearchPaging } : null,
         currentPlayerName: state.currentPlayerName,
         currentTournamentDescription: state.currentTournamentDescription,
         resultsSubtitle: els.resultsSubtitle.textContent,
@@ -1462,12 +1468,15 @@
         els.resultsSubtitle.textContent = subtitle;
       }
       els.resultCount.textContent = countLabel || `${state.results.length} result${state.results.length === 1 ? "" : "s"}`;
+      renderResultsTools();
     }
 
     function restoreResultsSnapshot(snapshot, options = {}) {
       const { activeValue = null, activeType = null } = options;
       state.mode = snapshot.mode;
       state.results = cloneResults(snapshot.results);
+      state.tournamentSearchPage = Math.max(0, Number(snapshot.tournamentSearchPage || 0));
+      state.tournamentSearchPaging = snapshot.tournamentSearchPaging ? { ...snapshot.tournamentSearchPaging } : null;
       syncResultsSummary(snapshot.resultsSubtitle, snapshot.resultCount);
       renderResults();
       if (activeValue && activeType) {
@@ -1553,7 +1562,8 @@
         cities: [...selectedCities].join(","),
         date_from: els.fields.date_from.value,
         date_before: els.fields.date_before.value,
-        tournament_code: ""
+        tournament_code: "",
+        page: state.mode === "tournaments" ? state.tournamentSearchPage : 0
       };
     }
 
@@ -1575,6 +1585,21 @@
       const totalCount = Number(paging?.total_count || 0);
       if (!totalCount) return "";
       return `<span class="eyebrow" data-page-controls="${escapeHtml(kind)}">${escapeHtml(pagingSummary(paging, itemLabel))}</span><button type="button" class="action secondary action-compact" data-page-nav="${escapeHtml(kind)}" data-direction="prev"${paging?.has_previous ? "" : " disabled"}>Previous</button><button type="button" class="action secondary action-compact" data-page-nav="${escapeHtml(kind)}" data-direction="next"${paging?.has_next ? "" : " disabled"}>Next</button>`;
+    }
+
+    function renderResultsTools() {
+      if (!els.resultsTools) return;
+      const paging = state.mode === "tournaments" && state.selectedType !== "tournament" ? state.tournamentSearchPaging : null;
+      const controlsHtml = paging ? pagerControlsHtml("search-tournaments", paging, "tournaments") : "";
+      els.resultsTools.innerHTML = `<div class="eyebrow" id="result-count">${escapeHtml(els.resultCount.textContent || "")}</div>${controlsHtml}`;
+      els.resultCount = document.getElementById("result-count");
+      els.resultsTools.querySelectorAll('[data-page-nav="search-tournaments"]').forEach((button) => {
+        button.addEventListener("click", () => {
+          const delta = button.getAttribute("data-direction") === "prev" ? -1 : 1;
+          state.tournamentSearchPage = Math.max(0, Number(state.tournamentSearchPage || 0) + delta);
+          search().catch(handleError);
+        });
+      });
     }
 
     function scrollTableHtml(headers, rows) {
@@ -2100,6 +2125,16 @@
       try {
         const payload = await loadJson(path, params, { signal: controller.signal });
         state.results = payload.results || [];
+        state.tournamentSearchPaging = state.mode === "tournaments" ? (payload.paging || {
+          page: state.tournamentSearchPage,
+          page_size: Number(els.fields.limit.value || 25),
+          total_count: state.results.length,
+          has_previous: state.tournamentSearchPage > 0,
+          has_next: false
+        }) : null;
+        state.tournamentSearchPage = state.mode === "tournaments"
+          ? Math.max(0, Number(state.tournamentSearchPaging?.page || 0))
+          : 0;
         state.selected = null;
         state.selectedType = null;
         state.navigationStack = [];
@@ -2107,11 +2142,14 @@
         updateLayoutMode();
         els.detail.innerHTML = defaultDetailEmptyState();
         els.context.innerHTML = '<div class="empty">Pick a player or tournament to reveal related context.</div>';
-        els.resultCount.textContent = `${state.results.length} result${state.results.length === 1 ? "" : "s"}`;
+        const totalCount = Number(state.tournamentSearchPaging?.total_count || state.results.length);
+        els.resultCount.textContent = `${totalCount} result${totalCount === 1 ? "" : "s"}`;
+        renderResultsTools();
         const debug = payload._debug || {};
         const timingLabel = Number.isFinite(Number(debug.elapsed_ms)) ? ` in ${Number(debug.elapsed_ms).toFixed(1)} ms` : "";
         const sourceLabel = debug.data_source ? ` from ${String(debug.data_source).replaceAll("_", " ")}` : "";
-        setStatus(state.results.length ? `Showing ${state.results.length} ${state.mode}${sourceLabel}${timingLabel}.` : `No ${state.mode} matched those filters${sourceLabel}${timingLabel}.`);
+        const displayCount = state.mode === "tournaments" ? totalCount : state.results.length;
+        setStatus(state.results.length ? `Showing ${displayCount} ${state.mode}${sourceLabel}${timingLabel}.` : `No ${state.mode} matched those filters${sourceLabel}${timingLabel}.`);
         if (state.results.length === 1) {
           if (state.mode === "players") {
             setStatus(`Opening the matching player...`);
@@ -2174,6 +2212,8 @@
       try {
         const payload = await loadJson("/api/ratings-explorer/players-startup", params, { signal: controller.signal });
         state.results = payload.results || [];
+        state.tournamentSearchPage = 0;
+        state.tournamentSearchPaging = null;
         state.selected = null;
         state.selectedType = null;
         state.navigationStack = [];
@@ -2182,6 +2222,7 @@
         els.detail.innerHTML = defaultDetailEmptyState();
         els.context.innerHTML = '<div class="empty">Pick a player or tournament to reveal related context.</div>';
         els.resultCount.textContent = `${state.results.length} result${state.results.length === 1 ? "" : "s"}`;
+        renderResultsTools();
         const debug = payload._debug || {};
         const timingLabel = Number.isFinite(Number(debug.elapsed_ms)) ? ` in ${Number(debug.elapsed_ms).toFixed(1)} ms` : "";
         const sourceLabel = debug.data_source ? ` from ${String(debug.data_source).replaceAll("_", " ")}` : "";
@@ -2731,12 +2772,15 @@
           selectedStates.clear();
         }
         state.mode = button.dataset.mode;
+        state.tournamentSearchPage = 0;
+        state.tournamentSearchPaging = null;
         renderStateMenu();
         renderCityMenu();
         search().catch(handleError);
       });
     });
     els.searchButton.addEventListener("click", () => {
+      state.tournamentSearchPage = 0;
       search().catch(handleError);
     });
     els.sgfModalClose.addEventListener("click", () => {
@@ -2758,6 +2802,8 @@
       selectedCities.clear();
       els.fields.status_filter.value = "all";
       els.fields.recent_activity_years.value = "";
+      state.tournamentSearchPage = 0;
+      state.tournamentSearchPaging = null;
       selectedRatingBands.clear();
       renderMultiSelectMenu(els.chapterMenu, state.filterOptions.chapters, selectedChapters, () => {
         updateMultiSelectTrigger(els.chapterTrigger, state.filterOptions.chapters, selectedChapters, "Any chapter", "chapters", compactChapterTriggerLabel);

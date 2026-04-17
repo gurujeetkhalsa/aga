@@ -100,6 +100,15 @@ def _parse_search_limit(req: func.HttpRequest) -> tuple[int | None, func.HttpRes
     return limit, None
 
 
+def _parse_nonnegative_int_param(req: func.HttpRequest, name: str, default: int = 0) -> tuple[int | None, func.HttpResponse | None]:
+    raw_text = (req.params.get(name) or "").strip()
+    if not raw_text:
+        return default, None
+    if not raw_text.isdigit():
+        return None, func.HttpResponse(f"Query parameter '{name}' must be a non-negative integer.", status_code=400)
+    return int(raw_text), None
+
+
 def _years_ago_iso(years: int, today: date) -> str:
     try:
         return today.replace(year=today.year - years).isoformat()
@@ -363,25 +372,28 @@ def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
     limit, error = _parse_search_limit(req)
     if error:
         return error
+    page, error = _parse_nonnegative_int_param(req, "page")
+    if error:
+        return error
     try:
         tournament_code = (req.params.get("tournament_code") or "").strip() or None
         cities = _parse_csv_values(req, "cities", "city")
         states = _parse_csv_values(req, "states", "state")
         if snapshot:
+            search_payload = explorer.search_tournaments_from_snapshot(
+                snapshot,
+                (req.params.get("description") or "").strip() or None,
+                tournament_code,
+                cities,
+                states,
+                (req.params.get("date_from") or "").strip() or None,
+                (req.params.get("date_before") or "").strip() or None,
+                limit,
+                page=page,
+            )
             return _json_response(
                 _with_debug(
-                    {
-                        "results": explorer.search_tournaments_from_snapshot(
-                            snapshot,
-                            (req.params.get("description") or "").strip() or None,
-                            tournament_code,
-                            cities,
-                            states,
-                            (req.params.get("date_from") or "").strip() or None,
-                            (req.params.get("date_before") or "").strip() or None,
-                            limit,
-                        )
-                    },
+                    search_payload,
                     data_source="main_snapshot",
                     elapsed_ms=round((perf_counter() - started) * 1000, 1),
                 )
@@ -389,20 +401,20 @@ def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
         conn_str, error = _get_conn_str_or_error()
         if error:
             return error
+        search_payload = explorer.search_tournaments(
+            conn_str,
+            (req.params.get("description") or "").strip() or None,
+            tournament_code,
+            cities,
+            states,
+            (req.params.get("date_from") or "").strip() or None,
+            (req.params.get("date_before") or "").strip() or None,
+            limit,
+            page=page,
+        )
         return _json_response(
             _with_debug(
-                {
-                    "results": explorer.search_tournaments(
-                        conn_str,
-                        (req.params.get("description") or "").strip() or None,
-                        tournament_code,
-                        cities,
-                        states,
-                        (req.params.get("date_from") or "").strip() or None,
-                        (req.params.get("date_before") or "").strip() or None,
-                        limit,
-                    )
-                },
+                search_payload,
                 data_source="sql_live",
                 elapsed_ms=round((perf_counter() - started) * 1000, 1),
             )

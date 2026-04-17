@@ -908,9 +908,13 @@ def search_tournaments(
     date_from: str | None,
     date_before: str | None,
     limit: int,
-) -> list[dict[str, Any]]:
+    page: int = 0,
+) -> dict[str, Any]:
     filters: list[str] = ["1 = 1"]
     params: list[Any] = []
+    page = max(0, int(page or 0))
+    page_size = max(1, int(limit))
+    offset = page * page_size
     if description:
         filters.append("COALESCE(t.[Tournament_Descr], '') LIKE ?")
         params.append(f"%{description}%")
@@ -932,8 +936,34 @@ def search_tournaments(
         filters.append("t.[Tournament_Date] < ?")
         params.append(date_before)
 
+    where_clause = " AND ".join(filters)
+    total_count_query = f"""
+SELECT COUNT(*) AS [TotalCount]
+FROM [ratings].[tournaments] AS t
+WHERE {where_clause}
+"""
+    total_count_rows = query_rows(conn_str, total_count_query, params)
+    total_count = int((total_count_rows[0] or {}).get("TotalCount") or 0) if total_count_rows else 0
+
     query = f"""
-SELECT TOP {limit}
+WITH [paged_tournaments] AS
+(
+    SELECT
+        t.[Tournament_Code],
+        t.[Tournament_Descr],
+        t.[Tournament_Date],
+        t.[City],
+        t.[State_Code],
+        t.[Country_Code],
+        t.[Rounds],
+        t.[Total_Players],
+        t.[Wallist]
+    FROM [ratings].[tournaments] AS t
+    WHERE {where_clause}
+    ORDER BY t.[Tournament_Date] DESC, t.[Tournament_Code]
+    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+)
+SELECT
     t.[Tournament_Code],
     t.[Tournament_Descr],
     t.[Tournament_Date],
@@ -945,7 +975,7 @@ SELECT TOP {limit}
     t.[Wallist],
     stats.[ParticipantCount],
     stats.[GameCount]
-FROM [ratings].[tournaments] AS t
+FROM [paged_tournaments] AS t
 OUTER APPLY
 (
     SELECT
@@ -958,10 +988,19 @@ OUTER APPLY
     ) AS participant([AGAID])
     WHERE g.[Tournament_Code] = t.[Tournament_Code]
 ) AS stats
-WHERE {" AND ".join(filters)}
 ORDER BY t.[Tournament_Date] DESC, t.[Tournament_Code]
 """
-    return [tournament_summary_payload(row) for row in query_rows(conn_str, query, params)]
+    results = [tournament_summary_payload(row) for row in query_rows(conn_str, query, params + [offset, page_size])]
+    return {
+        "results": results,
+        "paging": {
+            "page": page,
+            "page_size": page_size,
+            "total_count": total_count,
+            "has_previous": page > 0,
+            "has_next": (offset + len(results)) < total_count,
+        },
+    }
 
 
 def build_filter_options(conn_str: str) -> dict[str, Any]:
@@ -2886,7 +2925,11 @@ def search_tournaments_from_snapshot(
     date_from: str | None,
     date_before: str | None,
     limit: int,
-) -> list[dict[str, Any]]:
+    page: int = 0,
+) -> dict[str, Any]:
+    page = max(0, int(page or 0))
+    page_size = max(1, int(limit))
+    offset = page * page_size
     description_text = (description or "").lower()
     tournament_code_text = (tournament_code or "").strip().lower()
     city_values = {value.lower() for value in (cities or []) if value}
@@ -2932,7 +2975,17 @@ def search_tournaments_from_snapshot(
             continue
         matches.append(item)
     matches.sort(key=_snapshot_sort_key_tournament, reverse=True)
-    return matches[:limit]
+    paged_matches = matches[offset : offset + page_size]
+    return {
+        "results": paged_matches,
+        "paging": {
+            "page": page,
+            "page_size": page_size,
+            "total_count": len(matches),
+            "has_previous": page > 0,
+            "has_next": (offset + len(paged_matches)) < len(matches),
+        },
+    }
 
 
 def build_filter_options_from_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
