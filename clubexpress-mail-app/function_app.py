@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import re
+import threading
 from datetime import date, datetime, timedelta, timezone
 from email import message_from_bytes, policy
 from email.parser import BytesParser
@@ -45,6 +46,20 @@ RENEWAL_MESSAGE_TYPE = "member_renewal"
 JOURNAL_MESSAGE_TYPE = "american_go_e_journal"
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
 JOURNAL_EXCLUDED_MATCH_NAMES = {"chris garlock"}
+DEFAULT_JOURNAL_NAME_PREFIXES = (
+    "AGA President",
+    "AGA Vice President",
+    "AGA Board Chair",
+    "AGA Board Member",
+    "Congress Director",
+    "Chapter President",
+    "Chapter Vice President",
+    "Chapter Secretary",
+    "Chapter Treasurer",
+    "Executive Director",
+    "Membership Director",
+    "Tournament Director",
+)
 IGNORE_MESSAGE_TYPE = "ignore"
 TDLIST_REDIRECT_URLS = {
     "A": os.environ.get("TDLIST_REDIRECT_URL_A", ""),
@@ -138,6 +153,11 @@ STRING_COLUMNS = set(STAGING_COLUMNS) - INT_COLUMNS - DATE_COLUMNS - DATETIME_CO
 EXPECTED_HEADER_LOOKUP = {re.sub(r"[^a-z0-9]+", "", column.lower()): column for column in STAGING_COLUMNS}
 CATEGORY_COLUMNS = ["AGAID", "Category"]
 CATEGORY_HEADER_LOOKUP = {"agaid": "AGAID", "category": "Category"}
+JOURNAL_NLP_MODEL = "en_core_web_sm"
+JOURNAL_NLP_EXCLUDE = ["tagger", "parser", "lemmatizer", "attribute_ruler"]
+_journal_name_nlp = None
+_journal_name_nlp_attempted = False
+_journal_name_nlp_lock = threading.Lock()
 
 
 class CsvValidationError(ValueError):
@@ -1116,8 +1136,87 @@ def _match_member_rows_in_article(text: str, member_lookup: dict[str, list[tuple
 
 
 def _extract_candidate_person_names(text: str) -> set[str]:
+    candidates = set()
+    nlp = _get_journal_name_nlp()
+    if nlp is not None:
+        try:
+            doc = nlp(text or "")
+            for entity in doc.ents:
+                if entity.label_ != "PERSON":
+                    continue
+                candidates.update(_expand_candidate_person_names(entity.text))
+        except Exception:
+            logging.warning("spaCy person extraction failed; falling back to regex candidate matching.", exc_info=True)
+
     pattern = re.compile(r"\b[A-Z][a-z]+(?:[-'][A-Z][a-z]+)?(?:\s+[A-Z][a-z]+(?:[-'][A-Z][a-z]+)?){1,3}\b")
-    return {match.group(0).strip() for match in pattern.finditer(text or "")}
+    for match in pattern.finditer(text or ""):
+        candidates.update(_expand_candidate_person_names(match.group(0)))
+    return candidates
+
+
+def _get_journal_name_nlp():
+    global _journal_name_nlp, _journal_name_nlp_attempted
+    if _journal_name_nlp_attempted:
+        return _journal_name_nlp
+    with _journal_name_nlp_lock:
+        if _journal_name_nlp_attempted:
+            return _journal_name_nlp
+        _journal_name_nlp_attempted = True
+        try:
+            import spacy
+            _journal_name_nlp = spacy.load(JOURNAL_NLP_MODEL, exclude=JOURNAL_NLP_EXCLUDE)
+            logging.info("Loaded spaCy journal PERSON extractor using model %s.", JOURNAL_NLP_MODEL)
+        except Exception:
+            logging.warning(
+                "Unable to load spaCy model %s; journal person extraction will use regex fallback only.",
+                JOURNAL_NLP_MODEL,
+                exc_info=True,
+            )
+            _journal_name_nlp = None
+        return _journal_name_nlp
+
+
+def _expand_candidate_person_names(value: str) -> set[str]:
+    tokens = re.findall(r"[A-Za-z]+(?:[-'][A-Za-z]+)?", value or "")
+    if len(tokens) < 2:
+        return set()
+    candidates = {" ".join(tokens)}
+    max_window = min(len(tokens), 4)
+    for window_size in range(2, max_window + 1):
+        candidates.add(" ".join(tokens[-window_size:]))
+    stripped = _strip_journal_name_prefix(tokens)
+    if stripped:
+        candidates.add(" ".join(stripped))
+    return {candidate.strip() for candidate in candidates if candidate.strip()}
+
+
+def _strip_journal_name_prefix(tokens: list[str]) -> list[str]:
+    lowered_tokens = [token.lower() for token in tokens]
+    for prefix_tokens in _journal_name_prefix_token_lists():
+        prefix_length = len(prefix_tokens)
+        if len(lowered_tokens) <= prefix_length:
+            continue
+        if lowered_tokens[:prefix_length] == prefix_tokens:
+            return tokens[prefix_length:]
+    return []
+
+
+def _journal_name_prefix_token_lists() -> list[list[str]]:
+    configured = list(DEFAULT_JOURNAL_NAME_PREFIXES)
+    extra_prefixes = os.environ.get("JOURNAL_NAME_PREFIXES", "")
+    configured.extend(prefix.strip() for prefix in extra_prefixes.split(";") if prefix.strip())
+    token_lists = []
+    seen = set()
+    for prefix in configured:
+        tokens = [token.lower() for token in re.findall(r"[A-Za-z]+(?:[-'][A-Za-z]+)?", prefix)]
+        if len(tokens) < 1:
+            continue
+        key = tuple(tokens)
+        if key in seen:
+            continue
+        seen.add(key)
+        token_lists.append(tokens)
+    return sorted(token_lists, key=len, reverse=True)
 
 
 def _extract_review_matches_from_blog_entry(

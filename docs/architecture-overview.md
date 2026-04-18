@@ -23,11 +23,7 @@ Operational ingestion pipeline that polls Gmail, processes ClubExpress messages,
 
 ### Membership Data
 
-Membership/chapter/category data import and lookup endpoints.
-
-### TD Lists
-
-Public or semi-public TD list publishing endpoints with their own rendering/query logic.
+Membership/chapter/category data import and lookup endpoints, plus TD list publishing endpoints.
 
 ## Repo principle
 

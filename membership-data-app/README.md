@@ -4,6 +4,7 @@ This app contains:
 
 - membership/chapter import endpoint
 - member lookup endpoint
+- TD list publishing endpoints
 - SQL-backed import staging helpers
 
 Current migration source:
@@ -14,6 +15,12 @@ Current trigger surface:
 
 - `POST /api/import_memchap`
 - `GET /api/lookup-members`
+- `GET /api/GenerateTDListA`
+- `GET /api/GenerateTDListB`
+- `GET /api/GenerateTDListN`
+- `GET /api/tda`
+- `GET /api/tdb`
+- `GET /api/tdn`
 
 Migration note:
 

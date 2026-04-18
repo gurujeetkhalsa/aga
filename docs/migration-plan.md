@@ -2,7 +2,11 @@
 
 ## Goal
 
-Turn the current mixed Azure Functions code into a clean monorepo with separate app folders for each major responsibility.
+Turn the current mixed Azure Functions code into a clean monorepo with three production app folders:
+
+- `ratings-explorer-app`
+- `clubexpress-mail-app`
+- `membership-data-app`
 
 ## Current source inventory
 
@@ -50,20 +54,15 @@ Move here:
 
 - `import_memchap`
 - `lookup_members`
-- CSV parsing/import helpers
-- SQL stored procedure execution helpers
-- membership and category import staging logic
-
-### `tdlists-app`
-
-Move here:
-
 - `GenerateTDListA`
 - `GenerateTDListB`
 - `GenerateTDListN`
 - `TDListShortA`
 - `TDListShortB`
 - `TDListShortN`
+- CSV parsing/import helpers
+- SQL stored procedure execution helpers
+- membership and category import staging logic
 - TD list rendering/query helpers
 
 ### `shared`
@@ -83,12 +82,15 @@ Completed:
 
 1. `ratings-explorer-app` copied from the staging sandbox into this repo.
 2. `clubexpress-mail-app` created from the legacy monolith with only mailbox polling exposed as a trigger.
-3. `membership-data-app` created from the legacy monolith with `import_memchap` and `lookup-members` exposed.
-4. `tdlists-app` created from the legacy monolith with only TD list endpoints exposed.
+3. `membership-data-app` created from the legacy monolith with `import_memchap`, `lookup-members`, and TD list endpoints exposed.
+4. Production cut over to three Azure Function Apps:
+   - `aga-ratings-explorer`
+   - `aga-clubexpress-mail`
+   - `aga-membership-functions`
 
 Remaining cleanup:
 
-1. Reduce duplicated helper code across the three legacy-derived apps.
+1. Reduce duplicated helper code across the two legacy-derived apps.
 2. Decide whether member category import should also become a direct endpoint in `membership-data-app`.
 3. Add app-specific deployment notes and environment variable documentation.
 4. Introduce `shared/` modules only where duplication is clearly stable.
