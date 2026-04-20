@@ -1827,7 +1827,7 @@ LEFT JOIN [membership].[members] AS p1
 LEFT JOIN [membership].[members] AS p2
     ON p2.[AGAID] = g.[Pin_Player_2]
 WHERE g.[Tournament_Code] = ?
-ORDER BY g.[Game_Date], TRY_CONVERT(INT, g.[Round]), g.[Round], g.[Game_ID]
+ORDER BY g.[Game_Date], g.[Round], g.[Game_ID]
 """
 
     participants = [
@@ -2696,24 +2696,29 @@ def save_player_search_snapshot(payload_dict: dict[str, Any]) -> None:
 
 
 def save_tournament_detail_snapshots(tournament_details: dict[str, dict[str, Any]]) -> None:
-    detail_dir = tournament_detail_dir_path()
-    try:
-        detail_dir.mkdir(parents=True, exist_ok=True)
-    except Exception:
-        pass
+    container = _snapshot_container_client()
+    write_local_files = container is None
+    if write_local_files:
+        detail_dir = tournament_detail_dir_path()
+        try:
+            detail_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
     for tournament_code, payload_dict in tournament_details.items():
         payload = json.dumps(payload_dict, ensure_ascii=True)
         _cache_set("tournament_detail", str(tournament_code or "").strip(), payload_dict, TOURNAMENT_DETAIL_CACHE_TTL_SECONDS)
-        blob = _tournament_detail_blob_client(tournament_code)
-        if blob is not None:
+        if container is not None:
             try:
+                safe_code = _safe_snapshot_component(tournament_code)
+                blob = container.get_blob_client(f"{SNAPSHOT_TOURNAMENT_DETAIL_BLOB_PREFIX}/{safe_code}.json")
                 blob.upload_blob(payload.encode("utf-8"), overwrite=True)
             except Exception:
                 pass
-        try:
-            tournament_detail_path(tournament_code).write_text(payload, encoding="utf-8")
-        except Exception:
-            pass
+        if write_local_files:
+            try:
+                tournament_detail_path(tournament_code).write_text(payload, encoding="utf-8")
+            except Exception:
+                pass
 
 
 def save_snapshot_status(status: dict[str, Any]) -> None:
@@ -3502,7 +3507,7 @@ LEFT JOIN [membership].[members] AS p1
     ON p1.[AGAID] = g.[Pin_Player_1]
 LEFT JOIN [membership].[members] AS p2
     ON p2.[AGAID] = g.[Pin_Player_2]
-ORDER BY g.[Tournament_Code], g.[Game_Date], TRY_CONVERT(INT, g.[Round]), g.[Round], g.[Game_ID]
+ORDER BY g.[Tournament_Code], g.[Game_Date], g.[Round], g.[Game_ID]
 """,
         [],
     )

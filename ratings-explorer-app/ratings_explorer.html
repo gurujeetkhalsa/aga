@@ -1975,6 +1975,80 @@
       return `${String(normalized.sort).padStart(16, "0")}|${normalized.label}`;
     }
 
+    function numericRoundValue(value) {
+      const normalized = normalizeRoundValue(value);
+      return Number.isSafeInteger(normalized.sort) && normalized.sort > 0 && normalized.sort < Number.MAX_SAFE_INTEGER
+        ? normalized.sort
+        : null;
+    }
+
+    function playerIdsForGame(game) {
+      return [
+        String(game?.player_1?.agaid || ""),
+        String(game?.player_2?.agaid || "")
+      ].filter(Boolean);
+    }
+
+    function gameIdSortValue(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER;
+    }
+
+    function normalizeTournamentGameRounds(games, tournamentRoundCount) {
+      const clonedGames = (games || []).map((game) => ({ ...game }));
+      const numericRounds = clonedGames.map((game) => numericRoundValue(game.round)).filter((round) => round !== null);
+      const totalRounds = Math.max(
+        Number.isFinite(Number(tournamentRoundCount)) ? Number(tournamentRoundCount) : 0,
+        ...numericRounds,
+        0
+      );
+      if (!totalRounds) return clonedGames;
+
+      const occupied = new Map();
+      const hasOpenRound = (players, round) => players.every((agaid) => !(occupied.get(agaid)?.has(round)));
+      const reserveRound = (players, round) => {
+        players.forEach((agaid) => {
+          if (!occupied.has(agaid)) occupied.set(agaid, new Set());
+          occupied.get(agaid).add(round);
+        });
+      };
+      const orderedIndexes = clonedGames
+        .map((game, index) => ({ index, round: numericRoundValue(game.round), gameId: gameIdSortValue(game.game_id) }))
+        .sort((a, b) => (a.round ?? Number.MAX_SAFE_INTEGER) - (b.round ?? Number.MAX_SAFE_INTEGER) || a.gameId - b.gameId);
+
+      orderedIndexes.forEach(({ index, round }) => {
+        const game = clonedGames[index];
+        const players = playerIdsForGame(game);
+        if (!players.length || round === null) return;
+        let assignedRound = round;
+        if (!hasOpenRound(players, assignedRound)) {
+          assignedRound = null;
+          for (let candidate = round + 1; candidate <= totalRounds; candidate += 1) {
+            if (hasOpenRound(players, candidate)) {
+              assignedRound = candidate;
+              break;
+            }
+          }
+          if (assignedRound === null) {
+            for (let candidate = 1; candidate <= totalRounds; candidate += 1) {
+              if (hasOpenRound(players, candidate)) {
+                assignedRound = candidate;
+                break;
+              }
+            }
+          }
+        }
+        if (assignedRound !== null) {
+          if (assignedRound !== round) {
+            game.original_round = game.round;
+            game.round = String(assignedRound);
+          }
+          reserveRound(players, assignedRound);
+        }
+      });
+      return clonedGames;
+    }
+
     function lastNameOnly(player) {
       const lastName = String(player?.last_name || "").trim();
       if (lastName) return lastName;
@@ -2725,7 +2799,8 @@
         state.currentTournamentDescription = tournament?.description || tournament?.tournament_code || "";
         state.playerContextRequestId += 1;
         const participants = payload.participants || [];
-        const games = payload.games || [];
+        const rawGames = payload.games || [];
+        const games = normalizeTournamentGameRounds(rawGames, tournament.rounds);
         tournament.game_count = games.length;
         const sgfGames = games.filter((item) => gameHasSgf(item));
         state.activeGames = games;
