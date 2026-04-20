@@ -33,6 +33,8 @@ SNAPSHOT_STATUS_FILENAME = "ratings_explorer_snapshot_status.json"
 SNAPSHOT_REQUEST_FILENAME = "ratings_explorer_snapshot_request.json"
 STARTUP_PLAYERS_FILENAME = "ratings_explorer_startup_players.json"
 PLAYER_SEARCH_SNAPSHOT_FILENAME = "ratings_explorer_player_search_snapshot.json"
+TOURNAMENT_SEARCH_SNAPSHOT_FILENAME = "ratings_explorer_tournament_search_snapshot.json"
+FILTER_OPTIONS_SNAPSHOT_FILENAME = "ratings_explorer_filter_options.json"
 SNAPSHOT_TOURNAMENT_DETAIL_DIRNAME = "ratings_explorer_tournament_details"
 SNAPSHOT_CONTAINER = "ratings-explorer"
 SGF_CONTAINER = os.environ.get("RATINGS_SGF_CONTAINER") or "ratings-game-sgf"
@@ -42,6 +44,8 @@ SNAPSHOT_STATUS_BLOB_NAME = "ratings-explorer-snapshot-status.json"
 SNAPSHOT_REQUEST_BLOB_NAME = "ratings-explorer-snapshot-request.json"
 STARTUP_PLAYERS_BLOB_NAME = "ratings-explorer-startup-players.json"
 PLAYER_SEARCH_SNAPSHOT_BLOB_NAME = "ratings-explorer-player-search-snapshot.json"
+TOURNAMENT_SEARCH_SNAPSHOT_BLOB_NAME = "ratings-explorer-tournament-search-snapshot.json"
+FILTER_OPTIONS_SNAPSHOT_BLOB_NAME = "ratings-explorer-filter-options.json"
 SNAPSHOT_TOURNAMENT_DETAIL_BLOB_PREFIX = "tournament-details"
 SNAPSHOT_CACHE_TTL_SECONDS = 15.0
 SNAPSHOT_STATUS_CACHE_TTL_SECONDS = 5.0
@@ -2277,6 +2281,14 @@ def player_search_snapshot_path() -> Path:
     return _app_root() / SNAPSHOT_DIRNAME / PLAYER_SEARCH_SNAPSHOT_FILENAME
 
 
+def tournament_search_snapshot_path() -> Path:
+    return _app_root() / SNAPSHOT_DIRNAME / TOURNAMENT_SEARCH_SNAPSHOT_FILENAME
+
+
+def filter_options_snapshot_path() -> Path:
+    return _app_root() / SNAPSHOT_DIRNAME / FILTER_OPTIONS_SNAPSHOT_FILENAME
+
+
 def tournament_detail_dir_path() -> Path:
     return _app_root() / SNAPSHOT_DIRNAME / SNAPSHOT_TOURNAMENT_DETAIL_DIRNAME
 
@@ -2335,6 +2347,20 @@ def _player_search_snapshot_blob_client():
     if container is None:
         return None
     return container.get_blob_client(PLAYER_SEARCH_SNAPSHOT_BLOB_NAME)
+
+
+def _tournament_search_snapshot_blob_client():
+    container = _snapshot_container_client()
+    if container is None:
+        return None
+    return container.get_blob_client(TOURNAMENT_SEARCH_SNAPSHOT_BLOB_NAME)
+
+
+def _filter_options_snapshot_blob_client():
+    container = _snapshot_container_client()
+    if container is None:
+        return None
+    return container.get_blob_client(FILTER_OPTIONS_SNAPSHOT_BLOB_NAME)
 
 
 def _request_blob_client():
@@ -2644,6 +2670,46 @@ def load_player_search_snapshot() -> dict[str, Any] | None:
         return _cache_set("player_search_snapshot", "main", None, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
 
 
+def load_tournament_search_snapshot() -> dict[str, Any] | None:
+    cached, found = _cache_get("tournament_search_snapshot", "main")
+    if found:
+        return cached
+    blob = _tournament_search_snapshot_blob_client()
+    if blob is not None:
+        try:
+            payload = blob.download_blob().readall()
+            return _cache_set("tournament_search_snapshot", "main", json.loads(payload.decode("utf-8")), STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+        except Exception:
+            pass
+    path = tournament_search_snapshot_path()
+    if not path.exists():
+        return _cache_set("tournament_search_snapshot", "main", None, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+    try:
+        return _cache_set("tournament_search_snapshot", "main", json.loads(path.read_text(encoding="utf-8")), STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+    except (OSError, json.JSONDecodeError):
+        return _cache_set("tournament_search_snapshot", "main", None, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+
+
+def load_filter_options_snapshot() -> dict[str, Any] | None:
+    cached, found = _cache_get("filter_options_snapshot", "main")
+    if found:
+        return cached
+    blob = _filter_options_snapshot_blob_client()
+    if blob is not None:
+        try:
+            payload = blob.download_blob().readall()
+            return _cache_set("filter_options_snapshot", "main", json.loads(payload.decode("utf-8")), STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+        except Exception:
+            pass
+    path = filter_options_snapshot_path()
+    if not path.exists():
+        return _cache_set("filter_options_snapshot", "main", None, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+    try:
+        return _cache_set("filter_options_snapshot", "main", json.loads(path.read_text(encoding="utf-8")), STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+    except (OSError, json.JSONDecodeError):
+        return _cache_set("filter_options_snapshot", "main", None, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+
+
 def save_snapshot(snapshot: dict[str, Any]) -> None:
     payload = json.dumps(snapshot, ensure_ascii=True)
     _cache_set("snapshot", "main", snapshot, SNAPSHOT_CACHE_TTL_SECONDS)
@@ -2688,6 +2754,40 @@ def save_player_search_snapshot(payload_dict: dict[str, Any]) -> None:
         except Exception:
             pass
     path = player_search_snapshot_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(payload, encoding="utf-8")
+    except Exception:
+        pass
+
+
+def save_tournament_search_snapshot(payload_dict: dict[str, Any]) -> None:
+    payload = json.dumps(payload_dict, ensure_ascii=True)
+    _cache_set("tournament_search_snapshot", "main", payload_dict, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+    blob = _tournament_search_snapshot_blob_client()
+    if blob is not None:
+        try:
+            blob.upload_blob(payload.encode("utf-8"), overwrite=True)
+        except Exception:
+            pass
+    path = tournament_search_snapshot_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(payload, encoding="utf-8")
+    except Exception:
+        pass
+
+
+def save_filter_options_snapshot(payload_dict: dict[str, Any]) -> None:
+    payload = json.dumps(payload_dict, ensure_ascii=True)
+    _cache_set("filter_options_snapshot", "main", payload_dict, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
+    blob = _filter_options_snapshot_blob_client()
+    if blob is not None:
+        try:
+            blob.upload_blob(payload.encode("utf-8"), overwrite=True)
+        except Exception:
+            pass
+    path = filter_options_snapshot_path()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(payload, encoding="utf-8")
@@ -3760,10 +3860,232 @@ def build_player_search_snapshot_payload(snapshot: dict[str, Any]) -> dict[str, 
     }
 
 
+def build_tournament_search_snapshot_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "meta": dict(snapshot.get("meta") or {}),
+        "tournaments": list(snapshot.get("tournaments") or []),
+    }
+
+
+def _build_small_snapshot_artifacts(conn_str: str) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    player_summary_rows = query_rows(
+        conn_str,
+        current_ratings_cte()
+        + f"""
+SELECT
+    m.[AGAID],
+    m.[FirstName],
+    m.[LastName],
+    m.[State],
+    m.[MemberType],
+    m.[ExpirationDate],
+    c.[ChapterCode],
+    c.[ChapterName],
+    cr.[Rating],
+    cr.[Sigma],
+    stats.[GameCount],
+    stats.[TournamentCount],
+    stats.[LatestEventDate]
+FROM [membership].[members] AS m
+LEFT JOIN [membership].[chapters] AS c
+    ON c.[ChapterID] = m.[ChapterID]
+LEFT JOIN current_ratings AS cr
+    ON cr.[AGAID] = m.[AGAID]
+OUTER APPLY
+(
+    SELECT
+        COUNT(DISTINCT player_games.[Game_ID]) AS [GameCount],
+        COUNT(DISTINCT player_games.[Tournament_Code]) AS [TournamentCount],
+        MAX(player_games.[Game_Date]) AS [LatestEventDate]
+    FROM
+    (
+        SELECT g.[Game_ID], g.[Tournament_Code], g.[Game_Date]
+        FROM [ratings].[games] AS g
+        WHERE g.[Pin_Player_1] = m.[AGAID]
+        UNION ALL
+        SELECT g.[Game_ID], g.[Tournament_Code], g.[Game_Date]
+        FROM [ratings].[games] AS g
+        WHERE g.[Pin_Player_2] = m.[AGAID]
+    ) AS player_games
+) AS stats
+WHERE m.[AGAID] < {MAX_MEMBER_AGAID}
+ORDER BY
+    CASE WHEN cr.[Rating] IS NULL THEN 1 ELSE 0 END,
+    cr.[Rating] DESC,
+    m.[LastName],
+    m.[FirstName],
+    m.[AGAID]
+""",
+        [],
+    )
+    tournament_summary_rows = query_rows(
+        conn_str,
+        """
+SELECT
+    t.[Tournament_Code],
+    t.[Tournament_Descr],
+    t.[Tournament_Date],
+    t.[City],
+    t.[State_Code],
+    t.[Country_Code],
+    t.[Rounds],
+    t.[Total_Players],
+    t.[Wallist],
+    stats.[ParticipantCount],
+    stats.[GameCount],
+    stats.[LatestGameDate]
+FROM [ratings].[tournaments] AS t
+OUTER APPLY
+(
+    SELECT
+        COUNT(DISTINCT g.[Game_ID]) AS [GameCount],
+        COUNT(DISTINCT participant.[AGAID]) AS [ParticipantCount],
+        MAX(g.[Game_Date]) AS [LatestGameDate]
+    FROM [ratings].[games] AS g
+    OUTER APPLY
+    (
+        VALUES (g.[Pin_Player_1]), (g.[Pin_Player_2])
+    ) AS participant([AGAID])
+    WHERE g.[Tournament_Code] = t.[Tournament_Code]
+) AS stats
+ORDER BY t.[Tournament_Date] DESC, t.[Tournament_Code]
+""",
+        [],
+    )
+    tournament_participant_rows = query_rows(
+        conn_str,
+        """
+SELECT
+    participant_rows.[Tournament_Code],
+    participant_rows.[AGAID],
+    m.[FirstName],
+    m.[LastName],
+    m.[State],
+    c.[ChapterCode],
+    c.[ChapterName],
+    participant_rows.[GamesPlayed]
+FROM
+(
+    SELECT
+        g.[Tournament_Code],
+        participant.[AGAID],
+        COUNT(*) AS [GamesPlayed]
+    FROM [ratings].[games] AS g
+    OUTER APPLY
+    (
+        VALUES (g.[Pin_Player_1]), (g.[Pin_Player_2])
+    ) AS participant([AGAID])
+    WHERE participant.[AGAID] IS NOT NULL
+    GROUP BY g.[Tournament_Code], participant.[AGAID]
+) AS participant_rows
+LEFT JOIN [membership].[members] AS m
+    ON m.[AGAID] = participant_rows.[AGAID]
+LEFT JOIN [membership].[chapters] AS c
+    ON c.[ChapterID] = m.[ChapterID]
+ORDER BY participant_rows.[Tournament_Code], participant_rows.[GamesPlayed] DESC, m.[LastName], m.[FirstName], participant_rows.[AGAID]
+""",
+        [],
+    )
+    tournament_game_rows = query_rows(
+        conn_str,
+        """
+SELECT
+    g.[Tournament_Code],
+    g.[Game_ID],
+    g.[Game_Date],
+    g.[Round],
+    g.[Result],
+    g.[Handicap],
+    g.[Komi],
+    g.[Color_1],
+    g.[Color_2],
+    g.[Sgf_Code],
+    g.[Rank_1],
+    g.[Rank_2],
+    g.[Pin_Player_1],
+    g.[Pin_Player_2],
+    p1.[FirstName] AS [Player1FirstName],
+    p1.[LastName] AS [Player1LastName],
+    p2.[FirstName] AS [Player2FirstName],
+    p2.[LastName] AS [Player2LastName]
+FROM [ratings].[games] AS g
+LEFT JOIN [membership].[members] AS p1
+    ON p1.[AGAID] = g.[Pin_Player_1]
+LEFT JOIN [membership].[members] AS p2
+    ON p2.[AGAID] = g.[Pin_Player_2]
+ORDER BY g.[Tournament_Code], g.[Game_Date], g.[Round], g.[Game_ID]
+""",
+        [],
+    )
+
+    included_agaids = {
+        str(row.get("AGAID"))
+        for row in player_summary_rows
+        if (row.get("GameCount") or 0) > 0 and row.get("AGAID") is not None
+    }
+    players = [
+        player_summary_payload(row)
+        for row in player_summary_rows
+        if str(row.get("AGAID")) in included_agaids
+    ]
+    players.sort(key=_snapshot_sort_key_player)
+    tournaments = [tournament_summary_payload(row) for row in tournament_summary_rows]
+    tournaments.sort(key=_snapshot_sort_key_tournament, reverse=True)
+
+    tournament_detail_snapshots: dict[str, Any] = {}
+    for row in tournament_summary_rows:
+        code = row.get("Tournament_Code")
+        if not code:
+            continue
+        tournament_detail_snapshots[code] = {
+            "tournament": {
+                "tournament_code": code,
+                "description": row.get("Tournament_Descr"),
+                "tournament_date": json_safe_value(row.get("Tournament_Date")),
+                "city": row.get("City"),
+                "state": row.get("State_Code"),
+                "country": row.get("Country_Code"),
+                "rounds": row.get("Rounds"),
+                "total_players": row.get("Total_Players"),
+                "participant_count": row.get("ParticipantCount") or 0,
+                "game_count": row.get("GameCount") or 0,
+                "latest_game_date": json_safe_value(row.get("LatestGameDate")),
+                "wallist": row.get("Wallist"),
+            },
+            "participants": [],
+            "games": [],
+            "recent_games": [],
+        }
+
+    for row in tournament_participant_rows:
+        code = row.get("Tournament_Code")
+        if code in tournament_detail_snapshots:
+            tournament_detail_snapshots[code]["participants"].append(tournament_participant_payload(row))
+
+    for row in tournament_game_rows:
+        code = row.get("Tournament_Code")
+        if code in tournament_detail_snapshots:
+            tournament_detail_snapshots[code]["games"].append(tournament_game_payload(row))
+
+    for detail_payload in tournament_detail_snapshots.values():
+        detail_payload["recent_games"] = list(reversed(detail_payload["games"][-20:]))
+
+    meta = {
+        "generated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "player_count": len(players),
+        "tournament_count": len(tournaments),
+        "tournament_detail_snapshot_count": len(tournament_detail_snapshots),
+        "snapshot_version": 6,
+        "snapshot_layout": "small_artifacts",
+    }
+    return {"meta": meta, "players": players, "tournaments": tournaments}, tournament_detail_snapshots
+
+
 def refresh_snapshot(conn_str: str) -> dict[str, Any]:
-    snapshot, tournament_detail_snapshots = _build_snapshot_artifacts(conn_str)
-    save_snapshot(snapshot)
+    snapshot, tournament_detail_snapshots = _build_small_snapshot_artifacts(conn_str)
     save_startup_players(build_startup_players_payload(snapshot))
     save_player_search_snapshot(build_player_search_snapshot_payload(snapshot))
+    save_tournament_search_snapshot(build_tournament_search_snapshot_payload(snapshot))
+    save_filter_options_snapshot(build_filter_options_from_snapshot(snapshot))
     save_tournament_detail_snapshots(tournament_detail_snapshots)
     return snapshot

@@ -266,7 +266,7 @@ def ratings_explorer_players(req: func.HttpRequest) -> func.HttpResponse:
                             limit,
                         )
                     },
-                    data_source="main_snapshot",
+                    data_source="player_search_snapshot",
                     elapsed_ms=round((perf_counter() - started) * 1000, 1),
                 )
             )
@@ -319,21 +319,6 @@ def ratings_explorer_players_startup(req: func.HttpRequest) -> func.HttpResponse
                     elapsed_ms=round((perf_counter() - started) * 1000, 1),
                 )
             )
-        snapshot, error = _load_snapshot_or_error()
-        if error:
-            return error
-        if snapshot:
-            startup_payload = explorer.build_startup_players_payload(snapshot, limit=limit)
-            return _json_response(
-                _with_debug(
-                    {
-                        "results": startup_payload.get("results") or [],
-                        "meta": startup_payload.get("meta") or {},
-                    },
-                    data_source="main_snapshot",
-                    elapsed_ms=round((perf_counter() - started) * 1000, 1),
-                )
-            )
         conn_str, error = _get_conn_str_or_error()
         if error:
             return error
@@ -366,9 +351,7 @@ def ratings_explorer_players_startup(req: func.HttpRequest) -> func.HttpResponse
 @app.route(route="ratings-explorer/tournaments", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
     started = perf_counter()
-    snapshot, error = _load_snapshot_or_error()
-    if error:
-        return error
+    snapshot = explorer.load_tournament_search_snapshot()
     limit, error = _parse_search_limit(req)
     if error:
         return error
@@ -394,7 +377,29 @@ def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
             return _json_response(
                 _with_debug(
                     search_payload,
-                    data_source="main_snapshot",
+                    data_source="tournament_search_snapshot",
+                    elapsed_ms=round((perf_counter() - started) * 1000, 1),
+                )
+            )
+        legacy_snapshot, error = _load_snapshot_or_error()
+        if error:
+            return error
+        if legacy_snapshot:
+            search_payload = explorer.search_tournaments_from_snapshot(
+                legacy_snapshot,
+                (req.params.get("description") or "").strip() or None,
+                tournament_code,
+                cities,
+                states,
+                (req.params.get("date_from") or "").strip() or None,
+                (req.params.get("date_before") or "").strip() or None,
+                limit,
+                page=page,
+            )
+            return _json_response(
+                _with_debug(
+                    search_payload,
+                    data_source="main_snapshot_fallback",
                     elapsed_ms=round((perf_counter() - started) * 1000, 1),
                 )
             )
@@ -427,12 +432,15 @@ def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="ratings-explorer/filter-options", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_filter_options(req: func.HttpRequest) -> func.HttpResponse:
     started = perf_counter()
-    snapshot, error = _load_snapshot_or_error()
-    if error:
-        return error
     try:
+        filter_options = explorer.load_filter_options_snapshot()
+        if filter_options:
+            return _json_response(_with_debug(filter_options, data_source="filter_options_snapshot", elapsed_ms=round((perf_counter() - started) * 1000, 1)))
+        snapshot, error = _load_snapshot_or_error()
+        if error:
+            return error
         if snapshot:
-            return _json_response(_with_debug(explorer.build_filter_options_from_snapshot(snapshot), data_source="main_snapshot", elapsed_ms=round((perf_counter() - started) * 1000, 1)))
+            return _json_response(_with_debug(explorer.build_filter_options_from_snapshot(snapshot), data_source="main_snapshot_fallback", elapsed_ms=round((perf_counter() - started) * 1000, 1)))
         conn_str, error = _get_conn_str_or_error()
         if error:
             return error
@@ -445,9 +453,6 @@ def ratings_explorer_filter_options(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="ratings-explorer/player", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
     started = perf_counter()
-    snapshot, error = _load_snapshot_or_error()
-    if error:
-        return error
     agaid_text = (req.params.get("agaid") or "").strip()
     recent_games_sgf_only = (req.params.get("recent_games_sgf_only") or "").strip().lower() in {"1", "true", "yes", "on"}
     recent_tournaments_page_text = (req.params.get("recent_tournaments_page") or "0").strip()
@@ -461,82 +466,29 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
     if opponents_sort not in {"games", "latest"}:
         return func.HttpResponse("Query parameter 'opponents_sort' must be 'games' or 'latest'.", status_code=400)
     try:
-        history_points = None
         data_source = None
         recent_tournaments_page = int(recent_tournaments_page_text)
         recent_games_page = int(recent_games_page_text)
         opponents_page = int(opponents_page_text)
-        use_default_player_pages = recent_tournaments_page == 0 and recent_games_page == 0 and opponents_page == 0
-        can_use_snapshot_player_detail = (
-            bool(snapshot)
-            and explorer.snapshot_supports_player_member_type(snapshot)
-            and not recent_games_sgf_only
-            and use_default_player_pages
-            and opponents_sort == "games"
+        conn_str, error = _get_conn_str_or_error()
+        if error:
+            return error
+        payload = explorer.get_player_detail(
+            conn_str,
+            int(agaid_text),
+            recent_games_sgf_only=recent_games_sgf_only,
+            recent_tournaments_page=recent_tournaments_page,
+            recent_games_page=recent_games_page,
+            opponents_page=opponents_page,
+            opponents_sort=opponents_sort,
+            include_context=False,
         )
-        payload = (
-            explorer.get_player_detail_from_snapshot(snapshot, int(agaid_text))
-            if can_use_snapshot_player_detail
-            else None
-        )
-        payload_from_snapshot = bool(payload)
-        if payload_from_snapshot:
-            data_source = "main_snapshot"
-        if payload and (
-            not _player_detail_has_recent_game_handicap(payload)
-            or not _player_detail_has_recent_game_sgf_metadata(payload)
-            or not _player_detail_has_recent_game_rank_metadata(payload)
-        ):
-            payload = None
-            payload_from_snapshot = False
-        if not payload:
-            conn_str, error = _get_conn_str_or_error()
-            if error:
-                return error
-            payload = explorer.get_player_detail(
-                conn_str,
-                int(agaid_text),
-                recent_games_sgf_only=recent_games_sgf_only,
-                recent_tournaments_page=recent_tournaments_page,
-                recent_games_page=recent_games_page,
-                opponents_page=opponents_page,
-                opponents_sort=opponents_sort,
-                include_context=False,
-            )
-            history_points = explorer.load_sql_rating_history(int(agaid_text))
-            if payload:
-                data_source = "sql_live"
+        history_points = explorer.load_sql_rating_history(int(agaid_text))
+        if payload:
+            data_source = "sql_live"
         if not payload:
             return func.HttpResponse(f"No player found for AGAID {agaid_text}.", status_code=404)
-        if payload_from_snapshot:
-            history_points = explorer.load_rating_history_from_snapshot(snapshot, int(agaid_text))
         payload = dict(payload)
-        if payload_from_snapshot:
-            player_meta = payload.get("player") or {}
-            recent_tournaments = payload.get("recent_tournaments") or []
-            recent_games = payload.get("recent_games") or []
-            payload["recent_tournaments_paging"] = {
-                "page": recent_tournaments_page,
-                "page_size": 12,
-                "total_count": int(player_meta.get("tournament_count") or 0),
-                "has_previous": recent_tournaments_page > 0,
-                "has_next": len(recent_tournaments) < int(player_meta.get("tournament_count") or 0),
-            }
-            payload["recent_games_paging"] = {
-                "page": recent_games_page,
-                "page_size": 20,
-                "total_count": int(player_meta.get("game_count") or 0),
-                "has_previous": recent_games_page > 0,
-                "has_next": len(recent_games) < int(player_meta.get("game_count") or 0),
-            }
-            payload["opponents_paging"] = {
-                "page": opponents_page,
-                "page_size": 16,
-                "total_count": int(player_meta.get("opponent_count") or 0),
-                "has_previous": opponents_page > 0,
-                "has_next": len(payload.get("opponents") or []) < int(player_meta.get("opponent_count") or 0),
-            }
-            payload["opponents_sort"] = opponents_sort
         payload["rating_history"] = payload.get("rating_history") or _history_payload_from_points(history_points or [])
         payload["news_articles"] = []
         payload["review_videos"] = []
@@ -591,14 +543,6 @@ def ratings_explorer_tournament(req: func.HttpRequest) -> func.HttpResponse:
             payload = explorer.get_tournament_detail(conn_str, tournament_code)
             if payload:
                 data_source = "sql_live"
-        if not payload:
-            snapshot = explorer.load_snapshot()
-            if snapshot:
-                payload = explorer.get_tournament_detail_from_snapshot(snapshot, tournament_code)
-                if payload and not _tournament_detail_has_game_sgf_metadata(payload):
-                    payload = None
-                if payload:
-                    data_source = "main_snapshot_fallback"
         if not payload:
             if error:
                 return error
@@ -672,19 +616,12 @@ def ratings_explorer_player_history_svg(req: func.HttpRequest) -> func.HttpRespo
     agaid_text = (req.params.get("agaid") or "").strip()
     if not agaid_text.isdigit():
         return func.HttpResponse("Query parameter 'agaid' must be numeric.", status_code=400)
-    snapshot, error = _load_snapshot_or_error()
-    if error:
-        return error
     try:
-        if snapshot:
-            history = explorer.load_rating_history_from_snapshot(snapshot, int(agaid_text))
-            member_name = explorer.load_member_name_from_snapshot(snapshot, int(agaid_text))
-        else:
-            conn_str, error = _get_conn_str_or_error()
-            if error:
-                return error
-            history = explorer.load_sql_rating_history(int(agaid_text))
-            member_name = explorer.load_member_name(conn_str, int(agaid_text))
+        conn_str, error = _get_conn_str_or_error()
+        if error:
+            return error
+        history = explorer.load_sql_rating_history(int(agaid_text))
+        member_name = explorer.load_member_name(conn_str, int(agaid_text))
         svg = explorer.render_single_history_svg(
             int(agaid_text),
             history,
@@ -726,14 +663,18 @@ def ratings_explorer_snapshot_status(req: func.HttpRequest) -> func.HttpResponse
 @app.route(route="ratings-explorer/snapshot-warm", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_snapshot_warm(req: func.HttpRequest) -> func.HttpResponse:
     started = perf_counter()
-    snapshot = explorer.load_snapshot()
+    startup = explorer.load_startup_players()
+    player_search = explorer.load_player_search_snapshot()
+    tournament_search = explorer.load_tournament_search_snapshot()
+    filter_options = explorer.load_filter_options_snapshot()
+    ok = bool(startup and player_search and tournament_search and filter_options)
     return _json_response(
         _with_debug(
             {
-                "ok": bool(snapshot),
-                "snapshot_available": bool(snapshot),
+                "ok": ok,
+                "snapshot_available": ok,
             },
-            data_source="main_snapshot" if snapshot else "none",
+            data_source="small_artifacts" if ok else "none",
             elapsed_ms=round((perf_counter() - started) * 1000, 1),
         )
     )
