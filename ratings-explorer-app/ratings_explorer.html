@@ -85,6 +85,16 @@
       color: var(--ink);
       font-weight: 700;
     }
+    .snapshot-ops {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .snapshot-ops-status {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
     .modebar, .actions, .pillrow, .metric-grid, .headline, .results-header, .section-head {
       display: flex;
       gap: 10px;
@@ -918,6 +928,10 @@
         </div>
         <div class="hero-meta">
           <div class="snapshot-badge" id="snapshot-badge">Checking snapshot freshness...</div>
+          <div class="snapshot-ops hidden" id="snapshot-ops">
+            <button class="action secondary action-compact" type="button" id="snapshot-refresh-button">Refresh snapshots</button>
+            <span class="snapshot-ops-status" id="snapshot-ops-status"></span>
+          </div>
         </div>
         <div id="search-controls"></div>
         <div class="status" id="status">Loading players...</div>
@@ -975,6 +989,8 @@
       const normalized = configured;
       return normalized.endsWith("/") ? normalized.slice(0, -1) : normalized;
     })();
+    const pageParams = new URLSearchParams(window.location.search);
+    const SNAPSHOT_REFRESH_KEY_STORAGE = "ratingsExplorerSnapshotRefreshKey";
     const state = {
       mode: "players",
       results: [],
@@ -994,11 +1010,24 @@
       tournamentSearchPaging: null,
       playerContextRequestId: 0,
       searchBusy: false,
+      snapshotRefreshBusy: false,
+      snapshotOpsEnabled: pageParams.has("ops") || pageParams.has("snapshot_ops") || pageParams.has("snapshot_key"),
       filterOptionsLoaded: false,
       filterOptionsLoadingPromise: null,
       requestControllers: { search: null, player: null, tournament: null, playerContext: null },
       filterOptions: { chapters: [], states: [], cities: [], member_types: [], tournament_states: [], tournament_cities: [], tournament_locations: [] }
     };
+    const initialSnapshotRefreshKey = pageParams.get("snapshot_key");
+    if (initialSnapshotRefreshKey) {
+      try {
+        sessionStorage.setItem(SNAPSHOT_REFRESH_KEY_STORAGE, initialSnapshotRefreshKey);
+      } catch (error) {
+      }
+      pageParams.delete("snapshot_key");
+      const cleanQuery = pageParams.toString();
+      const cleanUrl = `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${window.location.hash || ""}`;
+      window.history.replaceState({}, "", cleanUrl);
+    }
     const PLAYER_RECENT_TOURNAMENTS_PAGE_SIZE = 12;
     const PLAYER_RECENT_GAMES_PAGE_SIZE = 20;
     const PLAYER_OPPONENTS_PAGE_SIZE = 16;
@@ -1030,6 +1059,9 @@
     const els = {
       status: document.getElementById("status"),
       snapshotBadge: document.getElementById("snapshot-badge"),
+      snapshotOps: document.getElementById("snapshot-ops"),
+      snapshotRefreshButton: document.getElementById("snapshot-refresh-button"),
+      snapshotOpsStatus: document.getElementById("snapshot-ops-status"),
       resultsPanel: document.getElementById("results-panel"),
       results: document.getElementById("results"),
       resultCount: document.getElementById("result-count"),
@@ -1182,6 +1214,21 @@
       return response.json();
     }
 
+    async function postJson(path, params, options = {}) {
+      const url = endpoint(path, params);
+      let response;
+      try {
+        response = await fetch(url, { method: "POST", signal: options.signal });
+      } catch (error) {
+        if (isAbortError(error)) throw error;
+        throw new Error(`Failed to post to ${url}.`);
+      }
+      if (!response.ok) {
+        throw new Error((await response.text()) || `Request failed with ${response.status}`);
+      }
+      return response.json();
+    }
+
     function setStatus(message) {
       els.status.textContent = message;
     }
@@ -1194,6 +1241,75 @@
     function setSnapshotBadge(message, options = {}) {
       const { emphasize = false } = options;
       els.snapshotBadge.innerHTML = emphasize ? `<strong>${escapeHtml(message)}</strong>` : escapeHtml(message);
+    }
+
+    function setSnapshotOpsStatus(message) {
+      if (!els.snapshotOpsStatus) return;
+      els.snapshotOpsStatus.textContent = message || "";
+    }
+
+    function getSnapshotRefreshKey() {
+      let key = "";
+      try {
+        key = sessionStorage.getItem(SNAPSHOT_REFRESH_KEY_STORAGE) || "";
+      } catch (error) {
+      }
+      if (!key) {
+        key = window.prompt("Enter the Ratings Explorer snapshot refresh function key:");
+        key = String(key || "").trim();
+        if (key) {
+          try {
+            sessionStorage.setItem(SNAPSHOT_REFRESH_KEY_STORAGE, key);
+          } catch (error) {
+          }
+        }
+      }
+      return key;
+    }
+
+    function setSnapshotRefreshBusy(isBusy) {
+      state.snapshotRefreshBusy = Boolean(isBusy);
+      if (els.snapshotRefreshButton) {
+        els.snapshotRefreshButton.disabled = state.snapshotRefreshBusy;
+      }
+    }
+
+    async function requestSnapshotRefresh() {
+      if (state.snapshotRefreshBusy) return;
+      const key = getSnapshotRefreshKey();
+      if (!key) {
+        setSnapshotOpsStatus("Refresh canceled.");
+        return;
+      }
+      setSnapshotRefreshBusy(true);
+      setSnapshotOpsStatus("Queueing refresh...");
+      try {
+        const payload = await postJson("/api/ratings-explorer/snapshot-refresh", { code: key });
+        setSnapshotBadge("Snapshot refresh queued", { emphasize: true });
+        setSnapshotOpsStatus(payload.requested_at ? `Queued ${formatDateTime(payload.requested_at)}` : "Queued");
+        setTimeout(() => loadSnapshotStatus(), 1500);
+      } catch (error) {
+        if (/401|403|Unauthorized|Forbidden/i.test(String(error.message || ""))) {
+          try {
+            sessionStorage.removeItem(SNAPSHOT_REFRESH_KEY_STORAGE);
+          } catch (storageError) {
+          }
+        }
+        setSnapshotOpsStatus(error.message || "Refresh request failed.");
+      } finally {
+        setSnapshotRefreshBusy(false);
+      }
+    }
+
+    function initializeSnapshotOps() {
+      if (!state.snapshotOpsEnabled || !els.snapshotOps) return;
+      els.snapshotOps.classList.remove("hidden");
+      els.snapshotRefreshButton.addEventListener("click", () => {
+        requestSnapshotRefresh().catch((error) => {
+          setSnapshotOpsStatus(error.message || "Refresh request failed.");
+          setSnapshotRefreshBusy(false);
+        });
+      });
     }
 
     function populateSelectOptions(select, options, placeholder) {
@@ -2976,6 +3092,7 @@
     });
 
     updateModeUi();
+    initializeSnapshotOps();
     renderRatingBandOptions();
     loadSnapshotStatus();
     loadStartupPlayers().catch(handleError);
