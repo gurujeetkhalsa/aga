@@ -991,6 +991,8 @@
     })();
     const pageParams = new URLSearchParams(window.location.search);
     const SNAPSHOT_REFRESH_KEY_STORAGE = "ratingsExplorerSnapshotRefreshKey";
+    const SNAPSHOT_REFRESH_POLL_MS = 30000;
+    const SNAPSHOT_REFRESH_POLL_LIMIT = 30;
     const state = {
       mode: "players",
       results: [],
@@ -1012,6 +1014,8 @@
       searchBusy: false,
       snapshotRefreshBusy: false,
       snapshotOpsEnabled: pageParams.has("ops") || pageParams.has("snapshot_ops") || pageParams.has("snapshot_key"),
+      snapshotRefreshPollTimer: null,
+      snapshotRefreshPollCount: 0,
       filterOptionsLoaded: false,
       filterOptionsLoadingPromise: null,
       requestControllers: { search: null, player: null, tournament: null, playerContext: null },
@@ -1274,6 +1278,50 @@
       }
     }
 
+    function snapshotJobState(payload) {
+      return String(payload?.job_status?.state || "").toLowerCase();
+    }
+
+    function stopSnapshotRefreshPolling() {
+      if (state.snapshotRefreshPollTimer) {
+        window.clearTimeout(state.snapshotRefreshPollTimer);
+      }
+      state.snapshotRefreshPollTimer = null;
+      state.snapshotRefreshPollCount = 0;
+    }
+
+    async function pollSnapshotRefreshStatus() {
+      state.snapshotRefreshPollTimer = null;
+      state.snapshotRefreshPollCount += 1;
+      const payload = await loadSnapshotStatus({ cacheBust: true, updateOpsStatus: true });
+      const jobState = snapshotJobState(payload);
+      if (jobState === "completed" || jobState === "failed") {
+        stopSnapshotRefreshPolling();
+        return;
+      }
+      if (state.snapshotRefreshPollCount >= SNAPSHOT_REFRESH_POLL_LIMIT) {
+        stopSnapshotRefreshPolling();
+        setSnapshotOpsStatus("Still queued or running; check status again in a moment.");
+        return;
+      }
+      state.snapshotRefreshPollTimer = window.setTimeout(() => {
+        pollSnapshotRefreshStatus().catch((error) => {
+          stopSnapshotRefreshPolling();
+          setSnapshotOpsStatus(error.message || "Snapshot status polling failed.");
+        });
+      }, SNAPSHOT_REFRESH_POLL_MS);
+    }
+
+    function startSnapshotRefreshPolling() {
+      stopSnapshotRefreshPolling();
+      state.snapshotRefreshPollTimer = window.setTimeout(() => {
+        pollSnapshotRefreshStatus().catch((error) => {
+          stopSnapshotRefreshPolling();
+          setSnapshotOpsStatus(error.message || "Snapshot status polling failed.");
+        });
+      }, 1500);
+    }
+
     async function requestSnapshotRefresh() {
       if (state.snapshotRefreshBusy) return;
       const key = getSnapshotRefreshKey();
@@ -1287,7 +1335,7 @@
         const payload = await postJson("/api/ratings-explorer/snapshot-refresh", { code: key });
         setSnapshotBadge("Snapshot refresh queued", { emphasize: true });
         setSnapshotOpsStatus(payload.requested_at ? `Queued ${formatDateTime(payload.requested_at)}` : "Queued");
-        setTimeout(() => loadSnapshotStatus(), 1500);
+        startSnapshotRefreshPolling();
       } catch (error) {
         if (/401|403|Unauthorized|Forbidden/i.test(String(error.message || ""))) {
           try {
@@ -2355,23 +2403,47 @@
       }
     }
 
-    async function loadSnapshotStatus() {
+    async function loadSnapshotStatus(options = {}) {
       try {
-        const payload = await loadJson("/api/ratings-explorer/snapshot-status");
+        const params = options.cacheBust ? { _: Date.now() } : undefined;
+        const payload = await loadJson("/api/ratings-explorer/snapshot-status", params);
+        const jobStatus = payload.job_status || {};
+        const jobState = snapshotJobState(payload);
+        if (jobState === "queued" || jobState === "running") {
+          const detail = jobStatus.detail || (jobState === "queued" ? "Snapshot refresh queued" : "Snapshot refresh running");
+          setSnapshotBadge(detail, { emphasize: true });
+          if (options.updateOpsStatus) {
+            setSnapshotOpsStatus(jobState === "queued" ? "Waiting for timer pickup..." : "Refresh running...");
+          }
+          return payload;
+        }
+        if (jobState === "failed") {
+          setSnapshotBadge(jobStatus.detail || "Snapshot refresh failed", { emphasize: true });
+          if (options.updateOpsStatus) {
+            setSnapshotOpsStatus(jobStatus.error || "Refresh failed.");
+          }
+          return payload;
+        }
         const meta = payload.meta || {};
         const generatedAt = meta.generated_at;
         if (payload.snapshot_available && generatedAt) {
           setSnapshotBadge(`Snapshot generated ${formatDateTime(generatedAt)}`);
-          return;
+          if (options.updateOpsStatus && jobState === "completed") {
+            setSnapshotOpsStatus(`Completed ${formatDateTime(jobStatus.last_completed_at || jobStatus.updated_at || generatedAt)}`);
+          }
+          return payload;
         }
         if (payload.snapshot_available) {
           setSnapshotBadge("Snapshot available");
-          return;
+          return payload;
         }
-        const detail = payload.job_status && payload.job_status.detail ? payload.job_status.detail : "Snapshot not built yet";
+        const detail = jobStatus.detail || "Snapshot not built yet";
         setSnapshotBadge(detail, { emphasize: true });
+        return payload;
       } catch (error) {
         setSnapshotBadge("Snapshot freshness unavailable");
+        if (options.updateOpsStatus) throw error;
+        return null;
       }
     }
 
