@@ -2027,13 +2027,99 @@ def render_single_history_svg(
     return "\n".join(svg)
 
 
-def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
+def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False) -> str:
     wgo_css = get_asset_text("wgo/wgo.player.css") or ""
     wgo_core_js = get_asset_text("wgo/wgo.min.js") or ""
     wgo_player_js = get_asset_text("wgo/wgo.player.min.js") or ""
     escaped_wgo_css = wgo_css.replace("</style>", "<\\/style>")
     escaped_wgo_core_js = wgo_core_js.replace("</script>", "<\\/script>")
     escaped_wgo_player_js = wgo_player_js.replace("</script>", "<\\/script>")
+    body_class = "mobile-viewer" if mobile else ""
+    mobile_styles = """
+  <style>
+    body.mobile-viewer { background: #ffffff; overflow: hidden; }
+    body.mobile-viewer .shell {
+      min-height: 100vh;
+      height: 100vh;
+      padding: 0;
+      overflow: hidden;
+    }
+    body.mobile-viewer .card {
+      height: 100vh;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+    }
+    body.mobile-viewer .viewer-shell,
+    body.mobile-viewer #viewer {
+      min-height: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    body.mobile-viewer #viewer .wgo-player-main {
+      width: 100% !important;
+      height: 100vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-top,
+    body.mobile-viewer #viewer .wgo-player-bottom,
+    body.mobile-viewer #viewer .wgo-player-left,
+    body.mobile-viewer #viewer .wgo-player-right,
+    body.mobile-viewer #viewer .wgo-player-info,
+    body.mobile-viewer #viewer .wgo-player-commentbox,
+    body.mobile-viewer #viewer .wgo-commentbox,
+    body.mobile-viewer #viewer .wgo-player-comments,
+    body.mobile-viewer #viewer .wgo-ctrlgroup-left,
+    body.mobile-viewer #viewer .wgo-ctrlgroup-right {
+      display: none !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-control {
+      display: block !important;
+      flex: 0 0 auto !important;
+      order: 1 !important;
+      width: 100% !important;
+      min-height: 38px !important;
+      padding: 2px 0 4px !important;
+      background: #ffffff !important;
+    }
+    body.mobile-viewer #viewer .wgo-control-wrapper {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      width: 100% !important;
+    }
+    body.mobile-viewer #viewer .wgo-ctrlgroup-control {
+      display: inline-flex !important;
+      float: none !important;
+      align-items: center !important;
+      justify-content: center !important;
+      max-width: 100% !important;
+      transform: scale(0.88);
+      transform-origin: top center;
+    }
+    body.mobile-viewer #viewer .wgo-player-control button.wgo-button {
+      width: 30px !important;
+      height: 30px !important;
+      margin: 0 1px !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-board,
+    body.mobile-viewer #viewer .wgo-board {
+      flex: 0 1 auto !important;
+      order: 2 !important;
+      max-width: 100vw !important;
+      max-height: calc(100vh - 44px) !important;
+      margin: 0 auto !important;
+      transform-origin: top center !important;
+    }
+  </style>
+""" if mobile else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -2111,8 +2197,9 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
     .hidden {{ display: none; }}
   </style>
   <style>{escaped_wgo_css}</style>
+{mobile_styles}
 </head>
-<body>
+<body class="{body_class}">
   <div class="shell">
     <div class="card">
       <div id="status" class="status hidden">Loading SGF viewer...</div>
@@ -2142,6 +2229,7 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
     const rawEl = document.getElementById('raw');
     const sgfDownloadUrl = {json.dumps(sgf_url)};
     const sgfDownloadName = {json.dumps(f"game-{game_id}.sgf")};
+    const isMobileViewer = document.body.classList.contains('mobile-viewer');
     let viewerTweaksApplied = false;
 
     if (window.WGo && window.WGo.BasicPlayer && window.WGo.BasicPlayer.component && window.WGo.BasicPlayer.component.Control) {{
@@ -2199,6 +2287,26 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
       return false;
     }}
 
+    function fitMobileViewerLayout() {{
+      if (!isMobileViewer) return;
+      const board = viewerEl.querySelector('.wgo-board');
+      const boardHost = viewerEl.querySelector('.wgo-player-board');
+      const control = viewerEl.querySelector('.wgo-player-control');
+      if (!board || !boardHost) return;
+      const boardWidth = board.offsetWidth || board.getBoundingClientRect().width;
+      const boardHeight = board.offsetHeight || board.getBoundingClientRect().height;
+      if (!boardWidth || !boardHeight) return;
+      const controlHeight = control ? Math.ceil(control.getBoundingClientRect().height) : 0;
+      const availableWidth = Math.max(220, window.innerWidth - 2);
+      const availableHeight = Math.max(220, window.innerHeight - controlHeight - 4);
+      const scale = Math.min(1, availableWidth / boardWidth, availableHeight / boardHeight);
+      board.style.transform = `scale(${{scale}})`;
+      board.style.transformOrigin = 'top center';
+      boardHost.style.width = `${{Math.ceil(boardWidth * scale)}}px`;
+      boardHost.style.height = `${{Math.ceil(boardHeight * scale)}}px`;
+      boardHost.style.overflow = 'hidden';
+    }}
+
     function showRawFallback(message, sgf) {{
       statusEl.textContent = message;
       if (sgf) {{
@@ -2226,7 +2334,11 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
             viewerEl.textContent = '';
             const player = new window.WGo.BasicPlayer(viewerEl, {{ sgf }});
             viewerEl._wgo_player = player;
-            window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); }}, 0);
+            window.setTimeout(() => {{
+              if (customizeViewerLayout()) observer.disconnect();
+              fitMobileViewerLayout();
+            }}, 0);
+            window.setTimeout(fitMobileViewerLayout, 250);
           }}
           return;
         }}
@@ -2240,13 +2352,15 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
 
     const observer = new MutationObserver(() => {{
       if (!viewerTweaksApplied && customizeViewerLayout()) observer.disconnect();
+      fitMobileViewerLayout();
     }});
     observer.observe(viewerShellEl, {{ childList: true, subtree: true }});
     window.addEventListener('load', () => {{
-      window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); }}, 0);
-      window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); }}, 250);
-      window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); }}, 800);
+      window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); fitMobileViewerLayout(); }}, 0);
+      window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); fitMobileViewerLayout(); }}, 250);
+      window.setTimeout(() => {{ if (customizeViewerLayout()) observer.disconnect(); fitMobileViewerLayout(); }}, 800);
     }});
+    window.addEventListener('resize', fitMobileViewerLayout);
 
     loadSgf();
   </script>
@@ -2255,8 +2369,8 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str) -> str:
 """
 
 
-def load_ratings_explorer_html(api_base: str = "") -> str:
-    template_path = _app_root() / "ratings_explorer.html"
+def load_ratings_explorer_html(api_base: str = "", template_name: str = "ratings_explorer.html") -> str:
+    template_path = _app_root() / template_name
     markup = template_path.read_text(encoding="utf-8")
     return markup.replace('"__RATINGS_EXPLORER_API_BASE__"', json.dumps(api_base))
 

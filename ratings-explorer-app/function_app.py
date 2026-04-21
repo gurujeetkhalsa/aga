@@ -203,6 +203,16 @@ def ratings_explorer_page(req: func.HttpRequest) -> func.HttpResponse:
     )
 
 
+@app.function_name(name="RatingsExplorerMobilePage")
+@app.route(route="ratings-explorer/mobile", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
+    return func.HttpResponse(
+        explorer.load_ratings_explorer_html("", "ratings_explorer_mobile.html"),
+        status_code=200,
+        headers=explorer.response_headers("text/html; charset=utf-8"),
+    )
+
+
 @app.function_name(name="RatingsExplorerPlayers")
 @app.route(route="ratings-explorer/players", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_players(req: func.HttpRequest) -> func.HttpResponse:
@@ -585,8 +595,9 @@ def ratings_explorer_game_sgf_viewer(req: func.HttpRequest) -> func.HttpResponse
     if not game_id_text.isdigit():
         return func.HttpResponse("Query parameter 'game_id' must be numeric.", status_code=400)
     game_id = int(game_id_text)
+    mobile = (req.params.get("mobile") or "").strip().lower() in {"1", "true", "yes", "on"}
     sgf_url = f"/api/ratings-explorer/game-sgf?game_id={game_id}"
-    page = explorer.render_game_sgf_viewer_html(game_id, sgf_url)
+    page = explorer.render_game_sgf_viewer_html(game_id, sgf_url, mobile=mobile)
     return func.HttpResponse(
         page,
         status_code=200,

@@ -1,0 +1,3356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AGA Ratings Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Text:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #eaf3fa;
+      --panel: #ffffff;
+      --panel-alt: #f4f9fd;
+      --ink: #163248;
+      --muted: #5a7082;
+      --line: #bfd4e5;
+      --accent: #3a73b2;
+      --accent-strong: #014a7d;
+      --accent-soft: rgba(174, 208, 232, 0.32);
+      --shadow: 0 18px 40px rgba(1, 74, 125, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Red Hat Text", Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(1, 74, 125, 0.14), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(174, 208, 232, 0.60), transparent 32%),
+        var(--bg);
+    }
+    .wrap {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 18px 16px 34px;
+    }
+    .shell, .stack, .detail-grid, .result-list, .mini-list {
+      display: grid;
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(31, 41, 55, 0.10);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .hero { padding: 14px 18px; }
+    .hero {
+      background: linear-gradient(135deg, rgba(174, 208, 232, 0.55), rgba(58, 115, 178, 0.12)), var(--panel);
+    }
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.08;
+    }
+    h1 { font-size: clamp(2rem, 3vw, 3rem); }
+    h2 { font-size: 1.35rem; }
+    h3 { font-size: 1.05rem; }
+    .subtitle, .eyebrow, .status, .meta-line { color: var(--muted); }
+    .hero-meta {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .snapshot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 0.10);
+      background: rgba(255, 255, 255, 0.78);
+      color: #4b5563;
+      font-size: 0.92rem;
+    }
+    .snapshot-badge strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .snapshot-ops {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .snapshot-ops-status {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .modebar, .actions, .pillrow, .metric-grid, .headline, .results-header, .section-head {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .headline, .results-header, .section-head { justify-content: space-between; align-items: baseline; }
+    .section-tools {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .modebar { margin-top: 10px; }
+    .modebar button, .action {
+      border: 0;
+      border-radius: 999px;
+      height: 42px;
+      padding: 0 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modebar button { background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(31, 41, 55, 0.10); }
+    .modebar button.active, .action { background: var(--accent); color: white; }
+    .action.secondary { background: white; color: var(--ink); border: 1px solid var(--line); }
+    .action:disabled,
+    .modebar button:disabled {
+      cursor: not-allowed;
+      background: #9ca3af;
+      color: white;
+      border-color: #9ca3af;
+      opacity: 0.75;
+      transform: none;
+      box-shadow: none;
+    }
+    .action.action-compact {
+      height: 36px;
+      padding: 0 14px;
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+    .search-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      align-items: end;
+    }
+    .field { display: grid; gap: 6px; }
+    .field.hidden { display: none; }
+    .field label { font-size: 0.88rem; color: #4b5563; font-weight: 700; }
+    .inline-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      white-space: nowrap;
+    }
+    .inline-field label {
+      font-size: 0.88rem;
+      color: #4b5563;
+      font-weight: 700;
+    }
+    .inline-field select {
+      width: auto;
+      min-width: 88px;
+    }
+    .multi-select {
+      position: relative;
+    }
+    .multi-select-trigger {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 9px 38px 9px 11px;
+      font: inherit;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+    .multi-select-trigger:hover {
+      border-color: rgba(58, 115, 178, 0.35);
+      background: rgba(255, 255, 255, 0.98);
+    }
+    .multi-select-trigger:focus-visible {
+      outline: none;
+      border-color: rgba(1, 74, 125, 0.45);
+      box-shadow: 0 0 0 3px rgba(58, 115, 178, 0.18);
+    }
+    .multi-select-trigger.active {
+      border-color: rgba(58, 115, 178, 0.4);
+      box-shadow: 0 0 0 3px rgba(174, 208, 232, 0.55);
+      background: #ffffff;
+    }
+    .multi-select-trigger::after {
+      content: "v";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: transform 120ms ease, color 120ms ease;
+    }
+    .multi-select-trigger.active::after {
+      transform: translateY(-50%) rotate(180deg);
+      color: var(--accent-strong);
+    }
+    .multi-select-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 20;
+      display: grid;
+      gap: 0;
+      width: max(100%, 280px);
+      max-width: min(420px, calc(100vw - 32px));
+      max-height: min(360px, calc(100vh - 140px));
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid rgba(31, 41, 55, 0.12);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .multi-select-menu.align-right {
+      left: auto;
+      right: 0;
+    }
+    .multi-select-menu.hidden {
+      display: none;
+    }
+    .multi-select-search {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding-bottom: 6px;
+      background: linear-gradient(180deg, var(--panel) 82%, rgba(255, 253, 248, 0));
+    }
+    .multi-select-search-input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 9px;
+      font: inherit;
+      background: rgba(255, 255, 255, 0.96);
+    }
+    .multi-select-search-input:focus-visible {
+      outline: none;
+      border-color: rgba(1, 74, 125, 0.45);
+      box-shadow: 0 0 0 3px rgba(58, 115, 178, 0.14);
+    }
+    .multi-select-options {
+      display: grid;
+      gap: 2px;
+    }
+    .multi-select-option {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      padding: 6px 6px;
+      font-size: 0.88rem;
+      line-height: 1.15;
+      cursor: pointer;
+      justify-items: start;
+      border-radius: 10px;
+      transition: background 120ms ease;
+    }
+    .multi-select-option:hover {
+      background: rgba(174, 208, 232, 0.28);
+    }
+    .multi-select-option.hidden {
+      display: none;
+    }
+    .multi-select-option input {
+      margin: 0;
+      justify-self: start;
+    }
+    .multi-select-option span {
+      min-width: 0;
+    }
+    .multi-select-footer {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 6px;
+      padding-top: 8px;
+      background: linear-gradient(0deg, var(--panel) 82%, rgba(255, 253, 248, 0));
+      border-top: 1px solid rgba(31, 41, 55, 0.08);
+    }
+    .multi-select-selection-note {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .multi-select-clear {
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-strong);
+      background: rgba(174, 208, 232, 0.32);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .multi-select-clear:hover {
+      background: rgba(58, 115, 178, 0.18);
+    }
+    .multi-select-clear:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    .multi-select-empty {
+      padding: 8px 2px 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    .field input, .field select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 9px 11px;
+      font: inherit;
+      background: rgba(255, 255, 255, 0.92);
+    }
+    .field input:disabled, .field select:disabled { background: #f5f5f4; color: #a8a29e; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.5fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .layout.focus-mode {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "results"
+        "detail";
+      align-items: start;
+    }
+    .layout.focus-mode .stack {
+      display: contents;
+    }
+    .layout.focus-mode #results-panel { grid-area: results; }
+    .layout.focus-mode #detail-panel { grid-area: detail; }
+    .layout.focus-mode #context-panel { display: none; }
+    .layout.focus-mode #detail-panel.hidden { display: none; }
+    .result-list {
+      gap: 8px;
+    }
+    .layout.focus-mode #results-panel .result-list {
+      grid-template-columns: 1fr;
+    }
+    .layout.focus-mode #results-panel .result-card {
+      width: 100%;
+      padding: 4px 16px;
+    }
+    .layout.focus-mode #results-panel .result-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+    }
+    .layout.focus-mode #results-panel .result-main {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .layout.focus-mode #results-panel .result-main .title {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .layout.focus-mode #results-panel .result-main .subtitle {
+      flex: 0 1 auto;
+    }
+    .layout.focus-mode #results-panel .result-meta {
+      display: block;
+      flex: 0 0 auto;
+      align-items: center;
+      white-space: nowrap;
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.1;
+    }
+    .layout.focus-mode #results-panel .headline {
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 14px;
+    }
+    .layout.focus-mode #results-panel .headline > div:first-child {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .layout.focus-mode #results-panel .title,
+    .layout.focus-mode #results-panel .subtitle {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .result-card, .mini-card, .detail-card, .metric {
+      border: 1px solid rgba(31, 41, 55, 0.10);
+      border-radius: 16px;
+      padding: 14px;
+      background: white;
+    }
+    .detail-card, .metric {
+      border-color: #014a7d;
+      box-shadow: inset 0 0 0 1px #014a7d;
+    }
+    .result-card { cursor: pointer; padding: 4px 12px; }
+    .result-card.active { border-color: rgba(1, 74, 125, 0.45); }
+    .title { font-size: 1.15rem; font-weight: 700; }
+    .pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.84rem;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+    .sgf-summary {
+      max-width: 100%;
+      text-align: right;
+      white-space: normal;
+    }
+    .result-card .headline { align-items: flex-start; gap: 6px; }
+    .result-card .title,
+    .result-card .subtitle,
+    .result-card .meta-line {
+      line-height: 1.05;
+    }
+    .result-card .subtitle { margin-top: 0; margin-bottom: 0; }
+    .result-card .result-meta { margin-top: 0; }
+    .meta-line {
+      font-size: 0.9rem;
+      line-height: 1.05;
+    }
+    .meta-line + .meta-line { margin-top: 0; }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+    .metric { background: var(--panel-alt); }
+    .metric .label { color: var(--muted); font-size: 0.84rem; text-transform: uppercase; }
+    .metric .value { margin-top: 6px; font-size: 1.4rem; font-weight: 700; }
+    .context-list {
+      display: grid;
+      gap: 8px;
+    }
+    .context-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #014a7d;
+      border-radius: 14px;
+      background: var(--panel-alt);
+      box-shadow: inset 0 0 0 1px #014a7d;
+    }
+    .context-kind {
+      color: var(--accent-strong);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .context-main {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .context-main .linkish {
+      display: inline-block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+    }
+    .context-meta {
+      color: var(--muted);
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .mobile-card-list {
+      display: none;
+    }
+    .mobile-data-card {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--panel-alt);
+    }
+    .mobile-data-card .mobile-card-title {
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    .mobile-card-meta,
+    .mobile-card-stats {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.2;
+    }
+    .mobile-card-stats {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .mobile-card-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding-top: 2px;
+    }
+    .table-scroll table {
+      min-width: 640px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-size: 0.83rem; text-transform: uppercase; }
+    .linkish { color: var(--accent-strong); text-decoration: none; font-weight: 700; cursor: pointer; }
+    .linkish:hover { text-decoration: underline; }
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.6);
+    }
+    .chart-shell {
+      position: relative;
+      border: 1px solid #014a7d;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 253, 0.98));
+      box-shadow: inset 0 0 0 1px #014a7d;
+    }
+    .chart-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      font-family: "Red Hat Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .chart-svg text {
+      font-family: "Red Hat Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .chart-grid-line {
+      stroke: #d9e7f2;
+      stroke-width: 1;
+    }
+    .chart-axis {
+      stroke: var(--accent-strong);
+      stroke-width: 1.5;
+    }
+    .chart-band {
+      fill: #aed0e8;
+      fill-opacity: 0.42;
+    }
+    .chart-line {
+      fill: none;
+      stroke: #3a73b2;
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .chart-point {
+      fill: var(--accent-strong);
+      stroke: #ffffff;
+      stroke-width: 1.4;
+      cursor: pointer;
+      transition: r 120ms ease, fill 120ms ease;
+    }
+    .chart-point.is-active, .chart-point:hover, .chart-point:focus {
+      fill: var(--accent);
+      r: 5.6;
+      outline: none;
+    }
+    .chart-label {
+      fill: #4a6477;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chart-axis-label {
+      fill: #163248;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .chart-title {
+      fill: #163248;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .chart-tooltip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      min-width: 150px;
+      padding: 9px 11px;
+      border: 1px solid rgba(1, 74, 125, 0.16);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 16px 28px rgba(1, 74, 125, 0.14);
+      color: var(--ink);
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 12px));
+      z-index: 3;
+    }
+    .chart-tooltip.hidden {
+      display: none;
+    }
+    .chart-tooltip-date {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 3px;
+    }
+    .chart-tooltip-value {
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+    .chart-tooltip-meta {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 2px;
+    }
+    .crosstab-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel-alt);
+    }
+    .crosstab {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.84rem;
+    }
+    .crosstab th, .crosstab td {
+      min-width: 82px;
+      text-align: center;
+      padding: 6px 5px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      background: var(--panel);
+    }
+    .crosstab th.sticky-corner,
+    .crosstab th.sticky-row,
+    .crosstab th.sticky-col {
+      position: sticky;
+      background: var(--panel-alt);
+      z-index: 2;
+    }
+    .crosstab th.sticky-corner {
+      left: 0;
+      top: 0;
+      z-index: 4;
+      min-width: 156px;
+      text-align: left;
+    }
+    .crosstab th.sticky-col {
+      left: 0;
+      z-index: 3;
+      min-width: 156px;
+      text-align: left;
+    }
+    .crosstab th.sticky-row {
+      top: 0;
+      z-index: 3;
+      min-width: 60px;
+    }
+    .crosstab-player {
+      display: block;
+      font-weight: 700;
+      color: var(--accent-strong);
+      text-decoration: none;
+      text-align: left;
+      line-height: 1.15;
+    }
+    .crosstab-player:hover { text-decoration: underline; }
+    .crosstab-player-main {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .crosstab-player-number {
+      color: var(--accent-strong);
+      font-weight: 800;
+      min-width: 1.3rem;
+    }
+    .crosstab-player-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .crosstab-meta {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-align: left;
+      line-height: 1.2;
+    }
+    .crosstab-rank {
+      display: inline-flex;
+      font-weight: 700;
+      color: var(--accent-strong);
+    }
+    .crosstab-cell {
+      display: grid;
+      gap: 3px;
+      justify-items: center;
+      line-height: 1.15;
+      text-align: center;
+    }
+    .crosstab-opponent {
+      color: var(--accent-strong);
+      text-decoration: none;
+      font-weight: 700;
+      line-height: 1.15;
+      font-size: 0.72rem;
+    }
+    .crosstab-opponent:hover { text-decoration: underline; }
+    .crosstab-outcome {
+      color: var(--ink);
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .crosstab-diagonal {
+      background: rgba(174, 208, 232, 0.4);
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+    .crosstab-empty {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: lowercase;
+    }
+    .crosstab-games {
+      display: grid;
+      gap: 4px;
+    }
+    .crosstab-token {
+      display: inline;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--accent-strong);
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: normal;
+    }
+    .sgf-link, .crosstab-token.sgf-link {
+      border: 0;
+      background: transparent;
+      color: var(--accent-strong);
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 0.12em;
+    }
+    .sgf-link:hover, .crosstab-token.sgf-link:hover {
+      color: var(--accent);
+    }
+    .sgf-link.muted {
+      text-decoration: none;
+      color: var(--muted);
+      cursor: default;
+    }
+    .sgf-viewer-frame {
+      width: 100%;
+      min-height: 364px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #f6fbff;
+    }
+    .sgf-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 18px 24px 24px;
+      background: rgba(9, 18, 31, 0.58);
+    }
+    .sgf-modal.hidden {
+      display: none;
+    }
+    .sgf-modal-dialog {
+      width: min(980px, 100%);
+      max-height: calc(100vh - 48px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #ffffff;
+      border: 1px solid rgba(11, 32, 61, 0.12);
+      border-radius: 22px;
+      box-shadow: 0 24px 72px rgba(8, 15, 28, 0.28);
+      overflow: hidden;
+    }
+    .sgf-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px 4px;
+      border-bottom: 1px solid var(--accent-strong);
+      background: #fff;
+    }
+    .sgf-modal-head > div {
+      min-width: 0;
+      flex: 1;
+    }
+    .sgf-modal-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sgf-modal-subtitle {
+      margin-top: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1;
+    }
+    .sgf-modal-close {
+      border: 0;
+      background: transparent;
+      color: var(--accent-strong);
+      border-radius: 0;
+      min-width: auto;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .sgf-modal-body {
+      padding: 6px 12px 12px;
+      overflow: auto;
+      background: #fff;
+    }
+    .sgf-modal-body .sgf-viewer-frame {
+      min-height: min(560px, calc(100vh - 180px));
+    }
+    @media (max-width: 1100px) {
+      .search-grid, .layout, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout.focus-mode {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "results"
+          "detail";
+      }
+      .layout.focus-mode #results-panel .result-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .layout.focus-mode #results-panel .result-main,
+      .layout.focus-mode #results-panel .result-meta {
+        min-width: 0;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .sgf-modal {
+        padding: 10px 12px 12px;
+      }
+      .sgf-modal-dialog {
+        max-height: calc(100vh - 24px);
+      }
+      .sgf-modal-head,
+      .sgf-modal-body {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+    }
+    @media (min-width: 0) {
+      .wrap { padding-inline: 12px; }
+      .search-grid, .layout { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .panel { padding: 14px; border-radius: 16px; }
+      .hero h1 { font-size: 1.7rem; }
+      .modebar button, .action { min-height: 44px; }
+      .result-card { padding: 10px 12px; }
+      .layout.focus-mode #results-panel .result-card { padding: 10px 12px; }
+      .layout.focus-mode #results-panel .result-row,
+      .layout.focus-mode #results-panel .result-main {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 5px;
+        overflow: visible;
+      }
+      .layout.focus-mode #results-panel .title,
+      .layout.focus-mode #results-panel .subtitle {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+      .layout.focus-mode #results-panel .result-meta {
+        text-align: left;
+        white-space: normal;
+      }
+      .results-header { flex-direction: column; align-items: flex-start; }
+      .headline { flex-direction: column; }
+      .title { font-size: 1.02rem; }
+      .subtitle, .meta-line, .eyebrow { font-size: 0.88rem; }
+      .metric { padding: 12px; }
+      .metric .value { font-size: 1.2rem; }
+      .detail-card { padding: 12px; border-radius: 14px; }
+      .context-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+      .context-main,
+      .context-main .linkish,
+      .context-meta {
+        white-space: normal;
+      }
+      .desktop-table-on-mobile { display: none; }
+      .mobile-card-list {
+        display: grid;
+        gap: 10px;
+      }
+      .table-scroll {
+        margin-inline: -4px;
+        padding-bottom: 2px;
+      }
+      .table-scroll table {
+        min-width: 580px;
+        font-size: 0.88rem;
+      }
+      .crosstab-wrap {
+        margin-inline: -4px;
+      }
+    .actions { align-items: stretch; }
+    .actions .action { width: 100%; }
+      .advanced-search-toggle {
+        width: 100%;
+        margin-top: 10px;
+      }
+    .inline-field { width: 100%; justify-content: space-between; }
+      .inline-field select { min-width: 112px; }
+      .section-tools {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
+      }
+      .section-tools .inline-field {
+        width: 100%;
+      }
+      .multi-select-menu,
+      .multi-select-menu.align-right {
+        left: 0;
+        right: 0;
+        width: auto;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <section class="panel hero">
+        <h1>AGA Ratings Explorer</h1>
+        <div class="modebar">
+          <button type="button" class="mode-button active" data-mode="players">Players</button>
+          <button type="button" class="mode-button" data-mode="tournaments">Tournaments</button>
+        </div>
+        <div class="hero-meta">
+          <div class="snapshot-badge" id="snapshot-badge">Checking snapshot freshness...</div>
+          <div class="snapshot-ops hidden" id="snapshot-ops">
+            <button class="action secondary action-compact" type="button" id="snapshot-refresh-button">Refresh snapshots</button>
+            <span class="snapshot-ops-status" id="snapshot-ops-status"></span>
+          </div>
+        </div>
+        <div id="search-controls"></div>
+        <div class="status" id="status">Loading players...</div>
+      </section>
+
+      <section class="layout focus-mode" id="layout">
+        <div class="stack">
+          <div class="panel" id="results-panel">
+            <div class="results-header">
+              <div>
+                <h2 id="results-title">Players</h2>
+                <div class="eyebrow" id="results-subtitle">Search results and quick player summaries</div>
+              </div>
+              <div class="section-tools" id="results-tools"><div class="eyebrow" id="result-count"></div></div>
+            </div>
+            <div id="results" class="result-list"></div>
+          </div>
+          <div class="panel" id="context-panel">
+            <div class="section-head">
+              <div>
+                <h3>Context</h3>
+                <div class="eyebrow">Related AGA E-Journal articles, NAOL review videos, and recent tournaments</div>
+              </div>
+            </div>
+            <div id="context" class="mini-list"></div>
+          </div>
+        </div>
+        <div class="panel hidden" id="detail-panel">
+          <div id="detail"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="sgf-modal hidden" id="sgf-modal" aria-hidden="true">
+    <div class="sgf-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="sgf-modal-title">
+      <div class="sgf-modal-head">
+        <div>
+          <h3 class="sgf-modal-title" id="sgf-modal-title">SGF Viewer</h3>
+          <div class="sgf-modal-subtitle" id="sgf-modal-subtitle">Choose a linked game to open its SGF.</div>
+        </div>
+        <button type="button" class="sgf-modal-close" id="sgf-modal-close" aria-label="Close SGF viewer">&times;</button>
+      </div>
+      <div class="sgf-modal-body" id="sgf-modal-body">
+        <div class="empty">Choose a game with SGF to load it here.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ClubExpress paste-in default points at the live explorer origin.
+       You can still override it by setting window.RATINGS_EXPLORER_API_BASE above this script. */
+    const API_BASE = (() => {
+      const explicit = window.RATINGS_EXPLORER_API_BASE;
+      const configured = explicit || window.location.origin;
+      const normalized = configured;
+      return normalized.endsWith("/") ? normalized.slice(0, -1) : normalized;
+    })();
+    const pageParams = new URLSearchParams(window.location.search);
+    const SNAPSHOT_REFRESH_KEY_STORAGE = "ratingsExplorerSnapshotRefreshKey";
+    const SNAPSHOT_REFRESH_POLL_MS = 30000;
+    const SNAPSHOT_REFRESH_POLL_LIMIT = 30;
+    const state = {
+      mode: "players",
+      results: [],
+      selected: null,
+      selectedType: null,
+      navigationStack: [],
+      activeGames: [],
+      selectedSgfGame: null,
+      playerRecentGamesSgfOnly: false,
+      playerRecentTournamentsPage: 0,
+      playerRecentGamesPage: 0,
+      playerOpponentsPage: 0,
+      playerOpponentsSort: "games",
+      currentPlayerName: "",
+      currentTournamentDescription: "",
+      tournamentSearchPage: 0,
+      tournamentSearchPaging: null,
+      playerContextRequestId: 0,
+      searchBusy: false,
+      snapshotRefreshBusy: false,
+      snapshotOpsEnabled: pageParams.has("ops") || pageParams.has("snapshot_ops") || pageParams.has("snapshot_key"),
+      snapshotRefreshPollTimer: null,
+      snapshotRefreshPollCount: 0,
+      filterOptionsLoaded: false,
+      filterOptionsLoadingPromise: null,
+      mobileAdvancedSearchOpen: false,
+      requestControllers: { search: null, player: null, tournament: null, playerContext: null },
+      filterOptions: { chapters: [], states: [], cities: [], member_types: [], tournament_states: [], tournament_cities: [], tournament_locations: [] }
+    };
+    const initialSnapshotRefreshKey = pageParams.get("snapshot_key");
+    if (initialSnapshotRefreshKey) {
+      try {
+        sessionStorage.setItem(SNAPSHOT_REFRESH_KEY_STORAGE, initialSnapshotRefreshKey);
+      } catch (error) {
+      }
+      pageParams.delete("snapshot_key");
+      const cleanQuery = pageParams.toString();
+      const cleanUrl = `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${window.location.hash || ""}`;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+    const PLAYER_RECENT_TOURNAMENTS_PAGE_SIZE = 12;
+    const PLAYER_RECENT_GAMES_PAGE_SIZE = 20;
+    const PLAYER_OPPONENTS_PAGE_SIZE = 16;
+    const searchControlsHost = document.getElementById("search-controls");
+    searchControlsHost.innerHTML = `
+      <div id="search-form">
+        <div class="search-grid">
+          <div class="field" data-field-modes="players" data-mobile-primary-search="true"><label for="agaid">AGAID</label><input id="agaid" name="agaid" inputmode="numeric" placeholder="e.g. 12345" /></div>
+          <div class="field" data-field-modes="players" data-mobile-primary-search="true"><label for="first_name">First Name</label><input id="first_name" name="first_name" placeholder="First name" /></div>
+          <div class="field" data-field-modes="players" data-mobile-primary-search="true"><label for="last_name">Last Name</label><input id="last_name" name="last_name" placeholder="Last name" /></div>
+          <div class="field" data-field-modes="players"><label for="chapter-trigger">Chapter</label><div class="multi-select" id="chapter-multiselect"><button type="button" class="multi-select-trigger" id="chapter-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="chapter-menu">Any chapter</button><div class="multi-select-menu hidden" id="chapter-menu" role="dialog" aria-label="Chapter filter options"></div></div></div>
+          <div class="field" data-field-modes="players,tournaments"><label for="state-trigger">State</label><div class="multi-select" id="state-multiselect"><button type="button" class="multi-select-trigger" id="state-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="state-menu">Any state</button><div class="multi-select-menu hidden" id="state-menu" role="dialog" aria-label="State filter options"></div></div></div>
+          <div class="field" data-field-modes="players"><label for="member-type-trigger">Member Type</label><div class="multi-select" id="member-type-multiselect"><button type="button" class="multi-select-trigger" id="member-type-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="member-type-menu">Any member type</button><div class="multi-select-menu hidden" id="member-type-menu" role="dialog" aria-label="Member type filter options"></div></div></div>
+          <div class="field" data-field-modes="players"><label for="status_filter">Status</label><select id="status_filter" name="status_filter"><option value="all" selected>All</option><option value="active">Active</option><option value="expired">Expired</option></select></div>
+          <div class="field" data-field-modes="players"><label for="recent_activity_years">Recent Activity</label><select id="recent_activity_years" name="recent_activity_years"><option value="1">1 Year</option><option value="3">3 Years</option><option value="5">5 Years</option><option value="10">10 Years</option><option value="" selected>No Limit</option></select></div>
+          <div class="field" data-field-modes="players"><label for="rating-band-trigger">Current Rating</label><div class="multi-select" id="rating-band-multiselect"><button type="button" class="multi-select-trigger" id="rating-band-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="rating-band-menu">All ratings</button><div class="multi-select-menu hidden" id="rating-band-menu" role="dialog" aria-label="Current rating filter options"></div></div></div>
+          <div class="field" data-field-modes="tournaments"><label for="description">Tournament</label><input id="description" name="description" placeholder="Tournament text" /></div>
+          <div class="field" data-field-modes="tournaments"><label for="city-trigger">City</label><div class="multi-select" id="city-multiselect"><button type="button" class="multi-select-trigger" id="city-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="city-menu">Any city</button><div class="multi-select-menu hidden" id="city-menu" role="dialog" aria-label="City filter options"></div></div></div>
+          <div class="field" data-field-modes="tournaments"><label for="date_from">Starting On Or After</label><input id="date_from" name="date_from" type="date" /></div>
+          <div class="field" data-field-modes="tournaments"><label for="date_before">Starting Before</label><input id="date_before" name="date_before" type="date" /></div>
+        </div>
+        <button class="action secondary action-compact advanced-search-toggle" type="button" id="advanced-search-toggle" aria-expanded="false">+ more search terms</button>
+        <div class="actions" style="margin-top:12px">
+          <button class="action" type="button" id="search-button" disabled>Search</button>
+          <button class="action secondary" type="button" id="reset-button">Reset</button>
+          <div class="inline-field"><label for="limit">Max results</label><select id="limit" name="limit"><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="250">250</option></select></div>
+        </div>
+      </div>
+    `;
+    const els = {
+      status: document.getElementById("status"),
+      snapshotBadge: document.getElementById("snapshot-badge"),
+      snapshotOps: document.getElementById("snapshot-ops"),
+      snapshotRefreshButton: document.getElementById("snapshot-refresh-button"),
+      snapshotOpsStatus: document.getElementById("snapshot-ops-status"),
+      resultsPanel: document.getElementById("results-panel"),
+      results: document.getElementById("results"),
+      resultCount: document.getElementById("result-count"),
+      resultsTools: document.getElementById("results-tools"),
+      resultsTitle: document.getElementById("results-title"),
+      resultsSubtitle: document.getElementById("results-subtitle"),
+      layout: document.getElementById("layout"),
+      detailPanel: document.getElementById("detail-panel"),
+      detail: document.getElementById("detail"),
+      context: document.getElementById("context"),
+      sgfModal: document.getElementById("sgf-modal"),
+      sgfModalBody: document.getElementById("sgf-modal-body"),
+      sgfModalTitle: document.getElementById("sgf-modal-title"),
+      sgfModalSubtitle: document.getElementById("sgf-modal-subtitle"),
+      sgfModalClose: document.getElementById("sgf-modal-close"),
+      form: document.getElementById("search-form"),
+      searchButton: document.getElementById("search-button"),
+      reset: document.getElementById("reset-button"),
+      advancedSearchToggle: document.getElementById("advanced-search-toggle"),
+      chapterTrigger: document.getElementById("chapter-trigger"),
+      chapterMenu: document.getElementById("chapter-menu"),
+      chapterMultiselect: document.getElementById("chapter-multiselect"),
+      stateTrigger: document.getElementById("state-trigger"),
+      stateMenu: document.getElementById("state-menu"),
+      stateMultiselect: document.getElementById("state-multiselect"),
+      memberTypeTrigger: document.getElementById("member-type-trigger"),
+      memberTypeMenu: document.getElementById("member-type-menu"),
+      memberTypeMultiselect: document.getElementById("member-type-multiselect"),
+      cityTrigger: document.getElementById("city-trigger"),
+      cityMenu: document.getElementById("city-menu"),
+      cityMultiselect: document.getElementById("city-multiselect"),
+      ratingBandTrigger: document.getElementById("rating-band-trigger"),
+      ratingBandMenu: document.getElementById("rating-band-menu"),
+      ratingBandMultiselect: document.getElementById("rating-band-multiselect"),
+      modeButtons: Array.from(document.querySelectorAll(".mode-button")),
+      fieldWrappers: Array.from(document.querySelectorAll("[data-field-modes]")),
+      fields: {
+        agaid: document.getElementById("agaid"),
+        first_name: document.getElementById("first_name"),
+        last_name: document.getElementById("last_name"),
+        status_filter: document.getElementById("status_filter"),
+        recent_activity_years: document.getElementById("recent_activity_years"),
+        limit: document.getElementById("limit"),
+        description: document.getElementById("description"),
+        date_from: document.getElementById("date_from"),
+        date_before: document.getElementById("date_before")
+      }
+    };
+    const ratingBandOptions = [
+      { value: "8plus_dan", label: "8+ dan" },
+      { value: "7_dan", label: "7 dan" },
+      { value: "6_dan", label: "6 dan" },
+      { value: "5_dan", label: "5 dan" },
+      { value: "4_dan", label: "4 dan" },
+      { value: "3_dan", label: "3 dan" },
+      { value: "2_dan", label: "2 dan" },
+      { value: "1_dan", label: "1 dan" },
+      { value: "1_kyu", label: "1 kyu" },
+      { value: "2_kyu", label: "2 kyu" },
+      { value: "3_kyu", label: "3 kyu" },
+      { value: "4_kyu", label: "4 kyu" },
+      { value: "5_kyu", label: "5 kyu" },
+      { value: "6_kyu", label: "6 kyu" },
+      { value: "7_kyu", label: "7 kyu" },
+      { value: "8_kyu", label: "8 kyu" },
+      { value: "9_kyu", label: "9 kyu" },
+      { value: "10_kyu", label: "10 kyu" },
+      { value: "11_kyu", label: "11 kyu" },
+      { value: "12_kyu", label: "12 kyu" },
+      { value: "13_kyu", label: "13 kyu" },
+      { value: "14_kyu", label: "14 kyu" },
+      { value: "15_kyu", label: "15 kyu" },
+      { value: "16_kyu", label: "16 kyu" },
+      { value: "17_kyu", label: "17 kyu" },
+      { value: "18_kyu", label: "18 kyu" },
+      { value: "19_kyu", label: "19 kyu" },
+      { value: "20plus_kyu", label: "20+ kyu" }
+    ];
+    const selectedRatingBands = new Set();
+    const selectedChapters = new Set();
+    const selectedStates = new Set();
+    const selectedMemberTypes = new Set();
+    const selectedCities = new Set();
+    const BLANK_CHAPTER_VALUE = "__blank_chapter__";
+    const BLANK_STATE_VALUE = "__blank_state__";
+    const BLANK_CITY_VALUE = "__blank_city__";
+
+    function setSearchBusy(isBusy) {
+      state.searchBusy = Boolean(isBusy);
+      els.searchButton.disabled = Boolean(isBusy);
+    }
+
+    function clearAgaidFilter() {
+      if (!els.fields.agaid.value.trim()) return;
+      els.fields.agaid.value = "";
+    }
+
+    function clearMultiSelectSearch(menu) {
+      if (!menu) return;
+      const searchInput = menu.querySelector(".multi-select-search-input");
+      if (!searchInput) return;
+      searchInput.value = "";
+      applyMultiSelectFilter(menu, "", menu._multiSelectMatchOption || defaultMultiSelectMatcher);
+    }
+
+    function endpoint(path, params) {
+      const url = new URL((API_BASE || window.location.origin) + path, window.location.origin);
+      Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && String(value).trim() !== "") {
+          url.searchParams.set(key, String(value).trim());
+        }
+      });
+      return url.toString();
+    }
+
+    function isAbortError(error) {
+      return Boolean(error && (error.name === "AbortError" || /aborted/i.test(String(error.message || ""))));
+    }
+
+    function cancelRequest(key) {
+      const controller = state.requestControllers[key];
+      if (controller) controller.abort();
+      state.requestControllers[key] = null;
+    }
+
+    function beginRequest(key) {
+      cancelRequest(key);
+      const controller = new AbortController();
+      state.requestControllers[key] = controller;
+      return controller;
+    }
+
+    function endRequest(key, controller) {
+      if (state.requestControllers[key] === controller) {
+        state.requestControllers[key] = null;
+      }
+    }
+
+    async function loadJson(path, params, options = {}) {
+      const url = endpoint(path, params);
+      let response;
+      try {
+        response = await fetch(url, { signal: options.signal });
+      } catch (error) {
+        if (isAbortError(error)) throw error;
+        throw new Error(`Failed to fetch ${url}. If this page is opened directly from a local file, try the deployed explorer page or a hosted page instead.`);
+      }
+      if (!response.ok) {
+        throw new Error((await response.text()) || `Request failed with ${response.status}`);
+      }
+      return response.json();
+    }
+
+    async function postJson(path, params, options = {}) {
+      const url = endpoint(path, params);
+      let response;
+      try {
+        response = await fetch(url, { method: "POST", signal: options.signal });
+      } catch (error) {
+        if (isAbortError(error)) throw error;
+        throw new Error(`Failed to post to ${url}.`);
+      }
+      if (!response.ok) {
+        throw new Error((await response.text()) || `Request failed with ${response.status}`);
+      }
+      return response.json();
+    }
+
+    function setStatus(message) {
+      els.status.textContent = message;
+    }
+
+    function selectedSgfGameFromList(games) {
+      const selectedId = String(state.selectedSgfGame?.game_id || "");
+      return (games || []).find((game) => String(game.game_id || "") === selectedId) || null;
+    }
+
+    function setSnapshotBadge(message, options = {}) {
+      const { emphasize = false } = options;
+      els.snapshotBadge.innerHTML = emphasize ? `<strong>${escapeHtml(message)}</strong>` : escapeHtml(message);
+    }
+
+    function setSnapshotOpsStatus(message) {
+      if (!els.snapshotOpsStatus) return;
+      els.snapshotOpsStatus.textContent = message || "";
+    }
+
+    function getSnapshotRefreshKey() {
+      let key = "";
+      try {
+        key = sessionStorage.getItem(SNAPSHOT_REFRESH_KEY_STORAGE) || "";
+      } catch (error) {
+      }
+      if (!key) {
+        key = window.prompt("Enter the Ratings Explorer snapshot refresh function key:");
+        key = String(key || "").trim();
+        if (key) {
+          try {
+            sessionStorage.setItem(SNAPSHOT_REFRESH_KEY_STORAGE, key);
+          } catch (error) {
+          }
+        }
+      }
+      return key;
+    }
+
+    function setSnapshotRefreshBusy(isBusy) {
+      state.snapshotRefreshBusy = Boolean(isBusy);
+      if (els.snapshotRefreshButton) {
+        els.snapshotRefreshButton.disabled = state.snapshotRefreshBusy;
+      }
+    }
+
+    function snapshotJobState(payload) {
+      return String(payload?.job_status?.state || "").toLowerCase();
+    }
+
+    function stopSnapshotRefreshPolling() {
+      if (state.snapshotRefreshPollTimer) {
+        window.clearTimeout(state.snapshotRefreshPollTimer);
+      }
+      state.snapshotRefreshPollTimer = null;
+      state.snapshotRefreshPollCount = 0;
+    }
+
+    async function pollSnapshotRefreshStatus() {
+      state.snapshotRefreshPollTimer = null;
+      state.snapshotRefreshPollCount += 1;
+      const payload = await loadSnapshotStatus({ cacheBust: true, updateOpsStatus: true });
+      const jobState = snapshotJobState(payload);
+      if (jobState === "completed" || jobState === "failed") {
+        stopSnapshotRefreshPolling();
+        return;
+      }
+      if (state.snapshotRefreshPollCount >= SNAPSHOT_REFRESH_POLL_LIMIT) {
+        stopSnapshotRefreshPolling();
+        setSnapshotOpsStatus("Still queued or running; check status again in a moment.");
+        return;
+      }
+      state.snapshotRefreshPollTimer = window.setTimeout(() => {
+        pollSnapshotRefreshStatus().catch((error) => {
+          stopSnapshotRefreshPolling();
+          setSnapshotOpsStatus(error.message || "Snapshot status polling failed.");
+        });
+      }, SNAPSHOT_REFRESH_POLL_MS);
+    }
+
+    function startSnapshotRefreshPolling() {
+      stopSnapshotRefreshPolling();
+      state.snapshotRefreshPollTimer = window.setTimeout(() => {
+        pollSnapshotRefreshStatus().catch((error) => {
+          stopSnapshotRefreshPolling();
+          setSnapshotOpsStatus(error.message || "Snapshot status polling failed.");
+        });
+      }, 1500);
+    }
+
+    async function requestSnapshotRefresh() {
+      if (state.snapshotRefreshBusy) return;
+      const key = getSnapshotRefreshKey();
+      if (!key) {
+        setSnapshotOpsStatus("Refresh canceled.");
+        return;
+      }
+      setSnapshotRefreshBusy(true);
+      setSnapshotOpsStatus("Queueing refresh...");
+      try {
+        const payload = await postJson("/api/ratings-explorer/snapshot-refresh", { code: key });
+        setSnapshotBadge("Snapshot refresh queued", { emphasize: true });
+        setSnapshotOpsStatus(payload.requested_at ? `Queued ${formatDateTime(payload.requested_at)}` : "Queued");
+        startSnapshotRefreshPolling();
+      } catch (error) {
+        if (/401|403|Unauthorized|Forbidden/i.test(String(error.message || ""))) {
+          try {
+            sessionStorage.removeItem(SNAPSHOT_REFRESH_KEY_STORAGE);
+          } catch (storageError) {
+          }
+        }
+        setSnapshotOpsStatus(error.message || "Refresh request failed.");
+      } finally {
+        setSnapshotRefreshBusy(false);
+      }
+    }
+
+    function initializeSnapshotOps() {
+      if (!state.snapshotOpsEnabled || !els.snapshotOps) return;
+      els.snapshotOps.classList.remove("hidden");
+      els.snapshotRefreshButton.addEventListener("click", () => {
+        requestSnapshotRefresh().catch((error) => {
+          setSnapshotOpsStatus(error.message || "Refresh request failed.");
+          setSnapshotRefreshBusy(false);
+        });
+      });
+    }
+
+    function populateSelectOptions(select, options, placeholder) {
+      const currentValue = select.value;
+      const placeholderOption = `<option value="">${escapeHtml(placeholder)}</option>`;
+      const optionHtml = (options || []).map((option) => {
+        if (typeof option === "string") {
+          return `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`;
+        }
+        return `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`;
+      }).join("");
+      select.innerHTML = placeholderOption + optionHtml;
+      if ([...select.options].some((option) => option.value === currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "Unknown date";
+      const parsed = new Date(value + "T00:00:00");
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    function formatShortDate(value) {
+      if (!value) return "n/a";
+      const parsed = new Date(value + "T00:00:00");
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" });
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "Unknown";
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZoneName: "short"
+      });
+    }
+
+    function formatRating(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric.toFixed(2) : "n/a";
+    }
+
+    function playerLabelWithRank(name, rank, color) {
+      const safeName = String(name || "").trim();
+      const safeRank = String(rank || "").trim();
+      const base = [safeName, safeRank].filter(Boolean).join(" ");
+      const safeColor = String(color || "").trim().toUpperCase();
+      return safeColor ? `${base} (${safeColor})` : base;
+    }
+
+    function formatMonthYear(value) {
+      if (!value) return "Unknown";
+      const parsed = new Date(value + "T00:00:00");
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleDateString(undefined, { year: "numeric", month: "short" });
+    }
+
+    function buildInteractiveHistoryChart(player, historyPoints) {
+      const points = (historyPoints || [])
+        .map((item) => {
+          const parsed = new Date(`${item.date}T00:00:00`);
+          const rating = Number(item.rating);
+          const sigma = Number(item.sigma ?? 0);
+          if (Number.isNaN(parsed.getTime()) || !Number.isFinite(rating)) return null;
+          return { date: item.date, parsed, rating, sigma: Number.isFinite(sigma) ? sigma : 0 };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.parsed - b.parsed);
+      if (!points.length) {
+        return '<div class="empty">No official rating history was found for this player.</div>';
+      }
+
+      const width = 1200;
+      const height = 520;
+      const left = 88;
+      const right = 26;
+      const top = 52;
+      const bottom = 62;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+
+      const minDate = points[0].parsed;
+      const maxDate = points[points.length - 1].parsed;
+      const chartRating = (value) => {
+        if (value <= -1) return value;
+        if (value >= 1) return value - 2;
+        return -1;
+      };
+      const chartTickLabel = (tick) => {
+        if (tick === -1) return "1/-1";
+        return tick >= 0 ? String(tick + 2) : String(tick);
+      };
+
+      const centerChartRatings = points.map((point) => chartRating(point.rating));
+      let minChartRating = Math.min(...points.map((point, index) => centerChartRatings[index] - point.sigma));
+      let maxChartRating = Math.max(...points.map((point, index) => centerChartRatings[index] + point.sigma));
+      if (minChartRating === maxChartRating) {
+        minChartRating -= 1;
+        maxChartRating += 1;
+      }
+      const chartPadding = Math.max((maxChartRating - minChartRating) * 0.05, 0.25);
+      minChartRating -= chartPadding;
+      maxChartRating += chartPadding;
+
+      const xPos = (date) => {
+        const totalDays = Math.max(1, Math.round((maxDate - minDate) / 86400000));
+        return left + ((((date - minDate) / 86400000)) / totalDays) * plotWidth;
+      };
+      const yPos = (rating) => top + ((maxChartRating - chartRating(rating)) / (maxChartRating - minChartRating)) * plotHeight;
+      const yPosChart = (chartValue) => top + ((maxChartRating - chartValue) / (maxChartRating - minChartRating)) * plotHeight;
+
+      const polyline = points.map((point) => `${xPos(point.parsed).toFixed(2)},${yPos(point.rating).toFixed(2)}`).join(" ");
+      const sigmaBand = [
+        ...points.map((point) => `${xPos(point.parsed).toFixed(2)},${yPosChart(chartRating(point.rating) + point.sigma).toFixed(2)}`),
+        ...[...points].reverse().map((point) => `${xPos(point.parsed).toFixed(2)},${yPosChart(chartRating(point.rating) - point.sigma).toFixed(2)}`)
+      ].join(" ");
+
+      const xTicks = [];
+      for (let year = minDate.getFullYear(); year <= maxDate.getFullYear(); year += 2) {
+        const tick = new Date(year, 0, 1);
+        if (tick >= minDate && tick <= maxDate) xTicks.push(tick);
+      }
+      if (!xTicks.length) xTicks.push(minDate, maxDate);
+
+      const yStart = Math.floor(minChartRating);
+      const yEnd = Math.ceil(maxChartRating);
+      let yTicks = [];
+      for (let tick = yStart; tick <= yEnd; tick += 1) yTicks.push(tick);
+      if (yStart <= -1 && yEnd >= -1 && !yTicks.includes(-1)) yTicks.push(-1);
+      if (yTicks.length < 2) yTicks = [...new Set([Math.floor(minChartRating), Math.ceil(maxChartRating)])];
+      else yTicks = [...new Set(yTicks)].sort((a, b) => a - b);
+
+      const title = escapeHtml(player.display_name || `AGAID ${player.agaid}`);
+      const xGrid = xTicks.map((tick) => {
+        const x = xPos(tick);
+        return `<line class="chart-grid-line" x1="${x.toFixed(2)}" y1="${top}" x2="${x.toFixed(2)}" y2="${top + plotHeight}"></line><text class="chart-label" x="${x.toFixed(2)}" y="${height - 24}" text-anchor="middle">${tick.getFullYear()}</text>`;
+      }).join("");
+      const yGrid = yTicks.map((tick) => {
+        const y = top + ((maxChartRating - tick) / (maxChartRating - minChartRating)) * plotHeight;
+        return `<line class="chart-grid-line" x1="${left}" y1="${y.toFixed(2)}" x2="${left + plotWidth}" y2="${y.toFixed(2)}"></line><text class="chart-label" x="${left - 10}" y="${(y + 4).toFixed(2)}" text-anchor="end">${escapeHtml(chartTickLabel(tick))}</text>`;
+      }).join("");
+      const pointMarkup = points.map((point, index) => {
+        const x = xPos(point.parsed).toFixed(2);
+        const y = yPos(point.rating).toFixed(2);
+        const label = `Date ${formatDate(point.date)}, rating ${formatRating(point.rating)}, sigma ${formatRating(point.sigma)}`;
+        return `<circle class="chart-point" cx="${x}" cy="${y}" r="4.3" tabindex="0" role="img" aria-label="${escapeHtml(label)}" data-point-index="${index}" data-date="${escapeHtml(point.date)}" data-rating="${formatRating(point.rating)}" data-sigma="${formatRating(point.sigma)}"></circle>`;
+      }).join("");
+
+      return `<div class="chart-shell"><div class="chart-tooltip hidden" aria-hidden="true"></div><svg class="chart-svg" viewBox="0 0 ${width} ${height}" aria-label="Rating history chart for ${title}" role="img"><rect width="100%" height="100%" fill="#ffffff"></rect><rect width="100%" height="100%" fill="url(#historyChartBg)"></rect><defs><linearGradient id="historyChartBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"></stop><stop offset="100%" stop-color="#f4f9fd"></stop></linearGradient></defs><text class="chart-title" x="${width / 2}" y="28" text-anchor="middle">${title}</text>${xGrid}${yGrid}<line class="chart-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top + plotHeight}"></line><line class="chart-axis" x1="${left}" y1="${top + plotHeight}" x2="${left + plotWidth}" y2="${top + plotHeight}"></line><polygon class="chart-band" points="${sigmaBand}"></polygon><polyline class="chart-line" points="${polyline}"></polyline>${pointMarkup}<text class="chart-axis-label" x="${width / 2}" y="${height - 4}" text-anchor="middle">Date</text><text class="chart-axis-label" x="24" y="${height / 2}" transform="rotate(-90 24 ${height / 2})" text-anchor="middle">Rating</text></svg></div>`;
+    }
+
+    function wireHistoryChart(root) {
+      const shell = root.querySelector(".chart-shell");
+      if (!shell) return;
+      const tooltip = shell.querySelector(".chart-tooltip");
+      const points = shell.querySelectorAll(".chart-point");
+
+      const hideTooltip = () => {
+        tooltip.classList.add("hidden");
+        tooltip.setAttribute("aria-hidden", "true");
+        points.forEach((point) => point.classList.remove("is-active"));
+      };
+
+      const showTooltip = (point) => {
+        const shellRect = shell.getBoundingClientRect();
+        const pointRect = point.getBoundingClientRect();
+        points.forEach((node) => node.classList.toggle("is-active", node === point));
+        tooltip.innerHTML = `<div class="chart-tooltip-date">${escapeHtml(formatMonthYear(point.dataset.date))}</div><div class="chart-tooltip-value">Rating ${escapeHtml(point.dataset.rating)}</div><div class="chart-tooltip-meta">Sigma ${escapeHtml(point.dataset.sigma)}</div>`;
+        tooltip.classList.remove("hidden");
+        tooltip.setAttribute("aria-hidden", "false");
+        tooltip.style.left = `${pointRect.left - shellRect.left + (pointRect.width / 2)}px`;
+        tooltip.style.top = `${pointRect.top - shellRect.top}px`;
+      };
+
+      points.forEach((point) => {
+        point.addEventListener("mouseenter", () => showTooltip(point));
+        point.addEventListener("focus", () => showTooltip(point));
+        point.addEventListener("mouseleave", hideTooltip);
+        point.addEventListener("blur", hideTooltip);
+      });
+      shell.addEventListener("mouseleave", hideTooltip);
+    }
+
+    function updateModeUi() {
+      const tournaments = state.mode === "tournaments";
+      els.modeButtons.forEach((button) => button.classList.toggle("active", button.dataset.mode === state.mode));
+      els.fieldWrappers.forEach((wrapper) => {
+        const modes = (wrapper.dataset.fieldModes || "").split(",").map((value) => value.trim());
+        const modeVisible = modes.includes(state.mode);
+        const collapsedPlayerSecondary = !tournaments
+          && !state.mobileAdvancedSearchOpen
+          && wrapper.dataset.mobilePrimarySearch !== "true";
+        wrapper.classList.toggle("hidden", !modeVisible || collapsedPlayerSecondary);
+      });
+      if (els.advancedSearchToggle) {
+        els.advancedSearchToggle.classList.toggle("hidden", tournaments);
+        els.advancedSearchToggle.setAttribute("aria-expanded", state.mobileAdvancedSearchOpen ? "true" : "false");
+        els.advancedSearchToggle.textContent = state.mobileAdvancedSearchOpen ? "- fewer search terms" : "+ more search terms";
+      }
+      els.resultsTitle.textContent = tournaments ? "Tournaments" : "Players";
+      els.resultsSubtitle.textContent = tournaments ? "Search results and tournament summaries" : "Search results and quick player summaries";
+    }
+
+    function defaultDetailEmptyState() {
+      return `<div class="empty">${state.mode === "players" ? "Choose a player" : "Choose a tournament"} to open the full detail view.</div>`;
+    }
+
+    function cloneResults(results) {
+      return (results || []).map((item) => ({ ...item }));
+    }
+
+    function navigationSnapshotKey(snapshot) {
+      if (!snapshot) return "";
+      const resultIds = (snapshot.results || []).map((item) => (
+        snapshot.mode === "players"
+          ? String(item.agaid ?? "")
+          : String(item.tournament_code ?? "")
+      ));
+      return JSON.stringify({
+        mode: snapshot.mode,
+        selected: snapshot.selected,
+        selectedType: snapshot.selectedType,
+        resultIds,
+        subtitle: snapshot.resultsSubtitle,
+        count: snapshot.resultCount,
+        sgfOnly: Boolean(snapshot.playerRecentGamesSgfOnly),
+        tournamentsPage: Number(snapshot.playerRecentTournamentsPage || 0),
+        gamesPage: Number(snapshot.playerRecentGamesPage || 0),
+        opponentsPage: Number(snapshot.playerOpponentsPage || 0),
+        opponentsSort: String(snapshot.playerOpponentsSort || "games"),
+        tournamentSearchPage: Number(snapshot.tournamentSearchPage || 0)
+      });
+    }
+
+    function snapshotNavigationState() {
+      return {
+        mode: state.mode,
+        results: cloneResults(state.results),
+        selected: state.selected,
+        selectedType: state.selectedType,
+        playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
+        playerRecentTournamentsPage: state.playerRecentTournamentsPage,
+        playerRecentGamesPage: state.playerRecentGamesPage,
+        playerOpponentsPage: state.playerOpponentsPage,
+        playerOpponentsSort: state.playerOpponentsSort,
+        tournamentSearchPage: state.tournamentSearchPage,
+        tournamentSearchPaging: state.tournamentSearchPaging ? { ...state.tournamentSearchPaging } : null,
+        currentPlayerName: state.currentPlayerName,
+        currentTournamentDescription: state.currentTournamentDescription,
+        resultsSubtitle: els.resultsSubtitle.textContent,
+        resultCount: els.resultCount.textContent
+      };
+    }
+
+    function pushNavigationSnapshot() {
+      const snapshot = snapshotNavigationState();
+      const previous = state.navigationStack[state.navigationStack.length - 1];
+      if (navigationSnapshotKey(previous) === navigationSnapshotKey(snapshot)) return;
+      state.navigationStack.push(snapshot);
+    }
+
+    function syncResultsSummary(subtitle, countLabel) {
+      updateModeUi();
+      if (subtitle) {
+        els.resultsSubtitle.textContent = subtitle;
+      }
+      els.resultCount.textContent = countLabel || `${state.results.length} result${state.results.length === 1 ? "" : "s"}`;
+      renderResultsTools();
+    }
+
+    function restoreResultsSnapshot(snapshot, options = {}) {
+      const { activeValue = null, activeType = null } = options;
+      state.mode = snapshot.mode;
+      state.results = cloneResults(snapshot.results);
+      state.tournamentSearchPage = Math.max(0, Number(snapshot.tournamentSearchPage || 0));
+      state.tournamentSearchPaging = snapshot.tournamentSearchPaging ? { ...snapshot.tournamentSearchPaging } : null;
+      syncResultsSummary(snapshot.resultsSubtitle, snapshot.resultCount);
+      renderResults();
+      if (activeValue && activeType) {
+        setActiveSelection(activeValue, activeType);
+      }
+    }
+
+    function detailBackButtonHtml() {
+      return state.navigationStack.length
+        ? '<button type="button" class="action secondary action-compact" data-nav-back>Back</button>'
+        : "";
+    }
+
+    function scrollDetailPanelToTop() {
+      window.requestAnimationFrame(() => {
+        els.detailPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    async function navigateBack() {
+      const snapshot = state.navigationStack.pop();
+      if (!snapshot) return;
+      state.mode = snapshot.mode;
+      state.selected = snapshot.selected;
+      state.selectedType = snapshot.selectedType;
+      state.playerRecentGamesSgfOnly = Boolean(snapshot.playerRecentGamesSgfOnly);
+      state.playerRecentTournamentsPage = Number(snapshot.playerRecentTournamentsPage || 0);
+      state.playerRecentGamesPage = Number(snapshot.playerRecentGamesPage || 0);
+      state.playerOpponentsPage = Number(snapshot.playerOpponentsPage || 0);
+      state.playerOpponentsSort = String(snapshot.playerOpponentsSort || "games");
+      state.currentPlayerName = snapshot.currentPlayerName || "";
+      state.currentTournamentDescription = snapshot.currentTournamentDescription || "";
+      restoreResultsSnapshot(snapshot);
+      if (!snapshot.selected || !snapshot.selectedType) {
+        els.detail.innerHTML = defaultDetailEmptyState();
+        els.context.innerHTML = '<div class="empty">Choose a player to surface related coverage and videos here.</div>';
+        updateLayoutMode();
+        setStatus("Returned to the previous explorer view.");
+        return;
+      }
+      if (snapshot.selectedType === "player") {
+        await loadPlayer(snapshot.selected, {
+          focusResult: false,
+          pushHistory: false,
+          preserveResultsSnapshot: true,
+          resultsSnapshot: snapshot.results,
+          modeOverride: snapshot.mode,
+          resultsSubtitle: snapshot.resultsSubtitle,
+          resultCountLabel: snapshot.resultCount,
+          playerRecentGamesSgfOnly: snapshot.playerRecentGamesSgfOnly,
+          playerRecentTournamentsPage: snapshot.playerRecentTournamentsPage,
+          playerRecentGamesPage: snapshot.playerRecentGamesPage,
+          playerOpponentsPage: snapshot.playerOpponentsPage,
+          playerOpponentsSort: snapshot.playerOpponentsSort
+        });
+        return;
+      }
+      await loadTournament(snapshot.selected, {
+        focusResult: false,
+        pushHistory: false,
+        preserveResultsSnapshot: true,
+        resultsSnapshot: snapshot.results,
+        modeOverride: snapshot.mode,
+        resultsSubtitle: snapshot.resultsSubtitle,
+        resultCountLabel: snapshot.resultCount
+      });
+    }
+
+    function currentSearchParams() {
+      const selectedRecentActivityYears = els.fields.recent_activity_years.value;
+      return {
+        agaid: els.fields.agaid.value,
+        first_name: els.fields.first_name.value,
+        last_name: els.fields.last_name.value,
+        chapters: [...selectedChapters].join(","),
+        states: [...selectedStates].join(","),
+        member_types: [...selectedMemberTypes].join(","),
+        status: els.fields.status_filter.value || "all",
+        recent_activity_years: selectedRecentActivityYears === "" ? "none" : (selectedRecentActivityYears || "3"),
+        rating_bands: [...selectedRatingBands].join(","),
+        limit: els.fields.limit.value || "10",
+        description: els.fields.description.value,
+        cities: [...selectedCities].join(","),
+        date_from: els.fields.date_from.value,
+        date_before: els.fields.date_before.value,
+        tournament_code: "",
+        page: state.mode === "tournaments" ? state.tournamentSearchPage : 0
+      };
+    }
+
+    function tableHtml(headers, rows) {
+      return `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table>`;
+    }
+
+    function pagingSummary(paging, itemLabel) {
+      const totalCount = Number(paging?.total_count || 0);
+      if (!totalCount) return `0 ${itemLabel}`;
+      const page = Number(paging?.page || 0);
+      const pageSize = Number(paging?.page_size || 0);
+      const start = page * pageSize + 1;
+      const end = Math.min(totalCount, start + pageSize - 1);
+      return `${start}-${end} of ${totalCount} ${itemLabel}`;
+    }
+
+    function pagerControlsHtml(kind, paging, itemLabel) {
+      const totalCount = Number(paging?.total_count || 0);
+      if (!totalCount) return "";
+      return `<span class="eyebrow" data-page-controls="${escapeHtml(kind)}">${escapeHtml(pagingSummary(paging, itemLabel))}</span><button type="button" class="action secondary action-compact" data-page-nav="${escapeHtml(kind)}" data-direction="prev"${paging?.has_previous ? "" : " disabled"}>Previous</button><button type="button" class="action secondary action-compact" data-page-nav="${escapeHtml(kind)}" data-direction="next"${paging?.has_next ? "" : " disabled"}>Next</button>`;
+    }
+
+    function renderResultsTools() {
+      if (!els.resultsTools) return;
+      const paging = state.mode === "tournaments" && state.selectedType !== "tournament" ? state.tournamentSearchPaging : null;
+      const controlsHtml = paging ? pagerControlsHtml("search-tournaments", paging, "tournaments") : "";
+      els.resultsTools.innerHTML = `<div class="eyebrow" id="result-count">${escapeHtml(els.resultCount.textContent || "")}</div>${controlsHtml}`;
+      els.resultCount = document.getElementById("result-count");
+      els.resultsTools.querySelectorAll('[data-page-nav="search-tournaments"]').forEach((button) => {
+        button.addEventListener("click", () => {
+          const delta = button.getAttribute("data-direction") === "prev" ? -1 : 1;
+          state.tournamentSearchPage = Math.max(0, Number(state.tournamentSearchPage || 0) + delta);
+          search().catch(handleError);
+        });
+      });
+    }
+
+    function scrollTableHtml(headers, rows) {
+      return `<div class="table-scroll">${tableHtml(headers, rows)}</div>`;
+    }
+
+    function mobileMetaLine(values) {
+      const items = values.filter((value) => String(value ?? "").trim());
+      return items.length ? `<div class="mobile-card-meta">${items.map((value) => `<span>${escapeHtml(value)}</span>`).join("")}</div>` : "";
+    }
+
+    function mobileStatsLine(values) {
+      const items = values.filter((value) => String(value ?? "").trim());
+      return items.length ? `<div class="mobile-card-stats">${items.map((value) => `<span>${escapeHtml(value)}</span>`).join("")}</div>` : "";
+    }
+
+    function mobileRecentTournamentCardsHtml(items) {
+      return `<div class="mobile-card-list">${items.map((item) => `
+        <article class="mobile-data-card">
+          <a href="#" class="linkish mobile-card-title" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.description || item.tournament_code)}</a>
+          ${mobileMetaLine([formatDate(item.tournament_date), item.tournament_code])}
+          ${mobileStatsLine([`${item.wins || 0}-${item.losses || 0}`, `${item.games_played || 0} games`])}
+        </article>
+      `).join("")}</div>`;
+    }
+
+    function mobileRecentGameCardsHtml(items) {
+      return `<div class="mobile-card-list">${items.map((item) => {
+        const sgfButton = gameHasSgf(item) && gameSgfViewerUrl(item)
+          ? `<button type="button" class="sgf-link" data-game-id="${escapeHtml(item.game_id)}" data-sgf-viewer-url="${escapeHtml(gameSgfViewerUrl(item))}" title="${escapeHtml(item.sgf_code || "")}">View SGF</button>`
+          : `<span class="sgf-link muted">No SGF</span>`;
+        return `
+          <article class="mobile-data-card">
+            <div class="mobile-card-title"><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></div>
+            ${mobileMetaLine([formatDate(item.game_date), item.round ? `Round ${item.round}` : "", item.color ? `Color ${item.color}` : "", item.handicap !== null && item.handicap !== undefined && item.handicap !== "" ? `Hcp ${item.handicap}` : ""])}
+            <div><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></div>
+            ${mobileStatsLine([item.outcome || item.result_text || ""])}
+            <div class="mobile-card-actions">${sgfButton}</div>
+          </article>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function mobileOpponentCardsHtml(items) {
+      return `<div class="mobile-card-list">${items.map((item) => `
+        <article class="mobile-data-card">
+          <a href="#" class="linkish mobile-card-title" data-player-link="${escapeHtml(item.agaid)}">${escapeHtml(item.display_name)}</a>
+          ${mobileStatsLine([`${item.games_played || 0} games`, `${item.wins || 0}-${item.losses || 0}`])}
+          ${mobileMetaLine([`Latest ${formatDate(item.latest_game_date)}`])}
+        </article>
+      `).join("")}</div>`;
+    }
+
+    function formatDelimitedFields(values) {
+      return values.map((value) => escapeHtml(String(value || ""))).join(" | ");
+    }
+
+    function compactChapterTriggerLabel(option) {
+      return option.value === BLANK_CHAPTER_VALUE ? "blank" : option.value;
+    }
+
+    function pluralize(count, singular, plural = `${singular}s`) {
+      return `${count} ${count === 1 ? singular : plural}`;
+    }
+
+    function setMultiSelectTriggerLabel(trigger, text, title = "") {
+      trigger.textContent = text;
+      trigger.title = title || text;
+    }
+
+    function summarizeSelectionLabels(labels, singularLabel, pluralLabel = `${singularLabel}s`) {
+      if (!labels.length) return "";
+      const joined = labels.join(", ");
+      if (joined.length <= 30) return joined;
+      if (labels.length === 1) return labels[0];
+      if (labels.length === 2) return `${labels[0]}, ${labels[1]}`;
+      const preview = `${labels[0]}, ${labels[1]}`;
+      return preview.length <= 24
+        ? `${preview} +${labels.length - 2}`
+        : `${pluralize(labels.length, singularLabel, pluralLabel)} selected`;
+    }
+
+    function updateMultiSelectTrigger(trigger, options, selectedValues, emptyLabel, itemLabel, formatOptionLabel = null) {
+      const selected = options.filter((option) => selectedValues.has(option.value));
+      if (!selected.length) {
+        setMultiSelectTriggerLabel(trigger, emptyLabel, emptyLabel);
+        return;
+      }
+      const labels = selected.map((option) => formatOptionLabel ? formatOptionLabel(option) : option.label);
+      const summary = summarizeSelectionLabels(labels, itemLabel);
+      setMultiSelectTriggerLabel(trigger, summary, labels.join(", "));
+    }
+
+    function compactStateTriggerLabel(option) {
+      return option.value === BLANK_STATE_VALUE ? "blank" : option.value;
+    }
+
+    function updateStateTrigger(trigger, options, selectedValues) {
+      const selected = options.filter((option) => selectedValues.has(option.value));
+      if (!selected.length) {
+        setMultiSelectTriggerLabel(trigger, "Any state", "Any state");
+        return;
+      }
+      const labels = selected.map(compactStateTriggerLabel);
+      const includesBlank = labels.includes("blank");
+      if (includesBlank) {
+        const stateCount = labels.length - 1;
+        const summary = stateCount > 0
+          ? `${pluralize(stateCount, "state")} + blank`
+          : "blank state";
+        setMultiSelectTriggerLabel(trigger, summary, labels.join(", "));
+        return;
+      }
+      const summary = summarizeSelectionLabels(labels, "state");
+      setMultiSelectTriggerLabel(trigger, summary, labels.join(", "));
+    }
+
+    function multiSelectSearchText(option) {
+      return `${String(option.value || "").trim()} ${String(option.label || "").trim()}`.trim().toLowerCase();
+    }
+
+    function defaultMultiSelectMatcher(option, query) {
+      return multiSelectSearchText(option).includes(query);
+    }
+
+    function chapterMultiSelectMatcher(option, query) {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      if (!normalizedQuery) return true;
+      if (option.value === BLANK_CHAPTER_VALUE) {
+        return "blank missing empty no chapter unknown".includes(normalizedQuery);
+      }
+      const code = String(option.value || "").trim().toLowerCase();
+      const label = String(option.label || "").trim().toLowerCase();
+      return code.includes(normalizedQuery) || label.includes(normalizedQuery);
+    }
+
+    function stateMultiSelectMatcher(option, query) {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      if (!normalizedQuery) return true;
+      if (option.value === BLANK_STATE_VALUE) {
+        return "blank missing empty no state unknown".includes(normalizedQuery);
+      }
+      const code = String(option.value || "").trim().toLowerCase();
+      const label = String(option.label || "").trim();
+      const separatorIndex = label.indexOf(" - ");
+      const stateName = (separatorIndex >= 0 ? label.slice(separatorIndex + 3) : label).trim().toLowerCase();
+      if (normalizedQuery.length <= 2 && code.startsWith(normalizedQuery)) {
+        return true;
+      }
+      return stateName.startsWith(normalizedQuery);
+    }
+
+    function findStateTypedSelectionMatch(options, query, matchOption = stateMultiSelectMatcher) {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      if (!normalizedQuery) return null;
+      if (normalizedQuery === "blank") {
+        return options.find((option) => option.value === BLANK_STATE_VALUE) || null;
+      }
+      if (normalizedQuery.length === 2) {
+        return options.find((option) => String(option.value || "").trim().toLowerCase() === normalizedQuery) || null;
+      }
+      if (normalizedQuery.length === 1) {
+        const matches = options.filter((option) => matchOption(option, normalizedQuery));
+        return matches.length === 1 ? matches[0] : null;
+      }
+      return null;
+    }
+
+    function applyMultiSelectFilter(menu, query, matchOption = defaultMultiSelectMatcher) {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      menu.querySelectorAll(".multi-select-option").forEach((optionElement) => {
+        const optionIndex = Number(optionElement.dataset.optionIndex);
+        const option = Number.isInteger(optionIndex) ? menu._multiSelectOptions?.[optionIndex] : null;
+        const matches = !normalizedQuery || (option && matchOption(option, normalizedQuery));
+        optionElement.classList.toggle("hidden", !matches);
+      });
+    }
+
+    function getTournamentStateBaseOptions() {
+      return state.filterOptions.tournament_states?.length ? state.filterOptions.tournament_states : state.filterOptions.states;
+    }
+
+    function getTournamentCityBaseOptions() {
+      return state.filterOptions.tournament_cities?.length ? state.filterOptions.tournament_cities : state.filterOptions.cities;
+    }
+
+    function getFilteredTournamentStateOptions() {
+      const baseOptions = getTournamentStateBaseOptions();
+      const selectedCityValues = [...selectedCities];
+      if (!selectedCityValues.length) return baseOptions;
+      const allowedStates = new Set(
+        (state.filterOptions.tournament_locations || [])
+          .filter((location) => selectedCities.has(location.city))
+          .map((location) => location.state)
+      );
+      return baseOptions.filter((option) => allowedStates.has(option.value));
+    }
+
+    function getFilteredTournamentCityOptions() {
+      const baseOptions = getTournamentCityBaseOptions();
+      const selectedStateValues = [...selectedStates];
+      if (!selectedStateValues.length) return baseOptions;
+      const allowedCities = new Set(
+        (state.filterOptions.tournament_locations || [])
+          .filter((location) => selectedStates.has(location.state))
+          .map((location) => location.city)
+      );
+      return baseOptions.filter((option) => allowedCities.has(option.value));
+    }
+
+    function findTypedMultiSelectMatch(options, query, matchOption = defaultMultiSelectMatcher) {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      if (!normalizedQuery) return null;
+      return options.find((option) => String(option.value || "").trim().toLowerCase() === normalizedQuery)
+        || options.find((option) => String(option.label || "").trim().toLowerCase() === normalizedQuery)
+        || options.find((option) => matchOption(option, normalizedQuery))
+        || null;
+    }
+
+    function renderMultiSelectMenu(menu, options, selectedValues, onChange, searchPlaceholder = "Type to filter or select", matchOption = defaultMultiSelectMatcher, findTypedMatch = null) {
+      const searchValue = "";
+      const selectedCount = options.filter((option) => selectedValues.has(option.value)).length;
+      menu._multiSelectOptions = options;
+      menu._multiSelectMatchOption = matchOption;
+      menu.innerHTML = `
+        <div class="multi-select-search">
+          <input type="text" class="multi-select-search-input" placeholder="${escapeHtml(searchPlaceholder)}" value="${escapeHtml(searchValue)}" />
+        </div>
+        <div class="multi-select-options">
+          ${options.map((option, index) => `
+            <label class="multi-select-option" data-option-index="${index}">
+              <input type="checkbox" value="${escapeHtml(option.value)}" ${selectedValues.has(option.value) ? "checked" : ""} />
+              <span>${escapeHtml(option.label)}</span>
+            </label>
+          `).join("")}
+        </div>
+        <div class="multi-select-footer">
+          <div class="multi-select-selection-note">${selectedCount ? `${pluralize(selectedCount, "option")} selected` : "No filters selected"}</div>
+          <button type="button" class="multi-select-clear" ${selectedCount ? "" : "disabled"}>Clear</button>
+        </div>
+      `;
+      menu.querySelectorAll("input[type='checkbox']").forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) {
+            selectedValues.add(input.value);
+          } else {
+            selectedValues.delete(input.value);
+          }
+          onChange();
+        });
+      });
+      const clearButton = menu.querySelector(".multi-select-clear");
+      if (clearButton) {
+        clearButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectedValues.clear();
+          onChange();
+          renderMultiSelectMenu(menu, options, selectedValues, onChange, searchPlaceholder, matchOption, findTypedMatch);
+          const refreshedSearchInput = menu.querySelector(".multi-select-search-input");
+          if (refreshedSearchInput) {
+            refreshedSearchInput.focus();
+          }
+        });
+      }
+      const searchInput = menu.querySelector(".multi-select-search-input");
+      searchInput.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeMultiSelectMenu(menu);
+          return;
+        }
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const match = findTypedMatch
+            ? findTypedMatch(options, searchInput.value, matchOption)
+            : findTypedMultiSelectMatch(options, searchInput.value, matchOption);
+          if (!match) return;
+          selectedValues.add(match.value);
+          onChange();
+          renderMultiSelectMenu(menu, options, selectedValues, onChange, searchPlaceholder, matchOption, findTypedMatch);
+          const refreshedSearchInput = menu.querySelector(".multi-select-search-input");
+          if (refreshedSearchInput) {
+            refreshedSearchInput.focus();
+            refreshedSearchInput.select();
+          }
+        }
+      });
+      searchInput.addEventListener("input", () => {
+        if (searchInput.value.trim()) {
+          clearAgaidFilter();
+        }
+        applyMultiSelectFilter(menu, searchInput.value, matchOption);
+      });
+      menu.querySelectorAll("input[type='checkbox']").forEach((input) => {
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeMultiSelectMenu(menu);
+          }
+        });
+      });
+      applyMultiSelectFilter(menu, searchValue, matchOption);
+    }
+
+    function updateRatingBandTrigger() {
+      const selectedLabels = ratingBandOptions
+        .filter((option) => selectedRatingBands.has(option.value))
+        .map((option) => option.label);
+      if (!selectedLabels.length) {
+        setMultiSelectTriggerLabel(els.ratingBandTrigger, "All ratings", "All ratings");
+        return;
+      }
+      const summary = summarizeSelectionLabels(selectedLabels, "rating");
+      setMultiSelectTriggerLabel(els.ratingBandTrigger, summary, selectedLabels.join(", "));
+    }
+
+    function renderRatingBandOptions() {
+      renderMultiSelectMenu(els.ratingBandMenu, ratingBandOptions, selectedRatingBands, () => {
+        clearAgaidFilter();
+        updateRatingBandTrigger();
+      }, "Type rating bucket");
+      updateRatingBandTrigger();
+    }
+
+    function closeMultiSelectMenu(menu) {
+      if (!menu) return;
+      menu.classList.add("hidden");
+      clearMultiSelectSearch(menu);
+      const trigger = menu.previousElementSibling;
+      if (trigger?.classList?.contains("multi-select-trigger")) {
+        trigger.classList.remove("active");
+        trigger.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    function openMultiSelectMenu(trigger, menu) {
+      [
+        [els.chapterTrigger, els.chapterMenu],
+        [els.stateTrigger, els.stateMenu],
+        [els.memberTypeTrigger, els.memberTypeMenu],
+        [els.cityTrigger, els.cityMenu],
+        [els.ratingBandTrigger, els.ratingBandMenu]
+      ].forEach(([, otherMenu]) => {
+        if (otherMenu !== menu) {
+          closeMultiSelectMenu(otherMenu);
+        }
+      });
+      const shouldOpen = menu.classList.contains("hidden");
+      if (!shouldOpen) {
+        closeMultiSelectMenu(menu);
+        return false;
+      }
+      menu.classList.remove("hidden");
+      menu.classList.toggle("align-right", window.innerWidth > 760 && trigger.getBoundingClientRect().left > window.innerWidth / 2);
+      trigger.classList.add("active");
+      trigger.setAttribute("aria-expanded", "true");
+      clearMultiSelectSearch(menu);
+      return true;
+    }
+
+    function closeAllMultiSelectMenus() {
+      [els.chapterMenu, els.stateMenu, els.memberTypeMenu, els.cityMenu, els.ratingBandMenu].forEach(closeMultiSelectMenu);
+    }
+
+
+    function normalizeRoundValue(value) {
+      const text = String(value ?? "").trim();
+      if (!text) return { label: "?", sort: Number.MAX_SAFE_INTEGER };
+      const numeric = Number(text);
+      return Number.isFinite(numeric) ? { label: text, sort: numeric } : { label: text, sort: Number.MAX_SAFE_INTEGER - 1 };
+    }
+
+    function outcomeForPlayer(game, playerKey) {
+      const result = String(game.result_text || "").trim().toUpperCase();
+      const color = String(game[playerKey]?.color || "").trim().toUpperCase();
+      if (!result || !color) return "?";
+      const winnerColor = result.startsWith("B") ? "B" : (result.startsWith("W") ? "W" : "");
+      if (!winnerColor) return "?";
+      return color === winnerColor ? "W" : "L";
+    }
+
+    function handicapLabel(value) {
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) return String(numeric);
+      const text = String(value ?? "").trim();
+      return text || "0";
+    }
+
+    function crossTabTokenHtml(game, playerKey) {
+      const round = normalizeRoundValue(game.round).label;
+      const outcome = outcomeForPlayer(game, playerKey);
+      const outcomeLabel = outcome === "W" ? "Win" : (outcome === "L" ? "Loss" : "Result");
+      const color = String(game[playerKey]?.color || "").trim().toUpperCase() || "?";
+      const label = `${outcomeLabel} as ${color} Hcp ${handicapLabel(game.handicap)}`;
+      const title = `Round ${round} | ${game.result_text || "Unknown result"}${game.handicap ? ` | H${game.handicap}` : ""}${game.komi ? ` | K${game.komi}` : ""}`;
+      const viewerUrl = gameSgfViewerUrl(game);
+      if (gameHasSgf(game) && viewerUrl) {
+        return `<button type="button" class="crosstab-token crosstab-outcome sgf-link" data-game-id="${escapeHtml(game.game_id)}" title="${escapeHtml(title)}" data-sgf-viewer-url="${escapeHtml(viewerUrl)}">${escapeHtml(label)}</button>`;
+      }
+      return `<span class="crosstab-token crosstab-outcome" title="${escapeHtml(title)}">${escapeHtml(label)}</span>`;
+    }
+
+    function rankStrength(rank) {
+      const text = String(rank || "").trim().toLowerCase();
+      const match = text.match(/^(\d+)\s*([dkp])$/);
+      if (!match) return Number.NEGATIVE_INFINITY;
+      const value = Number(match[1]);
+      const kind = match[2];
+      if (kind === "d") return 100 + value;
+      if (kind === "k") return 100 - value;
+      if (kind === "p") return 200 + value;
+      return Number.NEGATIVE_INFINITY;
+    }
+
+    function roundKey(round) {
+      const normalized = normalizeRoundValue(round);
+      return `${String(normalized.sort).padStart(16, "0")}|${normalized.label}`;
+    }
+
+    function numericRoundValue(value) {
+      const normalized = normalizeRoundValue(value);
+      return Number.isSafeInteger(normalized.sort) && normalized.sort > 0 && normalized.sort < Number.MAX_SAFE_INTEGER
+        ? normalized.sort
+        : null;
+    }
+
+    function playerIdsForGame(game) {
+      return [
+        String(game?.player_1?.agaid || ""),
+        String(game?.player_2?.agaid || "")
+      ].filter(Boolean);
+    }
+
+    function gameIdSortValue(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER;
+    }
+
+    function normalizeTournamentGameRounds(games, tournamentRoundCount) {
+      const clonedGames = (games || []).map((game) => ({ ...game }));
+      const numericRounds = clonedGames.map((game) => numericRoundValue(game.round)).filter((round) => round !== null);
+      const totalRounds = Math.max(
+        Number.isFinite(Number(tournamentRoundCount)) ? Number(tournamentRoundCount) : 0,
+        ...numericRounds,
+        0
+      );
+      if (!totalRounds) return clonedGames;
+
+      const occupied = new Map();
+      const hasOpenRound = (players, round) => players.every((agaid) => !(occupied.get(agaid)?.has(round)));
+      const reserveRound = (players, round) => {
+        players.forEach((agaid) => {
+          if (!occupied.has(agaid)) occupied.set(agaid, new Set());
+          occupied.get(agaid).add(round);
+        });
+      };
+      const orderedIndexes = clonedGames
+        .map((game, index) => ({ index, round: numericRoundValue(game.round), gameId: gameIdSortValue(game.game_id) }))
+        .sort((a, b) => (a.round ?? Number.MAX_SAFE_INTEGER) - (b.round ?? Number.MAX_SAFE_INTEGER) || a.gameId - b.gameId);
+
+      orderedIndexes.forEach(({ index, round }) => {
+        const game = clonedGames[index];
+        const players = playerIdsForGame(game);
+        if (!players.length || round === null) return;
+        let assignedRound = round;
+        if (!hasOpenRound(players, assignedRound)) {
+          assignedRound = null;
+          for (let candidate = round + 1; candidate <= totalRounds; candidate += 1) {
+            if (hasOpenRound(players, candidate)) {
+              assignedRound = candidate;
+              break;
+            }
+          }
+          if (assignedRound === null) {
+            for (let candidate = 1; candidate <= totalRounds; candidate += 1) {
+              if (hasOpenRound(players, candidate)) {
+                assignedRound = candidate;
+                break;
+              }
+            }
+          }
+        }
+        if (assignedRound !== null) {
+          if (assignedRound !== round) {
+            game.original_round = game.round;
+            game.round = String(assignedRound);
+          }
+          reserveRound(players, assignedRound);
+        }
+      });
+      return clonedGames;
+    }
+
+    function lastNameOnly(player) {
+      const lastName = String(player?.last_name || "").trim();
+      if (lastName) return lastName;
+      const display = String(player?.display_name || "").trim();
+      if (!display) return "Unknown";
+      const parts = display.split(/\s+/).filter(Boolean);
+      return parts.length > 1 ? parts[parts.length - 1] : display;
+    }
+
+    function cellGameHtml(game, playerKey, opponentKey, playerNumbers) {
+      const opponent = game[opponentKey] || {};
+      const opponentNumber = playerNumbers.get(String(opponent.agaid || "")) || "?";
+      const opponentLabel = `vs ${opponentNumber} ${lastNameOnly(opponent)}`;
+      return `<div class="crosstab-cell">${crossTabTokenHtml(game, playerKey)}<a href="#" class="crosstab-opponent" data-player-link="${escapeHtml(opponent.agaid)}">${escapeHtml(opponentLabel)}</a></div>`;
+    }
+
+    function renderTournamentCrossTab(participants, games) {
+      if (!participants.length) {
+        return '<div class="empty">No participant rows were derived from games for this tournament.</div>';
+      }
+      const participantMap = new Map(participants.map((item) => [String(item.agaid), { ...item, strongest_rank: "", wins: 0, losses: 0 }]));
+      const rounds = [];
+      const roundSeen = new Set();
+      const cellMap = new Map();
+      (games || []).forEach((game) => {
+        const p1 = String(game.player_1?.agaid || "");
+        const p2 = String(game.player_2?.agaid || "");
+        const roundLabel = normalizeRoundValue(game.round).label;
+        const rKey = roundKey(game.round);
+        if (!roundSeen.has(rKey)) {
+          roundSeen.add(rKey);
+          rounds.push({ key: rKey, label: roundLabel, sort: normalizeRoundValue(game.round).sort });
+        }
+        if (participantMap.has(p1)) {
+          const entryRank = String(game.player_1?.entry_rank || "").trim();
+          const current = participantMap.get(p1);
+          if (rankStrength(entryRank) > rankStrength(current.strongest_rank)) current.strongest_rank = entryRank;
+          const outcome = outcomeForPlayer(game, "player_1");
+          if (outcome === "W") current.wins += 1;
+          if (outcome === "L") current.losses += 1;
+        }
+        if (participantMap.has(p2)) {
+          const entryRank = String(game.player_2?.entry_rank || "").trim();
+          const current = participantMap.get(p2);
+          if (rankStrength(entryRank) > rankStrength(current.strongest_rank)) current.strongest_rank = entryRank;
+          const outcome = outcomeForPlayer(game, "player_2");
+          if (outcome === "W") current.wins += 1;
+          if (outcome === "L") current.losses += 1;
+        }
+      });
+      rounds.sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label));
+      const orderedParticipants = [...participantMap.values()].sort((a, b) => {
+        const rankDiff = rankStrength(b.strongest_rank) - rankStrength(a.strongest_rank);
+        if (rankDiff !== 0) return rankDiff;
+        const winDiff = Number(b.wins || 0) - Number(a.wins || 0);
+        if (winDiff !== 0) return winDiff;
+        const lossDiff = Number(a.losses || 0) - Number(b.losses || 0);
+        if (lossDiff !== 0) return lossDiff;
+        const byeDiff = (rounds.length - (Number(a.wins || 0) + Number(a.losses || 0)))
+          - (rounds.length - (Number(b.wins || 0) + Number(b.losses || 0)));
+        if (byeDiff !== 0) return byeDiff;
+        return String(a.display_name || "").localeCompare(String(b.display_name || ""));
+      });
+      const playerNumbers = new Map(orderedParticipants.map((player, index) => [String(player.agaid), index + 1]));
+      (games || []).forEach((game) => {
+        const rKey = roundKey(game.round);
+        const p1 = String(game.player_1?.agaid || "");
+        const p2 = String(game.player_2?.agaid || "");
+        if (participantMap.has(p1)) {
+          const key = `${p1}|${rKey}`;
+          if (!cellMap.has(key)) cellMap.set(key, []);
+          cellMap.get(key).push({ html: cellGameHtml(game, "player_1", "player_2", playerNumbers), sort: String(game.game_id || "") });
+        }
+        if (participantMap.has(p2)) {
+          const key = `${p2}|${rKey}`;
+          if (!cellMap.has(key)) cellMap.set(key, []);
+          cellMap.get(key).push({ html: cellGameHtml(game, "player_2", "player_1", playerNumbers), sort: String(game.game_id || "") });
+        }
+      });
+      const headerCells = rounds.map((item) => `<th class="sticky-row">R${escapeHtml(item.label)}</th>`).join("");
+      const bodyRows = orderedParticipants.map((rowPlayer, rowIndex) => {
+        const byeCount = Math.max(rounds.length - (rowPlayer.wins + rowPlayer.losses), 0);
+        const record = `${rowPlayer.wins}-${rowPlayer.losses}-${byeCount}`;
+        const chapterBits = [`AGAID ${rowPlayer.agaid}`];
+        if (rowPlayer.state) chapterBits.push(rowPlayer.state);
+        if (rowPlayer.chapter_code) chapterBits.push(rowPlayer.chapter_code);
+        const cells = rounds.map((round) => {
+          const key = `${rowPlayer.agaid}|${round.key}`;
+          const gamesHtml = (cellMap.get(key) || [])
+            .filter((entry) => entry.html)
+            .sort((a, b) => a.sort.localeCompare(b.sort))
+            .map((entry) => entry.html);
+          return `<td>${gamesHtml.length ? `<div class="crosstab-games">${gamesHtml.join("")}</div>` : '<span class="crosstab-empty">bye</span>'}</td>`;
+        }).join("");
+        const rankBadge = rowPlayer.strongest_rank ? `<span class="crosstab-rank">${escapeHtml(rowPlayer.strongest_rank)}</span>` : "";
+        return `<tr><th class="sticky-col"><a href="#" class="crosstab-player" data-player-link="${escapeHtml(rowPlayer.agaid)}"><span class="crosstab-player-main"><span class="crosstab-player-number">${rowIndex + 1}</span><span class="crosstab-player-name">${escapeHtml(rowPlayer.display_name)}</span>${rankBadge}<span>${escapeHtml(record)}</span></span></a><span class="crosstab-meta">${escapeHtml(chapterBits.join(" | "))}</span></th>${cells}</tr>`;
+      }).join("");
+      return `<div class="crosstab-wrap"><table class="crosstab"><thead><tr><th class="sticky-corner">Player</th>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table></div>`;
+    }
+
+    function setActiveSelection(value, type) {
+      document.querySelectorAll(".result-card").forEach((node) => {
+        const playerMatch = type === "player" && node.dataset.playerAgaid === String(value);
+        const tournamentMatch = type === "tournament" && node.dataset.tournamentCode === String(value);
+        node.classList.toggle("active", playerMatch || tournamentMatch);
+      });
+    }
+
+    function updateLayoutMode() {
+      const focusMode = state.mode === "tournaments" || state.mode === "players";
+      const hasDetail = !!state.selected && (
+        (state.mode === "tournaments" && state.selectedType === "tournament")
+        || (state.mode === "players" && state.selectedType === "player")
+      );
+      const hidePlayerResultsPanel = state.mode === "players" && state.selectedType === "player" && hasDetail;
+      els.layout.classList.toggle("focus-mode", focusMode);
+      els.detailPanel.classList.toggle("hidden", focusMode && !hasDetail);
+      els.resultsPanel.classList.toggle("hidden", hidePlayerResultsPanel);
+    }
+
+    function focusSinglePlayerResult(player) {
+      state.mode = "players";
+      state.results = [player];
+      syncResultsSummary("Focused player summary", "1 result");
+      renderResults();
+      setActiveSelection(player.agaid, "player");
+    }
+
+    function focusSingleTournamentResult(tournament) {
+      state.mode = "tournaments";
+      state.results = [tournament];
+      syncResultsSummary("Focused tournament summary", "1 result");
+      renderResults();
+      setActiveSelection(tournament.tournament_code, "tournament");
+    }
+
+    async function search() {
+      if (state.searchBusy) return;
+      const controller = beginRequest("search");
+      cancelRequest("player");
+      cancelRequest("tournament");
+      cancelRequest("playerContext");
+      setSearchBusy(true);
+      updateModeUi();
+      const params = currentSearchParams();
+      setStatus(`Loading ${state.mode}...`);
+      const path = state.mode === "players" ? "/api/ratings-explorer/players" : "/api/ratings-explorer/tournaments";
+      try {
+        const payload = await loadJson(path, params, { signal: controller.signal });
+        state.results = payload.results || [];
+        state.tournamentSearchPaging = state.mode === "tournaments" ? (payload.paging || {
+          page: state.tournamentSearchPage,
+          page_size: Number(els.fields.limit.value || 10),
+          total_count: state.results.length,
+          has_previous: state.tournamentSearchPage > 0,
+          has_next: false
+        }) : null;
+        state.tournamentSearchPage = state.mode === "tournaments"
+          ? Math.max(0, Number(state.tournamentSearchPaging?.page || 0))
+          : 0;
+        state.selected = null;
+        state.selectedType = null;
+        state.navigationStack = [];
+        renderResults();
+        updateLayoutMode();
+        els.detail.innerHTML = defaultDetailEmptyState();
+        els.context.innerHTML = '<div class="empty">Pick a player or tournament to reveal related context.</div>';
+        const totalCount = Number(state.tournamentSearchPaging?.total_count || state.results.length);
+        els.resultCount.textContent = `${totalCount} result${totalCount === 1 ? "" : "s"}`;
+        renderResultsTools();
+        const debug = payload._debug || {};
+        const timingLabel = Number.isFinite(Number(debug.elapsed_ms)) ? ` in ${Number(debug.elapsed_ms).toFixed(1)} ms` : "";
+        const sourceLabel = debug.data_source ? ` from ${String(debug.data_source).replaceAll("_", " ")}` : "";
+        const displayCount = state.mode === "tournaments" ? totalCount : state.results.length;
+        setStatus(state.results.length ? `Showing ${displayCount} ${state.mode}${sourceLabel}${timingLabel}.` : `No ${state.mode} matched those filters${sourceLabel}${timingLabel}.`);
+        if (state.results.length === 1) {
+          if (state.mode === "players") {
+            setStatus(`Opening the matching player...`);
+            loadPlayer(state.results[0].agaid).catch(handleError);
+          } else {
+            setStatus(`Opening the matching tournament...`);
+            loadTournament(state.results[0].tournament_code).catch(handleError);
+          }
+        }
+      } finally {
+        setSearchBusy(false);
+        endRequest("search", controller);
+      }
+    }
+
+    async function loadSnapshotStatus(options = {}) {
+      try {
+        const params = options.cacheBust ? { _: Date.now() } : undefined;
+        const payload = await loadJson("/api/ratings-explorer/snapshot-status", params);
+        const jobStatus = payload.job_status || {};
+        const jobState = snapshotJobState(payload);
+        if (jobState === "queued" || jobState === "running") {
+          const detail = jobStatus.detail || (jobState === "queued" ? "Snapshot refresh queued" : "Snapshot refresh running");
+          setSnapshotBadge(detail, { emphasize: true });
+          if (options.updateOpsStatus) {
+            setSnapshotOpsStatus(jobState === "queued" ? "Waiting for timer pickup..." : "Refresh running...");
+          }
+          return payload;
+        }
+        if (jobState === "failed") {
+          setSnapshotBadge(jobStatus.detail || "Snapshot refresh failed", { emphasize: true });
+          if (options.updateOpsStatus) {
+            setSnapshotOpsStatus(jobStatus.error || "Refresh failed.");
+          }
+          return payload;
+        }
+        const meta = payload.meta || {};
+        const generatedAt = meta.generated_at;
+        if (payload.snapshot_available && generatedAt) {
+          setSnapshotBadge(`Snapshot generated ${formatDateTime(generatedAt)}`);
+          if (options.updateOpsStatus && jobState === "completed") {
+            setSnapshotOpsStatus(`Completed ${formatDateTime(jobStatus.last_completed_at || jobStatus.updated_at || generatedAt)}`);
+          }
+          return payload;
+        }
+        if (payload.snapshot_available) {
+          setSnapshotBadge("Snapshot available");
+          return payload;
+        }
+        const detail = jobStatus.detail || "Snapshot not built yet";
+        setSnapshotBadge(detail, { emphasize: true });
+        return payload;
+      } catch (error) {
+        setSnapshotBadge("Snapshot freshness unavailable");
+        if (options.updateOpsStatus) throw error;
+        return null;
+      }
+    }
+
+    async function warmSnapshotInBackground() {
+      try {
+        await loadJson("/api/ratings-explorer/snapshot-warm");
+      } catch (error) {
+      }
+    }
+
+    function preloadBackgroundStartupData() {
+      warmSnapshotInBackground();
+      loadFilterOptions().catch((error) => {
+        console.error(error);
+      });
+    }
+
+    async function loadStartupPlayers() {
+      if (state.searchBusy) return;
+      const controller = beginRequest("search");
+      cancelRequest("player");
+      cancelRequest("tournament");
+      cancelRequest("playerContext");
+      setSearchBusy(true);
+      updateModeUi();
+      const params = { limit: els.fields.limit.value || "10" };
+      setStatus("Loading players...");
+      try {
+        const payload = await loadJson("/api/ratings-explorer/players-startup", params, { signal: controller.signal });
+        state.results = payload.results || [];
+        state.tournamentSearchPage = 0;
+        state.tournamentSearchPaging = null;
+        state.selected = null;
+        state.selectedType = null;
+        state.navigationStack = [];
+        renderResults();
+        updateLayoutMode();
+        els.detail.innerHTML = defaultDetailEmptyState();
+        els.context.innerHTML = '<div class="empty">Pick a player or tournament to reveal related context.</div>';
+        els.resultCount.textContent = `${state.results.length} result${state.results.length === 1 ? "" : "s"}`;
+        renderResultsTools();
+        const debug = payload._debug || {};
+        const timingLabel = Number.isFinite(Number(debug.elapsed_ms)) ? ` in ${Number(debug.elapsed_ms).toFixed(1)} ms` : "";
+        const sourceLabel = debug.data_source ? ` from ${String(debug.data_source).replaceAll("_", " ")}` : "";
+        setStatus(state.results.length ? `Showing ${state.results.length} players${sourceLabel}${timingLabel}.` : `No players were available${sourceLabel}${timingLabel}.`);
+      } finally {
+        setSearchBusy(false);
+        endRequest("search", controller);
+      }
+      preloadBackgroundStartupData();
+    }
+
+    async function loadFilterOptions() {
+      if (state.filterOptionsLoaded) return state.filterOptions;
+      if (state.filterOptionsLoadingPromise) return state.filterOptionsLoadingPromise;
+      state.filterOptionsLoadingPromise = (async () => {
+        const payload = await loadJson("/api/ratings-explorer/filter-options");
+        state.filterOptions = {
+          chapters: payload.chapters || [],
+          states: payload.states || [],
+          cities: payload.cities || [],
+          member_types: payload.member_types || [],
+          tournament_states: payload.tournament_states || payload.states || [],
+          tournament_cities: payload.tournament_cities || payload.cities || [],
+          tournament_locations: payload.tournament_locations || []
+        };
+        renderMultiSelectMenu(els.chapterMenu, state.filterOptions.chapters, selectedChapters, () => {
+          clearAgaidFilter();
+          updateMultiSelectTrigger(els.chapterTrigger, state.filterOptions.chapters, selectedChapters, "Any chapter", "chapters", compactChapterTriggerLabel);
+        }, "Type chapter code or name", chapterMultiSelectMatcher);
+        updateMultiSelectTrigger(els.chapterTrigger, state.filterOptions.chapters, selectedChapters, "Any chapter", "chapters", compactChapterTriggerLabel);
+        renderStateMenu();
+        renderMultiSelectMenu(els.memberTypeMenu, state.filterOptions.member_types, selectedMemberTypes, () => {
+          clearAgaidFilter();
+          updateMultiSelectTrigger(els.memberTypeTrigger, state.filterOptions.member_types, selectedMemberTypes, "Any member type", "member types");
+        }, "Type member type");
+        updateMultiSelectTrigger(els.memberTypeTrigger, state.filterOptions.member_types, selectedMemberTypes, "Any member type", "member types");
+        renderCityMenu();
+        state.filterOptionsLoaded = true;
+        return state.filterOptions;
+      })();
+      try {
+        return await state.filterOptionsLoadingPromise;
+      } finally {
+        state.filterOptionsLoadingPromise = null;
+      }
+    }
+
+    function renderStateMenu() {
+      const menuOptions = state.mode === "tournaments" ? getFilteredTournamentStateOptions() : state.filterOptions.states;
+      const triggerOptions = state.mode === "tournaments" ? getTournamentStateBaseOptions() : state.filterOptions.states;
+      renderMultiSelectMenu(els.stateMenu, menuOptions, selectedStates, () => {
+        clearAgaidFilter();
+        updateStateTrigger(els.stateTrigger, triggerOptions, selectedStates);
+        if (state.mode === "tournaments") {
+          renderCityMenu();
+        }
+      }, "Type state code or name", stateMultiSelectMatcher, findStateTypedSelectionMatch);
+      updateStateTrigger(els.stateTrigger, triggerOptions, selectedStates);
+    }
+
+    function renderCityMenu() {
+      const menuOptions = state.mode === "tournaments" ? getFilteredTournamentCityOptions() : state.filterOptions.cities;
+      const triggerOptions = state.mode === "tournaments" ? getTournamentCityBaseOptions() : state.filterOptions.cities;
+      renderMultiSelectMenu(els.cityMenu, menuOptions, selectedCities, () => {
+        clearAgaidFilter();
+        updateMultiSelectTrigger(els.cityTrigger, triggerOptions, selectedCities, "Any city", "cities");
+        if (state.mode === "tournaments") {
+          renderStateMenu();
+        }
+      }, "Type city");
+      updateMultiSelectTrigger(els.cityTrigger, triggerOptions, selectedCities, "Any city", "cities");
+    }
+
+    function syncTournamentDateFields(changedField) {
+      const dateFrom = els.fields.date_from.value;
+      const dateBefore = els.fields.date_before.value;
+      if (changedField === "date_from") {
+        if (dateFrom && (!dateBefore || dateFrom > dateBefore)) {
+          els.fields.date_before.value = dateFrom;
+        }
+        return;
+      }
+      if (changedField === "date_before") {
+        if (dateBefore && (!dateFrom || dateBefore < dateFrom)) {
+          els.fields.date_from.value = dateBefore;
+        }
+      }
+    }
+
+    function playerResultHtml(item) {
+      if (state.mode === "players") {
+        const subtitle = formatDelimitedFields([
+          `AGAID ${item.agaid ?? ""}`,
+          item.chapter_code || "",
+          item.state || "",
+          item.member_type || "",
+          item.expiration_date ? `Expiration ${formatShortDate(item.expiration_date)}` : "",
+        ]);
+        const meta = formatDelimitedFields([
+          item.rank_label ? item.rank_label : "Unrated",
+          `Rating ${formatRating(item.rating)}`,
+          `Sigma ${formatRating(item.sigma)}`,
+          `${item.tournament_count || 0} tournaments`,
+          `${item.game_count || 0} games`,
+        ]);
+        return `<div class="result-row"><div class="result-main"><div class="title">${escapeHtml(item.display_name)}</div><div class="subtitle">${subtitle}</div></div><div class="result-meta">${meta}</div></div>`;
+      }
+      const memberType = item.member_type ? ` | ${escapeHtml(item.member_type)}` : "";
+      const expiration = item.expiration_date ? ` | Exp date: ${formatShortDate(item.expiration_date)}` : "";
+      return `<div class="headline"><div><div class="title">${escapeHtml(item.display_name)}</div><div class="subtitle">AGAID ${escapeHtml(item.agaid)}${item.chapter_label ? ` | ${escapeHtml(item.chapter_label)}` : ""}${item.state ? ` | ${escapeHtml(item.state)}` : ""}${memberType}</div></div></div><div class="meta-line">Rating ${formatRating(item.rating)} +/- ${formatRating(item.sigma)}${expiration}</div><div class="meta-line">${item.tournament_count || 0} tournaments | ${item.game_count || 0} games</div>`;
+    }
+
+    function tournamentResultHtml(item) {
+      if (state.mode === "tournaments") {
+        const subtitle = formatDelimitedFields([
+          item.tournament_code || "",
+          item.state || "",
+          item.city || "",
+        ]);
+        const meta = formatDelimitedFields([
+          formatDate(item.tournament_date),
+          `${item.rounds ?? "?"} rounds`,
+          `${item.total_players ?? item.participant_count ?? 0} players`,
+          `${item.game_count || 0} games`,
+        ]);
+        return `<div class="result-row"><div class="result-main"><div class="title">${escapeHtml(item.description || item.tournament_code)}</div><div class="subtitle">${subtitle}</div></div><div class="result-meta">${meta}</div></div>`;
+      }
+      return `<div class="headline"><div><div class="title">${escapeHtml(item.description || item.tournament_code)}</div><div class="subtitle">${escapeHtml(item.tournament_code)}${item.state ? ` | ${escapeHtml(item.state)}` : ""}${item.city ? ` | ${escapeHtml(item.city)}` : ""}</div></div><div class="pill">${formatDate(item.tournament_date)}</div></div><div class="pillrow"><span class="pill">${item.rounds ?? "?"} rounds</span><span class="pill">${item.total_players ?? item.participant_count ?? 0} players</span><span class="pill">${item.game_count || 0} games</span></div>`;
+    }
+
+    function renderPlayerContext(newsArticles, reviewVideos) {
+      const rows = [
+        ...newsArticles.slice(0, 7).map((item) => `<div class="context-row"><div class="context-kind">AGA E-Journal article</div><div class="context-main"><a href="${escapeHtml(item.article_link)}" class="linkish" target="_blank" rel="noopener noreferrer">${escapeHtml(item.article_title)}</a></div><div class="context-meta">${formatDate(item.journal_date)}</div></div>`),
+        ...reviewVideos.slice(0, 7).map((item) => `<div class="context-row"><div class="context-kind">NAOL review video</div><div class="context-main"><a href="${escapeHtml(item.video_link)}" class="linkish" target="_blank" rel="noopener noreferrer">${escapeHtml(item.context_label)}</a></div><div class="context-meta">${formatDate(item.journal_date)}${item.review_count ? ` | game ${escapeHtml(item.game_order || "?")} of ${escapeHtml(item.review_count)} ${item.review_count === 1 ? "review" : "reviews"}` : ""}</div></div>`)
+      ];
+      return rows.length ? `<div class="context-list">${rows.join("")}</div>` : "";
+    }
+
+    function renderPlayerContextCard(contentHtml, hidden = false) {
+      return `<section class="detail-card${hidden ? " hidden" : ""}" id="player-context-card"><div class="section-head"><div><h3>Context</h3><div class="eyebrow">AGA E-Journal articles and NAOL review videos related to this player</div></div></div><div id="player-context-content">${contentHtml}</div></section>`;
+    }
+
+    async function loadPlayerContext(agaid, requestId) {
+      const controller = beginRequest("playerContext");
+      try {
+        const payload = await loadJson("/api/ratings-explorer/player-context", { agaid }, { signal: controller.signal });
+        if (state.playerContextRequestId !== requestId || state.selectedType !== "player" || String(state.selected) !== String(agaid)) return;
+        const contextHtml = renderPlayerContext(payload.news_articles || [], payload.review_videos || []);
+        const target = document.getElementById("player-context-content");
+        if (!target) return;
+        const card = document.getElementById("player-context-card");
+        if (!contextHtml) {
+          if (card) card.classList.add("hidden");
+          target.innerHTML = "";
+          return;
+        }
+        target.innerHTML = contextHtml;
+        if (card) card.classList.remove("hidden");
+      } catch (error) {
+        if (isAbortError(error)) return;
+        if (state.playerContextRequestId !== requestId || state.selectedType !== "player" || String(state.selected) !== String(agaid)) return;
+        const target = document.getElementById("player-context-content");
+        const card = document.getElementById("player-context-card");
+        if (!target) return;
+        target.innerHTML = '<div class="empty">Player context is temporarily unavailable.</div>';
+        if (card) card.classList.remove("hidden");
+      } finally {
+        endRequest("playerContext", controller);
+      }
+    }
+
+    function renderResults() {
+      if (!state.results.length) {
+        els.results.innerHTML = '<div class="empty">No matches yet. Try broadening the filters or switching modes.</div>';
+        return;
+      }
+      els.results.innerHTML = "";
+      state.results.forEach((item) => {
+        const card = document.createElement("article");
+        card.className = "result-card";
+        if (state.mode === "players") {
+          card.dataset.playerAgaid = String(item.agaid ?? "");
+        } else {
+          card.dataset.tournamentCode = String(item.tournament_code ?? "");
+        }
+        card.innerHTML = state.mode === "players" ? playerResultHtml(item) : tournamentResultHtml(item);
+        if (state.mode === "tournaments" && state.selectedType === "tournament" && String(state.selected) === String(item.tournament_code)) {
+          card.classList.add("focused-tournament-card");
+        }
+        card.addEventListener("click", () => {
+          if (state.mode === "players") {
+            loadPlayer(item.agaid, { focusResult: false });
+          } else {
+            loadTournament(item.tournament_code, { focusResult: false });
+          }
+        });
+        els.results.appendChild(card);
+      });
+    }
+
+    const SGF_VIEWER_REV = "20260415b";
+
+    function withSgfViewerRev(url) {
+      const raw = String(url || "").trim();
+      if (!raw) return "";
+      const separator = raw.includes("?") ? "&" : "?";
+      if (/[?&]rev=/.test(raw)) return raw;
+      return `${raw}${separator}rev=${encodeURIComponent(SGF_VIEWER_REV)}`;
+    }
+
+    function withMobileSgfViewer(url) {
+      const raw = String(url || "").trim();
+      if (!raw || /[?&]mobile=/.test(raw)) return raw;
+      const separator = raw.includes("?") ? "&" : "?";
+      return `${raw}${separator}mobile=1`;
+    }
+
+    function gameSgfViewerUrl(game) {
+      if (!game) return "";
+      const explicitUrl = String(game.sgf_viewer_url || "").trim();
+      if (explicitUrl) return withMobileSgfViewer(withSgfViewerRev(explicitUrl));
+      const hasSgf = Boolean(game.has_sgf || String(game.sgf_code || "").trim());
+      return hasSgf && game.game_id
+        ? withMobileSgfViewer(withSgfViewerRev(`/api/ratings-explorer/game-sgf-viewer?game_id=${encodeURIComponent(String(game.game_id))}`))
+        : "";
+    }
+
+    function gameHasSgf(game) {
+      if (!game) return false;
+      return Boolean(game.has_sgf || String(game.sgf_code || "").trim());
+    }
+
+    function filteredPlayerRecentGames(games) {
+      const items = games || [];
+      return state.playerRecentGamesSgfOnly ? items.filter((item) => gameHasSgf(item)) : items;
+    }
+
+    function sgfViewerTitle(game) {
+      if (!game) return "SGF Viewer";
+      let player1 = game.player_1?.display_name || game.player_name || game.member_name || "";
+      let player2 = game.player_2?.display_name || game.opponent_name || "";
+      let rank1 = String(game.player_1?.entry_rank || "").trim();
+      let rank2 = String(game.player_2?.entry_rank || "").trim();
+      let color1 = String(game.player_1?.color || "").trim().toUpperCase();
+      let color2 = String(game.player_2?.color || "").trim().toUpperCase();
+      if ((!player1 || !player2) && game.opponent_name) {
+        player1 = game.opponent_name || player1;
+        player2 = state.currentPlayerName || game.player_name || game.member_name || `AGAID ${state.selected || "?"}`;
+        rank1 = String(game.opponent_rank || "").trim();
+        rank2 = String(game.player_rank || "").trim();
+        color2 = String(game.color || "").trim().toUpperCase();
+        color1 = color2 === "B" ? "W" : color2 === "W" ? "B" : "";
+      }
+      player1 = player1 || `AGAID ${game.player_1?.agaid || game.opponent_agaid || "?"}`;
+      player2 = player2 || `AGAID ${game.player_2?.agaid || state.selected || "?"}`;
+      const player1Label = playerLabelWithRank(player1, rank1, color1);
+      const player2Label = playerLabelWithRank(player2, rank2, color2);
+      const handicapValue = Number(game.handicap);
+      return [
+        `${player1Label} vs ${player2Label}`,
+        game.game_date ? formatDate(game.game_date) : "",
+        game.round ? `Rnd ${game.round}` : "",
+        Number.isFinite(handicapValue) ? `Hcp ${handicapValue}` : ""
+      ].filter(Boolean).join(" | ");
+    }
+
+    function renderSgfViewerContent(selectedGame) {
+      const viewerUrl = gameSgfViewerUrl(selectedGame);
+      if (!selectedGame || !viewerUrl) {
+        return `<div class="empty">Choose a game with SGF to load it here.</div>`;
+      }
+      return `<iframe class="sgf-viewer-frame" src="${escapeHtml(viewerUrl)}" loading="lazy" title="SGF viewer"></iframe>`;
+    }
+
+    function closeSgfViewer() {
+      els.sgfModal.classList.add("hidden");
+      els.sgfModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    function syncSgfModal() {
+      els.sgfModalTitle.textContent = sgfViewerTitle(state.selectedSgfGame);
+      els.sgfModalSubtitle.textContent = "";
+      els.sgfModalBody.innerHTML = renderSgfViewerContent(state.selectedSgfGame);
+    }
+
+    function openSgfViewer(game) {
+      if (!game || !gameSgfViewerUrl(game)) return;
+      state.selectedSgfGame = game;
+      syncSgfModal();
+      els.sgfModal.classList.remove("hidden");
+      els.sgfModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      els.sgfModalClose.focus();
+      const label = game.opponent_name ? ` vs ${game.opponent_name}` : "";
+      setStatus(`Loaded SGF viewer for game ${game.game_id || ""}${label}.`);
+    }
+
+    function wireLinks(root) {
+      root.querySelectorAll("[data-nav-back]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          navigateBack().catch(handleError);
+        });
+      });
+      root.querySelectorAll("[data-player-link]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const agaid = link.getAttribute("data-player-link");
+          if (agaid) loadPlayer(agaid, { focusResult: true });
+        });
+      });
+      root.querySelectorAll("[data-tournament-link]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const code = link.getAttribute("data-tournament-link");
+          if (code) loadTournament(code, { focusResult: true });
+        });
+      });
+      root.querySelectorAll("[data-sgf-viewer-url]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const gameId = link.getAttribute("data-game-id");
+          const game = (state.activeGames || []).find((item) => String(item.game_id || "") === String(gameId || ""));
+          if (game) openSgfViewer(game);
+        });
+      });
+    }
+
+    async function loadPlayer(agaid, options = {}) {
+      const controller = beginRequest("player");
+      cancelRequest("tournament");
+      cancelRequest("playerContext");
+      const {
+        focusResult = false,
+        pushHistory = true,
+        preserveResultsSnapshot = false,
+        resultsSnapshot = [],
+        modeOverride = "players",
+        resultsSubtitle = "",
+        resultCountLabel = "",
+        playerRecentGamesSgfOnly = state.playerRecentGamesSgfOnly,
+        playerRecentTournamentsPage = 0,
+        playerRecentGamesPage = 0,
+        playerOpponentsPage = 0,
+        playerOpponentsSort = state.playerOpponentsSort
+      } = options;
+      if (pushHistory) pushNavigationSnapshot();
+      state.playerRecentGamesSgfOnly = Boolean(playerRecentGamesSgfOnly);
+      state.playerRecentTournamentsPage = Math.max(0, Number(playerRecentTournamentsPage || 0));
+      state.playerRecentGamesPage = Math.max(0, Number(playerRecentGamesPage || 0));
+      state.playerOpponentsPage = Math.max(0, Number(playerOpponentsPage || 0));
+      state.playerOpponentsSort = String(playerOpponentsSort || "games") === "latest" ? "latest" : "games";
+      state.selected = agaid;
+      state.selectedType = "player";
+      setStatus(`Loading player ${agaid}...`);
+      try {
+        const payload = await loadJson("/api/ratings-explorer/player", {
+          agaid,
+          recent_games_sgf_only: state.playerRecentGamesSgfOnly ? "1" : "",
+          recent_tournaments_page: state.playerRecentTournamentsPage,
+          recent_games_page: state.playerRecentGamesPage,
+          opponents_page: state.playerOpponentsPage,
+          opponents_sort: state.playerOpponentsSort
+        }, { signal: controller.signal });
+        const player = payload.player;
+        state.currentPlayerName = player?.display_name || `AGAID ${agaid}`;
+        state.currentTournamentDescription = "";
+        const recentTournaments = payload.recent_tournaments || [];
+        const recentTournamentsPaging = payload.recent_tournaments_paging || {
+          page: state.playerRecentTournamentsPage,
+          page_size: PLAYER_RECENT_TOURNAMENTS_PAGE_SIZE,
+          total_count: recentTournaments.length,
+          has_previous: state.playerRecentTournamentsPage > 0,
+          has_next: false
+        };
+        const opponents = payload.opponents || [];
+        const opponentsPaging = payload.opponents_paging || {
+          page: state.playerOpponentsPage,
+          page_size: PLAYER_OPPONENTS_PAGE_SIZE,
+          total_count: opponents.length,
+          has_previous: state.playerOpponentsPage > 0,
+          has_next: false
+        };
+        const opponentsSort = String(payload.opponents_sort || state.playerOpponentsSort || "games") === "latest" ? "latest" : "games";
+        const recentGames = payload.recent_games || [];
+        const recentGamesPaging = payload.recent_games_paging || {
+          page: state.playerRecentGamesPage,
+          page_size: PLAYER_RECENT_GAMES_PAGE_SIZE,
+          total_count: recentGames.length,
+          has_previous: state.playerRecentGamesPage > 0,
+          has_next: false
+        };
+        const sgfGames = recentGames.filter((item) => gameHasSgf(item));
+        const visibleRecentGames = filteredPlayerRecentGames(recentGames);
+        const ratingHistory = payload.rating_history || [];
+        state.playerRecentTournamentsPage = Number(recentTournamentsPaging.page || 0);
+        state.playerRecentGamesPage = Number(recentGamesPaging.page || 0);
+        state.playerOpponentsPage = Number(opponentsPaging.page || 0);
+        state.playerOpponentsSort = opponentsSort;
+        state.activeGames = recentGames;
+        state.selectedSgfGame = selectedSgfGameFromList(recentGames) || sgfGames[0] || null;
+        const contextSection = renderPlayerContextCard("", true);
+        const chartHtml = buildInteractiveHistoryChart(player, ratingHistory);
+        const recentGamesTools = `${pagerControlsHtml("games", recentGamesPaging, state.playerRecentGamesSgfOnly ? "SGF games" : "games")}<label class="inline-field" style="margin-left:auto"><input type="checkbox" id="recent-games-sgf-only"${state.playerRecentGamesSgfOnly ? " checked" : ""} /> <span>Games with SGF only?</span></label>`;
+        const recentTournamentsTools = recentTournamentsPaging.total_count ? `<div class="section-tools">${pagerControlsHtml("tournaments", recentTournamentsPaging, "tournaments")}</div>` : "";
+        const opponentsSortControls = `<label class="inline-field"><span>Sort</span><select id="opponents-sort"><option value="games"${opponentsSort === "games" ? " selected" : ""}>Games</option><option value="latest"${opponentsSort === "latest" ? " selected" : ""}>Latest</option></select></label>`;
+        const opponentsTools = `<div class="section-tools">${opponentsPaging.total_count ? pagerControlsHtml("opponents", opponentsPaging, "opponents") : ""}${opponentsSortControls}</div>`;
+        if (preserveResultsSnapshot) {
+          restoreResultsSnapshot({
+            mode: modeOverride,
+            results: resultsSnapshot,
+            resultsSubtitle,
+            resultCount: resultCountLabel
+          }, { activeValue: player.agaid, activeType: "player" });
+        } else {
+          focusSinglePlayerResult(player);
+        }
+        updateLayoutMode();
+        const host = document.createElement("div");
+        host.className = "detail-grid";
+        const recentTournamentsHtml = recentTournaments.length
+          ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Tournament", "Date", "Record", "Games"], recentTournaments.map((item) => `<tr><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.description || item.tournament_code)}</a></td><td>${formatDate(item.tournament_date)}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${item.games_played || 0}</td></tr>`))}</div>${mobileRecentTournamentCardsHtml(recentTournaments)}`
+          : '<div class="empty">No tournament history was found for this player.</div>';
+        const recentGamesHtml = visibleRecentGames.length
+          ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Date", "Opponent", "Tournament", "Rnd", "B/W", "Hcp", "W/L", "SGF"], visibleRecentGames.map((item) => `<tr><td>${formatDate(item.game_date)}</td><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></td><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></td><td>${escapeHtml(item.round || "")}</td><td>${escapeHtml(item.color || "")}</td><td>${escapeHtml(item.handicap ?? "")}</td><td>${escapeHtml(item.outcome || item.result_text || "")}</td><td>${gameHasSgf(item) && gameSgfViewerUrl(item) ? `<button type="button" class="sgf-link" data-game-id="${escapeHtml(item.game_id)}" data-sgf-viewer-url="${escapeHtml(gameSgfViewerUrl(item))}" title="${escapeHtml(item.sgf_code || "")}">View SGF</button>` : `<span class="sgf-link muted">None</span>`}</td></tr>`))}</div>${mobileRecentGameCardsHtml(visibleRecentGames)}`
+          : `<div class="empty">${state.playerRecentGamesSgfOnly ? "No SGF-linked recent games were found for this player." : "No recent games were found for this player."}</div>`;
+        const opponentsHtml = opponents.length
+          ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Opponent", "Games", "Record", "Latest"], opponents.map((item) => `<tr><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.agaid)}">${escapeHtml(item.display_name)}</a></td><td>${item.games_played || 0}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${formatDate(item.latest_game_date)}</td></tr>`))}</div>${mobileOpponentCardsHtml(opponents)}`
+          : '<div class="empty">No opponent detail is available for this player yet.</div>';
+        host.innerHTML = `
+          <section class="detail-card">
+            <div class="headline">
+              <div>
+                <div class="title">${escapeHtml(player.display_name)}</div>
+                <div class="subtitle">AGAID ${escapeHtml(player.agaid)}${player.chapter_label ? ` | ${escapeHtml(player.chapter_label)}` : ""}${player.state ? ` | ${escapeHtml(player.state)}` : ""}${player.expiration_date ? ` | Expiration ${formatShortDate(player.expiration_date)}` : ""}</div>
+              </div>
+              <div class="section-tools">${detailBackButtonHtml()}</div>
+            </div>
+            <div class="metric-grid">
+              <div class="metric"><div class="label">Current Rating</div><div class="value">${formatRating(player.rating)}</div></div>
+              <div class="metric"><div class="label">Sigma</div><div class="value">${formatRating(player.sigma)}</div></div>
+              <div class="metric"><div class="label">Tournaments</div><div class="value">${player.tournament_count || 0}</div></div>
+              <div class="metric"><div class="label">Games</div><div class="value">${player.game_count || 0}</div></div>
+              <div class="metric"><div class="label">Opponents</div><div class="value">${player.opponent_count || 0}</div></div>
+              <div class="metric"><div class="label">Wins</div><div class="value">${player.wins || 0}</div></div>
+              <div class="metric"><div class="label">Losses</div><div class="value">${player.losses || 0}</div></div>
+              <div class="metric"><div class="label">Latest Event</div><div class="value" style="font-size:1rem">${formatDate(player.latest_event_date)}</div></div>
+            </div>
+          </section>
+          ${contextSection}
+          <section class="detail-card"><div class="section-head"><div><h3>Rating History</h3></div></div>${chartHtml}</section>
+          <section class="detail-card"><div class="section-head"><div><h3>Recent Tournaments</h3><div class="eyebrow">Click any event to pivot into tournament detail</div></div>${recentTournamentsTools}</div>${recentTournamentsHtml}</section>
+          <section class="detail-card"><div class="section-head"><div><h3>Recent Games</h3><div class="eyebrow">A game-by-game view with opponent and tournament links</div></div><div class="section-tools">${recentGamesTools}</div></div>${recentGamesHtml}</section>
+          <section class="detail-card"><div class="section-head"><div><h3>Opponent Summary</h3><div class="eyebrow">Cross-link into any opponent from here</div></div>${opponentsTools}</div>${opponentsHtml}</section>
+        `;
+        els.detail.innerHTML = "";
+        els.detail.appendChild(host);
+        wireHistoryChart(host);
+        wireLinks(host);
+        if (focusResult) scrollDetailPanelToTop();
+        host.querySelector("#recent-games-sgf-only")?.addEventListener("change", (event) => {
+          state.playerRecentGamesSgfOnly = Boolean(event.target.checked);
+          loadPlayer(agaid, {
+            focusResult,
+            pushHistory: false,
+            playerRecentTournamentsPage: state.playerRecentTournamentsPage,
+            playerRecentGamesPage: 0,
+            playerOpponentsPage: state.playerOpponentsPage,
+            playerOpponentsSort: state.playerOpponentsSort
+          }).catch(handleError);
+        });
+        host.querySelector("#opponents-sort")?.addEventListener("change", (event) => {
+          loadPlayer(agaid, {
+            focusResult: false,
+            pushHistory: false,
+            playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
+            playerRecentTournamentsPage: state.playerRecentTournamentsPage,
+            playerRecentGamesPage: state.playerRecentGamesPage,
+            playerOpponentsPage: 0,
+            playerOpponentsSort: event.target.value
+          }).catch(handleError);
+        });
+        host.querySelectorAll("[data-page-nav]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const kind = button.getAttribute("data-page-nav");
+            const direction = button.getAttribute("data-direction");
+            const delta = direction === "prev" ? -1 : 1;
+            const nextTournamentPage = kind === "tournaments"
+              ? Math.max(0, state.playerRecentTournamentsPage + delta)
+              : state.playerRecentTournamentsPage;
+            const nextGamesPage = kind === "games"
+              ? Math.max(0, state.playerRecentGamesPage + delta)
+              : state.playerRecentGamesPage;
+            const nextOpponentsPage = kind === "opponents"
+              ? Math.max(0, state.playerOpponentsPage + delta)
+              : state.playerOpponentsPage;
+            loadPlayer(agaid, {
+              focusResult: false,
+              pushHistory: false,
+              playerRecentGamesSgfOnly: state.playerRecentGamesSgfOnly,
+              playerRecentTournamentsPage: nextTournamentPage,
+              playerRecentGamesPage: nextGamesPage,
+              playerOpponentsPage: nextOpponentsPage,
+              playerOpponentsSort: state.playerOpponentsSort
+            }).catch(handleError);
+          });
+        });
+        state.playerContextRequestId += 1;
+        loadPlayerContext(agaid, state.playerContextRequestId).catch(() => {});
+        els.context.innerHTML = '<div class="empty">Player context is now shown inside the detail view.</div>';
+        const debug = payload._debug || {};
+        const sourceLabel = payload.data_source ? ` from ${String(payload.data_source).replaceAll("_", " ")}` : "";
+        const timingLabel = Number.isFinite(Number(debug.elapsed_ms)) ? ` in ${Number(debug.elapsed_ms).toFixed(1)} ms` : "";
+        setStatus(`Loaded player ${player.display_name}${sourceLabel}${timingLabel}.`);
+      } finally {
+        endRequest("player", controller);
+      }
+    }
+
+    async function loadTournament(tournamentCode, options = {}) {
+      const controller = beginRequest("tournament");
+      cancelRequest("player");
+      cancelRequest("playerContext");
+      const {
+        focusResult = false,
+        pushHistory = true,
+        preserveResultsSnapshot = false,
+        resultsSnapshot = [],
+        modeOverride = "tournaments",
+        resultsSubtitle = "",
+        resultCountLabel = ""
+      } = options;
+      if (pushHistory) pushNavigationSnapshot();
+      state.selected = tournamentCode;
+      state.selectedType = "tournament";
+      setStatus(`Loading tournament ${tournamentCode}...`);
+      try {
+        const payload = await loadJson("/api/ratings-explorer/tournament", { tournament_code: tournamentCode }, { signal: controller.signal });
+        const tournament = { ...(payload.tournament || {}) };
+        state.currentTournamentDescription = tournament?.description || tournament?.tournament_code || "";
+        state.playerContextRequestId += 1;
+        const participants = payload.participants || [];
+        const rawGames = payload.games || [];
+        const games = normalizeTournamentGameRounds(rawGames, tournament.rounds);
+        tournament.game_count = games.length;
+        const sgfGames = games.filter((item) => gameHasSgf(item));
+        state.activeGames = games;
+        state.selectedSgfGame = selectedSgfGameFromList(games) || sgfGames[0] || null;
+        if (preserveResultsSnapshot) {
+          restoreResultsSnapshot({
+            mode: modeOverride,
+            results: resultsSnapshot,
+            resultsSubtitle,
+            resultCount: resultCountLabel
+          }, { activeValue: tournament.tournament_code, activeType: "tournament" });
+        } else {
+          focusSingleTournamentResult(tournament);
+        }
+        updateLayoutMode();
+        const crossTab = renderTournamentCrossTab(participants, games);
+        const host = document.createElement("div");
+        host.className = "detail-grid";
+        host.innerHTML = `<section class="detail-card"><div class="headline"><div><h3>Cross-Tab</h3></div><div class="section-tools">${detailBackButtonHtml()}</div></div><div class="eyebrow">Built from tournament player and game data, with player links ready for deeper navigation. Click a result token when an SGF is linked to open it in the viewer.</div>${crossTab}</section>`;
+        els.detail.innerHTML = "";
+        els.detail.appendChild(host);
+        wireLinks(host);
+        if (focusResult) scrollDetailPanelToTop();
+        els.context.innerHTML = '<div class="empty">Tournament mode hides the context panel so the cross-tab can use the full width.</div>';
+        const debug = payload._debug || {};
+        const sourceLabel = payload.data_source ? ` from ${String(payload.data_source).replaceAll("_", " ")}` : "";
+        const timingLabel = Number.isFinite(Number(debug.elapsed_ms)) ? ` in ${Number(debug.elapsed_ms).toFixed(1)} ms` : "";
+        setStatus(`Loaded tournament ${tournament.description || tournament.tournament_code}${sourceLabel}${timingLabel}.`);
+      } finally {
+        endRequest("tournament", controller);
+      }
+    }
+
+    function handleError(error) {
+      if (isAbortError(error)) return;
+      console.error(error);
+      setStatus(error.message || "Something went wrong.");
+      els.detail.innerHTML = `<div class="empty">${escapeHtml(error.message || "Something went wrong.")}</div>`;
+    }
+
+    els.modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (state.mode !== button.dataset.mode) {
+          selectedStates.clear();
+        }
+        state.mode = button.dataset.mode;
+        state.mobileAdvancedSearchOpen = false;
+        state.tournamentSearchPage = 0;
+        state.tournamentSearchPaging = null;
+        renderStateMenu();
+        renderCityMenu();
+        search().catch(handleError);
+      });
+    });
+    els.advancedSearchToggle?.addEventListener("click", () => {
+      state.mobileAdvancedSearchOpen = !state.mobileAdvancedSearchOpen;
+      updateModeUi();
+    });
+    els.searchButton.addEventListener("click", () => {
+      state.tournamentSearchPage = 0;
+      search().catch(handleError);
+    });
+    els.sgfModalClose.addEventListener("click", () => {
+      closeSgfViewer();
+    });
+    els.sgfModal.addEventListener("click", (event) => {
+      if (event.target === els.sgfModal) closeSgfViewer();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !els.sgfModal.classList.contains("hidden")) {
+        closeSgfViewer();
+      }
+    });
+    els.reset.addEventListener("click", () => {
+      Object.values(els.fields).forEach((input) => { input.value = ""; });
+      selectedChapters.clear();
+      selectedStates.clear();
+      selectedMemberTypes.clear();
+      selectedCities.clear();
+      state.mobileAdvancedSearchOpen = false;
+      els.fields.status_filter.value = "all";
+      els.fields.recent_activity_years.value = "";
+      state.tournamentSearchPage = 0;
+      state.tournamentSearchPaging = null;
+      selectedRatingBands.clear();
+      renderMultiSelectMenu(els.chapterMenu, state.filterOptions.chapters, selectedChapters, () => {
+        updateMultiSelectTrigger(els.chapterTrigger, state.filterOptions.chapters, selectedChapters, "Any chapter", "chapters", compactChapterTriggerLabel);
+      }, "Type chapter code or name", chapterMultiSelectMatcher);
+      updateMultiSelectTrigger(els.chapterTrigger, state.filterOptions.chapters, selectedChapters, "Any chapter", "chapters", compactChapterTriggerLabel);
+      renderStateMenu();
+      renderMultiSelectMenu(els.memberTypeMenu, state.filterOptions.member_types, selectedMemberTypes, () => {
+        updateMultiSelectTrigger(els.memberTypeTrigger, state.filterOptions.member_types, selectedMemberTypes, "Any member type", "member types");
+      }, "Type member type");
+      updateMultiSelectTrigger(els.memberTypeTrigger, state.filterOptions.member_types, selectedMemberTypes, "Any member type", "member types");
+      renderCityMenu();
+      renderRatingBandOptions();
+      els.fields.limit.value = "10";
+      search().catch(handleError);
+    });
+    [
+      [els.chapterTrigger, els.chapterMenu],
+      [els.stateTrigger, els.stateMenu],
+      [els.memberTypeTrigger, els.memberTypeMenu],
+      [els.cityTrigger, els.cityMenu],
+      [els.ratingBandTrigger, els.ratingBandMenu]
+    ].forEach(([trigger, menu]) => {
+      trigger.addEventListener("click", () => {
+        const opened = openMultiSelectMenu(trigger, menu);
+        if (!opened) return;
+        const searchInput = menu.querySelector(".multi-select-search-input");
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+      trigger.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          const opened = openMultiSelectMenu(trigger, menu);
+          if (!opened) return;
+          const searchInput = menu.querySelector(".multi-select-search-input");
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          closeMultiSelectMenu(menu);
+        }
+      });
+    });
+    document.addEventListener("click", (event) => {
+      [
+        [els.chapterMultiselect, els.chapterMenu],
+        [els.stateMultiselect, els.stateMenu],
+        [els.memberTypeMultiselect, els.memberTypeMenu],
+        [els.cityMultiselect, els.cityMenu],
+        [els.ratingBandMultiselect, els.ratingBandMenu]
+      ].forEach(([host, menu]) => {
+        if (!host.contains(event.target)) {
+          closeMultiSelectMenu(menu);
+        }
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeAllMultiSelectMenus();
+      }
+    });
+    [els.fields.first_name, els.fields.last_name, els.fields.description].forEach((input) => {
+      input.addEventListener("input", () => {
+        if (input.value.trim()) {
+          clearAgaidFilter();
+        }
+      });
+    });
+    [els.fields.status_filter, els.fields.recent_activity_years, els.fields.date_from, els.fields.date_before].forEach((input) => {
+      input.addEventListener("change", () => {
+        const value = String(input.value || "").trim();
+        const isDefaultStatus = input === els.fields.status_filter && value === "all";
+        const isDefaultRecentActivity = input === els.fields.recent_activity_years && value === "";
+        if (!value || isDefaultStatus || isDefaultRecentActivity) return;
+        clearAgaidFilter();
+      });
+    });
+    Object.values(els.fields).forEach((input) => {
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          search().catch(handleError);
+        }
+      });
+    });
+    els.fields.date_from.addEventListener("change", () => {
+      syncTournamentDateFields("date_from");
+    });
+    els.fields.date_before.addEventListener("change", () => {
+      syncTournamentDateFields("date_before");
+    });
+
+    updateModeUi();
+    initializeSnapshotOps();
+    renderRatingBandOptions();
+    loadSnapshotStatus();
+    loadStartupPlayers().catch(handleError);
+  </script>
+</body>
+</html>
