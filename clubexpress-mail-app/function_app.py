@@ -773,6 +773,7 @@ def _parse_journal_email(conn_str: str, message: dict) -> dict:
     else:
         articles = _extract_journal_articles_from_text(_message_body_to_text(message))
         review_blog_entries = _extract_journal_review_blog_entries_from_text(_message_body_to_text(message))
+    articles = _normalize_journal_article_titles(articles)
 
     member_lookup = _load_member_name_lookup(conn_str)
     matches = []
@@ -830,6 +831,20 @@ def _extract_journal_articles_from_html(html_body: str) -> list[dict[str, str]]:
 def _extract_journal_articles_from_text(text: str) -> list[dict[str, str]]:
     lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines() if line.strip()]
     return _extract_journal_articles_from_lines(lines)
+
+
+def _normalize_journal_article_titles(articles: list[dict[str, str]]) -> list[dict[str, str]]:
+    normalized_articles = []
+    for article in articles:
+        title = str(article.get("title") or "").strip()
+        link = str(article.get("link") or "").strip()
+        if _looks_like_url(title) and link:
+            resolved_title = _fetch_article_page_title(link)
+            if resolved_title:
+                article = dict(article)
+                article["title"] = resolved_title[:500]
+        normalized_articles.append(article)
+    return normalized_articles
 
 
 def _extract_journal_review_blog_entries_from_html(html_body: str) -> list[dict[str, str]]:
@@ -1083,6 +1098,30 @@ def _looks_like_article_title(text: str) -> bool:
     collapsed = re.sub(r"\s+", " ", text).strip()
     word_count = len(collapsed.split())
     return 2 <= word_count <= 20 and len(collapsed) <= 180
+
+
+def _looks_like_url(text: str) -> bool:
+    return bool(re.match(r"^https?://\S+$", (text or "").strip(), re.IGNORECASE))
+
+
+def _fetch_article_page_title(url: str) -> str:
+    html_body = _fetch_external_html(url)
+    if not html_body:
+        return ""
+
+    title_match = re.search(r"<title\b[^>]*>(.*?)</title>", html_body, re.IGNORECASE | re.DOTALL)
+    if title_match:
+        title = re.sub(r"\s+", " ", _html_to_text(title_match.group(1))).strip()
+        title = re.sub(r"\s+-\s+American Go Association\s*$", "", title).strip()
+        if title and not _looks_like_url(title):
+            return title
+
+    heading_match = re.search(r"<h[12]\b[^>]*>(.*?)</h[12]>", html_body, re.IGNORECASE | re.DOTALL)
+    if heading_match:
+        title = re.sub(r"\s+", " ", _html_to_text(heading_match.group(1))).strip()
+        if title and not _looks_like_url(title):
+            return title
+    return ""
 
 
 def _looks_like_section_heading(text: str) -> bool:
