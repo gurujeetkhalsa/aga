@@ -1600,14 +1600,19 @@ WITH all_reviews AS
         match_rows.[BlogLink],
         match_rows.[ReviewerName],
         match_rows.[ReviewerRank],
+        match_rows.[ReviewedPlayerName],
+        match_rows.[ReviewedPlayerRank],
         match_rows.[OpponentName],
         match_rows.[OpponentRank],
         match_rows.[GameLink],
         match_rows.[VideoLink],
-        match_rows.[VideoReviewCount]
+        match_rows.[VideoReviewCount],
+        match_rows.[ReviewGameOrder]
     FROM [integration].[journal_review_member_match] AS match_rows
     WHERE NULLIF(LTRIM(RTRIM(match_rows.[ReviewerName])), '') IS NOT NULL
       AND NULLIF(LTRIM(RTRIM(match_rows.[ReviewerRank])), '') IS NOT NULL
+      AND NULLIF(LTRIM(RTRIM(match_rows.[ReviewedPlayerName])), '') IS NOT NULL
+      AND NULLIF(LTRIM(RTRIM(match_rows.[ReviewedPlayerRank])), '') IS NOT NULL
       AND NULLIF(LTRIM(RTRIM(match_rows.[OpponentName])), '') IS NOT NULL
       AND NULLIF(LTRIM(RTRIM(match_rows.[OpponentRank])), '') IS NOT NULL
       AND NULLIF(LTRIM(RTRIM(match_rows.[VideoLink])), '') IS NOT NULL
@@ -1619,11 +1624,10 @@ distinct_video_games AS
         all_reviews.[BlogLink],
         all_reviews.[ReviewerName],
         all_reviews.[ReviewerRank],
-        MAX(all_reviews.[OpponentName]) AS [OpponentName],
-        MAX(all_reviews.[OpponentRank]) AS [OpponentRank],
         all_reviews.[GameLink],
         all_reviews.[VideoLink],
         MAX(all_reviews.[VideoReviewCount]) AS [StoredReviewCount],
+        MAX(all_reviews.[ReviewGameOrder]) AS [StoredGameOrder],
         MIN(all_reviews.[JournalReviewMemberMatchID]) AS [FirstMatchID]
     FROM all_reviews
     WHERE NULLIF(LTRIM(RTRIM(all_reviews.[GameLink])), '') IS NOT NULL
@@ -1642,10 +1646,9 @@ ordered_video_games AS
         distinct_video_games.[BlogLink],
         distinct_video_games.[ReviewerName],
         distinct_video_games.[ReviewerRank],
-        distinct_video_games.[OpponentName],
-        distinct_video_games.[OpponentRank],
         distinct_video_games.[GameLink],
         distinct_video_games.[VideoLink],
+        distinct_video_games.[StoredGameOrder],
         COALESCE(
             NULLIF(distinct_video_games.[StoredReviewCount], 0),
             COUNT(*) OVER (
@@ -1665,24 +1668,31 @@ ordered_video_games AS
                 distinct_video_games.[ReviewerRank],
                 distinct_video_games.[VideoLink]
             ORDER BY distinct_video_games.[FirstMatchID]
-        ) AS [GameOrder]
+        ) AS [FallbackGameOrder]
     FROM distinct_video_games
 ),
 matched_reviews AS
 (
-    SELECT DISTINCT
+    SELECT
         all_reviews.[AGAID],
         ordered_video_games.[JournalDate],
         ordered_video_games.[ReviewerName],
         ordered_video_games.[ReviewerRank],
-        ordered_video_games.[OpponentName],
-        ordered_video_games.[OpponentRank],
+        all_reviews.[ReviewedPlayerName],
+        all_reviews.[ReviewedPlayerRank],
+        all_reviews.[OpponentName],
+        all_reviews.[OpponentRank],
         ordered_video_games.[VideoLink],
         ordered_video_games.[ReviewCount],
-        ordered_video_games.[GameOrder],
+        COALESCE(
+            NULLIF(all_reviews.[ReviewGameOrder], 0),
+            NULLIF(ordered_video_games.[StoredGameOrder], 0),
+            ordered_video_games.[FallbackGameOrder]
+        ) AS [GameOrder],
         ordered_video_games.[GameLink],
         ordered_video_games.[BlogLink],
-        MIN(all_reviews.[JournalReviewMemberMatchID]) OVER (
+        all_reviews.[JournalReviewMemberMatchID] AS [FirstMatchID],
+        ROW_NUMBER() OVER (
             PARTITION BY
                 all_reviews.[AGAID],
                 ordered_video_games.[JournalDate],
@@ -1690,8 +1700,10 @@ matched_reviews AS
                 ordered_video_games.[ReviewerName],
                 ordered_video_games.[ReviewerRank],
                 ordered_video_games.[VideoLink],
-                ordered_video_games.[GameLink]
-        ) AS [FirstMatchID]
+                ordered_video_games.[GameLink],
+                all_reviews.[ReviewGameOrder]
+            ORDER BY all_reviews.[JournalReviewMemberMatchID]
+        ) AS [PlayerGameRowNumber]
     FROM all_reviews
     INNER JOIN ordered_video_games
         ON ordered_video_games.[JournalDate] = all_reviews.[JournalDate]
@@ -1705,6 +1717,8 @@ SELECT TOP {review_limit}
     matched_reviews.[JournalDate],
     matched_reviews.[ReviewerName],
     matched_reviews.[ReviewerRank],
+    matched_reviews.[ReviewedPlayerName],
+    matched_reviews.[ReviewedPlayerRank],
     matched_reviews.[OpponentName],
     matched_reviews.[OpponentRank],
     matched_reviews.[VideoLink],
@@ -1712,6 +1726,7 @@ SELECT TOP {review_limit}
     matched_reviews.[GameOrder]
 FROM matched_reviews
 WHERE matched_reviews.[AGAID] = ?
+  AND matched_reviews.[PlayerGameRowNumber] = 1
 ORDER BY matched_reviews.[JournalDate] DESC, matched_reviews.[FirstMatchID] ASC
 """
     reviews = [
@@ -1719,13 +1734,16 @@ ORDER BY matched_reviews.[JournalDate] DESC, matched_reviews.[FirstMatchID] ASC
             "journal_date": json_safe_value(review.get("JournalDate")),
             "reviewer_name": review.get("ReviewerName"),
             "reviewer_rank": review.get("ReviewerRank"),
+            "reviewed_player_name": review.get("ReviewedPlayerName"),
+            "reviewed_player_rank": review.get("ReviewedPlayerRank"),
             "opponent_name": review.get("OpponentName"),
             "opponent_rank": review.get("OpponentRank"),
             "video_link": review.get("VideoLink"),
             "review_count": int(review.get("ReviewCount") or 0),
             "game_order": int(review.get("GameOrder") or 0),
             "context_label": (
-                f'{review.get("ReviewerName")} ({review.get("ReviewerRank")}) reviews game vs '
+                f'{review.get("ReviewerName")} ({review.get("ReviewerRank")}) reviews '
+                f'{review.get("ReviewedPlayerName")} ({review.get("ReviewedPlayerRank")}) vs '
                 f'{review.get("OpponentName")} ({review.get("OpponentRank")})'
             ),
         }

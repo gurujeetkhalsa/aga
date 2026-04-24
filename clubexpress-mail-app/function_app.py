@@ -60,6 +60,60 @@ DEFAULT_JOURNAL_NAME_PREFIXES = (
     "Membership Director",
     "Tournament Director",
 )
+JOURNAL_FIRST_NAME_ALIAS_GROUPS = (
+    ("abigail", "abby", "abbie", "gail"),
+    ("alexander", "alex", "xander"),
+    ("alexandra", "alex", "lexi", "sandra"),
+    ("andrew", "andy", "drew"),
+    ("anthony", "tony"),
+    ("barbara", "barb", "barbie"),
+    ("benjamin", "ben", "benny"),
+    ("catherine", "cathy", "kathy", "kate", "katie"),
+    ("charles", "charlie", "chuck"),
+    ("christopher", "chris"),
+    ("daniel", "dan", "danny"),
+    ("david", "dave", "davey"),
+    ("deborah", "deb", "debbie"),
+    ("donald", "don", "donny"),
+    ("dorothy", "dot", "dottie"),
+    ("edward", "ed", "eddie", "ted", "teddy", "ned"),
+    ("edwin", "ed", "eddie", "ned"),
+    ("elizabeth", "beth", "betsy", "betty", "eliza", "liz", "lizzie"),
+    ("frances", "fran", "frannie"),
+    ("frederick", "fred", "freddie"),
+    ("george", "geo"),
+    ("gerald", "gerry", "jerry"),
+    ("gregory", "greg"),
+    ("james", "jim", "jimmy"),
+    ("janet", "jan"),
+    ("jennifer", "jen", "jenny"),
+    ("john", "jack", "johnny"),
+    ("jonathan", "jon", "johnny"),
+    ("joseph", "joe", "joey"),
+    ("katherine", "kathy", "kate", "katie"),
+    ("kenneth", "ken", "kenny"),
+    ("kimberly", "kim"),
+    ("lawrence", "larry"),
+    ("margaret", "maggie", "meg", "peggy"),
+    ("matthew", "matt"),
+    ("michael", "mike", "mikey"),
+    ("nicholas", "nick", "nicky"),
+    ("patricia", "pat", "patty", "tricia"),
+    ("patrick", "pat"),
+    ("rebecca", "becky", "becca"),
+    ("richard", "rick", "ricky", "dick"),
+    ("robert", "rob", "robbie", "bob", "bobby"),
+    ("ronald", "ron", "ronnie"),
+    ("samuel", "sam", "sammy"),
+    ("stephen", "steve", "stevie"),
+    ("steven", "steve", "stevie"),
+    ("susan", "sue", "susie", "suzie"),
+    ("theodore", "ted", "teddy", "theo"),
+    ("thomas", "tom", "tommy"),
+    ("timothy", "tim", "timmy"),
+    ("victoria", "vicki", "vicky", "tori"),
+    ("william", "bill", "billy", "will", "willy", "liam"),
+)
 IGNORE_MESSAGE_TYPE = "ignore"
 TDLIST_REDIRECT_URLS = {
     "A": os.environ.get("TDLIST_REDIRECT_URL_A", ""),
@@ -1165,13 +1219,42 @@ def _load_member_name_lookup(conn_str: str) -> dict[str, list[tuple[int, str]]]:
 def _match_member_rows_in_article(text: str, member_lookup: dict[str, list[tuple[int, str]]]) -> list[tuple[int, str]]:
     matched_rows = set()
     for candidate in _extract_candidate_person_names(text):
-        key = _normalize_person_name(candidate)
-        if not key:
-            continue
-        if key in JOURNAL_EXCLUDED_MATCH_NAMES:
-            continue
-        matched_rows.update(member_lookup.get(key, []))
+        for key in _journal_person_lookup_keys(candidate):
+            if key in JOURNAL_EXCLUDED_MATCH_NAMES:
+                continue
+            matched_rows.update(member_lookup.get(key, []))
     return sorted(matched_rows, key=lambda row: (row[0], row[1].lower()))
+
+
+def _journal_person_lookup_keys(value: str) -> set[str]:
+    key = _normalize_person_name(value)
+    if not key:
+        return set()
+
+    first_name, last_name = key.split(" ", 1)
+    return {f"{first_variant} {last_name}" for first_variant in _journal_first_name_variants(first_name)}
+
+
+def _journal_first_name_variants(first_name: str) -> set[str]:
+    normalized = (first_name or "").strip().lower()
+    if not normalized:
+        return set()
+
+    variants = {normalized}
+    for group in _journal_first_name_alias_groups():
+        if normalized in group:
+            variants.update(group)
+    return variants
+
+
+def _journal_first_name_alias_groups() -> list[set[str]]:
+    groups = [set(group) for group in JOURNAL_FIRST_NAME_ALIAS_GROUPS]
+    extra_groups = os.environ.get("JOURNAL_FIRST_NAME_ALIAS_GROUPS", "")
+    for raw_group in extra_groups.split(";"):
+        names = {name.lower() for name in re.findall(r"[A-Za-z]+(?:[-'][A-Za-z]+)?", raw_group)}
+        if len(names) >= 2:
+            groups.append(names)
+    return groups
 
 
 def _extract_candidate_person_names(text: str) -> set[str]:
