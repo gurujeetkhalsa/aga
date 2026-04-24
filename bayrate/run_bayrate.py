@@ -25,7 +25,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--inactivity-growth-per-day",
         type=float,
-        default=BayrateConfig.inactivity_growth_per_day,
+        default=BayrateConfig().inactivity_growth_per_day,
         help="Daily sigma growth for inactive players.",
     )
     return parser
