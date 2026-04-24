@@ -8,9 +8,9 @@ from datetime import date
 from pathlib import Path
 
 try:
-    from .core import BayrateConfig, result_to_json, run_bayrate
+    from .core import BayrateConfig, CsvValidationError, result_to_json, run_bayrate
 except ImportError:  # pragma: no cover - supports direct script execution
-    from core import BayrateConfig, result_to_json, run_bayrate
+    from core import BayrateConfig, CsvValidationError, result_to_json, run_bayrate
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -45,7 +45,10 @@ def main() -> None:
     if args.max_game_date:
         config.max_game_date = date.fromisoformat(args.max_game_date)
 
-    payload = result_to_json(run_bayrate(args.games, args.ratings, config))
+    try:
+        payload = result_to_json(run_bayrate(args.games, args.ratings, config))
+    except CsvValidationError as exc:
+        parser.error(str(exc))
     if args.output:
         args.output.write_text(payload + "\n", encoding="utf-8")
     else:

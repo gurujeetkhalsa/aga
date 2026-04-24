@@ -41,3 +41,6 @@ py -3 -m bayrate.run_bayrate --games path\to\games.csv --ratings path\to\ratings
 ```
 
 The output JSON includes per-event player results, per-game expected values, and simple pre/post fit metrics.
+
+Malformed CSV values are reported with the input path, line number, and column name. Domain filters still apply silently:
+unrated rows, excluded rows, and online rows are skipped unless `--allow-online-games` is set.

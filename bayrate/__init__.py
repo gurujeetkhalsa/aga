@@ -3,6 +3,8 @@
 from .core import (
     BayrateConfig,
     BayrateRunResult,
+    CsvRowError,
+    CsvValidationError,
     EventGameResult,
     EventPlayerResult,
     EventRecord,
@@ -24,6 +26,8 @@ from .core import (
 __all__ = [
     "BayrateConfig",
     "BayrateRunResult",
+    "CsvRowError",
+    "CsvValidationError",
     "EventGameResult",
     "EventPlayerResult",
     "EventRecord",

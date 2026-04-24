@@ -66,6 +66,25 @@ class BayrateConfig:
 
 
 @dataclass(slots=True)
+class CsvRowError:
+    path: Path
+    line_number: int
+    column: str
+    message: str
+
+    def format(self) -> str:
+        return f"{self.path}:{self.line_number}: {self.column}: {self.message}"
+
+
+class CsvValidationError(ValueError):
+    def __init__(self, errors: list[CsvRowError]) -> None:
+        self.errors = errors
+        detail = "\n".join(error.format() for error in errors[:10])
+        more = "" if len(errors) <= 10 else f"\n... {len(errors) - 10} more error(s)"
+        super().__init__(f"CSV validation failed with {len(errors)} error(s):\n{detail}{more}")
+
+
+@dataclass(slots=True)
 class GameRecord:
     source_game_id: int
     tournament_code: str | None
@@ -234,13 +253,17 @@ def _parse_float(value: str | None) -> float | None:
     return float(text)
 
 
-def _parse_bool(value: str | int | None) -> bool:
+def _parse_csv_bool(value: str | int | None) -> bool:
     if value is None:
-        return False
+        raise ValueError("missing boolean value")
     if isinstance(value, int):
         return value != 0
     text = value.strip().lower()
-    return text not in {"", "0", "false", "no", "n"}
+    if text in {"1", "true", "yes", "y"}:
+        return True
+    if text in {"", "0", "false", "no", "n", "null"}:
+        return False
+    raise ValueError(f"unsupported boolean value {value!r}")
 
 
 def rank_to_seed(rank_text: str | None) -> float | None:
@@ -336,33 +359,193 @@ def normal_win_probability(rd: float, sigma_px: float) -> float:
     return min(max(p, MIN_PROBABILITY), 1.0 - MIN_PROBABILITY)
 
 
+GAME_CSV_REQUIRED_COLUMNS = [
+    "Game_ID",
+    "Tournament_Code",
+    "Game_Date",
+    "Round",
+    "Pin_Player_1",
+    "Pin_Player_2",
+    "Rank_1",
+    "Rank_2",
+    "Color_1",
+    "Handicap",
+    "Komi",
+    "Result",
+    "Rated",
+    "Exclude",
+    "Online",
+]
+
+
+def _read_required_value(
+    row: dict[str, str],
+    column: str,
+    path: Path,
+    line_number: int,
+    errors: list[CsvRowError],
+) -> str | None:
+    value = row.get(column)
+    if value is None or not value.strip():
+        errors.append(CsvRowError(path, line_number, column, "required value is missing"))
+        return None
+    return value
+
+
+def _parse_required_int(
+    row: dict[str, str],
+    column: str,
+    path: Path,
+    line_number: int,
+    errors: list[CsvRowError],
+) -> int | None:
+    value = _read_required_value(row, column, path, line_number, errors)
+    if value is None:
+        return None
+    try:
+        parsed = _parse_int(value)
+    except ValueError as exc:
+        errors.append(CsvRowError(path, line_number, column, str(exc)))
+        return None
+    if parsed is None:
+        errors.append(CsvRowError(path, line_number, column, "required value is missing"))
+    return parsed
+
+
+def _parse_optional_int(
+    row: dict[str, str],
+    column: str,
+    path: Path,
+    line_number: int,
+    errors: list[CsvRowError],
+) -> int | None:
+    try:
+        return _parse_int(row.get(column))
+    except ValueError as exc:
+        errors.append(CsvRowError(path, line_number, column, str(exc)))
+        return None
+
+
+def _parse_required_float(
+    row: dict[str, str],
+    column: str,
+    path: Path,
+    line_number: int,
+    errors: list[CsvRowError],
+) -> float | None:
+    value = _read_required_value(row, column, path, line_number, errors)
+    if value is None:
+        return None
+    try:
+        parsed = _parse_float(value)
+    except ValueError as exc:
+        errors.append(CsvRowError(path, line_number, column, str(exc)))
+        return None
+    if parsed is None:
+        errors.append(CsvRowError(path, line_number, column, "required value is missing"))
+    return parsed
+
+
+def _parse_required_date(
+    row: dict[str, str],
+    column: str,
+    path: Path,
+    line_number: int,
+    errors: list[CsvRowError],
+) -> date | None:
+    value = _read_required_value(row, column, path, line_number, errors)
+    if value is None:
+        return None
+    try:
+        parsed = _parse_date(value)
+    except ValueError as exc:
+        errors.append(CsvRowError(path, line_number, column, str(exc)))
+        return None
+    if parsed is None:
+        errors.append(CsvRowError(path, line_number, column, "required value is missing"))
+    return parsed
+
+
+def _parse_required_bool(
+    row: dict[str, str],
+    column: str,
+    path: Path,
+    line_number: int,
+    errors: list[CsvRowError],
+) -> bool | None:
+    value = _read_required_value(row, column, path, line_number, errors)
+    if value is None:
+        return None
+    try:
+        return _parse_csv_bool(value)
+    except ValueError as exc:
+        errors.append(CsvRowError(path, line_number, column, str(exc)))
+        return None
+
+
+def _add_rank_error(path: Path, line_number: int, column: str, value: str | None, errors: list[CsvRowError]) -> None:
+    if value is None or not value.strip():
+        errors.append(CsvRowError(path, line_number, column, "required value is missing"))
+    else:
+        errors.append(CsvRowError(path, line_number, column, f"unsupported rank value {value!r}"))
+
+
 def load_games_from_csv(path: Path, config: BayrateConfig) -> list[GameRecord]:
     games: list[GameRecord] = []
+    errors: list[CsvRowError] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
-        for row in reader:
-            game_date = _parse_date(row.get("Game_Date"))
-            if game_date is None:
+        missing_columns = [column for column in GAME_CSV_REQUIRED_COLUMNS if column not in (reader.fieldnames or [])]
+        if missing_columns:
+            raise CsvValidationError(
+                [CsvRowError(path, 1, column, "required column is missing") for column in missing_columns]
+            )
+        for line_number, row in enumerate(reader, start=2):
+            game_date = _parse_required_date(row, "Game_Date", path, line_number, errors)
+            rated = _parse_required_bool(row, "Rated", path, line_number, errors)
+            excluded = _parse_required_bool(row, "Exclude", path, line_number, errors)
+            is_online = _parse_required_bool(row, "Online", path, line_number, errors)
+            if game_date is None or rated is None or excluded is None or is_online is None:
                 continue
             if config.min_game_date and game_date < config.min_game_date:
                 continue
             if config.max_game_date and game_date > config.max_game_date:
                 continue
-            if not _parse_bool(row.get("Rated")) or _parse_bool(row.get("Exclude")):
+            if not rated or excluded:
                 continue
-            is_online = _parse_bool(row.get("Online"))
             if is_online and not config.allow_online_games:
                 continue
             color_1 = (row.get("Color_1") or "").strip().upper()
             result = (row.get("Result") or "").strip().upper()
-            if color_1 not in {"W", "B"} or result not in {"W", "B"}:
+            if color_1 not in {"W", "B"}:
+                errors.append(CsvRowError(path, line_number, "Color_1", "expected W or B"))
                 continue
-            pin_1 = _parse_int(row.get("Pin_Player_1"))
-            pin_2 = _parse_int(row.get("Pin_Player_2"))
-            if pin_1 is None or pin_2 is None or pin_1 == pin_2:
+            if result not in {"W", "B"}:
+                errors.append(CsvRowError(path, line_number, "Result", "expected W or B"))
+                continue
+            game_id = _parse_required_int(row, "Game_ID", path, line_number, errors)
+            round_number = _parse_optional_int(row, "Round", path, line_number, errors)
+            pin_1 = _parse_required_int(row, "Pin_Player_1", path, line_number, errors)
+            pin_2 = _parse_required_int(row, "Pin_Player_2", path, line_number, errors)
+            handicap = _parse_required_int(row, "Handicap", path, line_number, errors)
+            komi = _parse_required_float(row, "Komi", path, line_number, errors)
+            if pin_1 is not None and pin_2 is not None and pin_1 == pin_2:
+                errors.append(CsvRowError(path, line_number, "Pin_Player_2", "players must be different"))
+            if (
+                game_id is None
+                or pin_1 is None
+                or pin_2 is None
+                or pin_1 == pin_2
+                or handicap is None
+                or komi is None
+            ):
                 continue
             seed_1 = rank_to_seed(row.get("Rank_1"))
             seed_2 = rank_to_seed(row.get("Rank_2"))
+            if seed_1 is None:
+                _add_rank_error(path, line_number, "Rank_1", row.get("Rank_1"), errors)
+            if seed_2 is None:
+                _add_rank_error(path, line_number, "Rank_2", row.get("Rank_2"), errors)
             if seed_1 is None or seed_2 is None:
                 continue
             if color_1 == "W":
@@ -377,40 +560,58 @@ def load_games_from_csv(path: Path, config: BayrateConfig) -> list[GameRecord]:
                 black_seed_rank = seed_1
             games.append(
                 GameRecord(
-                    source_game_id=_parse_int(row.get("Game_ID")) or 0,
+                    source_game_id=game_id,
                     tournament_code=(row.get("Tournament_Code") or "").strip() or None,
                     game_date=game_date,
-                    round_number=_parse_int(row.get("Round")),
+                    round_number=round_number,
                     white_agaid=white_agaid,
                     black_agaid=black_agaid,
                     white_seed_rank=white_seed_rank,
                     black_seed_rank=black_seed_rank,
-                    handicap=_parse_int(row.get("Handicap")) or 0,
-                    komi=_parse_float(row.get("Komi")) or 0.0,
+                    handicap=handicap,
+                    komi=komi,
                     white_wins=(result == "W"),
                     is_online_game=is_online,
                 )
             )
+    if errors:
+        raise CsvValidationError(errors)
     games.sort(key=lambda g: (g.game_date, g.tournament_code or "", g.round_number or 0, g.source_game_id))
     return games
 
 
 def load_official_history(path: Path) -> dict[int, list[OfficialSnapshot]]:
     history: dict[int, list[OfficialSnapshot]] = {}
+    errors: list[CsvRowError] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.reader(handle)
-        for row in reader:
+        for line_number, row in enumerate(reader, start=1):
             if len(row) < 6:
+                errors.append(CsvRowError(path, line_number, "row", "expected 6 columns"))
                 continue
-            snapshot = OfficialSnapshot(
-                player_id=int(row[0]),
-                rating=float(row[1]),
-                sigma=float(row[2]),
-                elab_date=_parse_date(row[3]) or date(1900, 1, 1),
-                tournament_code=None if not row[4].strip() or row[4].strip().upper() == "NULL" else row[4].strip(),
-                row_id=int(row[5]),
-            )
+            try:
+                elab_date = _parse_date(row[3])
+            except ValueError as exc:
+                errors.append(CsvRowError(path, line_number, "Elab_Date", str(exc)))
+                continue
+            if elab_date is None:
+                errors.append(CsvRowError(path, line_number, "Elab_Date", "required value is missing"))
+                continue
+            try:
+                snapshot = OfficialSnapshot(
+                    player_id=int(row[0]),
+                    rating=float(row[1]),
+                    sigma=float(row[2]),
+                    elab_date=elab_date,
+                    tournament_code=None if not row[4].strip() or row[4].strip().upper() == "NULL" else row[4].strip(),
+                    row_id=int(row[5]),
+                )
+            except ValueError as exc:
+                errors.append(CsvRowError(path, line_number, "row", str(exc)))
+                continue
             history.setdefault(snapshot.player_id, []).append(snapshot)
+    if errors:
+        raise CsvValidationError(errors)
     for snapshots in history.values():
         snapshots.sort(key=lambda s: (s.elab_date, s.row_id))
     return history
