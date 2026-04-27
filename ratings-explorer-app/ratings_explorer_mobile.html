@@ -168,6 +168,11 @@
       width: auto;
       min-width: 88px;
     }
+    .inline-checkbox-field {
+      width: auto;
+      justify-content: flex-start;
+      gap: 6px;
+    }
     .multi-select {
       position: relative;
     }
@@ -580,7 +585,7 @@
     }
     .chart-axis {
       stroke: var(--accent-strong);
-      stroke-width: 1.5;
+      stroke-width: 1.4;
     }
     .chart-band {
       fill: #aed0e8;
@@ -589,25 +594,25 @@
     .chart-line {
       fill: none;
       stroke: #3a73b2;
-      stroke-width: 3;
+      stroke-width: 4.4;
       stroke-linejoin: round;
       stroke-linecap: round;
     }
     .chart-point {
       fill: var(--accent-strong);
       stroke: #ffffff;
-      stroke-width: 1.4;
+      stroke-width: 1.7;
       cursor: pointer;
       transition: r 120ms ease, fill 120ms ease;
     }
     .chart-point.is-active, .chart-point:hover, .chart-point:focus {
       fill: var(--accent);
-      r: 5.6;
+      r: 7.6;
       outline: none;
     }
     .chart-label {
       fill: #4a6477;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
     }
     .chart-axis-label {
@@ -800,86 +805,6 @@
       color: var(--muted);
       cursor: default;
     }
-    .sgf-viewer-frame {
-      width: 100%;
-      min-height: 364px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: #f6fbff;
-    }
-    .sgf-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 1200;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 18px 24px 24px;
-      background: rgba(9, 18, 31, 0.58);
-    }
-    .sgf-modal.hidden {
-      display: none;
-    }
-    .sgf-modal-dialog {
-      width: min(980px, 100%);
-      max-height: calc(100vh - 48px);
-      display: grid;
-      grid-template-rows: auto 1fr;
-      background: #ffffff;
-      border: 1px solid rgba(11, 32, 61, 0.12);
-      border-radius: 22px;
-      box-shadow: 0 24px 72px rgba(8, 15, 28, 0.28);
-      overflow: hidden;
-    }
-    .sgf-modal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 6px 12px 4px;
-      border-bottom: 1px solid var(--accent-strong);
-      background: #fff;
-    }
-    .sgf-modal-head > div {
-      min-width: 0;
-      flex: 1;
-    }
-    .sgf-modal-title {
-      font-size: 0.96rem;
-      font-weight: 700;
-      margin: 0;
-      line-height: 1.15;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .sgf-modal-subtitle {
-      margin-top: 0;
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1;
-    }
-    .sgf-modal-close {
-      border: 0;
-      background: transparent;
-      color: var(--accent-strong);
-      border-radius: 0;
-      min-width: auto;
-      width: 22px;
-      height: 22px;
-      padding: 0;
-      font-size: 1.05rem;
-      line-height: 1;
-      cursor: pointer;
-    }
-    .sgf-modal-body {
-      padding: 6px 12px 12px;
-      overflow: auto;
-      background: #fff;
-    }
-    .sgf-modal-body .sgf-viewer-frame {
-      min-height: min(560px, calc(100vh - 180px));
-    }
     @media (max-width: 1100px) {
       .search-grid, .layout, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .layout.focus-mode {
@@ -898,17 +823,6 @@
         overflow-x: auto;
         padding-bottom: 2px;
       }
-      .sgf-modal {
-        padding: 10px 12px 12px;
-      }
-      .sgf-modal-dialog {
-        max-height: calc(100vh - 24px);
-      }
-      .sgf-modal-head,
-      .sgf-modal-body {
-        padding-left: 10px;
-        padding-right: 10px;
-      }
     }
     @media (min-width: 0) {
       .wrap { padding-inline: 12px; }
@@ -917,6 +831,14 @@
       .panel { padding: 14px; border-radius: 16px; }
       .hero h1 { font-size: 1.7rem; }
       .modebar button, .action { min-height: 44px; }
+      .action[data-page-nav] {
+        flex: 0 0 auto;
+        width: auto;
+        min-height: 32px;
+        height: 32px;
+        padding: 0 10px;
+        font-size: 0.8rem;
+      }
       .result-card { padding: 10px 12px; }
       .layout.focus-mode #results-panel .result-card { padding: 10px 12px; }
       .layout.focus-mode #results-panel .result-row,
@@ -975,6 +897,10 @@
         margin-top: 10px;
       }
     .inline-field { width: 100%; justify-content: space-between; }
+      .inline-checkbox-field {
+        width: auto;
+        justify-content: flex-start;
+      }
       .inline-field select { min-width: 112px; }
       .section-tools {
         width: 100%;
@@ -1042,21 +968,6 @@
       </section>
     </div>
   </div>
-  <div class="sgf-modal hidden" id="sgf-modal" aria-hidden="true">
-    <div class="sgf-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="sgf-modal-title">
-      <div class="sgf-modal-head">
-        <div>
-          <h3 class="sgf-modal-title" id="sgf-modal-title">SGF Viewer</h3>
-          <div class="sgf-modal-subtitle" id="sgf-modal-subtitle">Choose a linked game to open its SGF.</div>
-        </div>
-        <button type="button" class="sgf-modal-close" id="sgf-modal-close" aria-label="Close SGF viewer">&times;</button>
-      </div>
-      <div class="sgf-modal-body" id="sgf-modal-body">
-        <div class="empty">Choose a game with SGF to load it here.</div>
-      </div>
-    </div>
-  </div>
-
   <script>
     /* ClubExpress paste-in default points at the live explorer origin.
        You can still override it by setting window.RATINGS_EXPLORER_API_BASE above this script. */
@@ -1077,7 +988,6 @@
       selectedType: null,
       navigationStack: [],
       activeGames: [],
-      selectedSgfGame: null,
       playerRecentGamesSgfOnly: false,
       playerRecentTournamentsPage: 0,
       playerRecentGamesPage: 0,
@@ -1155,11 +1065,6 @@
       detailPanel: document.getElementById("detail-panel"),
       detail: document.getElementById("detail"),
       context: document.getElementById("context"),
-      sgfModal: document.getElementById("sgf-modal"),
-      sgfModalBody: document.getElementById("sgf-modal-body"),
-      sgfModalTitle: document.getElementById("sgf-modal-title"),
-      sgfModalSubtitle: document.getElementById("sgf-modal-subtitle"),
-      sgfModalClose: document.getElementById("sgf-modal-close"),
       form: document.getElementById("search-form"),
       searchButton: document.getElementById("search-button"),
       reset: document.getElementById("reset-button"),
@@ -1315,11 +1220,6 @@
 
     function setStatus(message) {
       els.status.textContent = message;
-    }
-
-    function selectedSgfGameFromList(games) {
-      const selectedId = String(state.selectedSgfGame?.game_id || "");
-      return (games || []).find((game) => String(game.game_id || "") === selectedId) || null;
     }
 
     function setSnapshotBadge(message, options = {}) {
@@ -1526,12 +1426,12 @@
         return '<div class="empty">No official rating history was found for this player.</div>';
       }
 
-      const width = 1200;
-      const height = 520;
-      const left = 88;
-      const right = 26;
-      const top = 52;
-      const bottom = 62;
+      const width = 390;
+      const height = 300;
+      const left = 42;
+      const right = 14;
+      const top = 16;
+      const bottom = 36;
       const plotWidth = width - left - right;
       const plotHeight = height - top - bottom;
 
@@ -1572,24 +1472,41 @@
       ].join(" ");
 
       const xTicks = [];
-      for (let year = minDate.getFullYear(); year <= maxDate.getFullYear(); year += 2) {
-        const tick = new Date(year, 0, 1);
-        if (tick >= minDate && tick <= maxDate) xTicks.push(tick);
+      const addXTick = (date, label) => {
+        const time = date.getTime();
+        if (!xTicks.some((tick) => Math.abs(tick.date.getTime() - time) < 86400000 || tick.label === label)) {
+          xTicks.push({ date, label });
+        }
+      };
+      const minYear = minDate.getFullYear();
+      const maxYear = maxDate.getFullYear();
+      if (minYear === maxYear) {
+        addXTick(minDate, formatMonthYear(points[0].date));
+        if (maxDate.getTime() !== minDate.getTime()) addXTick(maxDate, formatMonthYear(points[points.length - 1].date));
+      } else {
+        const midYear = Math.round((minYear + maxYear) / 2);
+        addXTick(minDate, String(minYear));
+        if (midYear !== minYear && midYear !== maxYear) {
+          const midTick = new Date(midYear, 0, 1);
+          addXTick(midTick >= minDate && midTick <= maxDate ? midTick : new Date((minDate.getTime() + maxDate.getTime()) / 2), String(midYear));
+        }
+        addXTick(maxDate, String(maxYear));
       }
-      if (!xTicks.length) xTicks.push(minDate, maxDate);
 
-      const yStart = Math.floor(minChartRating);
-      const yEnd = Math.ceil(maxChartRating);
-      let yTicks = [];
-      for (let tick = yStart; tick <= yEnd; tick += 1) yTicks.push(tick);
-      if (yStart <= -1 && yEnd >= -1 && !yTicks.includes(-1)) yTicks.push(-1);
-      if (yTicks.length < 2) yTicks = [...new Set([Math.floor(minChartRating), Math.ceil(maxChartRating)])];
-      else yTicks = [...new Set(yTicks)].sort((a, b) => a - b);
+      const yLow = Math.ceil(minChartRating);
+      const yHigh = Math.floor(maxChartRating);
+      let yTicks = yLow <= yHigh
+        ? [yLow, Math.round((yLow + yHigh) / 2), yHigh]
+        : [Math.floor(minChartRating), Math.ceil(maxChartRating)];
+      if (minChartRating <= -1 && maxChartRating >= -1 && !yTicks.includes(-1)) {
+        yTicks[Math.floor(yTicks.length / 2)] = -1;
+      }
+      yTicks = [...new Set(yTicks)].sort((a, b) => a - b);
 
       const title = escapeHtml(player.display_name || `AGAID ${player.agaid}`);
       const xGrid = xTicks.map((tick) => {
-        const x = xPos(tick);
-        return `<line class="chart-grid-line" x1="${x.toFixed(2)}" y1="${top}" x2="${x.toFixed(2)}" y2="${top + plotHeight}"></line><text class="chart-label" x="${x.toFixed(2)}" y="${height - 24}" text-anchor="middle">${tick.getFullYear()}</text>`;
+        const x = xPos(tick.date);
+        return `<line class="chart-grid-line" x1="${x.toFixed(2)}" y1="${top}" x2="${x.toFixed(2)}" y2="${top + plotHeight}"></line><text class="chart-label" x="${x.toFixed(2)}" y="${height - 12}" text-anchor="middle">${escapeHtml(tick.label)}</text>`;
       }).join("");
       const yGrid = yTicks.map((tick) => {
         const y = top + ((maxChartRating - tick) / (maxChartRating - minChartRating)) * plotHeight;
@@ -1599,10 +1516,10 @@
         const x = xPos(point.parsed).toFixed(2);
         const y = yPos(point.rating).toFixed(2);
         const label = `Date ${formatDate(point.date)}, rating ${formatRating(point.rating)}, sigma ${formatRating(point.sigma)}`;
-        return `<circle class="chart-point" cx="${x}" cy="${y}" r="4.3" tabindex="0" role="img" aria-label="${escapeHtml(label)}" data-point-index="${index}" data-date="${escapeHtml(point.date)}" data-rating="${formatRating(point.rating)}" data-sigma="${formatRating(point.sigma)}"></circle>`;
+        return `<circle class="chart-point" cx="${x}" cy="${y}" r="5.4" tabindex="0" role="img" aria-label="${escapeHtml(label)}" data-point-index="${index}" data-date="${escapeHtml(point.date)}" data-rating="${formatRating(point.rating)}" data-sigma="${formatRating(point.sigma)}"></circle>`;
       }).join("");
 
-      return `<div class="chart-shell"><div class="chart-tooltip hidden" aria-hidden="true"></div><svg class="chart-svg" viewBox="0 0 ${width} ${height}" aria-label="Rating history chart for ${title}" role="img"><rect width="100%" height="100%" fill="#ffffff"></rect><rect width="100%" height="100%" fill="url(#historyChartBg)"></rect><defs><linearGradient id="historyChartBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"></stop><stop offset="100%" stop-color="#f4f9fd"></stop></linearGradient></defs><text class="chart-title" x="${width / 2}" y="28" text-anchor="middle">${title}</text>${xGrid}${yGrid}<line class="chart-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top + plotHeight}"></line><line class="chart-axis" x1="${left}" y1="${top + plotHeight}" x2="${left + plotWidth}" y2="${top + plotHeight}"></line><polygon class="chart-band" points="${sigmaBand}"></polygon><polyline class="chart-line" points="${polyline}"></polyline>${pointMarkup}<text class="chart-axis-label" x="${width / 2}" y="${height - 4}" text-anchor="middle">Date</text><text class="chart-axis-label" x="24" y="${height / 2}" transform="rotate(-90 24 ${height / 2})" text-anchor="middle">Rating</text></svg></div>`;
+      return `<div class="chart-shell"><div class="chart-tooltip hidden" aria-hidden="true"></div><svg class="chart-svg" viewBox="0 0 ${width} ${height}" aria-label="Rating history chart for ${title}" role="img"><rect width="100%" height="100%" fill="#ffffff"></rect><rect width="100%" height="100%" fill="url(#historyChartBg)"></rect><defs><linearGradient id="historyChartBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"></stop><stop offset="100%" stop-color="#f4f9fd"></stop></linearGradient></defs>${xGrid}${yGrid}<line class="chart-axis" x1="${left}" y1="${top}" x2="${left}" y2="${top + plotHeight}"></line><line class="chart-axis" x1="${left}" y1="${top + plotHeight}" x2="${left + plotWidth}" y2="${top + plotHeight}"></line><polygon class="chart-band" points="${sigmaBand}"></polygon><polyline class="chart-line" points="${polyline}"></polyline>${pointMarkup}</svg></div>`;
     }
 
     function wireHistoryChart(root) {
@@ -1869,6 +1786,13 @@
       return items.length ? `<div class="mobile-card-stats">${items.map((value) => `<span>${escapeHtml(value)}</span>`).join("")}</div>` : "";
     }
 
+    function gameOutcomeLabel(game) {
+      const outcome = String(game?.outcome || game?.result_text || "").trim();
+      if (outcome.toUpperCase() === "W") return "Win";
+      if (outcome.toUpperCase() === "L") return "Loss";
+      return outcome;
+    }
+
     function mobileRecentTournamentCardsHtml(items) {
       return `<div class="mobile-card-list">${items.map((item) => `
         <article class="mobile-data-card">
@@ -1881,16 +1805,15 @@
 
     function mobileRecentGameCardsHtml(items) {
       return `<div class="mobile-card-list">${items.map((item) => {
-        const sgfButton = gameHasSgf(item) && gameSgfViewerUrl(item)
-          ? `<button type="button" class="sgf-link" data-game-id="${escapeHtml(item.game_id)}" data-sgf-viewer-url="${escapeHtml(gameSgfViewerUrl(item))}" title="${escapeHtml(item.sgf_code || "")}">View SGF</button>`
+        const sgfButton = gameHasSgf(item) && gameSgfDownloadUrl(item)
+          ? `<a class="sgf-link" href="${escapeHtml(gameSgfDownloadUrl(item))}" download="${escapeHtml(gameSgfDownloadName(item))}" title="${escapeHtml(item.sgf_code || "")}">Download SGF</a>`
           : `<span class="sgf-link muted">No SGF</span>`;
         return `
           <article class="mobile-data-card">
             <div class="mobile-card-title"><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></div>
             ${mobileMetaLine([formatDate(item.game_date), item.round ? `Round ${item.round}` : "", item.color ? `Color ${item.color}` : "", item.handicap !== null && item.handicap !== undefined && item.handicap !== "" ? `Hcp ${item.handicap}` : ""])}
             <div><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></div>
-            ${mobileStatsLine([item.outcome || item.result_text || ""])}
-            <div class="mobile-card-actions">${sgfButton}</div>
+            <div class="mobile-card-stats"><span>${escapeHtml(gameOutcomeLabel(item))}</span><span>${sgfButton}</span></div>
           </article>
         `;
       }).join("")}</div>`;
@@ -2251,9 +2174,9 @@
       const color = String(game[playerKey]?.color || "").trim().toUpperCase() || "?";
       const label = `${outcomeLabel} as ${color} Hcp ${handicapLabel(game.handicap)}`;
       const title = `Round ${round} | ${game.result_text || "Unknown result"}${game.handicap ? ` | H${game.handicap}` : ""}${game.komi ? ` | K${game.komi}` : ""}`;
-      const viewerUrl = gameSgfViewerUrl(game);
-      if (gameHasSgf(game) && viewerUrl) {
-        return `<button type="button" class="crosstab-token crosstab-outcome sgf-link" data-game-id="${escapeHtml(game.game_id)}" title="${escapeHtml(title)}" data-sgf-viewer-url="${escapeHtml(viewerUrl)}">${escapeHtml(label)}</button>`;
+      const downloadUrl = gameSgfDownloadUrl(game);
+      if (gameHasSgf(game) && downloadUrl) {
+        return `<a class="crosstab-token crosstab-outcome sgf-link" href="${escapeHtml(downloadUrl)}" download="${escapeHtml(gameSgfDownloadName(game))}" title="${escapeHtml(`${title} | ${label}`)}">Download SGF</a>`;
       }
       return `<span class="crosstab-token crosstab-outcome" title="${escapeHtml(title)}">${escapeHtml(label)}</span>`;
     }
@@ -2821,31 +2744,14 @@
       });
     }
 
-    const SGF_VIEWER_REV = "20260415b";
-
-    function withSgfViewerRev(url) {
-      const raw = String(url || "").trim();
-      if (!raw) return "";
-      const separator = raw.includes("?") ? "&" : "?";
-      if (/[?&]rev=/.test(raw)) return raw;
-      return `${raw}${separator}rev=${encodeURIComponent(SGF_VIEWER_REV)}`;
+    function gameSgfDownloadUrl(game) {
+      if (!game || !gameHasSgf(game) || !game.game_id) return "";
+      return `/api/ratings-explorer/game-sgf?game_id=${encodeURIComponent(String(game.game_id))}`;
     }
 
-    function withMobileSgfViewer(url) {
-      const raw = String(url || "").trim();
-      if (!raw || /[?&]mobile=/.test(raw)) return raw;
-      const separator = raw.includes("?") ? "&" : "?";
-      return `${raw}${separator}mobile=1`;
-    }
-
-    function gameSgfViewerUrl(game) {
-      if (!game) return "";
-      const explicitUrl = String(game.sgf_viewer_url || "").trim();
-      if (explicitUrl) return withMobileSgfViewer(withSgfViewerRev(explicitUrl));
-      const hasSgf = Boolean(game.has_sgf || String(game.sgf_code || "").trim());
-      return hasSgf && game.game_id
-        ? withMobileSgfViewer(withSgfViewerRev(`/api/ratings-explorer/game-sgf-viewer?game_id=${encodeURIComponent(String(game.game_id))}`))
-        : "";
+    function gameSgfDownloadName(game) {
+      const gameId = String(game?.game_id || "game").trim() || "game";
+      return `aga-game-${gameId}.sgf`;
     }
 
     function gameHasSgf(game) {
@@ -2856,67 +2762,6 @@
     function filteredPlayerRecentGames(games) {
       const items = games || [];
       return state.playerRecentGamesSgfOnly ? items.filter((item) => gameHasSgf(item)) : items;
-    }
-
-    function sgfViewerTitle(game) {
-      if (!game) return "SGF Viewer";
-      let player1 = game.player_1?.display_name || game.player_name || game.member_name || "";
-      let player2 = game.player_2?.display_name || game.opponent_name || "";
-      let rank1 = String(game.player_1?.entry_rank || "").trim();
-      let rank2 = String(game.player_2?.entry_rank || "").trim();
-      let color1 = String(game.player_1?.color || "").trim().toUpperCase();
-      let color2 = String(game.player_2?.color || "").trim().toUpperCase();
-      if ((!player1 || !player2) && game.opponent_name) {
-        player1 = game.opponent_name || player1;
-        player2 = state.currentPlayerName || game.player_name || game.member_name || `AGAID ${state.selected || "?"}`;
-        rank1 = String(game.opponent_rank || "").trim();
-        rank2 = String(game.player_rank || "").trim();
-        color2 = String(game.color || "").trim().toUpperCase();
-        color1 = color2 === "B" ? "W" : color2 === "W" ? "B" : "";
-      }
-      player1 = player1 || `AGAID ${game.player_1?.agaid || game.opponent_agaid || "?"}`;
-      player2 = player2 || `AGAID ${game.player_2?.agaid || state.selected || "?"}`;
-      const player1Label = playerLabelWithRank(player1, rank1, color1);
-      const player2Label = playerLabelWithRank(player2, rank2, color2);
-      const handicapValue = Number(game.handicap);
-      return [
-        `${player1Label} vs ${player2Label}`,
-        game.game_date ? formatDate(game.game_date) : "",
-        game.round ? `Rnd ${game.round}` : "",
-        Number.isFinite(handicapValue) ? `Hcp ${handicapValue}` : ""
-      ].filter(Boolean).join(" | ");
-    }
-
-    function renderSgfViewerContent(selectedGame) {
-      const viewerUrl = gameSgfViewerUrl(selectedGame);
-      if (!selectedGame || !viewerUrl) {
-        return `<div class="empty">Choose a game with SGF to load it here.</div>`;
-      }
-      return `<iframe class="sgf-viewer-frame" src="${escapeHtml(viewerUrl)}" loading="lazy" title="SGF viewer"></iframe>`;
-    }
-
-    function closeSgfViewer() {
-      els.sgfModal.classList.add("hidden");
-      els.sgfModal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    }
-
-    function syncSgfModal() {
-      els.sgfModalTitle.textContent = sgfViewerTitle(state.selectedSgfGame);
-      els.sgfModalSubtitle.textContent = "";
-      els.sgfModalBody.innerHTML = renderSgfViewerContent(state.selectedSgfGame);
-    }
-
-    function openSgfViewer(game) {
-      if (!game || !gameSgfViewerUrl(game)) return;
-      state.selectedSgfGame = game;
-      syncSgfModal();
-      els.sgfModal.classList.remove("hidden");
-      els.sgfModal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-      els.sgfModalClose.focus();
-      const label = game.opponent_name ? ` vs ${game.opponent_name}` : "";
-      setStatus(`Loaded SGF viewer for game ${game.game_id || ""}${label}.`);
     }
 
     function wireLinks(root) {
@@ -2938,14 +2783,6 @@
           event.preventDefault();
           const code = link.getAttribute("data-tournament-link");
           if (code) loadTournament(code, { focusResult: true });
-        });
-      });
-      root.querySelectorAll("[data-sgf-viewer-url]").forEach((link) => {
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          const gameId = link.getAttribute("data-game-id");
-          const game = (state.activeGames || []).find((item) => String(item.game_id || "") === String(gameId || ""));
-          if (game) openSgfViewer(game);
         });
       });
     }
@@ -3014,7 +2851,6 @@
           has_previous: state.playerRecentGamesPage > 0,
           has_next: false
         };
-        const sgfGames = recentGames.filter((item) => gameHasSgf(item));
         const visibleRecentGames = filteredPlayerRecentGames(recentGames);
         const ratingHistory = payload.rating_history || [];
         state.playerRecentTournamentsPage = Number(recentTournamentsPaging.page || 0);
@@ -3022,10 +2858,9 @@
         state.playerOpponentsPage = Number(opponentsPaging.page || 0);
         state.playerOpponentsSort = opponentsSort;
         state.activeGames = recentGames;
-        state.selectedSgfGame = selectedSgfGameFromList(recentGames) || sgfGames[0] || null;
         const contextSection = renderPlayerContextCard("", true);
         const chartHtml = buildInteractiveHistoryChart(player, ratingHistory);
-        const recentGamesTools = `${pagerControlsHtml("games", recentGamesPaging, state.playerRecentGamesSgfOnly ? "SGF games" : "games")}<label class="inline-field" style="margin-left:auto"><input type="checkbox" id="recent-games-sgf-only"${state.playerRecentGamesSgfOnly ? " checked" : ""} /> <span>Games with SGF only?</span></label>`;
+        const recentGamesTools = `${pagerControlsHtml("games", recentGamesPaging, state.playerRecentGamesSgfOnly ? "SGF games" : "games")}<label class="inline-field inline-checkbox-field" style="margin-left:auto"><input type="checkbox" id="recent-games-sgf-only"${state.playerRecentGamesSgfOnly ? " checked" : ""} /> <span>Games with SGF only?</span></label>`;
         const recentTournamentsTools = recentTournamentsPaging.total_count ? `<div class="section-tools">${pagerControlsHtml("tournaments", recentTournamentsPaging, "tournaments")}</div>` : "";
         const opponentsSortControls = `<label class="inline-field"><span>Sort</span><select id="opponents-sort"><option value="games"${opponentsSort === "games" ? " selected" : ""}>Games</option><option value="latest"${opponentsSort === "latest" ? " selected" : ""}>Latest</option></select></label>`;
         const opponentsTools = `<div class="section-tools">${opponentsPaging.total_count ? pagerControlsHtml("opponents", opponentsPaging, "opponents") : ""}${opponentsSortControls}</div>`;
@@ -3046,7 +2881,7 @@
           ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Tournament", "Date", "Record", "Games"], recentTournaments.map((item) => `<tr><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.description || item.tournament_code)}</a></td><td>${formatDate(item.tournament_date)}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${item.games_played || 0}</td></tr>`))}</div>${mobileRecentTournamentCardsHtml(recentTournaments)}`
           : '<div class="empty">No tournament history was found for this player.</div>';
         const recentGamesHtml = visibleRecentGames.length
-          ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Date", "Opponent", "Tournament", "Rnd", "B/W", "Hcp", "W/L", "SGF"], visibleRecentGames.map((item) => `<tr><td>${formatDate(item.game_date)}</td><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></td><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></td><td>${escapeHtml(item.round || "")}</td><td>${escapeHtml(item.color || "")}</td><td>${escapeHtml(item.handicap ?? "")}</td><td>${escapeHtml(item.outcome || item.result_text || "")}</td><td>${gameHasSgf(item) && gameSgfViewerUrl(item) ? `<button type="button" class="sgf-link" data-game-id="${escapeHtml(item.game_id)}" data-sgf-viewer-url="${escapeHtml(gameSgfViewerUrl(item))}" title="${escapeHtml(item.sgf_code || "")}">View SGF</button>` : `<span class="sgf-link muted">None</span>`}</td></tr>`))}</div>${mobileRecentGameCardsHtml(visibleRecentGames)}`
+          ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Date", "Opponent", "Tournament", "Rnd", "B/W", "Hcp", "Result", "SGF"], visibleRecentGames.map((item) => `<tr><td>${formatDate(item.game_date)}</td><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.opponent_agaid)}">${escapeHtml(item.opponent_name)}</a></td><td><a href="#" class="linkish" data-tournament-link="${escapeHtml(item.tournament_code)}">${escapeHtml(item.tournament_description || item.tournament_code)}</a></td><td>${escapeHtml(item.round || "")}</td><td>${escapeHtml(item.color || "")}</td><td>${escapeHtml(item.handicap ?? "")}</td><td>${escapeHtml(gameOutcomeLabel(item))}</td><td>${gameHasSgf(item) && gameSgfDownloadUrl(item) ? `<a class="sgf-link" href="${escapeHtml(gameSgfDownloadUrl(item))}" download="${escapeHtml(gameSgfDownloadName(item))}" title="${escapeHtml(item.sgf_code || "")}">Download SGF</a>` : `<span class="sgf-link muted">No SGF</span>`}</td></tr>`))}</div>${mobileRecentGameCardsHtml(visibleRecentGames)}`
           : `<div class="empty">${state.playerRecentGamesSgfOnly ? "No SGF-linked recent games were found for this player." : "No recent games were found for this player."}</div>`;
         const opponentsHtml = opponents.length
           ? `<div class="desktop-table-on-mobile">${scrollTableHtml(["Opponent", "Games", "Record", "Latest"], opponents.map((item) => `<tr><td><a href="#" class="linkish" data-player-link="${escapeHtml(item.agaid)}">${escapeHtml(item.display_name)}</a></td><td>${item.games_played || 0}</td><td>${item.wins || 0}-${item.losses || 0}</td><td>${formatDate(item.latest_game_date)}</td></tr>`))}</div>${mobileOpponentCardsHtml(opponents)}`
@@ -3167,9 +3002,7 @@
         const rawGames = payload.games || [];
         const games = normalizeTournamentGameRounds(rawGames, tournament.rounds);
         tournament.game_count = games.length;
-        const sgfGames = games.filter((item) => gameHasSgf(item));
         state.activeGames = games;
-        state.selectedSgfGame = selectedSgfGameFromList(games) || sgfGames[0] || null;
         if (preserveResultsSnapshot) {
           restoreResultsSnapshot({
             mode: modeOverride,
@@ -3227,17 +3060,6 @@
     els.searchButton.addEventListener("click", () => {
       state.tournamentSearchPage = 0;
       search().catch(handleError);
-    });
-    els.sgfModalClose.addEventListener("click", () => {
-      closeSgfViewer();
-    });
-    els.sgfModal.addEventListener("click", (event) => {
-      if (event.target === els.sgfModal) closeSgfViewer();
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !els.sgfModal.classList.contains("hidden")) {
-        closeSgfViewer();
-      }
     });
     els.reset.addEventListener("click", () => {
       Object.values(els.fields).forEach((input) => { input.value = ""; });

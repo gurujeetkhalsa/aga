@@ -47,16 +47,19 @@ Production base URL:
 
 Deploy logic:
 
-- publish from the app folder, not from the legacy monolith
-- command:
+- publish from a prepared package so the sibling `bayrate/` package is included with `ratings-explorer-app/`
+- prepare package from repo root:
+  `.\scripts\prepare-ratings-explorer-deploy.ps1`
+- publish from the generated `_deploy\ratings-explorer-app-bayrate-<timestamp>\` folder
+- command from that generated folder:
   `func azure functionapp publish aga-ratings-explorer --python --build remote`
-- working directory:
-  `C:\Users\guruj\OneDrive\Documents\Playground\aga\ratings-explorer-app`
 
 Notes:
 
 - staging has historically used `aga-ratings-explorer-sgf-20260407t2105`
 - generated snapshot data under `data/` should not be committed
+- BayRate routes require Azure App Service Authentication plus `BAYRATE_TRUST_EASY_AUTH=true`.
+- BayRate operators are controlled in SQL with `ratings.bayrate_admins`; apply `bayrate/sql/bayrate_authorization_schema.sql` before enabling the BayRate UI in Azure.
 
 ### `aga-clubexpress-mail`
 

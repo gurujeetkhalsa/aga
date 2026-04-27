@@ -1,11 +1,48 @@
 import json
 import os
+import sys
 from datetime import date, datetime, timezone
+from pathlib import Path
 from time import perf_counter
+from urllib.parse import quote, urlsplit
 
 import azure.functions as func
 
 import ratings_explorer_support as explorer
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.append(str(REPO_ROOT))
+
+try:
+    from bayrate.auth import authorize_bayrate_admin
+    from bayrate.commit_staged_run import build_commit_plan, printable_commit_plan
+    from bayrate.sql_adapter import SqlAdapter
+    from bayrate.replay_staged_run import run_staged_replay
+    from bayrate.stage_reports import (
+        apply_tournament_review_decision,
+        build_insert_statements,
+        build_staging_payload,
+        ensure_payload_run_id,
+        explain_staged_run_review,
+        load_staged_run,
+        printable_payload,
+        update_staged_run_review,
+    )
+except Exception:
+    authorize_bayrate_admin = None
+    build_commit_plan = None
+    printable_commit_plan = None
+    SqlAdapter = None
+    run_staged_replay = None
+    apply_tournament_review_decision = None
+    build_insert_statements = None
+    build_staging_payload = None
+    ensure_payload_run_id = None
+    explain_staged_run_review = None
+    load_staged_run = None
+    printable_payload = None
+    update_staged_run_review = None
 
 app = func.FunctionApp()
 ALLOWED_SEARCH_LIMITS = {10, 25, 50, 100, 250}
@@ -14,6 +51,11 @@ ALLOWED_ACTIVITY_YEARS = {1, 3, 5, 10}
 DEFAULT_RECENT_ACTIVITY_YEARS = 3
 ALLOWED_RATING_BANDS = {item["value"] for item in explorer.RATING_FILTER_OPTIONS}
 ALLOWED_PLAYER_STATUS_FILTERS = {"all", "active", "expired"}
+SQL_CONNECTION_STRING = explorer.get_sql_connection_string()
+if not SQL_CONNECTION_STRING:
+    raise RuntimeError(
+        "Missing SQL connection string. Set SQL_CONNECTION_STRING or MYSQL_SYNC_SQL_CONNECTION_STRING in Function App settings or local.settings.json."
+    )
 
 
 def _json_response(payload: dict) -> func.HttpResponse:
@@ -29,6 +71,187 @@ def _with_debug(payload: dict, **debug_fields) -> dict:
     enriched["_debug"] = {key: value for key, value in debug_fields.items() if value is not None}
     return enriched
 
+
+def _bayrate_json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    return func.HttpResponse(
+        json.dumps(payload, default=explorer.json_safe_value),
+        status_code=status_code,
+        headers=explorer.response_headers("application/json; charset=utf-8"),
+    )
+
+
+def _bayrate_preview_error(message: str, status_code: int = 400) -> func.HttpResponse:
+    return _bayrate_json_response({"ok": False, "error": message}, status_code=status_code)
+
+
+def _bayrate_modules_available(*names: str) -> bool:
+    modules = {
+        "stage": build_staging_payload is not None and printable_payload is not None,
+        "write": build_insert_statements is not None and ensure_payload_run_id is not None,
+        "review": (
+            load_staged_run is not None
+            and apply_tournament_review_decision is not None
+            and update_staged_run_review is not None
+        ),
+        "replay": run_staged_replay is not None,
+        "commit": build_commit_plan is not None and printable_commit_plan is not None,
+    }
+    return all(modules.get(name, False) for name in names)
+
+
+def _bayrate_adapter_or_error() -> tuple[object | None, func.HttpResponse | None]:
+    if SqlAdapter is None:
+        return None, _bayrate_preview_error("BayRate SQL adapter is not available in this deployment.", status_code=500)
+    return SqlAdapter(SQL_CONNECTION_STRING), None
+
+
+def _bayrate_login_redirect(req: func.HttpRequest) -> str:
+    raw_url = getattr(req, "url", "") or "/api/ratings-explorer/bayrate"
+    parsed = urlsplit(raw_url)
+    redirect_path = parsed.path or "/api/ratings-explorer/bayrate"
+    if parsed.query:
+        redirect_path = f"{redirect_path}?{parsed.query}"
+    return f"/.auth/login/aad?post_login_redirect_uri={quote(redirect_path, safe='')}"
+
+
+def _bayrate_authorization_response(
+    req: func.HttpRequest,
+    adapter: object,
+    *,
+    html: bool = False,
+) -> tuple[dict | None, func.HttpResponse | None]:
+    if authorize_bayrate_admin is None:
+        message = "BayRate authorization modules are not available in this deployment."
+        if html:
+            return None, func.HttpResponse(message, status_code=500, headers=explorer.response_headers("text/plain; charset=utf-8"))
+        return None, _bayrate_preview_error(message, status_code=500)
+
+    result = authorize_bayrate_admin(req.headers, adapter)
+    if result.ok:
+        return {
+            "principal_name": result.principal.principal_name if result.principal else None,
+            "principal_id": result.principal.principal_id if result.principal else None,
+            "identity_provider": result.principal.identity_provider if result.principal else None,
+        }, None
+
+    if html and result.status_code == 401:
+        headers = explorer.response_headers("text/plain; charset=utf-8")
+        headers["Location"] = _bayrate_login_redirect(req)
+        return None, func.HttpResponse("", status_code=302, headers=headers)
+
+    message = result.error or "BayRate authorization failed."
+    if html:
+        return None, func.HttpResponse(message, status_code=result.status_code, headers=explorer.response_headers("text/plain; charset=utf-8"))
+    return None, _bayrate_json_response(
+        {
+            "ok": False,
+            "error": message,
+            "authorization": {
+                "status_code": result.status_code,
+                "principal_name": result.principal.principal_name if result.principal else None,
+            },
+        },
+        status_code=result.status_code,
+    )
+
+
+def _bayrate_request_json(req: func.HttpRequest) -> tuple[dict | None, func.HttpResponse | None]:
+    try:
+        body = req.get_json()
+    except ValueError:
+        return None, _bayrate_preview_error("Request body must be JSON.")
+    if not isinstance(body, dict):
+        return None, _bayrate_preview_error("Request body must be a JSON object.")
+    return body, None
+
+
+def _bayrate_report_inputs_from_body(body: dict) -> tuple[list[tuple[str, str]] | None, func.HttpResponse | None]:
+    reports = body.get("reports")
+    if not isinstance(reports, list) or not reports:
+        return None, _bayrate_preview_error("At least one report is required.")
+    if len(reports) > 20:
+        return None, _bayrate_preview_error("At most 20 reports can be previewed at once.")
+
+    report_inputs = []
+    for index, item in enumerate(reports, start=1):
+        if not isinstance(item, dict):
+            return None, _bayrate_preview_error(f"Report {index} must be an object.")
+        source_name = str(item.get("source_name") or f"pasted-report-{index}.txt").strip()
+        content = str(item.get("content") or "")
+        if not content.strip():
+            return None, _bayrate_preview_error(f"Report {index} is empty.")
+        if len(content) > 500_000:
+            return None, _bayrate_preview_error(f"Report {index} is too large.")
+        report_inputs.append((source_name, content))
+    return report_inputs, None
+
+
+def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, written: bool = False) -> dict:
+    explanations = explain_staged_run_review(adapter, payload) if (adapter and explain_staged_run_review is not None) else None
+    summary = printable_payload(payload, include_games=False)
+    summary["written"] = written
+    return {
+        "ok": True,
+        "written": written,
+        "summary": summary,
+        "same_date_groups": _bayrate_same_date_groups(payload),
+        "review_explanation": explanations,
+    }
+
+
+def _bayrate_replay_response(artifact: dict) -> dict:
+    plan = artifact.get("plan") or {}
+    result = artifact.get("bayrate_result") or {}
+    staged_rating_summary = artifact.get("staged_rating_summary") or {}
+    return {
+        "ok": True,
+        "read_only": True,
+        "run_id": plan.get("run_id"),
+        "output_path": artifact.get("output_path"),
+        "plan": plan,
+        "staged_rating_summary": staged_rating_summary,
+        "result_summary": {
+            "event_count": result.get("event_count"),
+            "player_count": result.get("player_count"),
+            "pre_event_metrics": result.get("pre_event_metrics"),
+            "post_event_fit_metrics": result.get("post_event_fit_metrics"),
+            "rating_result_count": staged_rating_summary.get("rating_count", 0),
+            "staged_rating_count": plan.get("staged_rating_count", 0),
+        },
+    }
+
+
+def _bayrate_same_date_groups(payload: dict) -> list[dict]:
+    groups: dict[str, list[dict]] = {}
+    for entry in payload.get("staged_tournaments") or []:
+        row = entry.get("tournament_row") or {}
+        tournament_date = row.get("Tournament_Date")
+        key = tournament_date.isoformat() if hasattr(tournament_date, "isoformat") else str(tournament_date or "")
+        groups.setdefault(key, []).append(
+            {
+                "source_report_ordinal": entry.get("source_report_ordinal"),
+                "source_report_name": entry.get("source_report_name"),
+                "tournament_code": row.get("Tournament_Code"),
+                "title": row.get("Tournament_Descr"),
+                "tournament_date": tournament_date,
+                "status": entry.get("status"),
+                "duplicate_candidate": entry.get("duplicate_candidate"),
+                "game_count": sum(
+                    1
+                    for game in payload.get("staged_games") or []
+                    if game.get("source_report_ordinal") == entry.get("source_report_ordinal")
+                ),
+            }
+        )
+    return [
+        {
+            "tournament_date": tournament_date,
+            "events": events,
+        }
+        for tournament_date, events in sorted(groups.items())
+        if tournament_date and len(events) > 1
+    ]
+
 def _load_snapshot_or_error() -> tuple[dict | None, func.HttpResponse | None]:
     if (os.environ.get("RATINGS_EXPLORER_DISABLE_SNAPSHOT") or "").strip().lower() in {"1", "true", "yes", "on"}:
         return None, None
@@ -39,10 +262,7 @@ def _load_snapshot_or_error() -> tuple[dict | None, func.HttpResponse | None]:
 
 
 def _get_conn_str_or_error() -> tuple[str | None, func.HttpResponse | None]:
-    conn_str = explorer.get_sql_connection_string()
-    if not conn_str:
-        return None, func.HttpResponse("Missing SQL connection string.", status_code=500)
-    return conn_str, None
+    return SQL_CONNECTION_STRING, None
 
 
 def _player_detail_has_recent_game_handicap(payload: dict | None) -> bool:
@@ -211,6 +431,190 @@ def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
         status_code=200,
         headers=explorer.response_headers("text/html; charset=utf-8"),
     )
+
+
+@app.function_name(name="BayRateStagingPage")
+@app.route(route="ratings-explorer/bayrate", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_page(req: func.HttpRequest) -> func.HttpResponse:
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter, html=True)
+    if auth_error:
+        return auth_error
+    return func.HttpResponse(
+        explorer.load_ratings_explorer_html("", "bayrate_staging.html"),
+        status_code=200,
+        headers=explorer.response_headers("text/html; charset=utf-8"),
+    )
+
+
+@app.function_name(name="BayRateStagingPreview")
+@app.route(route="ratings-explorer/bayrate/preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("stage"):
+        return _bayrate_preview_error("BayRate staging modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    body, error = _bayrate_request_json(req)
+    if error:
+        return error
+    report_inputs, error = _bayrate_report_inputs_from_body(body)
+    if error:
+        return error
+
+    duplicate_check = bool(body.get("duplicate_check", True))
+    try:
+        payload = build_staging_payload(
+            report_inputs,
+            adapter=adapter,
+            duplicate_check=duplicate_check,
+        )
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc))
+
+    response_adapter = adapter if duplicate_check else None
+    return _bayrate_json_response(
+        {
+            **_bayrate_payload_response(payload, adapter=response_adapter, written=False),
+            "duplicate_check": duplicate_check and bool(adapter),
+        }
+    )
+
+
+@app.function_name(name="BayRateStagingWrite")
+@app.route(route="ratings-explorer/bayrate/stage", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_write(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("stage", "write"):
+        return _bayrate_preview_error("BayRate staging write modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    body, error = _bayrate_request_json(req)
+    if error:
+        return error
+    if body.get("confirm_stage") is not True:
+        return _bayrate_preview_error("confirm_stage=true is required.")
+    report_inputs, error = _bayrate_report_inputs_from_body(body)
+    if error:
+        return error
+    try:
+        payload = build_staging_payload(report_inputs, adapter=adapter, duplicate_check=True)
+        ensure_payload_run_id(payload, adapter)
+        adapter.execute_statements(build_insert_statements(payload))
+        payload["written"] = True
+        payload["dry_run"] = False
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc), status_code=500)
+    return _bayrate_json_response(_bayrate_payload_response(payload, adapter=adapter, written=True))
+
+
+@app.function_name(name="BayRateStagingReview")
+@app.route(route="ratings-explorer/bayrate/review", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("stage", "review"):
+        return _bayrate_preview_error("BayRate review modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    body, error = _bayrate_request_json(req)
+    if error:
+        return error
+    if body.get("confirm_review") is not True:
+        return _bayrate_preview_error("confirm_review=true is required.")
+    run_id = str(body.get("run_id") or "").strip()
+    if not run_id:
+        return _bayrate_preview_error("run_id is required.")
+    source_report_ordinal = body.get("source_report_ordinal")
+    if not isinstance(source_report_ordinal, int):
+        return _bayrate_preview_error("source_report_ordinal must be an integer.")
+    try:
+        payload = load_staged_run(adapter, run_id)
+        apply_tournament_review_decision(
+            payload,
+            source_report_ordinal,
+            use_duplicate_code=bool(body.get("use_duplicate_code", False)),
+            mark_ready=bool(body.get("mark_ready", False)),
+            operator_note=str(body.get("operator_note") or "").strip() or None,
+        )
+        update_staged_run_review(adapter, payload)
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc), status_code=500)
+    return _bayrate_json_response(_bayrate_payload_response(payload, adapter=adapter, written=True))
+
+
+@app.function_name(name="BayRateStagingReplay")
+@app.route(route="ratings-explorer/bayrate/replay", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("replay"):
+        return _bayrate_preview_error("BayRate replay modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    body, error = _bayrate_request_json(req)
+    if error:
+        return error
+    run_id = str(body.get("run_id") or "").strip()
+    if not run_id:
+        return _bayrate_preview_error("run_id is required.")
+    try:
+        artifact = run_staged_replay(
+            adapter,
+            run_id=run_id,
+            allow_needs_review=bool(body.get("allow_needs_review", True)),
+            write_artifact=False,
+            persist_staged_ratings=bool(body.get("persist_staged_ratings", True)),
+        )
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc), status_code=500)
+    return _bayrate_json_response(_bayrate_replay_response(artifact))
+
+
+@app.function_name(name="BayRateStagingCommitPreview")
+@app.route(route="ratings-explorer/bayrate/commit-preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_commit_preview(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("commit"):
+        return _bayrate_preview_error("BayRate commit modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    body, error = _bayrate_request_json(req)
+    if error:
+        return error
+    run_id = str(body.get("run_id") or "").strip()
+    if not run_id:
+        return _bayrate_preview_error("run_id is required.")
+    try:
+        plan = build_commit_plan(adapter, run_id)
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc), status_code=500)
+    return _bayrate_json_response({"ok": True, "commit_plan": printable_commit_plan(plan)})
 
 
 @app.function_name(name="RatingsExplorerPlayers")
@@ -708,15 +1112,7 @@ def ratings_explorer_snapshot_refresh(req: func.HttpRequest) -> func.HttpRespons
 @app.function_name(name="RatingsExplorerNightlySnapshot")
 @app.schedule(schedule="0 15 6 * * *", arg_name="timer", run_on_startup=False, use_monitor=True)
 def ratings_explorer_nightly_snapshot(timer: func.TimerRequest) -> None:
-    conn_str = explorer.get_sql_connection_string()
-    if not conn_str:
-        explorer.update_snapshot_status(
-            "failed",
-            source="timer",
-            detail="Nightly snapshot skipped.",
-            error="Missing SQL connection string.",
-        )
-        return
+    conn_str = SQL_CONNECTION_STRING
     explorer.update_snapshot_status("running", source="timer", detail="Nightly snapshot refresh started.", error=None)
     try:
         snapshot = explorer.refresh_snapshot(conn_str)
@@ -743,15 +1139,7 @@ def ratings_explorer_pending_snapshot_refresh(timer: func.TimerRequest) -> None:
     request = explorer.load_snapshot_request()
     if not request:
         return
-    conn_str = explorer.get_sql_connection_string()
-    if not conn_str:
-        explorer.update_snapshot_status(
-            "failed",
-            source="manual-timer",
-            detail="Pending snapshot refresh skipped.",
-            error="Missing SQL connection string.",
-        )
-        return
+    conn_str = SQL_CONNECTION_STRING
     try:
         explorer.update_snapshot_status(
             "running",

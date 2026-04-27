@@ -1,0 +1,1405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BayRate Staging</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #18212f;
+      --muted: #657386;
+      --line: #d7dde5;
+      --line-strong: #aeb8c6;
+      --accent: #256f70;
+      --accent-strong: #174e50;
+      --accent-soft: #e5f1ef;
+      --warn: #9b5b16;
+      --warn-soft: #fff4df;
+      --danger: #a33a3a;
+      --danger-soft: #feecec;
+      --ready: #1f7a4d;
+      --ready-soft: #e7f5ed;
+      --shadow: 0 12px 28px rgba(24, 33, 47, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    button, input, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      min-height: 36px;
+      padding: 0 12px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.success {
+      border-color: var(--ready);
+      background: var(--ready);
+      color: #fff;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+    }
+
+    .page {
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .topbar,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.55rem, 2.4vw, 2.25rem);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      font-size: 0.96rem;
+      letter-spacing: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 0.86fr) minmax(420px, 1.14fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-head,
+    .row-actions,
+    .metrics,
+    .source-meta,
+    .status-line {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .section-head {
+      justify-content: space-between;
+    }
+
+    .dropzone {
+      min-height: 132px;
+      border: 2px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fbfcfd;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 18px;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+
+    .dropzone.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .dropzone input {
+      display: none;
+    }
+
+    .dropzone-title {
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfd;
+      color: var(--ink);
+      line-height: 1.35;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .source-list,
+    .same-date-list,
+    .preview-list,
+    .message-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .source-card,
+    .event-row,
+    .preview-card,
+    .message {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .source-card {
+      display: grid;
+      gap: 8px;
+    }
+
+    .source-card.dragging,
+    .event-row.dragging {
+      opacity: 0.5;
+    }
+
+    .source-card.drop-target,
+    .event-row.drop-target {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .source-title {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .source-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 3px 8px;
+      background: #fff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-label::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .status-label.ready {
+      color: var(--ready);
+    }
+
+    .status-label.review {
+      color: var(--warn);
+    }
+
+    .status-label.failed {
+      color: var(--danger);
+    }
+
+    .same-date-group {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      background: #fbfcfd;
+    }
+
+    .event-row {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .event-index {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 800;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(110px, 1fr));
+      gap: 8px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfd;
+    }
+
+    .metric-value {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .preview-card {
+      display: grid;
+      gap: 8px;
+    }
+
+    .preview-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+      flex-wrap: wrap;
+    }
+
+    .message {
+      border-color: #ecd09a;
+      background: var(--warn-soft);
+      color: #5f370b;
+    }
+
+    .message.highlight {
+      border-color: #e3a05f;
+      background: #fff0df;
+      font-weight: 700;
+    }
+
+    .message.review {
+      border-color: #e0a05a;
+      background: #fff0df;
+      border-left: 4px solid var(--warn);
+      font-weight: 700;
+    }
+
+    .warning-title {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .error {
+      border: 1px solid #efb1b1;
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-radius: 8px;
+      padding: 10px;
+      font-weight: 700;
+    }
+
+    .empty {
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      padding: 14px;
+      color: var(--muted);
+      background: #fbfcfd;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .run-banner {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 920px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        padding: 10px;
+      }
+
+      .event-row {
+        grid-template-columns: 30px minmax(0, 1fr);
+      }
+
+      .event-row .row-actions {
+        grid-column: 1 / -1;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div>
+        <h1>BayRate Staging</h1>
+        <p class="muted">Reports to staging preview</p>
+      </div>
+      <div class="row-actions">
+        <a href="/api/ratings-explorer"><button type="button">Ratings Explorer</button></a>
+        <button type="button" id="previewBtn" class="primary">Preview Run</button>
+        <button type="button" id="stageBtn" class="success" disabled>Write Staged Run</button>
+        <button type="button" id="replayBtn" disabled>Run Replay</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="section-head">
+          <h2>Report Intake</h2>
+          <button type="button" id="clearAllBtn">Clear</button>
+        </div>
+
+        <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Drop report files or choose text report files">
+          <input id="fileInput" type="file" accept=".txt,text/plain" multiple />
+          <span>
+            <span class="dropzone-title">Drop report files</span><br />
+            <button type="button" id="chooseFilesBtn">Choose Files</button>
+          </span>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <h2>Paste Report</h2>
+            <button type="button" id="addPasteBtn">Add Pasted Report</button>
+          </div>
+          <textarea id="pasteBox" spellcheck="false"></textarea>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <h2>Source Reports</h2>
+            <span id="sourceCount" class="pill">0 reports</span>
+          </div>
+          <div id="sourceList" class="source-list"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <h2>Same-Date Sequence</h2>
+          <span class="muted">Applied before preview</span>
+        </div>
+        <div id="sameDateList" class="same-date-list"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Preview</h2>
+        <div class="status-line">
+          <span id="previewStatus" class="muted">No preview yet</span>
+        </div>
+      </div>
+      <div id="previewOutput" class="preview-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "__RATINGS_EXPLORER_API_BASE__";
+    const state = {
+      reports: [],
+      nextId: 1,
+      nextSequence: 1,
+      busy: false,
+      dragId: null,
+      dragTargetId: null,
+      dropDepth: 0,
+      previewPayload: null,
+      stagedSummary: null,
+      replaySummary: null,
+      commitPreview: null,
+    };
+
+    const els = {
+      dropzone: document.getElementById("dropzone"),
+      fileInput: document.getElementById("fileInput"),
+      chooseFilesBtn: document.getElementById("chooseFilesBtn"),
+      pasteBox: document.getElementById("pasteBox"),
+      addPasteBtn: document.getElementById("addPasteBtn"),
+      clearAllBtn: document.getElementById("clearAllBtn"),
+      previewBtn: document.getElementById("previewBtn"),
+      stageBtn: document.getElementById("stageBtn"),
+      replayBtn: document.getElementById("replayBtn"),
+      sourceCount: document.getElementById("sourceCount"),
+      sourceList: document.getElementById("sourceList"),
+      sameDateList: document.getElementById("sameDateList"),
+      previewStatus: document.getElementById("previewStatus"),
+      previewOutput: document.getElementById("previewOutput"),
+    };
+
+    function parseLocalReport(text, fallbackName) {
+      const lines = String(text || "").split(/\r?\n/);
+      let title = fallbackName || "Untitled report";
+      for (let i = 0; i < lines.length; i += 1) {
+        const match = lines[i].match(/^\s*(?:TOURNEY|TOURNAMENT)\b(.*)$/i);
+        if (!match) continue;
+        const inlineTitle = match[1].trim();
+        if (inlineTitle) {
+          title = inlineTitle;
+        } else {
+          const nextTitle = lines.slice(i + 1).map((line) => line.trim()).find(Boolean);
+          if (nextTitle) title = nextTitle;
+        }
+        break;
+      }
+      const startMatch = String(text || "").match(/^\s*start\s*=\s*['"]?([^'"\r\n]+)/im);
+      const eventDate = startMatch ? normalizeDate(startMatch[1].trim()) : "";
+      const gameMatch = String(text || "").match(/^\s*GAMES(?:\s+\d+|\s*\((\d+)\))?/gim);
+      const playerMatch = String(text || "").match(/^\s*PLAYERS(?:\s*\((\d+)\))?/im);
+      return {
+        title,
+        eventDate,
+        playerCountHint: playerMatch && playerMatch[1] ? Number(playerMatch[1]) : null,
+        gameSectionCount: gameMatch ? gameMatch.length : 0,
+      };
+    }
+
+    function normalizeDate(value) {
+      const text = String(value || "").trim();
+      let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (match) return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+      match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (match) return `${match[3]}-${match[1].padStart(2, "0")}-${match[2].padStart(2, "0")}`;
+      return "";
+    }
+
+    function addReport(sourceName, content) {
+      resetPreviewState();
+      const summary = parseLocalReport(content, sourceName);
+      state.reports.push({
+        id: state.nextId,
+        sequence: state.nextSequence,
+        sourceName,
+        content,
+        ...summary,
+      });
+      state.nextId += 1;
+      state.nextSequence += 1;
+      render();
+    }
+
+    function resetPreviewState() {
+      state.previewPayload = null;
+      state.stagedSummary = null;
+      state.replaySummary = null;
+      state.commitPreview = null;
+      els.previewStatus.textContent = "No preview yet";
+      els.previewOutput.innerHTML = "";
+    }
+
+    function hasDroppedFiles(event) {
+      return Array.from(event.dataTransfer?.types || []).includes("Files");
+    }
+
+    function hasDroppedPlainText(event) {
+      return Array.from(event.dataTransfer?.types || []).includes("text/plain");
+    }
+
+    function droppedFiles(dataTransfer) {
+      const files = Array.from(dataTransfer?.files || []).filter((file) => file);
+      if (files.length) return files;
+      return Array.from(dataTransfer?.items || [])
+        .filter((item) => item.kind === "file")
+        .map((item) => item.getAsFile())
+        .filter((file) => file);
+    }
+
+    function setDropzoneActive(active) {
+      els.dropzone.classList.toggle("active", Boolean(active));
+    }
+
+    async function readDroppedData(dataTransfer) {
+      const files = droppedFiles(dataTransfer);
+      if (files.length) {
+        await readFiles(files);
+        return;
+      }
+      const text = dataTransfer?.getData("text/plain") || "";
+      if (text.trim()) {
+        const summary = parseLocalReport(text, "Dropped report");
+        const suffix = summary.eventDate || String(state.nextId).padStart(2, "0");
+        addReport(`dropped-report-${suffix}.txt`, text);
+        els.previewStatus.textContent = "Loaded dropped report text";
+      }
+    }
+
+    async function readFiles(files) {
+      const fileList = Array.from(files || []).filter((file) => file);
+      let loadedCount = 0;
+      const failedNames = [];
+      for (const file of fileList) {
+        try {
+          const content = await file.text();
+          addReport(file.name, content);
+          loadedCount += 1;
+        } catch (error) {
+          failedNames.push(file.name || "unnamed file");
+        }
+      }
+      if (loadedCount) {
+        els.previewStatus.textContent = `Loaded ${loadedCount} report file${loadedCount === 1 ? "" : "s"}`;
+      }
+      if (failedNames.length) {
+        els.previewOutput.insertAdjacentHTML(
+          "afterbegin",
+          `<div class="error">Could not read ${escapeHtml(failedNames.join(", "))}</div>`
+        );
+      }
+    }
+
+    function orderedReports() {
+      return [...state.reports].sort((left, right) => {
+        const leftDate = left.eventDate || "9999-12-31";
+        const rightDate = right.eventDate || "9999-12-31";
+        if (leftDate !== rightDate) return leftDate.localeCompare(rightDate);
+        return left.sequence - right.sequence;
+      });
+    }
+
+    function sameDateGroups() {
+      const groups = new Map();
+      for (const report of state.reports) {
+        if (!report.eventDate) continue;
+        if (!groups.has(report.eventDate)) groups.set(report.eventDate, []);
+        groups.get(report.eventDate).push(report);
+      }
+      return [...groups.entries()]
+        .map(([eventDate, reports]) => [eventDate, reports.sort((a, b) => a.sequence - b.sequence)])
+        .filter(([, reports]) => reports.length > 1)
+        .sort(([left], [right]) => left.localeCompare(right));
+    }
+
+    function moveWithinDate(reportId, delta) {
+      const report = state.reports.find((item) => item.id === reportId);
+      if (!report || !report.eventDate) return;
+      const group = state.reports
+        .filter((item) => item.eventDate === report.eventDate)
+        .sort((a, b) => a.sequence - b.sequence);
+      const index = group.findIndex((item) => item.id === reportId);
+      const nextIndex = index + delta;
+      if (index < 0 || nextIndex < 0 || nextIndex >= group.length) return;
+      const other = group[nextIndex];
+      const sequence = report.sequence;
+      report.sequence = other.sequence;
+      other.sequence = sequence;
+      resetPreviewState();
+      render();
+    }
+
+    function removeReport(reportId) {
+      state.reports = state.reports.filter((report) => report.id !== reportId);
+      resetPreviewState();
+      render();
+    }
+
+    function render() {
+      els.sourceCount.textContent = `${state.reports.length} report${state.reports.length === 1 ? "" : "s"}`;
+      els.previewBtn.disabled = state.busy || state.reports.length === 0;
+      els.stageBtn.disabled = state.busy || !state.previewPayload || Boolean(state.stagedSummary);
+      els.replayBtn.disabled = state.busy || !state.stagedSummary;
+      renderSources();
+      renderSameDates();
+    }
+
+    function renderSources() {
+      const reports = orderedReports();
+      if (!reports.length) {
+        els.sourceList.innerHTML = '<div class="empty">No source reports loaded.</div>';
+        return;
+      }
+      els.sourceList.innerHTML = reports.map((report, index) => `
+        <article class="source-card" data-id="${report.id}">
+          <div class="preview-title">
+            <div>
+              <div class="source-title">${escapeHtml(report.title)}</div>
+              <div class="source-meta">
+                <span>${escapeHtml(report.sourceName)}</span>
+                <span>${report.eventDate || "date not found"}</span>
+                <span>${report.playerCountHint ? `${report.playerCountHint} players` : "players unknown"}</span>
+              </div>
+            </div>
+            <span class="pill">#${index + 1}</span>
+          </div>
+          <div class="row-actions">
+            <button type="button" data-action="remove" data-id="${report.id}">Remove</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderSameDates() {
+      const groups = sameDateGroups();
+      if (!groups.length) {
+        els.sameDateList.innerHTML = '<div class="empty">No same-date report groups.</div>';
+        return;
+      }
+      els.sameDateList.innerHTML = groups.map(([eventDate, reports]) => `
+        <section class="same-date-group">
+          <div class="section-head">
+            <h3>${eventDate}</h3>
+            <span class="pill">${reports.length} events</span>
+          </div>
+          ${reports.map((report, index) => `
+            <div class="event-row" draggable="true" data-id="${report.id}">
+              <span class="event-index">${index + 1}</span>
+              <div>
+                <div class="source-title">${escapeHtml(report.title)}</div>
+                <div class="source-meta">${escapeHtml(report.sourceName)}</div>
+              </div>
+              <div class="row-actions">
+                <button type="button" data-action="up" data-id="${report.id}" ${index === 0 ? "disabled" : ""}>Up</button>
+                <button type="button" data-action="down" data-id="${report.id}" ${index === reports.length - 1 ? "disabled" : ""}>Down</button>
+              </div>
+            </div>
+          `).join("")}
+        </section>
+      `).join("");
+    }
+
+    async function previewRun() {
+      if (!state.reports.length || state.busy) return;
+      state.busy = true;
+      state.previewPayload = null;
+      state.stagedSummary = null;
+      state.replaySummary = null;
+      state.commitPreview = null;
+      els.previewStatus.textContent = "Previewing...";
+      els.previewOutput.innerHTML = "";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/preview`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            duplicate_check: true,
+            reports: orderedReports().map((report) => ({
+              source_name: report.sourceName,
+              content: report.content,
+            })),
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Preview failed with HTTP ${response.status}`);
+        state.previewPayload = payload;
+        els.previewStatus.textContent = payload.duplicate_check ? "Preview complete" : "Preview complete; duplicate checks skipped";
+        renderPreview(payload);
+      } catch (error) {
+        els.previewStatus.textContent = "Preview failed";
+        els.previewOutput.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function stageRun() {
+      if (!state.reports.length || state.busy) return;
+      if (!window.confirm("Write this run to BayRate staging tables?")) return;
+      state.busy = true;
+      els.previewStatus.textContent = "Writing staged run...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/stage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            confirm_stage: true,
+            reports: orderedReports().map((report) => ({
+              source_name: report.sourceName,
+              content: report.content,
+            })),
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Stage failed with HTTP ${response.status}`);
+        state.previewPayload = payload;
+        state.stagedSummary = payload.summary;
+        state.replaySummary = null;
+        state.commitPreview = null;
+        els.previewStatus.textContent = "Staged run written";
+        renderPreview(payload);
+      } catch (error) {
+        els.previewStatus.textContent = "Stage failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function approveDuplicate(sourceReportOrdinal, duplicateCode) {
+      if (!state.stagedSummary || state.busy) return;
+      if (!window.confirm(`Reuse production Tournament_Code ${duplicateCode} and mark this tournament ready_for_rating?`)) return;
+      const note = window.prompt("Approval note", `Operator approved reuse of ${duplicateCode}.`) || "";
+      state.busy = true;
+      els.previewStatus.textContent = "Saving review...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            confirm_review: true,
+            run_id: state.stagedSummary.run_id,
+            source_report_ordinal: sourceReportOrdinal,
+            use_duplicate_code: true,
+            mark_ready: true,
+            operator_note: note,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Review failed with HTTP ${response.status}`);
+        state.previewPayload = payload;
+        state.stagedSummary = payload.summary;
+        state.replaySummary = null;
+        state.commitPreview = null;
+        els.previewStatus.textContent = "Review saved";
+        renderPreview(payload);
+      } catch (error) {
+        els.previewStatus.textContent = "Review failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function markReady(sourceReportOrdinal, tournamentCode) {
+      if (!state.stagedSummary || state.busy) return;
+      if (!window.confirm(`Mark ${tournamentCode} ready_for_rating?`)) return;
+      const note = window.prompt("Approval note", `Operator reviewed warnings for ${tournamentCode}.`) || "";
+      state.busy = true;
+      els.previewStatus.textContent = "Saving review...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            confirm_review: true,
+            run_id: state.stagedSummary.run_id,
+            source_report_ordinal: sourceReportOrdinal,
+            use_duplicate_code: false,
+            mark_ready: true,
+            operator_note: note,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Review failed with HTTP ${response.status}`);
+        state.previewPayload = payload;
+        state.stagedSummary = payload.summary;
+        state.replaySummary = null;
+        state.commitPreview = null;
+        els.previewStatus.textContent = "Review saved";
+        renderPreview(payload);
+      } catch (error) {
+        els.previewStatus.textContent = "Review failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function replayRun() {
+      if (!state.stagedSummary || state.busy) return;
+      if (!window.confirm("Run a read-only BayRate replay for this staged run?")) return;
+      state.busy = true;
+      els.previewStatus.textContent = "Running replay...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/replay`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            run_id: state.stagedSummary.run_id,
+            allow_needs_review: true,
+            persist_staged_ratings: true,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Replay failed with HTTP ${response.status}`);
+        state.replaySummary = payload;
+        state.commitPreview = null;
+        els.previewStatus.textContent = "Replay complete";
+        renderPreview(state.previewPayload);
+      } catch (error) {
+        els.previewStatus.textContent = "Replay failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function previewCommit() {
+      if (!state.stagedSummary || state.busy) return;
+      state.busy = true;
+      els.previewStatus.textContent = "Building commit preview...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/commit-preview`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            run_id: state.stagedSummary.run_id,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Commit preview failed with HTTP ${response.status}`);
+        state.commitPreview = payload.commit_plan;
+        els.previewStatus.textContent = "Commit preview ready";
+        renderPreview(state.previewPayload);
+      } catch (error) {
+        els.previewStatus.textContent = "Commit preview failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    function renderPreview(payload) {
+      const summary = payload.summary;
+      const tournaments = summary.tournaments || [];
+      els.previewOutput.innerHTML = `
+        ${renderRunBanner(summary)}
+        ${renderRunWarnings(summary.warnings || [])}
+        <div class="metrics">
+          ${metric("Status", summary.status)}
+          ${metric("Reports", summary.source_report_count)}
+          ${metric("Tournaments", summary.tournament_count)}
+          ${metric("Games", summary.game_count)}
+        </div>
+        <div class="preview-list">
+          ${tournaments.map(renderTournament).join("")}
+        </div>
+        ${renderApiSameDateGroups(payload.same_date_groups || [])}
+        ${renderReviewExplanation(payload.review_explanation)}
+        ${renderReplaySummary(state.replaySummary)}
+        ${renderCommitPreview(state.commitPreview)}
+      `;
+    }
+
+    function renderRunWarnings(warnings) {
+      if (!warnings.length) return "";
+      return `
+        <section class="message-list">
+          ${warnings.map(renderWarning).join("")}
+        </section>
+      `;
+    }
+
+    function renderRunBanner(summary) {
+      if (!summary) return "";
+      const written = Boolean(summary.written || state.stagedSummary);
+      const runId = summary.run_id || (state.stagedSummary && state.stagedSummary.run_id);
+      return `
+        <div class="run-banner">
+          <div>
+            <strong>${written ? "Staged Run" : "Preview Run"}</strong>
+            <div class="source-meta">${runId ? `RunID ${escapeHtml(runId)}` : "Not written to SQL"}</div>
+          </div>
+          <div class="row-actions">
+            ${!written ? '<button type="button" data-action="stage-preview" class="success">Write Staged Run</button>' : ""}
+            ${written ? '<button type="button" data-action="replay-run">Run Replay</button>' : ""}
+            ${written && state.replaySummary ? '<button type="button" data-action="commit-preview">Preview Production Commit</button>' : ""}
+          </div>
+        </div>
+      `;
+    }
+
+    function metric(label, value) {
+      return `
+        <div class="metric">
+          <div class="muted">${escapeHtml(label)}</div>
+          <div class="metric-value">${escapeHtml(value)}</div>
+        </div>
+      `;
+    }
+
+    function renderTournament(tournament) {
+      const statusClass = tournament.status === "ready_for_rating"
+        ? "ready"
+        : tournament.status === "validation_failed"
+          ? "failed"
+          : tournament.status === "needs_review"
+            ? "review"
+            : "";
+      const duplicate = tournament.duplicate_candidate;
+      const warnings = tournament.warnings || [];
+      const canApproveDuplicate = Boolean(
+        state.stagedSummary
+        && duplicate
+        && duplicate.tournament_code
+        && tournament.status === "needs_review"
+      );
+      const canMarkReady = Boolean(
+        state.stagedSummary
+        && !duplicate
+        && !((tournament.validation_errors || []).length)
+        && ["needs_review", "staged"].includes(tournament.status)
+      );
+      return `
+        <article class="preview-card">
+          <div class="preview-title">
+            <div>
+              <div class="source-title">${escapeHtml(tournament.description || tournament.tournament_code)}</div>
+              <div class="source-meta">
+                <span>${escapeHtml(tournament.tournament_code)}</span>
+                <span>${escapeHtml(tournament.tournament_date)}</span>
+                <span>${escapeHtml(tournament.source_report_name)}</span>
+              </div>
+            </div>
+            <span class="status-label ${statusClass}">${escapeHtml(tournament.status)}</span>
+          </div>
+          ${duplicate ? `<div class="message">Duplicate candidate: ${escapeHtml(duplicate.tournament_code)} score ${escapeHtml(duplicate.score)}</div>` : ""}
+          ${warnings.map(renderWarning).join("")}
+          ${(tournament.validation_errors || []).map((error) => `<div class="error">${escapeHtml(error)}</div>`).join("")}
+          ${canApproveDuplicate || canMarkReady ? `
+            <div class="row-actions">
+              ${canApproveDuplicate ? `
+                <button
+                  type="button"
+                  class="success"
+                  data-action="approve-duplicate"
+                  data-ordinal="${tournament.source_report_ordinal}"
+                  data-code="${escapeHtml(duplicate.tournament_code)}"
+                >Approve Duplicate</button>
+              ` : ""}
+              ${canMarkReady ? `
+                <button
+                  type="button"
+                  class="success"
+                  data-action="mark-ready"
+                  data-ordinal="${tournament.source_report_ordinal}"
+                  data-code="${escapeHtml(tournament.tournament_code)}"
+                >Mark Ready</button>
+              ` : ""}
+            </div>
+          ` : ""}
+        </article>
+      `;
+    }
+
+    function renderWarning(warning) {
+      const reviewRequired = Boolean(warning.review_required || warning.severity === "review");
+      const highlighted = Boolean(warning.highlight || warning.severity === "highlight");
+      const className = reviewRequired ? "review" : highlighted ? "highlight" : "";
+      return `
+        <div class="message ${className}">
+          <span class="warning-title">${escapeHtml(warningLabel(warning))}</span>
+          ${escapeHtml(warning.message || warning.type || "Warning")}
+        </div>
+      `;
+    }
+
+    function warningLabel(warning) {
+      if (warning.review_required || warning.severity === "review") return "Review required";
+      if (warning.type === "membership_name_mismatch") return "Name warning";
+      if (warning.type === "entry_rank_mismatch") return warning.highlight ? "Rank warning highlighted" : "Rank warning";
+      if (warning.type === "generated_tournament_code") return "Code warning";
+      if (warning.type === "inferred_round_information") return "Round warning";
+      return "Warning";
+    }
+
+    function renderApiSameDateGroups(groups) {
+      if (!groups.length) return "";
+      return `
+        <section class="same-date-list">
+          <div class="section-head"><h2>Preview Same-Date Order</h2></div>
+          ${groups.map((group) => `
+            <div class="same-date-group">
+              <div class="section-head">
+                <h3>${escapeHtml(group.tournament_date)}</h3>
+                <span class="pill">${group.events.length} events</span>
+              </div>
+              ${group.events.map((event, index) => `
+                <div class="event-row">
+                  <span class="event-index">${index + 1}</span>
+                  <div>
+                    <div class="source-title">${escapeHtml(event.title || event.tournament_code)}</div>
+                    <div class="source-meta">
+                      <span>${escapeHtml(event.tournament_code)}</span>
+                      <span>${escapeHtml(event.status)}</span>
+                      <span>${escapeHtml(event.game_count)} games</span>
+                    </div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `).join("")}
+        </section>
+      `;
+    }
+
+    function renderReviewExplanation(explanation) {
+      const tournaments = explanation && explanation.tournaments ? explanation.tournaments : [];
+      if (!tournaments.length) return "";
+      return `
+        <section class="message-list">
+          <div class="section-head"><h2>Review Details</h2></div>
+          ${tournaments.map((item) => {
+            const diff = item.game_diff || {};
+            const duplicate = item.duplicate_candidate || {};
+            const sameDateOrder = item.same_date_order || [];
+            return `
+              <div class="message">
+                <strong>${escapeHtml(item.staged_code)}</strong>
+                ${duplicate.tournament_code ? `<div>Duplicate candidate: ${escapeHtml(duplicate.tournament_code)} score ${escapeHtml(duplicate.score)}</div>` : ""}
+                ${diff.staged_game_count !== undefined ? `<div>Game comparison: matched ${escapeHtml(diff.matched_game_count)} of ${escapeHtml(diff.staged_game_count)} staged games against ${escapeHtml(diff.production_game_count)} production games.</div>` : ""}
+                ${sameDateOrder.length ? `<div>Production same-date order: ${sameDateOrder.map((row) => `${row.order}. ${row.tournament_code}`).join(", ")}</div>` : ""}
+              </div>
+            `;
+          }).join("")}
+        </section>
+      `;
+    }
+
+    function renderReplaySummary(replay) {
+      if (!replay) return "";
+      const plan = replay.plan || {};
+      const result = replay.result_summary || {};
+      const pre = result.pre_event_metrics || {};
+      const post = result.post_event_fit_metrics || {};
+      const stagedRatingCount = result.staged_rating_count || (replay.staged_rating_summary && replay.staged_rating_summary.rating_count) || 0;
+      return `
+        <section class="preview-card">
+          <div class="preview-title">
+            <div>
+              <div class="source-title">Replay And Staged Ratings</div>
+              <div class="source-meta">
+                <span>${escapeHtml(plan.event_count)} events</span>
+                <span>${escapeHtml(plan.game_count)} games</span>
+                <span>Production writes ${escapeHtml(plan.production_write_count || 0)}</span>
+              </div>
+            </div>
+            <span class="status-label ready">complete</span>
+          </div>
+          <div class="metrics">
+            ${metric("Staged Ratings", stagedRatingCount)}
+            ${metric("Pre Accuracy", formatMetric(pre.accuracy))}
+            ${metric("Post Accuracy", formatMetric(post.accuracy))}
+          </div>
+          ${renderStagedRatingEvents(replay.staged_rating_summary)}
+        </section>
+      `;
+    }
+
+    function renderStagedRatingEvents(summary) {
+      const events = summary && summary.events ? summary.events : [];
+      if (!events.length) return "";
+      return `
+        <div class="message-list">
+          ${events.slice(0, 8).map((event) => `
+            <div class="message">
+              <strong>${escapeHtml(event.tournament_code)}</strong>
+              <div>${escapeHtml(event.rating_count)} staged rating rows from ${escapeHtml(event.event_source)}</div>
+            </div>
+          `).join("")}
+          ${events.length > 8 ? `<div class="message">${events.length - 8} more replay event(s) staged.</div>` : ""}
+        </div>
+      `;
+    }
+
+    function renderCommitPreview(plan) {
+      if (!plan) return "";
+      const gameRange = plan.game_id_range || {};
+      const ratingRange = plan.rating_id_range || {};
+      return `
+        <section class="preview-card">
+          <div class="preview-title">
+            <div>
+              <div class="source-title">Production Commit Preview</div>
+              <div class="source-meta">
+                <span>RunID ${escapeHtml(plan.run_id)}</span>
+                <span>${escapeHtml(plan.production_write_count || 0)} planned production writes</span>
+              </div>
+            </div>
+            <span class="status-label review">preview only</span>
+          </div>
+          <div class="metrics">
+            ${metric("Tournament Upserts", plan.tournament_upsert_count || 0)}
+            ${metric("Game Inserts", plan.game_insert_count || 0)}
+            ${metric("Rating Inserts", plan.rating_insert_count || 0)}
+            ${metric("Cascade Events", (plan.production_cascade_tournament_codes || []).length)}
+          </div>
+          <div class="message-list">
+            <div class="message">
+              <strong>Affected ratings</strong>
+              <div>${escapeHtml((plan.affected_tournament_codes || []).join(", ") || "none")}</div>
+            </div>
+            <div class="message">
+              <strong>Production game IDs</strong>
+              <div>${gameRange.first ? `${escapeHtml(gameRange.first)} to ${escapeHtml(gameRange.last)}` : "none"}</div>
+            </div>
+            <div class="message">
+              <strong>Production rating row IDs</strong>
+              <div>${ratingRange.first ? `${escapeHtml(ratingRange.first)} to ${escapeHtml(ratingRange.last)}` : "none"}</div>
+            </div>
+            ${(plan.warnings || []).map((warning) => `<div class="message review">${escapeHtml(warning)}</div>`).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function formatMetric(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return "";
+      return Number(value).toFixed(4);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    els.dropzone.addEventListener("click", (event) => {
+      if (event.target.closest("button")) return;
+      els.fileInput.click();
+    });
+
+    els.dropzone.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      els.fileInput.click();
+    });
+
+    els.chooseFilesBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      els.fileInput.click();
+    });
+
+    els.fileInput.addEventListener("change", async () => {
+      await readFiles(els.fileInput.files);
+      els.fileInput.value = "";
+    });
+
+    document.addEventListener("dragover", (event) => {
+      if (!hasDroppedFiles(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    });
+
+    document.addEventListener("drop", async (event) => {
+      if (!hasDroppedFiles(event) || event.target.closest("#dropzone")) return;
+      event.preventDefault();
+      await readDroppedData(event.dataTransfer);
+    });
+
+    els.dropzone.addEventListener("dragenter", (event) => {
+      if (!hasDroppedFiles(event) && !hasDroppedPlainText(event)) return;
+      event.preventDefault();
+      state.dropDepth += 1;
+      setDropzoneActive(true);
+    });
+
+    els.dropzone.addEventListener("dragover", (event) => {
+      if (!hasDroppedFiles(event) && !hasDroppedPlainText(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      setDropzoneActive(true);
+    });
+
+    els.dropzone.addEventListener("dragleave", (event) => {
+      if (!hasDroppedFiles(event) && !hasDroppedPlainText(event)) return;
+      event.preventDefault();
+      state.dropDepth = Math.max(0, state.dropDepth - 1);
+      if (state.dropDepth === 0) setDropzoneActive(false);
+    });
+
+    els.dropzone.addEventListener("drop", async (event) => {
+      if (!hasDroppedFiles(event) && !hasDroppedPlainText(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      state.dropDepth = 0;
+      setDropzoneActive(false);
+      await readDroppedData(event.dataTransfer);
+    });
+
+    els.addPasteBtn.addEventListener("click", () => {
+      const content = els.pasteBox.value;
+      if (!content.trim()) return;
+      const summary = parseLocalReport(content, "Pasted report");
+      const suffix = summary.eventDate || String(state.nextId).padStart(2, "0");
+      addReport(`pasted-report-${suffix}.txt`, content);
+      els.pasteBox.value = "";
+    });
+
+    els.clearAllBtn.addEventListener("click", () => {
+      state.reports = [];
+      resetPreviewState();
+      render();
+    });
+
+    els.previewBtn.addEventListener("click", previewRun);
+    els.stageBtn.addEventListener("click", stageRun);
+    els.replayBtn.addEventListener("click", replayRun);
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      if (button.dataset.action === "remove") removeReport(id);
+      if (button.dataset.action === "up") moveWithinDate(id, -1);
+      if (button.dataset.action === "down") moveWithinDate(id, 1);
+      if (button.dataset.action === "stage-preview") stageRun();
+      if (button.dataset.action === "replay-run") replayRun();
+      if (button.dataset.action === "commit-preview") previewCommit();
+      if (button.dataset.action === "approve-duplicate") {
+        approveDuplicate(Number(button.dataset.ordinal), button.dataset.code || "");
+      }
+      if (button.dataset.action === "mark-ready") {
+        markReady(Number(button.dataset.ordinal), button.dataset.code || "");
+      }
+    });
+
+    els.sameDateList.addEventListener("dragstart", (event) => {
+      const row = event.target.closest(".event-row[data-id]");
+      if (!row) return;
+      state.dragId = Number(row.dataset.id);
+      row.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(state.dragId));
+    });
+
+    els.sameDateList.addEventListener("dragend", () => {
+      state.dragId = null;
+      state.dragTargetId = null;
+      render();
+    });
+
+    els.sameDateList.addEventListener("dragover", (event) => {
+      const row = event.target.closest(".event-row[data-id]");
+      if (!row || state.dragId === null) return;
+      const targetId = Number(row.dataset.id);
+      const source = state.reports.find((report) => report.id === state.dragId);
+      const target = state.reports.find((report) => report.id === targetId);
+      if (!source || !target || source.eventDate !== target.eventDate || source.id === target.id) return;
+      event.preventDefault();
+      state.dragTargetId = targetId;
+      row.classList.add("drop-target");
+    });
+
+    els.sameDateList.addEventListener("dragleave", (event) => {
+      const row = event.target.closest(".event-row");
+      if (row) row.classList.remove("drop-target");
+    });
+
+    els.sameDateList.addEventListener("drop", (event) => {
+      const row = event.target.closest(".event-row[data-id]");
+      if (!row || state.dragId === null) return;
+      event.preventDefault();
+      const source = state.reports.find((report) => report.id === state.dragId);
+      const target = state.reports.find((report) => report.id === Number(row.dataset.id));
+      if (!source || !target || source.eventDate !== target.eventDate) return;
+      const sequence = source.sequence;
+      source.sequence = target.sequence;
+      target.sequence = sequence;
+      resetPreviewState();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

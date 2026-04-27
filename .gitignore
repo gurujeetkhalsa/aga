@@ -10,6 +10,7 @@ env/
 local.settings.json
 bin/
 obj/
+*.log
 
 # Node/build artifacts
 node_modules/
@@ -24,4 +25,7 @@ Thumbs.db
 *.zip
 *.results.json
 data/
+_deploy/
+bayrate/output/
+bayrate/tests/tmp*/
 

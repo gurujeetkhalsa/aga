@@ -38,7 +38,7 @@ FILTER_OPTIONS_SNAPSHOT_FILENAME = "ratings_explorer_filter_options.json"
 SNAPSHOT_TOURNAMENT_DETAIL_DIRNAME = "ratings_explorer_tournament_details"
 SNAPSHOT_CONTAINER = "ratings-explorer"
 SGF_CONTAINER = os.environ.get("RATINGS_SGF_CONTAINER") or "ratings-game-sgf"
-SGF_VIEWER_REV = "20260415b"
+SGF_VIEWER_REV = "20260421c"
 SNAPSHOT_BLOB_NAME = "ratings-explorer-snapshot.json"
 SNAPSHOT_STATUS_BLOB_NAME = "ratings-explorer-snapshot-status.json"
 SNAPSHOT_REQUEST_BLOB_NAME = "ratings-explorer-snapshot-request.json"
@@ -291,7 +291,7 @@ def _tds_connect(conn_str: str):
 
 
 def get_sql_connection_string() -> str | None:
-    conn = os.environ.get("SQL_CONNECTION_STRING")
+    conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn:
         return conn
     for settings_path in (_app_root() / "local.settings.json", _app_root().parent / "local.settings.json"):
@@ -300,7 +300,7 @@ def get_sql_connection_string() -> str | None:
                 values = json.loads(settings_path.read_text(encoding="utf-8")).get("Values", {})
             except (OSError, json.JSONDecodeError):
                 continue
-            conn = values.get("SQL_CONNECTION_STRING")
+            conn = values.get("SQL_CONNECTION_STRING") or values.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
             if conn:
                 return conn
     return None
@@ -2087,7 +2087,6 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
       padding: 0 !important;
     }
     body.mobile-viewer #viewer .wgo-player-top,
-    body.mobile-viewer #viewer .wgo-player-bottom,
     body.mobile-viewer #viewer .wgo-player-left,
     body.mobile-viewer #viewer .wgo-player-right,
     body.mobile-viewer #viewer .wgo-player-info,
@@ -2098,13 +2097,28 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
     body.mobile-viewer #viewer .wgo-ctrlgroup-right {
       display: none !important;
     }
+    body.mobile-viewer #viewer .wgo-player-center,
+    body.mobile-viewer #viewer .wgo-player-bottom {
+      display: block !important;
+      float: none !important;
+      width: 100% !important;
+      min-height: 0 !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-bottom {
+      flex: 0 0 auto !important;
+      order: 2 !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-center {
+      flex: 1 1 auto !important;
+      order: 1 !important;
+      overflow: hidden !important;
+    }
     body.mobile-viewer #viewer .wgo-player-control {
       display: block !important;
       flex: 0 0 auto !important;
-      order: 1 !important;
       width: 100% !important;
-      min-height: 38px !important;
-      padding: 2px 0 4px !important;
+      min-height: 34px !important;
+      padding: 2px 0 !important;
       background: #ffffff !important;
     }
     body.mobile-viewer #viewer .wgo-control-wrapper {
@@ -2119,22 +2133,86 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
       align-items: center !important;
       justify-content: center !important;
       max-width: 100% !important;
-      transform: scale(0.88);
-      transform-origin: top center;
+      transform: none !important;
     }
     body.mobile-viewer #viewer .wgo-player-control button.wgo-button {
-      width: 30px !important;
-      height: 30px !important;
+      width: 28px !important;
+      height: 28px !important;
       margin: 0 1px !important;
     }
-    body.mobile-viewer #viewer .wgo-player-board,
-    body.mobile-viewer #viewer .wgo-board {
+    body.mobile-viewer #viewer .wgo-button::before {
+      font-size: 24px !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-mn-wrapper {
+      width: 32px !important;
+    }
+    body.mobile-viewer #viewer input[type="text"].wgo-player-mn-value {
+      width: 26px !important;
+      font-size: 13px !important;
+    }
+    body.mobile-viewer #viewer .wgo-player-board {
       flex: 0 1 auto !important;
-      order: 2 !important;
-      max-width: 100vw !important;
-      max-height: calc(100vh - 44px) !important;
+      max-width: calc(100vw - 16px) !important;
+      max-height: calc(100vh - 46px) !important;
       margin: 0 auto !important;
-      transform-origin: top center !important;
+      overflow: visible !important;
+    }
+    body.mobile-viewer #viewer .wgo-board {
+      transform: none !important;
+      transform-origin: center top !important;
+    }
+    body.mobile-viewer .mobile-sgf-shell {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 4px;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      justify-items: center;
+      align-items: start;
+      background: #ffffff;
+    }
+    body.mobile-viewer .mobile-sgf-board {
+      width: 100%;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2px 0 0;
+    }
+    body.mobile-viewer .mobile-sgf-board .wgo-board {
+      margin: 0 auto !important;
+      transform: none !important;
+    }
+    body.mobile-viewer .mobile-sgf-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      min-height: 38px;
+      padding: 4px 6px 6px;
+      background: #ffffff;
+      border-top: 1px solid #bfd4e5;
+      z-index: 5;
+    }
+    body.mobile-viewer .mobile-sgf-controls button {
+      border: 1px solid #bfd4e5;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #163248;
+      min-width: 52px;
+      height: 30px;
+      padding: 0 8px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    body.mobile-viewer .mobile-sgf-controls button:disabled {
+      opacity: 0.45;
+      cursor: default;
     }
   </style>
 """ if mobile else ""
@@ -2250,6 +2328,15 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
     const isMobileViewer = document.body.classList.contains('mobile-viewer');
     let viewerTweaksApplied = false;
 
+    function mobileViewportHeight() {{
+      return Math.floor(window.visualViewport && window.visualViewport.height ? window.visualViewport.height : window.innerHeight);
+    }}
+
+    function initialMobileBoardWidth() {{
+      if (!isMobileViewer) return 0;
+      return Math.max(220, Math.floor(Math.min(window.innerWidth - 16, mobileViewportHeight() - 56)));
+    }}
+
     if (window.WGo && window.WGo.BasicPlayer && window.WGo.BasicPlayer.component && window.WGo.BasicPlayer.component.Control) {{
       const menuItems = window.WGo.BasicPlayer.component.Control.menu || [];
       const permalinkItem = menuItems.find((item) => item && item.args && item.args.name === 'permalink');
@@ -2307,22 +2394,76 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
 
     function fitMobileViewerLayout() {{
       if (!isMobileViewer) return;
+      const player = viewerEl._wgo_player;
       const board = viewerEl.querySelector('.wgo-board');
-      const boardHost = viewerEl.querySelector('.wgo-player-board');
-      const control = viewerEl.querySelector('.wgo-player-control');
+      const boardHost = viewerEl.querySelector('.mobile-sgf-board') || viewerEl.querySelector('.wgo-player-board');
+      const control = viewerEl.querySelector('.mobile-sgf-controls') || viewerEl.querySelector('.wgo-player-control');
       if (!board || !boardHost) return;
-      const boardWidth = board.offsetWidth || board.getBoundingClientRect().width;
-      const boardHeight = board.offsetHeight || board.getBoundingClientRect().height;
-      if (!boardWidth || !boardHeight) return;
-      const controlHeight = control ? Math.ceil(control.getBoundingClientRect().height) : 0;
-      const availableWidth = Math.max(220, window.innerWidth - 2);
-      const availableHeight = Math.max(220, window.innerHeight - controlHeight - 4);
-      const scale = Math.min(1, availableWidth / boardWidth, availableHeight / boardHeight);
-      board.style.transform = `scale(${{scale}})`;
-      board.style.transformOrigin = 'top center';
-      boardHost.style.width = `${{Math.ceil(boardWidth * scale)}}px`;
-      boardHost.style.height = `${{Math.ceil(boardHeight * scale)}}px`;
-      boardHost.style.overflow = 'hidden';
+      const controlHeight = control ? Math.ceil(control.getBoundingClientRect().height) : 38;
+      const availableWidth = Math.max(220, Math.floor((viewerEl.clientWidth || window.innerWidth) - 16));
+      const availableHeight = Math.max(220, mobileViewportHeight() - controlHeight - 16);
+      const boardWidth = Math.floor(Math.min(availableWidth, availableHeight));
+      if (player && player.board && typeof player.board.setWidth === 'function') {{
+        player.board.setWidth(boardWidth);
+      }}
+      board.style.transform = 'none';
+      board.style.transformOrigin = 'center top';
+      boardHost.style.width = `${{board.offsetWidth || boardWidth}}px`;
+      boardHost.style.height = `${{board.offsetHeight || boardWidth + 4}}px`;
+      boardHost.style.overflow = 'visible';
+      boardHost.style.marginLeft = 'auto';
+      boardHost.style.marginRight = 'auto';
+    }}
+
+    function updateMobileSgfControls() {{
+      if (!isMobileViewer) return;
+      const player = viewerEl._wgo_player;
+      if (!player || !player.kifuReader) return;
+      const canPrevious = Boolean(player.kifuReader.node && player.kifuReader.node.parent);
+      const canNext = Boolean(player.kifuReader.node && player.kifuReader.node.children && player.kifuReader.node.children.length);
+      viewerEl.querySelectorAll('[data-mobile-sgf-action]').forEach((button) => {{
+        const action = button.getAttribute('data-mobile-sgf-action');
+        if (action === 'first' || action === 'previous') button.disabled = !canPrevious;
+        if (action === 'next' || action === 'last') button.disabled = !canNext;
+      }});
+    }}
+
+    function renderMobileSgfPlayer(sgf) {{
+      viewerEl.innerHTML = `
+        <div class="mobile-sgf-shell">
+          <div class="mobile-sgf-board" id="mobile-sgf-board"></div>
+          <div class="mobile-sgf-controls" aria-label="SGF navigation">
+            <button type="button" data-mobile-sgf-action="first">First</button>
+            <button type="button" data-mobile-sgf-action="previous">Prev</button>
+            <button type="button" data-mobile-sgf-action="next">Next</button>
+            <button type="button" data-mobile-sgf-action="last">Last</button>
+          </div>
+        </div>`;
+      const boardHost = document.getElementById('mobile-sgf-board');
+      const player = new window.WGo.Player(boardHost, {{
+        sgf,
+        board: {{ width: initialMobileBoardWidth() }},
+        enableWheel: false,
+        enableKeys: false
+      }});
+      viewerEl._wgo_player = player;
+      if (typeof player.addEventListener === 'function') {{
+        player.addEventListener('update', updateMobileSgfControls);
+        player.addEventListener('kifuLoaded', updateMobileSgfControls);
+      }}
+      viewerEl.querySelectorAll('[data-mobile-sgf-action]').forEach((button) => {{
+        button.addEventListener('click', () => {{
+          const action = button.getAttribute('data-mobile-sgf-action');
+          if (player && typeof player[action] === 'function') {{
+            player[action]();
+            updateMobileSgfControls();
+            fitMobileViewerLayout();
+          }}
+        }});
+      }});
+      fitMobileViewerLayout();
+      updateMobileSgfControls();
+      window.setTimeout(() => {{ fitMobileViewerLayout(); updateMobileSgfControls(); }}, 150);
     }}
 
     function showRawFallback(message, sgf) {{
@@ -2347,10 +2488,19 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
       }}
       const sgf = await response.text();
       try {{
+        if (isMobileViewer && window.WGo && typeof window.WGo.Player === 'function') {{
+          if (!viewerEl._wgo_player) renderMobileSgfPlayer(sgf);
+          return;
+        }}
         if (window.WGo && typeof window.WGo.BasicPlayer === 'function') {{
           if (!viewerEl._wgo_player) {{
             viewerEl.textContent = '';
-            const player = new window.WGo.BasicPlayer(viewerEl, {{ sgf }});
+            const playerConfig = {{ sgf }};
+            if (isMobileViewer && window.WGo.BasicPlayer.layouts && window.WGo.BasicPlayer.layouts.minimal) {{
+              playerConfig.layout = window.WGo.BasicPlayer.layouts.minimal;
+              playerConfig.board = {{ width: initialMobileBoardWidth() }};
+            }}
+            const player = new window.WGo.BasicPlayer(viewerEl, playerConfig);
             viewerEl._wgo_player = player;
             window.setTimeout(() => {{
               if (customizeViewerLayout()) observer.disconnect();

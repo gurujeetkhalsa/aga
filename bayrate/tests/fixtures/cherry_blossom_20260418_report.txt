@@ -1,0 +1,104 @@
+TOURNAMENT 
+2026 NGC Cherry Blossom Washington, DC, April 18 2026 
+start=4/18/2026 
+finish=4/18/2026 
+rules=aga 
+
+PLAYERS 
+32425   Zhang, Yiyu             6d 
+4566    Zhou, Yuan              6d 
+10583   Gu, Zhenying            4d 
+30510   Chen, Jia               4d 
+30165   Xu, Chang               4d 
+30735   Chen, Toby              4d 
+30264   Lee, Dongha             4d 
+26268   Thomas, Luc             2d 
+23843   Wang, Arthur            1k 
+15343   Robinson, Austin        1k 
+31313   Gurtz, Ryan E           2k 
+30721   Lee, Joonha             2k 
+22211   Sun, Patrick            3k 
+21525   Lee, Hyungwook          4k 
+26304   Li, Caroline            5k 
+30722   Lee, Inha               6k 
+15784   Khalsa, Gurujeet        7k 
+31560   Bains, Shamsher S       8k 
+30164   Rieth, David J          8k 
+32162   Lee, Ian                9k 
+2482    Edey, Marion            9k 
+25821   Sievert, Nicholas       9k 
+2098    Small, Elizabeth H      12k 
+32371   Chen, David             13k 
+31630   Bistany-Riebman, Joshua 13k 
+32410   Hitchner, John G        14k 
+8822    Ensworth, Laurie        15k 
+32372   Work, Andrew            15k 
+32493   Boggarapu, Praneet      15k 
+32485   Hossain, Ziyad          20k 
+32491   Lee, Zac                20k 
+
+
+GAMES 1 
+30735   30510 	 w	 0	 7 
+31630   32371 	 b	 0	 7 
+26304   21525 	 w	 0	 7 
+23843   15343 	 b	 0	 7 
+4566    10583 	 b	 1	 0 
+32162   30164 	 w	 0	 7 
+30165   26268 	 w	 1	 0 
+32493   32410 	 w	 0	 7 
+30721   22211 	 b	 0	 7 
+32425   30264 	 w	 1	 0 
+30722   31560 	 b	 1	 0 
+25821   2098  	 w	 2	 0 
+32372   32485 	 w	 4	 0 
+
+GAMES 2 
+30164   25821 	 b	 0	 7 
+15343   22211 	 w	 1	 0 
+26304   31560 	 b	 2	 0 
+32162   32371 	 w	 3	 0 
+32425   10583 	 w	 1	 0 
+8822    32493 	 w	 0	 7 
+23843   30721 	 b	 0	 7 
+2098    31630 	 b	 0	 7 
+32410   32372 	 w	 0	 7 
+4566    30735 	 w	 1	 0 
+21525   30722 	 w	 1	 0 
+30264   30165 	 b	 0	 7 
+30510   26268 	 w	 1	 0 
+32485   32491 	 w	 0	 7 
+
+GAMES 3 
+32425   4566  	 b	 0	 7 
+25821   32162 	 b	 0	 7 
+31313   23843 	 w	 0	 7 
+30722   26304 	 b	 0	 7 
+10583   30510 	 b	 0	 7 
+32493   32485 	 w	 4	 0 
+30264   26268 	 w	 1	 0 
+32372   32491 	 w	 4	 0 
+30721   15343 	 b	 0	 7 
+30165   30735 	 b	 0	 7 
+32410   8822  	 w	 0	 7 
+31560   30164 	 b	 0	 7 
+32371   2098  	 w	 0	 7 
+22211   21525 	 w	 0	 7 
+
+GAMES 4 
+4566    30510 	 w	 1	 0 
+10583   30165 	 b	 0	 7 
+8822    32491 	 w	 4	 0 
+30722   32162 	 b	 2	 0 
+32425   30735 	 w	 1	 0 
+2098    32372 	 w	 2	 0 
+30264   31313 	 w	 4	 0 
+30721   26304 	 b	 2	 0 
+32410   32485 	 w	 5	 0 
+21525   31560 	 w	 3	 0 
+23843   22211 	 b	 1	 0 
+30164   2482  	 w	 0	 7 
+25821   32371 	 b	 3	 0 
+
+
+END

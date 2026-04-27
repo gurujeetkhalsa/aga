@@ -576,7 +576,6 @@ def load_games_from_csv(path: Path, config: BayrateConfig) -> list[GameRecord]:
             )
     if errors:
         raise CsvValidationError(errors)
-    games.sort(key=lambda g: (g.game_date, g.tournament_code or "", g.round_number or 0, g.source_game_id))
     return games
 
 
@@ -644,9 +643,10 @@ def build_events(games: Iterable[GameRecord]) -> list[EventRecord]:
                 games=[],
             )
             grouped[key] = event
+        elif game.game_date < event.event_date:
+            event.event_date = game.game_date
         event.games.append(game)
-    events = sorted(grouped.values(), key=lambda e: (e.event_date, e.tournament_code or "", e.games[0].source_game_id))
-    return events
+    return sorted(grouped.values(), key=lambda e: e.event_date)
 
 
 def _prepare_event(

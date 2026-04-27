@@ -1,0 +1,15 @@
+TOURNEY Migration Sample One
+start=2026-01-01
+finish=2026-01-01
+location=New York, NY
+rules=AGA
+
+PLAYERS (3)
+1001 Alice Example 1D
+1002 Bob Example 1D
+1003 Cara Example 2D
+
+GAMES (2)
+1001 1002 W 0 7
+1002 1003 B 0 7
+END

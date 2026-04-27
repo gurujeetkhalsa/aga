@@ -1,0 +1,13 @@
+TOURNAMENT Migration Sample Two
+start=2026-01-02
+finish=2026-01-02
+location=Chicago, IL
+rules=AGA
+
+PLAYERS (2)
+2001 Dana Example 3K
+2002 Evan Example 4K
+
+GAMES 1
+2001 2002 B 0 7
+END
