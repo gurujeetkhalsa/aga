@@ -16,7 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 
 try:
     from bayrate.auth import authorize_bayrate_admin
-    from bayrate.commit_staged_run import build_commit_plan, printable_commit_plan
+    from bayrate.commit_staged_run import build_commit_plan, commit_staged_run, printable_commit_plan
     from bayrate.sql_adapter import SqlAdapter
     from bayrate.replay_staged_run import run_staged_replay
     from bayrate.stage_reports import (
@@ -32,6 +32,7 @@ try:
 except Exception:
     authorize_bayrate_admin = None
     build_commit_plan = None
+    commit_staged_run = None
     printable_commit_plan = None
     SqlAdapter = None
     run_staged_replay = None
@@ -87,6 +88,7 @@ def _bayrate_preview_error(message: str, status_code: int = 400) -> func.HttpRes
 def _bayrate_modules_available(*names: str) -> bool:
     modules = {
         "stage": build_staging_payload is not None and printable_payload is not None,
+        "load": load_staged_run is not None and printable_payload is not None,
         "write": build_insert_statements is not None and ensure_payload_run_id is not None,
         "review": (
             load_staged_run is not None
@@ -94,7 +96,7 @@ def _bayrate_modules_available(*names: str) -> bool:
             and update_staged_run_review is not None
         ),
         "replay": run_staged_replay is not None,
-        "commit": build_commit_plan is not None and printable_commit_plan is not None,
+        "commit": build_commit_plan is not None and commit_staged_run is not None and printable_commit_plan is not None,
     }
     return all(modules.get(name, False) for name in names)
 
@@ -190,12 +192,62 @@ def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, w
     explanations = explain_staged_run_review(adapter, payload) if (adapter and explain_staged_run_review is not None) else None
     summary = printable_payload(payload, include_games=False)
     summary["written"] = written
-    return {
+    response = {
         "ok": True,
         "written": written,
         "summary": summary,
         "same_date_groups": _bayrate_same_date_groups(payload),
         "review_explanation": explanations,
+    }
+    if adapter and written and summary.get("run_id") is not None:
+        response["commit_state"] = _bayrate_commit_state(adapter, summary.get("run_id"))
+    return response
+
+
+def _bayrate_commit_state(adapter: object, run_id: int | str) -> dict:
+    rows = adapter.query_rows(
+        """
+SELECT
+    (SELECT COUNT(*) FROM [ratings].[bayrate_staged_ratings] WHERE [RunID] = ?) AS [StagedRatingCount],
+    (SELECT COUNT(*) FROM [ratings].[bayrate_staged_ratings] WHERE [RunID] = ? AND [Planned_Rating_Row_ID] IS NOT NULL) AS [PlannedRatingCount],
+    (SELECT COUNT(*) FROM [ratings].[bayrate_staged_games] WHERE [RunID] = ?) AS [StagedGameCount],
+    (SELECT COUNT(*) FROM [ratings].[bayrate_staged_games] WHERE [RunID] = ? AND [Game_ID] IS NOT NULL) AS [PlannedGameCount]
+""",
+        (run_id, run_id, run_id, run_id),
+    )
+    row = rows[0] if rows else {}
+    staged_rating_count = int(row.get("StagedRatingCount") or 0)
+    planned_rating_count = int(row.get("PlannedRatingCount") or 0)
+    staged_game_count = int(row.get("StagedGameCount") or 0)
+    planned_game_count = int(row.get("PlannedGameCount") or 0)
+    partial_marker = (
+        0 < planned_rating_count < staged_rating_count
+        or 0 < planned_game_count < staged_game_count
+        or (planned_rating_count > 0 and staged_rating_count == 0)
+        or (planned_game_count > 0 and staged_game_count == 0)
+    )
+    committed = (
+        staged_rating_count > 0
+        and planned_rating_count == staged_rating_count
+        and planned_game_count == staged_game_count
+        and not partial_marker
+    )
+    if partial_marker:
+        state = "partial_commit_marker"
+    elif committed:
+        state = "committed"
+    elif staged_rating_count:
+        state = "replayed_uncommitted"
+    else:
+        state = "needs_replay"
+    return {
+        "state": state,
+        "committed": committed,
+        "has_staged_ratings": staged_rating_count > 0,
+        "staged_rating_count": staged_rating_count,
+        "planned_rating_count": planned_rating_count,
+        "staged_game_count": staged_game_count,
+        "planned_game_count": planned_game_count,
     }
 
 
@@ -559,6 +611,38 @@ def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
     return _bayrate_json_response(_bayrate_payload_response(payload, adapter=adapter, written=True))
 
 
+@app.function_name(name="BayRateStagingRun")
+@app.route(route="ratings-explorer/bayrate/run", methods=["GET", "POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_run(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("load", "review"):
+        return _bayrate_preview_error("BayRate staged-run modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+
+    if req.method == "GET":
+        run_id = str(req.params.get("run_id") or "").strip()
+    else:
+        body, error = _bayrate_request_json(req)
+        if error:
+            return error
+        run_id = str(body.get("run_id") or "").strip()
+    if not run_id:
+        return _bayrate_preview_error("run_id is required.")
+
+    try:
+        payload = load_staged_run(adapter, run_id)
+    except Exception as exc:
+        status_code = 404 if "was not found" in str(exc) else 500
+        return _bayrate_preview_error(str(exc), status_code=status_code)
+    return _bayrate_json_response(_bayrate_payload_response(payload, adapter=adapter, written=True))
+
+
 @app.function_name(name="BayRateStagingReplay")
 @app.route(route="ratings-explorer/bayrate/replay", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
@@ -588,7 +672,9 @@ def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
         )
     except Exception as exc:
         return _bayrate_preview_error(str(exc), status_code=500)
-    return _bayrate_json_response(_bayrate_replay_response(artifact))
+    response = _bayrate_replay_response(artifact)
+    response["commit_state"] = _bayrate_commit_state(adapter, run_id)
+    return _bayrate_json_response(response)
 
 
 @app.function_name(name="BayRateStagingCommitPreview")
@@ -614,7 +700,66 @@ def bayrate_staging_commit_preview(req: func.HttpRequest) -> func.HttpResponse:
         plan = build_commit_plan(adapter, run_id)
     except Exception as exc:
         return _bayrate_preview_error(str(exc), status_code=500)
-    return _bayrate_json_response({"ok": True, "commit_plan": printable_commit_plan(plan)})
+    return _bayrate_json_response(
+        {
+            "ok": True,
+            "commit_plan": printable_commit_plan(plan),
+            "commit_state": _bayrate_commit_state(adapter, run_id),
+        }
+    )
+
+
+@app.function_name(name="BayRateStagingCommit")
+@app.route(route="ratings-explorer/bayrate/commit", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_staging_commit(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if not _bayrate_modules_available("commit"):
+        return _bayrate_preview_error("BayRate commit modules are not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    authorization, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    body, error = _bayrate_request_json(req)
+    if error:
+        return error
+    run_id = str(body.get("run_id") or "").strip()
+    if not run_id:
+        return _bayrate_preview_error("run_id is required.")
+    if body.get("confirm_production_commit") is not True:
+        return _bayrate_preview_error("confirm_production_commit=true is required.")
+    expected_confirmation = f"COMMIT RUN {run_id}"
+    if str(body.get("confirmation_text") or "").strip() != expected_confirmation:
+        return _bayrate_preview_error(f'confirmation_text must be "{expected_confirmation}".')
+    commit_plan_hash = str(body.get("commit_plan_hash") or "").strip()
+    if not commit_plan_hash:
+        return _bayrate_preview_error("commit_plan_hash is required. Preview the production commit before committing.")
+
+    try:
+        plan = commit_staged_run(
+            adapter,
+            run_id,
+            confirm_production_commit=True,
+            expected_plan_hash=commit_plan_hash,
+            confirm_sgf_replacement=body.get("confirm_sgf_replacement") is True,
+            operator_principal_name=(authorization or {}).get("principal_name"),
+            operator_principal_id=(authorization or {}).get("principal_id"),
+        )
+    except ValueError as exc:
+        status_code = 409 if "changed since preview" in str(exc) else 400
+        return _bayrate_preview_error(str(exc), status_code=status_code)
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc), status_code=500)
+
+    return _bayrate_json_response(
+        {
+            "ok": True,
+            "commit_plan": printable_commit_plan(plan),
+            "commit_state": _bayrate_commit_state(adapter, run_id),
+        }
+    )
 
 
 @app.function_name(name="RatingsExplorerPlayers")

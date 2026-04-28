@@ -871,15 +871,15 @@ def _parse_journal_subject_date(subject: str) -> date:
 
 
 def _extract_journal_articles_from_html(html_body: str) -> list[dict[str, str]]:
-    lines = _extract_visible_lines_from_html(html_body)
-    articles = _extract_journal_articles_from_lines(lines, html_body=html_body)
-    if articles:
-        return articles
-
     parser = _JournalHtmlParser()
     parser.feed(html_body)
     parser.close()
-    return _build_journal_articles_from_blocks(parser.blocks)
+    articles = _build_journal_articles_from_blocks(parser.blocks)
+    if articles:
+        return articles
+
+    lines = _extract_visible_lines_from_html(html_body)
+    return _extract_journal_articles_from_lines(lines, html_body=html_body)
 
 
 def _extract_journal_articles_from_text(text: str) -> list[dict[str, str]]:
@@ -1106,6 +1106,14 @@ def _find_line_index(lines: list[str], target: str, start: int) -> Optional[int]
     return None
 
 
+def _journal_block_http_links(block: dict[str, object]) -> list[str]:
+    return [
+        link[:1000]
+        for link in (block.get("links") or [])
+        if isinstance(link, str) and link.startswith(("http://", "https://"))
+    ]
+
+
 def _build_journal_articles_from_blocks(blocks: list[dict[str, object]]) -> list[dict[str, str]]:
     news_index = None
     for idx, block in enumerate(blocks):
@@ -1116,15 +1124,66 @@ def _build_journal_articles_from_blocks(blocks: list[dict[str, object]]) -> list
     if news_index is None:
         return []
 
-    articles = []
-    current = None
-    found_article = False
+    news_blocks: list[dict[str, object]] = []
     for block in blocks[news_index:]:
         text = str(block.get("text") or "").strip()
         if not text:
             continue
+        if block.get("heading_level") is not None and _looks_like_terminal_journal_section(text):
+            break
+        news_blocks.append(block)
 
-        links = [link for link in (block.get("links") or []) if isinstance(link, str) and link.startswith(("http://", "https://"))]
+    link_lookup: dict[str, str] = {}
+    for block in news_blocks:
+        text = str(block.get("text") or "").strip()
+        links = _journal_block_http_links(block)
+        if links and _looks_like_article_title(text):
+            link_lookup.setdefault(text, links[0])
+
+    heading_indices = [
+        idx
+        for idx, block in enumerate(news_blocks)
+        if block.get("heading_level") is not None
+        and _looks_like_article_title(str(block.get("text") or "").strip())
+        and (
+            str(block.get("text") or "").strip() in link_lookup
+            or bool(_journal_block_http_links(block))
+        )
+    ]
+    if heading_indices:
+        articles = []
+        for position, heading_index in enumerate(heading_indices):
+            heading_block = news_blocks[heading_index]
+            title = str(heading_block.get("text") or "").strip()
+            next_heading_index = heading_indices[position + 1] if position + 1 < len(heading_indices) else len(news_blocks)
+            heading_links = _journal_block_http_links(heading_block)
+            link = (heading_links[0] if heading_links else link_lookup.get(title, ""))
+            if not link:
+                continue
+            analysis_lines = []
+            for body_block in news_blocks[heading_index + 1:next_heading_index]:
+                body_text = str(body_block.get("text") or "").strip()
+                if body_text:
+                    analysis_lines.append(body_text)
+            articles.append(
+                {
+                    "title": title[:500],
+                    "link": link,
+                    "analysisText": " ".join(analysis_lines).strip(),
+                }
+            )
+        if articles:
+            return articles
+
+    articles = []
+    current = None
+    found_article = False
+    for block in news_blocks:
+        text = str(block.get("text") or "").strip()
+        if not text:
+            continue
+
+        links = _journal_block_http_links(block)
         heading_level = block.get("heading_level")
         if found_article and heading_level is not None and not links and _looks_like_section_heading(text):
             break

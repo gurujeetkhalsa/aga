@@ -61,9 +61,26 @@
       color: #fff;
     }
 
+    button.danger {
+      border-color: var(--danger);
+      background: var(--danger);
+      color: #fff;
+    }
+
     button:disabled {
       cursor: not-allowed;
       opacity: 0.58;
+    }
+
+    .run-id-input {
+      width: 104px;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 700;
     }
 
     .page {
@@ -348,6 +365,12 @@
       font-weight: 700;
     }
 
+    .message.ready {
+      border-color: #a7d7bb;
+      background: var(--ready-soft);
+      color: #155637;
+    }
+
     .warning-title {
       display: block;
       margin-bottom: 3px;
@@ -431,6 +454,8 @@
       </div>
       <div class="row-actions">
         <a href="/api/ratings-explorer"><button type="button">Ratings Explorer</button></a>
+        <input id="runIdInput" class="run-id-input" type="number" min="1" step="1" placeholder="RunID" aria-label="RunID" />
+        <button type="button" id="loadRunBtn">Load Run</button>
         <button type="button" id="previewBtn" class="primary">Preview Run</button>
         <button type="button" id="stageBtn" class="success" disabled>Write Staged Run</button>
         <button type="button" id="replayBtn" disabled>Run Replay</button>
@@ -503,6 +528,7 @@
       stagedSummary: null,
       replaySummary: null,
       commitPreview: null,
+      commitState: null,
     };
 
     const els = {
@@ -512,6 +538,8 @@
       pasteBox: document.getElementById("pasteBox"),
       addPasteBtn: document.getElementById("addPasteBtn"),
       clearAllBtn: document.getElementById("clearAllBtn"),
+      runIdInput: document.getElementById("runIdInput"),
+      loadRunBtn: document.getElementById("loadRunBtn"),
       previewBtn: document.getElementById("previewBtn"),
       stageBtn: document.getElementById("stageBtn"),
       replayBtn: document.getElementById("replayBtn"),
@@ -578,6 +606,7 @@
       state.stagedSummary = null;
       state.replaySummary = null;
       state.commitPreview = null;
+      state.commitState = null;
       els.previewStatus.textContent = "No preview yet";
       els.previewOutput.innerHTML = "";
     }
@@ -689,9 +718,14 @@
 
     function render() {
       els.sourceCount.textContent = `${state.reports.length} report${state.reports.length === 1 ? "" : "s"}`;
+      els.loadRunBtn.disabled = state.busy;
       els.previewBtn.disabled = state.busy || state.reports.length === 0;
       els.stageBtn.disabled = state.busy || !state.previewPayload || Boolean(state.stagedSummary);
-      els.replayBtn.disabled = state.busy || !state.stagedSummary;
+      els.replayBtn.disabled = (
+        state.busy
+        || !state.stagedSummary
+        || Boolean(state.commitState && (state.commitState.committed || state.commitState.state === "partial_commit_marker"))
+      );
       renderSources();
       renderSameDates();
     }
@@ -758,6 +792,7 @@
       state.stagedSummary = null;
       state.replaySummary = null;
       state.commitPreview = null;
+      state.commitState = null;
       els.previewStatus.textContent = "Previewing...";
       els.previewOutput.innerHTML = "";
       render();
@@ -811,6 +846,7 @@
         state.stagedSummary = payload.summary;
         state.replaySummary = null;
         state.commitPreview = null;
+        state.commitState = payload.commit_state || null;
         els.previewStatus.textContent = "Staged run written";
         renderPreview(payload);
       } catch (error) {
@@ -848,6 +884,7 @@
         state.stagedSummary = payload.summary;
         state.replaySummary = null;
         state.commitPreview = null;
+        state.commitState = payload.commit_state || null;
         els.previewStatus.textContent = "Review saved";
         renderPreview(payload);
       } catch (error) {
@@ -885,6 +922,7 @@
         state.stagedSummary = payload.summary;
         state.replaySummary = null;
         state.commitPreview = null;
+        state.commitState = payload.commit_state || null;
         els.previewStatus.textContent = "Review saved";
         renderPreview(payload);
       } catch (error) {
@@ -916,6 +954,12 @@
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Replay failed with HTTP ${response.status}`);
         state.replaySummary = payload;
         state.commitPreview = null;
+        state.commitState = payload.commit_state || {
+          state: "replayed_uncommitted",
+          committed: false,
+          has_staged_ratings: Boolean(payload.staged_rating_summary && payload.staged_rating_summary.rating_count),
+          staged_rating_count: payload.staged_rating_summary ? payload.staged_rating_summary.rating_count || 0 : 0,
+        };
         els.previewStatus.textContent = "Replay complete";
         renderPreview(state.previewPayload);
       } catch (error) {
@@ -943,10 +987,94 @@
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Commit preview failed with HTTP ${response.status}`);
         state.commitPreview = payload.commit_plan;
+        state.commitState = payload.commit_state || state.commitState;
         els.previewStatus.textContent = "Commit preview ready";
         renderPreview(state.previewPayload);
       } catch (error) {
         els.previewStatus.textContent = "Commit preview failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function loadRun() {
+      let runId = String(els.runIdInput.value || "").trim();
+      if (!runId) {
+        runId = String(window.prompt("RunID to load", "") || "").trim();
+        if (runId) els.runIdInput.value = runId;
+      }
+      if (!runId || state.busy) return;
+      if (state.reports.length && !window.confirm("Load this staged run and clear the current report intake?")) return;
+      state.busy = true;
+      state.reports = [];
+      state.previewPayload = null;
+      state.stagedSummary = null;
+      state.replaySummary = null;
+      state.commitPreview = null;
+      state.commitState = null;
+      els.previewStatus.textContent = `Loading RunID ${runId}...`;
+      els.previewOutput.innerHTML = "";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/run`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ run_id: runId }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Load failed with HTTP ${response.status}`);
+        state.previewPayload = payload;
+        state.stagedSummary = payload.summary;
+        state.commitState = payload.commit_state || null;
+        els.previewStatus.textContent = `Loaded RunID ${runId}`;
+        renderPreview(payload);
+      } catch (error) {
+        els.previewStatus.textContent = "Load failed";
+        els.previewOutput.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function commitRun() {
+      if (!state.stagedSummary || !state.commitPreview || state.busy) return;
+      const runId = state.commitPreview.run_id || state.stagedSummary.run_id;
+      const confirmation = `COMMIT RUN ${runId}`;
+      const writeCount = state.commitPreview.production_write_count || 0;
+      if (!window.confirm(`Commit RunID ${runId} to production ratings tables with ${writeCount} planned writes?`)) return;
+      const typed = window.prompt(`Type ${confirmation} to commit production ratings`, "");
+      if (typed !== confirmation) return;
+      let confirmSgfReplacement = false;
+      if (state.commitPreview.requires_sgf_acknowledgement) {
+        confirmSgfReplacement = window.confirm("Existing production game rows with SGF links will be replaced. Continue?");
+        if (!confirmSgfReplacement) return;
+      }
+      state.busy = true;
+      els.previewStatus.textContent = "Committing to production...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/commit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            run_id: runId,
+            confirm_production_commit: true,
+            confirmation_text: confirmation,
+            commit_plan_hash: state.commitPreview.plan_hash,
+            confirm_sgf_replacement: confirmSgfReplacement,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Commit failed with HTTP ${response.status}`);
+        state.commitPreview = payload.commit_plan;
+        state.commitState = payload.commit_state || { state: "committed", committed: true };
+        els.previewStatus.textContent = "Production commit complete";
+        renderPreview(state.previewPayload);
+      } catch (error) {
+        els.previewStatus.textContent = "Commit failed";
         els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
       } finally {
         state.busy = false;
@@ -989,16 +1117,25 @@
       if (!summary) return "";
       const written = Boolean(summary.written || state.stagedSummary);
       const runId = summary.run_id || (state.stagedSummary && state.stagedSummary.run_id);
+      const commitState = state.commitState || {};
+      const committed = Boolean(commitState.committed);
+      const partialCommitMarker = commitState.state === "partial_commit_marker";
+      const canPreviewCommit = written && !committed && !partialCommitMarker;
+      const canCommit = canPreviewCommit && state.commitPreview && !state.commitPreview.executed;
       return `
         <div class="run-banner">
           <div>
             <strong>${written ? "Staged Run" : "Preview Run"}</strong>
-            <div class="source-meta">${runId ? `RunID ${escapeHtml(runId)}` : "Not written to SQL"}</div>
+            <div class="source-meta">
+              ${runId ? `RunID ${escapeHtml(runId)}` : "Not written to SQL"}
+              ${commitState.state ? `<span>${escapeHtml(commitState.state.replace(/_/g, " "))}</span>` : ""}
+            </div>
           </div>
           <div class="row-actions">
             ${!written ? '<button type="button" data-action="stage-preview" class="success">Write Staged Run</button>' : ""}
-            ${written ? '<button type="button" data-action="replay-run">Run Replay</button>' : ""}
-            ${written && state.replaySummary ? '<button type="button" data-action="commit-preview">Preview Production Commit</button>' : ""}
+            ${written && !committed && !partialCommitMarker ? '<button type="button" data-action="replay-run">Run Replay</button>' : ""}
+            ${canPreviewCommit ? '<button type="button" data-action="commit-preview">Preview Production Commit</button>' : ""}
+            ${canCommit ? '<button type="button" data-action="commit-run" class="danger">Commit to Production</button>' : ""}
           </div>
         </div>
       `;
@@ -1201,17 +1338,18 @@
       if (!plan) return "";
       const gameRange = plan.game_id_range || {};
       const ratingRange = plan.rating_id_range || {};
+      const executed = Boolean(plan.executed);
       return `
         <section class="preview-card">
           <div class="preview-title">
             <div>
-              <div class="source-title">Production Commit Preview</div>
+              <div class="source-title">${executed ? "Production Commit Complete" : "Production Commit Preview"}</div>
               <div class="source-meta">
                 <span>RunID ${escapeHtml(plan.run_id)}</span>
                 <span>${escapeHtml(plan.production_write_count || 0)} planned production writes</span>
               </div>
             </div>
-            <span class="status-label review">preview only</span>
+            <span class="status-label ${executed ? "ready" : "review"}">${executed ? "committed" : "preview only"}</span>
           </div>
           <div class="metrics">
             ${metric("Tournament Upserts", plan.tournament_upsert_count || 0)}
@@ -1232,6 +1370,12 @@
               <strong>Production rating row IDs</strong>
               <div>${ratingRange.first ? `${escapeHtml(ratingRange.first)} to ${escapeHtml(ratingRange.last)}` : "none"}</div>
             </div>
+            <div class="message">
+              <strong>Plan hash</strong>
+              <div>${escapeHtml((plan.plan_hash || "").slice(0, 16))}</div>
+            </div>
+            ${executed ? '<div class="message ready">Production tables were written for this RunID.</div>' : ""}
+            ${plan.requires_sgf_acknowledgement ? '<div class="message review">Existing SGF-linked production game rows require explicit acknowledgement before commit.</div>' : ""}
             ${(plan.warnings || []).map((warning) => `<div class="message review">${escapeHtml(warning)}</div>`).join("")}
           </div>
         </section>
@@ -1334,6 +1478,13 @@
     els.previewBtn.addEventListener("click", previewRun);
     els.stageBtn.addEventListener("click", stageRun);
     els.replayBtn.addEventListener("click", replayRun);
+    els.loadRunBtn.addEventListener("click", loadRun);
+    els.runIdInput.addEventListener("input", render);
+    els.runIdInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      loadRun();
+    });
 
     document.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-action]");
@@ -1345,6 +1496,7 @@
       if (button.dataset.action === "stage-preview") stageRun();
       if (button.dataset.action === "replay-run") replayRun();
       if (button.dataset.action === "commit-preview") previewCommit();
+      if (button.dataset.action === "commit-run") commitRun();
       if (button.dataset.action === "approve-duplicate") {
         approveDuplicate(Number(button.dataset.ordinal), button.dataset.code || "");
       }
@@ -1399,7 +1551,13 @@
       render();
     });
 
-    render();
+    const initialRunId = new URLSearchParams(window.location.search).get("run_id");
+    if (initialRunId) {
+      els.runIdInput.value = initialRunId;
+      loadRun();
+    } else {
+      render();
+    }
   </script>
 </body>
 </html>

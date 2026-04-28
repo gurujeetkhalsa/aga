@@ -1,7 +1,8 @@
 import argparse
+import hashlib
 import json
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, TextIO
 
@@ -131,6 +132,50 @@ WHERE [RunID] = ?
   AND [Pin_Player] = ?
 """
 
+COMMIT_RUN_GUARD_SQL = """
+DECLARE @RunID int = ?;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM [ratings].[bayrate_runs] WITH (UPDLOCK, HOLDLOCK)
+    WHERE [RunID] = @RunID
+)
+BEGIN
+    THROW 51020, N'BayRate staged run was not found during commit.', 1;
+END;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM [ratings].[bayrate_staged_ratings] WITH (UPDLOCK, HOLDLOCK)
+    WHERE [RunID] = @RunID
+      AND [Planned_Rating_Row_ID] IS NOT NULL
+)
+BEGIN
+    THROW 51021, N'BayRate staged run already has production rating row IDs and appears committed.', 1;
+END;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM [ratings].[bayrate_staged_games] WITH (UPDLOCK, HOLDLOCK)
+    WHERE [RunID] = @RunID
+      AND [Game_ID] IS NOT NULL
+)
+BEGIN
+    THROW 51022, N'BayRate staged run already has production game IDs and appears committed.', 1;
+END;
+"""
+
+UPDATE_COMMIT_AUDIT_SQL = """
+UPDATE [ratings].[bayrate_runs]
+SET
+    [Last_Updated_At] = SYSUTCDATETIME(),
+    [SummaryJson] = ?
+WHERE [RunID] = ?
+"""
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Preview or execute a BayRate staged-run production commit.")
@@ -171,11 +216,26 @@ def commit_staged_run(
     run_id: int | str,
     *,
     confirm_production_commit: bool = False,
+    expected_plan_hash: str | None = None,
+    confirm_sgf_replacement: bool = False,
+    operator_principal_name: str | None = None,
+    operator_principal_id: str | None = None,
 ) -> dict[str, Any]:
     if not confirm_production_commit:
         raise ValueError("confirm_production_commit=True is required to write production rating tables.")
     plan = build_commit_plan(adapter, run_id)
-    adapter.execute_statements(build_commit_statements(plan))
+    validate_commit_plan_for_execution(
+        plan,
+        expected_plan_hash=expected_plan_hash,
+        confirm_sgf_replacement=confirm_sgf_replacement,
+    )
+    adapter.execute_statements(
+        build_commit_statements(
+            plan,
+            operator_principal_name=operator_principal_name,
+            operator_principal_id=operator_principal_id,
+        )
+    )
     plan["executed"] = True
     return plan
 
@@ -189,9 +249,16 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
     staged_ratings = load_staged_rating_rows(adapter, run_id_int)
     if not staged_ratings:
         raise ValueError(f"RunID {run_id_int} has no staged rating rows. Run Replay before commit.")
+    if any(row.get("planned_rating_row_id") is not None for row in staged_ratings):
+        raise ValueError(
+            f"RunID {run_id_int} already has production rating row IDs and appears to have been committed."
+        )
 
     staged_tournaments = list(payload.get("staged_tournaments") or [])
     staged_games = list(payload.get("staged_games") or [])
+    if any(_optional_int((entry.get("game_row") or {}).get("Game_ID")) is not None for entry in staged_games):
+        raise ValueError(f"RunID {run_id_int} already has production game IDs and appears to have been committed.")
+
     staged_tournament_codes = _ordered_unique(
         entry["tournament_row"].get("Tournament_Code")
         for entry in staged_tournaments
@@ -216,6 +283,7 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         production_tournament_rows=production_tournament_rows,
         production_game_rows=production_game_rows,
     )
+    requires_sgf_acknowledgement = any(row.get("Sgf_Code") for row in production_game_rows)
 
     production_write_count = (
         len(staged_tournaments)
@@ -238,6 +306,7 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         "game_insert_count": len(planned_games),
         "rating_insert_count": len(planned_ratings),
         "production_write_count": production_write_count,
+        "requires_sgf_acknowledgement": requires_sgf_acknowledgement,
         "warnings": warnings,
         "staged_tournaments": staged_tournaments,
         "planned_games": planned_games,
@@ -349,12 +418,10 @@ def plan_rating_ids(
     production_rating_summaries: list[dict[str, Any]],
     max_rating_id: int,
 ) -> list[dict[str, Any]]:
-    existing_first_ids = [
-        int(row["FirstRatingRowID"])
-        for row in production_rating_summaries
-        if row.get("FirstRatingRowID") is not None
-    ]
-    next_rating_id = min(existing_first_ids) if existing_first_ids else max_rating_id + 1
+    # Production rating IDs are not guaranteed to be contiguous by tournament.
+    # Older unaffected events can be interleaved inside the cascade's old ID range,
+    # so allocate a fresh append-only block rather than reusing deleted IDs.
+    next_rating_id = max_rating_id + 1
     planned = []
     for index, row in enumerate(staged_ratings, start=0):
         planned.append({**row, "planned_rating_row_id": next_rating_id + index})
@@ -381,8 +448,27 @@ def build_commit_warnings(
     return warnings
 
 
-def build_commit_statements(plan: dict[str, Any]) -> list[SqlStatement]:
-    statements: list[SqlStatement] = []
+def validate_commit_plan_for_execution(
+    plan: dict[str, Any],
+    *,
+    expected_plan_hash: str | None = None,
+    confirm_sgf_replacement: bool = False,
+) -> None:
+    if expected_plan_hash:
+        actual_plan_hash = printable_commit_plan(plan).get("plan_hash")
+        if expected_plan_hash != actual_plan_hash:
+            raise ValueError("Commit plan changed since preview. Preview the production commit again before committing.")
+    if plan.get("requires_sgf_acknowledgement") and not confirm_sgf_replacement:
+        raise ValueError("Existing SGF-linked production game rows would be replaced; confirm_sgf_replacement=True is required.")
+
+
+def build_commit_statements(
+    plan: dict[str, Any],
+    *,
+    operator_principal_name: str | None = None,
+    operator_principal_id: str | None = None,
+) -> list[SqlStatement]:
+    statements: list[SqlStatement] = [(COMMIT_RUN_GUARD_SQL, (plan["run_id"],))]
     delete_rating_codes = list(plan.get("delete_rating_tournament_codes") or [])
     replace_game_codes = list(plan.get("replace_game_tournament_codes") or [])
     if delete_rating_codes:
@@ -427,6 +513,15 @@ def build_commit_statements(plan: dict[str, Any]) -> list[SqlStatement]:
                 ),
             )
         )
+    statements.append(
+        (
+            UPDATE_COMMIT_AUDIT_SQL,
+            (
+                _json_dumps(_commit_audit_summary(plan, operator_principal_name, operator_principal_id)),
+                plan["run_id"],
+            ),
+        )
+    )
     return statements
 
 
@@ -513,7 +608,7 @@ def print_commit_plan(plan: dict[str, Any], output: TextIO) -> None:
 
 
 def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
-    return {
+    result = {
         "run_id": plan.get("run_id"),
         "executed": plan.get("executed", False),
         "status": plan.get("status"),
@@ -527,9 +622,43 @@ def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "game_insert_count": plan.get("game_insert_count", 0),
         "rating_insert_count": plan.get("rating_insert_count", 0),
         "production_write_count": plan.get("production_write_count", 0),
+        "requires_sgf_acknowledgement": bool(plan.get("requires_sgf_acknowledgement", False)),
         "warnings": plan.get("warnings") or [],
         "game_id_range": _id_range(row["planned_game_id"] for row in plan.get("planned_games") or []),
         "rating_id_range": _id_range(row["planned_rating_row_id"] for row in plan.get("planned_ratings") or []),
+    }
+    fingerprint = dict(result)
+    fingerprint.pop("executed", None)
+    result["plan_hash"] = _commit_plan_hash(fingerprint)
+    return result
+
+
+def _commit_plan_hash(payload: dict[str, Any]) -> str:
+    stable_payload = json.dumps(payload, default=_json_default, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(stable_payload.encode("utf-8")).hexdigest()
+
+
+def _commit_audit_summary(
+    plan: dict[str, Any],
+    operator_principal_name: str | None,
+    operator_principal_id: str | None,
+) -> dict[str, Any]:
+    printable = printable_commit_plan(plan)
+    return {
+        "run_id": plan.get("run_id"),
+        "run_status": plan.get("status"),
+        "commit_status": "committed",
+        "committed_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "committed_by": operator_principal_name,
+        "committed_principal_id": operator_principal_id,
+        "commit_plan_hash": printable.get("plan_hash"),
+        "affected_tournament_codes": printable.get("affected_tournament_codes") or [],
+        "staged_tournament_codes": printable.get("staged_tournament_codes") or [],
+        "production_cascade_tournament_codes": printable.get("production_cascade_tournament_codes") or [],
+        "production_write_count": printable.get("production_write_count", 0),
+        "game_id_range": printable.get("game_id_range"),
+        "rating_id_range": printable.get("rating_id_range"),
+        "warnings": printable.get("warnings") or [],
     }
 
 

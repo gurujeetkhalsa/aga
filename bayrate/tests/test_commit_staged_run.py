@@ -1,7 +1,7 @@
 import unittest
 from datetime import date
 
-from bayrate.commit_staged_run import build_commit_plan, build_commit_statements, commit_staged_run
+from bayrate.commit_staged_run import build_commit_plan, build_commit_statements, commit_staged_run, printable_commit_plan
 
 
 class CommitAdapter:
@@ -168,9 +168,33 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual([row["planned_game_id"] for row in plan["planned_games"]], [101])
         self.assertEqual([row["planned_rating_row_id"] for row in plan["planned_ratings"]], [201, 202])
 
+    def test_build_commit_plan_appends_rating_ids_when_replacing_existing_ratings(self) -> None:
+        plan = build_commit_plan(
+            CommitAdapter(
+                production_ratings=[
+                    {
+                        "Tournament_Code": "new20260101",
+                        "RatingRowCount": 2,
+                        "FirstRatingRowID": 10,
+                        "LastRatingRowID": 11,
+                    }
+                ]
+            ),
+            1,
+        )
+
+        self.assertEqual([row["planned_rating_row_id"] for row in plan["planned_ratings"]], [201, 202])
+
     def test_build_commit_plan_rejects_runs_without_replay_rows(self) -> None:
         with self.assertRaisesRegex(ValueError, "Run Replay before commit"):
             build_commit_plan(CommitAdapter(staged_ratings=[]), 1)
+
+    def test_build_commit_plan_rejects_already_committed_rows(self) -> None:
+        staged_ratings = CommitAdapter.default_staged_ratings()
+        staged_ratings[0]["Planned_Rating_Row_ID"] = 201
+
+        with self.assertRaisesRegex(ValueError, "appears to have been committed"):
+            build_commit_plan(CommitAdapter(staged_ratings=staged_ratings), 1)
 
     def test_build_commit_plan_rejects_non_ready_runs(self) -> None:
         with self.assertRaisesRegex(ValueError, "only ready_for_rating"):
@@ -188,6 +212,18 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertIn("INSERT INTO [ratings].[ratings]", sql_text)
         self.assertIn("UPDATE [ratings].[bayrate_staged_games]", sql_text)
         self.assertIn("UPDATE [ratings].[bayrate_staged_ratings]", sql_text)
+        self.assertIn("THROW 51021", sql_text)
+        self.assertIn("UPDATE [ratings].[bayrate_runs]", sql_text)
+
+    def test_printable_commit_plan_includes_stable_plan_hash(self) -> None:
+        plan = build_commit_plan(CommitAdapter(), 1)
+        preview = printable_commit_plan(plan)
+
+        plan["executed"] = True
+        executed = printable_commit_plan(plan)
+
+        self.assertEqual(len(preview["plan_hash"]), 64)
+        self.assertEqual(preview["plan_hash"], executed["plan_hash"])
 
     def test_game_insert_uses_production_integer_komi_convention(self) -> None:
         plan = build_commit_plan(CommitAdapter(), 1)
@@ -199,6 +235,35 @@ class CommitStagedRunTest(unittest.TestCase):
     def test_commit_staged_run_requires_confirmation(self) -> None:
         with self.assertRaisesRegex(ValueError, "confirm_production_commit"):
             commit_staged_run(CommitAdapter(), 1)
+
+    def test_commit_staged_run_rejects_stale_preview_hash(self) -> None:
+        with self.assertRaisesRegex(ValueError, "changed since preview"):
+            commit_staged_run(
+                CommitAdapter(),
+                1,
+                confirm_production_commit=True,
+                expected_plan_hash="not-the-current-plan",
+            )
+
+    def test_commit_staged_run_requires_sgf_acknowledgement_for_sgf_replacement(self) -> None:
+        production_games = [
+            {
+                "Game_ID": 700,
+                "Tournament_Code": "new20260101",
+                "Game_Date": date(2026, 1, 1),
+                "Round": 1,
+                "Pin_Player_1": 1001,
+                "Pin_Player_2": 1002,
+                "Sgf_Code": "linked-game",
+            }
+        ]
+
+        with self.assertRaisesRegex(ValueError, "SGF-linked"):
+            commit_staged_run(
+                CommitAdapter(production_games=production_games),
+                1,
+                confirm_production_commit=True,
+            )
 
     def test_commit_staged_run_executes_generated_statements(self) -> None:
         adapter = CommitAdapter()
