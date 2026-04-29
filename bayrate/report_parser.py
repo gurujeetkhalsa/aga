@@ -1,6 +1,7 @@
 ﻿import argparse
 import csv
 import json
+import math
 import os
 import re
 import sys
@@ -654,8 +655,15 @@ def _normalize_strength(value: str) -> str:
     if RANK_TOKEN_RE.match(text):
         return text.lower()
     if NUMERIC_STRENGTH_RE.match(text):
-        return text
+        return _numeric_strength_to_rank(text)
     raise ValueError(f"Unsupported strength token {value!r}")
+
+
+def _numeric_strength_to_rank(value: str) -> str:
+    rating = float(value)
+    if rating >= 0:
+        return f"{math.floor(rating)}d"
+    return f"{abs(math.ceil(rating))}k"
 
 
 def _normalize_komi(value: str) -> int:

@@ -73,6 +73,34 @@ class RatingsReportParserTest(unittest.TestCase):
         self.assertEqual(payload["reports"][1]["tournament_row"]["Tournament_Descr"], "Migration Sample One")
         self.assertEqual(payload["warnings"][0]["type"], "report_parse_failed")
 
+    def test_decimal_rating_strengths_are_converted_to_bayrate_ranks(self) -> None:
+        report = """TOURNEY Decimal Strength Sample
+start=2026-05-01
+finish=2026-05-01
+location=Seattle, WA
+rules=AGA
+
+PLAYERS (3)
+5001 Positive Dan 4.45
+5002 Negative Kyu -3.34
+5003
+Exact Kyu
+-8.00
+
+GAMES (1)
+5001 5002 W 0 7
+END
+"""
+
+        payload = parse_report_to_rows(report)
+
+        self.assertEqual(payload["game_rows"][0]["Rank_1"], "4d")
+        self.assertEqual(payload["game_rows"][0]["Rank_2"], "3k")
+        normalized_by_id = {player["agaid"]: player["normalized_strength"] for player in payload["players"]}
+        self.assertEqual(normalized_by_id[5001], "4d")
+        self.assertEqual(normalized_by_id[5002], "3k")
+        self.assertEqual(normalized_by_id[5003], "8k")
+
     def test_question_mark_game_result_is_warned_and_ignored(self) -> None:
         report = """TOURNEY Unreported Result Sample
 start=2026-05-01

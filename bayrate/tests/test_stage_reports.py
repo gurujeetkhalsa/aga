@@ -153,23 +153,71 @@ class StageReportsTest(unittest.TestCase):
         self.assertTrue(tournament["original_tournament_code"])
         self.assertEqual({entry["game_row"]["Tournament_Code"] for entry in payload["staged_games"]}, {"REUSED-1"})
 
+    def test_generated_code_collision_with_different_production_tournament_gets_unique_code(self) -> None:
+        adapter = FakeAdapter(
+            [
+                {
+                    "Tournament_Code": "2026badukp20260425",
+                    "Tournament_Descr": "2026 BadukPop Tournament",
+                    "Tournament_Date": date(2026, 4, 25),
+                    "City": "San Francisco",
+                    "State_Code": "CA",
+                    "Country_Code": "US",
+                    "Game_ID": 501,
+                    "Game_Date": date(2026, 4, 25),
+                    "Round": 1,
+                    "Pin_Player_1": 9001,
+                    "Pin_Player_2": 9002,
+                    "Handicap": 0,
+                    "Komi": 7,
+                    "Result": "W",
+                }
+            ]
+        )
+        report = """TOURNEY 2026 BadukPop Open, San Francisco
+start=2026-04-25
+finish=2026-04-25
+location=San Francisco, CA
+rules=AGA
+
+PLAYERS (2)
+3001 Open One 1D
+3002 Open Two 2D
+
+GAMES (1)
+3001 3002 W 0 7
+END
+"""
+
+        payload = build_staging_payload([("2026BPO.txt", report)], adapter=adapter)
+        tournament = payload["staged_tournaments"][0]
+
+        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(tournament["tournament_row"]["Tournament_Code"], "2026badukp20260425-2")
+        self.assertEqual(tournament["original_tournament_code"], "2026badukp20260425")
+        self.assertEqual(tournament["code_source"], "generated")
+        self.assertEqual({entry["game_row"]["Tournament_Code"] for entry in payload["staged_games"]}, {"2026badukp20260425-2"})
+        self.assertTrue(
+            any(warning.get("type") == "generated_tournament_code_collision" for warning in tournament["parser_warnings"])
+        )
+
     def test_validation_failure_for_non_bayrate_rank(self) -> None:
-        report = """TOURNEY Numeric Rank Sample
+        report = """TOURNEY Decimal Rank Suffix Sample
 start=2026-03-01
 finish=2026-03-01
 location=Seattle, WA
 rules=AGA
 
 PLAYERS (2)
-3001 Numeric One 1.0
-3002 Numeric Two 2.0
+3001 Decimal Suffix One 1.5D
+3002 Numeric Two 2D
 
 GAMES (1)
 3001 3002 W 0 7
 END
 """
         payload = build_staging_payload(
-            [("numeric_rank_report.txt", report)],
+            [("decimal_rank_suffix_report.txt", report)],
             adapter=FakeAdapter(),
         )
 

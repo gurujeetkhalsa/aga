@@ -272,6 +272,7 @@ def build_staging_payload(
     staged_tournaments: list[dict[str, Any]] = []
     staged_games: list[dict[str, Any]] = []
     run_warnings: list[dict[str, Any]] = []
+    assigned_tournament_codes: set[str] = set()
     if adapter is None:
         run_warnings.append(
             {
@@ -333,6 +334,27 @@ def build_staging_payload(
                         "type": "ambiguous_existing_tournament_match",
                         "matches": [candidate.tournament_code for candidate in exact_matches],
                         "message": "Multiple production tournaments matched this title/date; keeping generated code.",
+                    }
+                )
+            exact_match_codes = {candidate.tournament_code for candidate in exact_matches}
+            reserved_codes = {candidate.tournament_code for candidate in duplicate_candidates}
+            reserved_codes.update(assigned_tournament_codes)
+            current_code = str(tournament_row.get("Tournament_Code") or "").strip()
+            collides_with_different_production = current_code in reserved_codes and current_code not in exact_match_codes
+            if code_source == "generated" and collides_with_different_production:
+                replacement_code = _unique_generated_tournament_code(current_code, reserved_codes)
+                tournament_row["Tournament_Code"] = replacement_code
+                for game_row in game_rows:
+                    game_row["Tournament_Code"] = replacement_code
+                parser_warnings.append(
+                    {
+                        "type": "generated_tournament_code_collision",
+                        "original_code": current_code,
+                        "replacement_code": replacement_code,
+                        "message": (
+                            f"Generated Tournament_Code {current_code!r} already belongs to another "
+                            f"same-date production tournament. Using {replacement_code!r} instead."
+                        ),
                     }
                 )
 
@@ -441,6 +463,9 @@ def build_staging_payload(
             "metadata": dict(report.get("metadata") or {}),
         }
         staged_tournaments.append(tournament_entry)
+        assigned_code = str(tournament_row.get("Tournament_Code") or "").strip()
+        if assigned_code:
+            assigned_tournament_codes.add(assigned_code)
         for entry in game_entries:
             if status in {"ready_for_rating", "needs_review"} and not entry["validation_errors"]:
                 entry["status"] = status
@@ -472,6 +497,18 @@ def _initial_code_source(parser_warnings: list[dict[str, Any]]) -> str:
     if any(warning.get("type") == "generated_tournament_code" for warning in parser_warnings):
         return "generated"
     return "parser"
+
+
+def _unique_generated_tournament_code(base_code: str, reserved_codes: set[str]) -> str:
+    base = str(base_code or "").strip()[:32] or "generated"
+    if base not in reserved_codes:
+        return base
+    for suffix_number in range(2, 1000):
+        suffix = f"-{suffix_number}"
+        candidate = f"{base[: 32 - len(suffix)]}{suffix}"
+        if candidate not in reserved_codes:
+            return candidate
+    raise ValueError(f"Could not generate a unique Tournament_Code from {base_code!r}.")
 
 
 def validate_tournament_row(tournament_row: dict[str, Any], game_rows: list[dict[str, Any]]) -> list[str]:

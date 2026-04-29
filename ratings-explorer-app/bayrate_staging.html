@@ -1044,13 +1044,22 @@
       const runId = state.commitPreview.run_id || state.stagedSummary.run_id;
       const confirmation = `COMMIT RUN ${runId}`;
       const writeCount = state.commitPreview.production_write_count || 0;
-      if (!window.confirm(`Commit RunID ${runId} to production ratings tables with ${writeCount} planned writes?`)) return;
+      if (!window.confirm(`Commit RunID ${runId} to production ratings tables with ${writeCount} planned writes?`)) {
+        els.previewStatus.textContent = "Commit cancelled before sending request";
+        return;
+      }
       const typed = window.prompt(`Type ${confirmation} to commit production ratings`, "");
-      if (typed !== confirmation) return;
+      if (typed !== confirmation) {
+        els.previewStatus.textContent = "Commit cancelled: confirmation text did not match";
+        return;
+      }
       let confirmSgfReplacement = false;
       if (state.commitPreview.requires_sgf_acknowledgement) {
         confirmSgfReplacement = window.confirm("Existing production game rows with SGF links will be replaced. Continue?");
-        if (!confirmSgfReplacement) return;
+        if (!confirmSgfReplacement) {
+          els.previewStatus.textContent = "Commit cancelled before SGF replacement acknowledgement";
+          return;
+        }
       }
       state.busy = true;
       els.previewStatus.textContent = "Committing to production...";

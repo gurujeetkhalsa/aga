@@ -54,6 +54,16 @@ class DuplicateCandidateAdapter:
         raise AssertionError("Duplicate candidate test adapter should not write SQL.")
 
 
+class NoDuplicateCandidateAdapter:
+    def query_rows(self, query, params=()):
+        if "FROM [membership].[members]" in query:
+            return [{"AGAID": player_id, "ExpirationDate": date(2099, 1, 1)} for player_id in params]
+        return []
+
+    def execute_statements(self, statements):
+        raise AssertionError("No-duplicate candidate test adapter should not write SQL.")
+
+
 class ReplayAdapter:
     def __init__(self) -> None:
         self.queries = []
@@ -172,7 +182,39 @@ def needs_review_payload():
     )
 
 
+def ready_new_tournament_payload():
+    return build_staging_payload(
+        [
+            (
+                "report_compact_one.txt",
+                (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"),
+            )
+        ],
+        adapter=NoDuplicateCandidateAdapter(),
+        run_id=778,
+    )
+
+
 class ReplayStagedRunTest(unittest.TestCase):
+    def test_replay_input_treats_same_day_production_as_predecessors_for_new_event(self) -> None:
+        payload = ready_new_tournament_payload()
+        adapter = ReplayAdapter()
+
+        replay_input = build_staged_replay_input(adapter, payload=payload)
+        plan = replay_input["plan"]
+        staged_code = payload["staged_tournaments"][0]["tournament_row"]["Tournament_Code"]
+
+        self.assertEqual(plan["anchor"]["tournament_code"], staged_code)
+        self.assertIsNone(plan["anchor"]["first_rating_row_id"])
+        self.assertEqual([event["tournament_code"] for event in plan["events"]], [staged_code])
+        self.assertEqual(plan["staged_event_count"], 1)
+        self.assertEqual(plan["production_cascade_event_count"], 0)
+        self.assertEqual(
+            plan["starter"]["same_day_predecessor_tournament_codes"],
+            ["PREV-SAME-DAY", "OLD-SAMPLE-1", "LATER-SAME-DAY"],
+        )
+        self.assertEqual([game.tournament_code for game in replay_input["games"]], [staged_code, staged_code])
+
     def test_replay_input_replaces_duplicate_and_adds_later_same_day_cascade(self) -> None:
         payload = needs_review_payload()
         adapter = ReplayAdapter()
@@ -233,15 +275,15 @@ class ReplayStagedRunTest(unittest.TestCase):
         )
 
     def test_replay_rejects_validation_failed_payload(self) -> None:
-        report = """TOURNEY Numeric Rank Sample
+        report = """TOURNEY Decimal Rank Suffix Sample
 start=2026-03-01
 finish=2026-03-01
 location=Seattle, WA
 rules=AGA
 
 PLAYERS (2)
-3001 Numeric One 1.0
-3002 Numeric Two 2.0
+3001 Decimal Suffix One 1.5D
+3002 Numeric Two 2D
 
 GAMES (1)
 3001 3002 W 0 7

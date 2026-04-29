@@ -791,7 +791,7 @@ def _coerce_bool(value: Any, *, default: bool) -> bool:
 def _planned_event_sort_key(event: PlannedEvent) -> tuple[Any, ...]:
     rating_key = event.first_rating_row_id
     if rating_key is None:
-        rating_key = -1 if event.source == "staged" else 10**18
+        rating_key = 10**18
     return (
         event.tournament_date,
         rating_key,
