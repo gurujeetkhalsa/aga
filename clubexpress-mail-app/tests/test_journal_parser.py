@@ -1,7 +1,9 @@
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import unittest
+from datetime import date, datetime, timezone
 
 
 APP_DIR = Path(__file__).resolve().parents[1]
@@ -58,6 +60,168 @@ class JournalParserTest(unittest.TestCase):
         self.assertIn("Wren Perchlik", vermont_text)
         self.assertNotIn("Jonathan Green", archive_text)
         self.assertNotIn("5 MINUTES WITH: Ofer Zivony, Israel", titles)
+
+
+class MembershipRewardEventTest(unittest.TestCase):
+    def test_membership_reward_event_params_preserve_source_context(self):
+        received_at = datetime(2026, 5, 2, 15, 30, tzinfo=timezone.utc)
+
+        params = mailapp._membership_reward_event_params(
+            {"id": "msg-123"},
+            received_at,
+            mailapp.REWARDS_RENEWAL_EVENT_TYPE,
+            date(2026, 5, 2),
+            {
+                "AGAID": 12345,
+                "MemberType": "Adult Full",
+                "IsChapterMember": False,
+            },
+            sender="ClubExpress <scheduler@example.test>",
+            subject="American Go Association - Member Renewal",
+            blob_path="member_renewal/2026/05/02/msg-123",
+        )
+
+        self.assertEqual(params["MessageId"], "msg-123")
+        self.assertEqual(params["AGAID"], 12345)
+        self.assertEqual(params["EventType"], "renewal")
+        self.assertEqual(params["EventDate"], date(2026, 5, 2))
+        self.assertEqual(params["MemberType"], "Adult Full")
+
+        payload = json.loads(params["SourcePayloadJson"])
+        self.assertEqual(payload["message_id"], "msg-123")
+        self.assertEqual(payload["subject"], "American Go Association - Member Renewal")
+        self.assertEqual(payload["parsed"]["MemberType"], "Adult Full")
+        self.assertFalse(payload["parsed"]["IsChapterMember"])
+
+    def test_stored_procedure_call_orders_params(self):
+        sql, values = mailapp._stored_procedure_call(
+            "rewards.sp_record_membership_event",
+            {"MessageId": "msg-123", "AGAID": 12345},
+        )
+
+        self.assertEqual(
+            sql,
+            "EXEC rewards.sp_record_membership_event @MessageId = ?, @AGAID = ?",
+        )
+        self.assertEqual(values, ["msg-123", 12345])
+
+
+class RewardsSnapshotTest(unittest.TestCase):
+    def test_rewards_snapshot_params_do_not_replace_existing_snapshots(self):
+        params = mailapp._rewards_snapshot_params(date(2026, 5, 2))
+
+        self.assertEqual(
+            params,
+            {
+                "SnapshotDate": date(2026, 5, 2),
+                "RunType": "daily",
+                "ReplaceExisting": 0,
+            },
+        )
+
+
+class RewardsMembershipAwardsTest(unittest.TestCase):
+    def test_rewards_membership_awards_params_write_daily_run(self):
+        params = mailapp._rewards_membership_awards_params(date(2026, 5, 2))
+
+        self.assertEqual(
+            params,
+            {
+                "AsOfDate": date(2026, 5, 2),
+                "RunType": "daily",
+                "DryRun": 0,
+            },
+        )
+
+
+class RewardsRatedGameAwardsTest(unittest.TestCase):
+    def test_rewards_rated_game_awards_params_write_daily_run(self):
+        params = mailapp._rewards_rated_game_awards_params(date(2026, 5, 2))
+
+        self.assertEqual(
+            params,
+            {
+                "GameDateFrom": date(2026, 5, 2),
+                "GameDateTo": date(2026, 5, 2),
+                "RunType": "daily",
+                "DryRun": 0,
+            },
+        )
+
+
+class RewardsTournamentAwardsTest(unittest.TestCase):
+    def test_rewards_tournament_awards_params_scan_through_daily_date(self):
+        params = mailapp._rewards_tournament_awards_params(date(2026, 5, 3))
+
+        self.assertEqual(
+            params,
+            {
+                "TournamentDateFrom": None,
+                "TournamentDateTo": date(2026, 5, 3),
+                "RunType": "daily",
+                "DryRun": 0,
+            },
+        )
+
+
+class RewardsPointExpirationsTest(unittest.TestCase):
+    def test_rewards_point_expirations_params_write_daily_run(self):
+        params = mailapp._rewards_point_expirations_params(date(2028, 5, 3))
+
+        self.assertEqual(
+            params,
+            {
+                "AsOfDate": date(2028, 5, 3),
+                "RunType": "daily",
+                "DryRun": 0,
+            },
+        )
+
+
+class ChapterCsvImportTest(unittest.TestCase):
+    def test_chapterx_filename_is_classified_as_chapter_csv(self):
+        report_type = mailapp._detect_attachment_report_type(
+            "Immediate_Chapterx.csv",
+            b"ID,Name,Short Name,City,State,Status\r\n32477,Test Club,TST,Seattle,WA,Active\r\n",
+        )
+
+        self.assertEqual(report_type, mailapp.CHAPTER_MESSAGE_TYPE)
+
+    def test_chapter_rows_accept_extra_clubexpress_columns_and_aliases(self):
+        rows = mailapp._parse_chapter_rows(
+            b"Report generated,ignored\r\n"
+            b"ID,Name,Short Name,City,State,Primary Contact Member ID,Date Created,Status,Extra\r\n"
+            b"32477,Test Go Club,TST,Seattle,WA,32478,4/17/2026,Active,ignored\r\n"
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][0], 32477)
+        self.assertEqual(rows[0][1], "TST")
+        self.assertEqual(rows[0][2], "Test Go Club")
+        self.assertEqual(rows[0][5], 32478)
+        self.assertEqual(rows[0][7], "Active")
+
+    def test_chapter_rows_reject_duplicate_chapter_ids(self):
+        with self.assertRaisesRegex(mailapp.CsvValidationError, "Duplicate ChapterID"):
+            mailapp._parse_chapter_rows(
+                b"ChapterID,ChapterName,ChapterCode\r\n"
+                b"1,One,ONE\r\n"
+                b"1,Duplicate,DUP\r\n"
+            )
+
+    def test_chapter_rows_reject_missing_required_headers(self):
+        with self.assertRaisesRegex(mailapp.CsvValidationError, "ChapterID, ChapterCode, ChapterName"):
+            mailapp._parse_chapter_rows(
+                b"ChapterID,ChapterName,City,State\r\n"
+                b"1,One,Seattle,WA\r\n"
+            )
+
+    def test_chapter_rows_reject_blank_required_values(self):
+        with self.assertRaisesRegex(mailapp.CsvValidationError, "Column ChapterCode is required"):
+            mailapp._parse_chapter_rows(
+                b"ChapterID,ChapterName,ChapterCode\r\n"
+                b"1,One,\r\n"
+            )
 
 
 if __name__ == "__main__":

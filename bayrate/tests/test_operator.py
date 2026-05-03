@@ -16,6 +16,16 @@ class FakeAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        if "FROM [membership].[chapters]" in query:
+            return [
+                {
+                    "ChapterID": 10,
+                    "ChapterCode": "SEAG",
+                    "ChapterName": "Seattle Go Center",
+                    "City": "Seattle",
+                    "State": "WA",
+                }
+            ]
         if "FROM [membership].[members]" in query:
             if self.membership_rows is None:
                 return [{"AGAID": player_id, "ExpirationDate": date(2099, 1, 1)} for player_id in params]
@@ -44,6 +54,16 @@ class ExistingRunAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        if "FROM [membership].[chapters]" in query:
+            return [
+                {
+                    "ChapterID": 10,
+                    "ChapterCode": "SEAG",
+                    "ChapterName": "Seattle Go Center",
+                    "City": "Seattle",
+                    "State": "WA",
+                }
+            ]
         if "FROM [ratings].[bayrate_runs]" in query:
             return [
                 {
@@ -75,6 +95,12 @@ class ExistingRunAdapter:
                     "City": "New York",
                     "State_Code": "NY",
                     "Country_Code": "US",
+                    "Host_ChapterID": None,
+                    "Host_ChapterCode": None,
+                    "Host_ChapterName": None,
+                    "Reward_Event_Key": "migrations20260101",
+                    "Reward_Event_Name": "Migration Sample One",
+                    "Reward_Is_State_Championship": 0,
                     "Rounds": 2,
                     "Total_Players": 3,
                     "Wallist": None,
@@ -193,7 +219,7 @@ class OperatorWorkflowTest(unittest.TestCase):
         payload = run_operator(
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=adapter,
-            input_func=ScriptedInput(["y", "y", "Round correction approved.", "y"]),
+            input_func=ScriptedInput(["y", "y", "SEAG", "", "", "", "Round correction approved.", "y"]),
             output=io.StringIO(),
             run_id=222,
         )
@@ -214,13 +240,13 @@ class OperatorWorkflowTest(unittest.TestCase):
         payload = run_operator(
             [FIXTURE_DIR / "report_compact_two.txt"],
             adapter=adapter,
-            input_func=ScriptedInput(["n"]),
+            input_func=ScriptedInput(["n", "n"]),
             output=io.StringIO(),
             run_id=333,
         )
 
         self.assertFalse(payload["written"])
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(adapter.statements, [])
 
     def test_operator_can_keep_duplicate_run_in_review(self) -> None:
@@ -247,7 +273,7 @@ class OperatorWorkflowTest(unittest.TestCase):
         payload = run_existing_run_review(
             555,
             adapter=adapter,
-            input_func=ScriptedInput(["y", "y", "Existing run approval note.", "y"]),
+            input_func=ScriptedInput(["y", "y", "SEAG", "", "", "", "Existing run approval note.", "y"]),
             output=io.StringIO(),
         )
 

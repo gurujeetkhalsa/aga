@@ -60,6 +60,7 @@ Notes:
 - generated snapshot data under `data/` should not be committed
 - BayRate routes require Azure App Service Authentication plus `BAYRATE_TRUST_EASY_AUTH=true`.
 - BayRate operators are controlled in SQL with `ratings.bayrate_admins`; apply `bayrate/sql/bayrate_authorization_schema.sql` before enabling the BayRate UI in Azure.
+- BayRate tournament host chapter, reward-event grouping, and State Championship flags require `bayrate/sql/bayrate_staging_schema.sql`; it adds those reward metadata columns to `ratings.bayrate_staged_tournaments` and `ratings.tournaments`.
 
 ### `aga-clubexpress-mail`
 
@@ -76,9 +77,14 @@ Purpose:
 - NAOL review parsing
 - membership/journal stored-procedure orchestration
 
-Primary function in this app:
+Primary functions in this app:
 
 - `poll_clubexpress_mailbox`
+- `create_rewards_daily_snapshot`
+- `process_rewards_membership_awards`
+- `process_rewards_rated_game_awards`
+- `process_rewards_tournament_awards`
+- `process_rewards_point_expirations`
 
 Production host:
 
@@ -99,6 +105,16 @@ Important settings:
 - `CLUBEXPRESS_MAILBOX_BATCH_SIZE`
 - `CLUBEXPRESS_PROCESSED_CATEGORY`
 - `CLUBEXPRESS_ARCHIVE_CONTAINER`
+- `REWARDS_SNAPSHOT_ENABLED`
+- `REWARDS_SNAPSHOT_SCHEDULE`
+- `REWARDS_MEMBERSHIP_AWARDS_ENABLED`
+- `REWARDS_MEMBERSHIP_AWARDS_SCHEDULE`
+- `REWARDS_RATED_GAME_AWARDS_ENABLED`
+- `REWARDS_RATED_GAME_AWARDS_SCHEDULE`
+- `REWARDS_TOURNAMENT_AWARDS_ENABLED`
+- `REWARDS_TOURNAMENT_AWARDS_SCHEDULE`
+- `REWARDS_EXPIRATIONS_ENABLED`
+- `REWARDS_EXPIRATIONS_SCHEDULE`
 - `GOOGLE_WORKSPACE_CLIENT_ID`
 - `GOOGLE_WORKSPACE_CLIENT_SECRET`
 - `GOOGLE_WORKSPACE_REFRESH_TOKEN`
@@ -172,6 +188,34 @@ Production is now intentionally split into three apps:
    membership data APIs and TD lists only
 
 This means mailbox parser changes should be deployed to `clubexpress-mail-app`, not to `membership-data-app`.
+
+## Chapter Rewards SQL
+
+Apply these SQL files to the AGA Azure SQL database before relying on the automated rewards timers:
+
+- `rewards/sql/chapter_rewards_schema.sql`
+- `rewards/sql/membership_event_logging.sql`
+- `rewards/sql/snapshot_processing.sql`
+- `rewards/sql/membership_award_processing.sql`
+- `rewards/sql/rated_game_award_processing.sql`
+- `rewards/sql/tournament_award_processing.sql`
+- `rewards/sql/opening_balance_import.sql`
+- `rewards/sql/point_expiration_processing.sql`
+- `rewards/sql/reporting_views.sql`
+
+## Membership Import SQL
+
+Apply this SQL before deploying ClubExpress chapter CSV mailbox support:
+
+- `membership-data-app/sql/chapter_import.sql`
+
+## BayRate SQL
+
+Apply this SQL before deploying the BayRate host-chapter review UI:
+
+- `bayrate/sql/bayrate_staging_schema.sql`
+
+The current BayRate flow requires a host chapter before a staged tournament can be marked `ready_for_rating` or committed to production ratings tables. Split sections of one hosted event, such as open and handicap sections, should share the same `Reward_Event_Key` so Chapter Rewards can total their rated games together. If a section or combined group is a State Championship, set `Reward_Is_State_Championship`; the Chapter Rewards tournament processor awards the sponsoring chapter `200,000` points once for that grouped reward event.
 
 ## Legacy note
 

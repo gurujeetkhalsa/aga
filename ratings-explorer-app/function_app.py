@@ -25,6 +25,7 @@ try:
         build_staging_payload,
         ensure_payload_run_id,
         explain_staged_run_review,
+        load_host_chapter_options,
         load_staged_run,
         printable_payload,
         update_staged_run_review,
@@ -41,6 +42,7 @@ except Exception:
     build_staging_payload = None
     ensure_payload_run_id = None
     explain_staged_run_review = None
+    load_host_chapter_options = None
     load_staged_run = None
     printable_payload = None
     update_staged_run_review = None
@@ -199,9 +201,45 @@ def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, w
         "same_date_groups": _bayrate_same_date_groups(payload),
         "review_explanation": explanations,
     }
+    if adapter and load_host_chapter_options is not None:
+        response["host_chapter_options"] = load_host_chapter_options(adapter)
     if adapter and written and summary.get("run_id") is not None:
         response["commit_state"] = _bayrate_commit_state(adapter, summary.get("run_id"))
     return response
+
+
+def _bayrate_host_chapter_from_body(adapter: object, body: dict) -> tuple[dict | None, func.HttpResponse | None]:
+    if "host_chapter_id" not in body and "hostChapterId" not in body:
+        return None, None
+    raw_id = body.get("host_chapter_id", body.get("hostChapterId"))
+    try:
+        host_chapter_id = int(str(raw_id).strip())
+    except (TypeError, ValueError):
+        return None, _bayrate_preview_error("host_chapter_id must be an integer.")
+    if host_chapter_id <= 0:
+        return None, _bayrate_preview_error("host_chapter_id must be a positive integer.")
+    if load_host_chapter_options is None:
+        return None, _bayrate_preview_error("BayRate host chapter lookup is not available.", status_code=500)
+    for option in load_host_chapter_options(adapter):
+        if int(option.get("chapter_id") or 0) == host_chapter_id:
+            return option, None
+    return None, _bayrate_preview_error(f"Host chapter {host_chapter_id} was not found.", status_code=404)
+
+
+def _bayrate_optional_bool_from_body(body: dict, *names: str) -> bool | None:
+    for name in names:
+        if name not in body:
+            continue
+        value = body.get(name)
+        if isinstance(value, bool):
+            return value
+        text = str(value or "").strip().lower()
+        if text in {"1", "true", "yes", "y", "on"}:
+            return True
+        if text in {"0", "false", "no", "n", "off", ""}:
+            return False
+        return bool(value)
+    return None
 
 
 def _bayrate_commit_state(adapter: object, run_id: int | str) -> dict:
@@ -596,6 +634,9 @@ def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
     source_report_ordinal = body.get("source_report_ordinal")
     if not isinstance(source_report_ordinal, int):
         return _bayrate_preview_error("source_report_ordinal must be an integer.")
+    host_chapter, error = _bayrate_host_chapter_from_body(adapter, body)
+    if error:
+        return error
     try:
         payload = load_staged_run(adapter, run_id)
         apply_tournament_review_decision(
@@ -604,6 +645,20 @@ def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
             use_duplicate_code=bool(body.get("use_duplicate_code", False)),
             mark_ready=bool(body.get("mark_ready", False)),
             operator_note=str(body.get("operator_note") or "").strip() or None,
+            host_chapter_id=host_chapter.get("chapter_id") if host_chapter else None,
+            host_chapter_code=host_chapter.get("chapter_code") if host_chapter else None,
+            host_chapter_name=host_chapter.get("chapter_name") if host_chapter else None,
+            reward_event_key=str(body.get("reward_event_key") or "").strip() or None
+            if "reward_event_key" in body
+            else None,
+            reward_event_name=str(body.get("reward_event_name") or "").strip() or None
+            if "reward_event_name" in body
+            else None,
+            reward_is_state_championship=_bayrate_optional_bool_from_body(
+                body,
+                "reward_is_state_championship",
+                "rewardIsStateChampionship",
+            ),
         )
         update_staged_run_review(adapter, payload)
     except Exception as exc:

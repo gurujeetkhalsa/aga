@@ -5,6 +5,7 @@ from pathlib import Path
 
 from bayrate.core import BayrateConfig, load_games_from_csv
 from bayrate.stage_reports import (
+    apply_tournament_review_decision,
     bayrate_game_csv_rows,
     build_staging_payload,
     compare_staged_to_production_games,
@@ -54,12 +55,18 @@ class StageReportsTest(unittest.TestCase):
         )
 
         self.assertEqual(payload["run_id"], run_id)
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(payload["tournament_count"], 2)
         self.assertEqual(payload["game_count"], 3)
         self.assertTrue(payload["written"])
         self.assertEqual(len(adapter.statements), 6)
-        self.assertEqual([entry["status"] for entry in payload["staged_tournaments"]], ["ready_for_rating", "ready_for_rating"])
+        self.assertEqual([entry["status"] for entry in payload["staged_tournaments"]], ["needs_review", "needs_review"])
+        self.assertTrue(
+            all(
+                any(warning.get("type") == "host_chapter_required" for warning in entry["parser_warnings"])
+                for entry in payload["staged_tournaments"]
+            )
+        )
 
     def test_stage_write_reserves_incremental_run_id(self) -> None:
         adapter = FakeAdapter()
@@ -75,6 +82,40 @@ class StageReportsTest(unittest.TestCase):
         self.assertEqual(adapter.statements[0][1][0], 42)
         self.assertEqual({entry["run_id"] for entry in payload["staged_tournaments"]}, {42})
         self.assertEqual({entry["run_id"] for entry in payload["staged_games"]}, {42})
+
+    def test_host_chapter_is_required_before_marking_ready(self) -> None:
+        payload = stage_report_files(
+            [FIXTURE_DIR / "report_compact_one.txt"],
+            adapter=FakeAdapter(),
+            dry_run=True,
+        )
+
+        tournament = payload["staged_tournaments"][0]
+        self.assertEqual(payload["status"], "needs_review")
+        self.assertTrue(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
+
+        with self.assertRaisesRegex(ValueError, "Host chapter must be selected"):
+            apply_tournament_review_decision(payload, 1, mark_ready=True)
+
+        apply_tournament_review_decision(
+            payload,
+            1,
+            host_chapter_id=10,
+            host_chapter_code="SEAG",
+            host_chapter_name="Seattle Go Center",
+            reward_event_key="migration-sample-combined",
+            reward_event_name="Migration Sample Combined Event",
+            reward_is_state_championship=True,
+            mark_ready=True,
+        )
+
+        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(tournament["tournament_row"]["Host_ChapterID"], 10)
+        self.assertEqual(tournament["tournament_row"]["Host_ChapterCode"], "SEAG")
+        self.assertEqual(tournament["tournament_row"]["Reward_Event_Key"], "migration-sample-combined")
+        self.assertEqual(tournament["tournament_row"]["Reward_Event_Name"], "Migration Sample Combined Event")
+        self.assertEqual(tournament["tournament_row"]["Reward_Is_State_Championship"], 1)
+        self.assertFalse(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
 
     def test_duplicate_candidate_with_different_code_needs_review(self) -> None:
         adapter = FakeAdapter(
@@ -147,7 +188,7 @@ class StageReportsTest(unittest.TestCase):
         payload = stage_report_files([FIXTURE_DIR / "report_compact_one.txt"], adapter=adapter, dry_run=True)
         tournament = payload["staged_tournaments"][0]
 
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(tournament["tournament_row"]["Tournament_Code"], "REUSED-1")
         self.assertEqual(tournament["code_source"], "reused")
         self.assertTrue(tournament["original_tournament_code"])
@@ -192,7 +233,7 @@ END
         payload = build_staging_payload([("2026BPO.txt", report)], adapter=adapter)
         tournament = payload["staged_tournaments"][0]
 
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(tournament["tournament_row"]["Tournament_Code"], "2026badukp20260425-2")
         self.assertEqual(tournament["original_tournament_code"], "2026badukp20260425")
         self.assertEqual(tournament["code_source"], "generated")
@@ -258,7 +299,7 @@ END
         later_warnings = payload["staged_tournaments"][1]["parser_warnings"]
         self.assertTrue(any(warning.get("type") == "missing_rules" for warning in later_warnings))
         self.assertFalse(any(warning.get("type") == "membership_validation_skipped" for warning in later_warnings))
-        self.assertEqual(payload["staged_tournaments"][1]["status"], "staged")
+        self.assertEqual(payload["staged_tournaments"][1]["status"], "needs_review")
 
     def test_unreported_game_result_is_warned_and_not_staged(self) -> None:
         report = """TOURNEY Unreported Result Sample
@@ -283,7 +324,7 @@ END
             adapter=FakeAdapter(),
         )
 
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(payload["game_count"], 1)
         warnings = payload["staged_tournaments"][0]["parser_warnings"]
         unreported = [warning for warning in warnings if warning.get("type") == "unreported_game_results"]
@@ -307,7 +348,7 @@ END
             today=date(2026, 4, 25),
         )
 
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(payload["validation_error_count"], 0)
 
     def test_expired_membership_before_event_date_requires_review(self) -> None:
@@ -374,7 +415,7 @@ END
 
         warnings = payload["staged_tournaments"][0]["parser_warnings"]
         mismatch = [warning for warning in warnings if warning.get("type") == "membership_name_mismatch"]
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(len(mismatch), 1)
         self.assertEqual(mismatch[0]["agaid"], 1002)
         self.assertIn("Bob Example", mismatch[0]["message"])
@@ -413,7 +454,7 @@ END
             for warning in payload["staged_tournaments"][0]["parser_warnings"]
             if warning.get("type") == "entry_rank_mismatch"
         ]
-        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(payload["status"], "needs_review")
         self.assertEqual(len(warnings), 2)
         highlighted = [warning for warning in warnings if warning.get("highlight")]
         self.assertEqual(len(highlighted), 1)

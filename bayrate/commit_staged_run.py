@@ -53,6 +53,12 @@ SET
     [City] = ?,
     [State_Code] = ?,
     [Country_Code] = ?,
+    [Host_ChapterID] = ?,
+    [Host_ChapterCode] = ?,
+    [Host_ChapterName] = ?,
+    [Reward_Event_Key] = ?,
+    [Reward_Event_Name] = ?,
+    [Reward_Is_State_Championship] = ?,
     [Rounds] = ?,
     [Total_Players] = ?,
     [Wallist] = ?,
@@ -69,12 +75,18 @@ BEGIN
         [City],
         [State_Code],
         [Country_Code],
+        [Host_ChapterID],
+        [Host_ChapterCode],
+        [Host_ChapterName],
+        [Reward_Event_Key],
+        [Reward_Event_Name],
+        [Reward_Is_State_Championship],
         [Rounds],
         [Total_Players],
         [Wallist],
         [Elab_Date]
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 END
 """
 
@@ -255,6 +267,18 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         )
 
     staged_tournaments = list(payload.get("staged_tournaments") or [])
+    missing_host_chapter = [
+        str((entry.get("tournament_row") or {}).get("Tournament_Code") or entry.get("source_report_ordinal"))
+        for entry in staged_tournaments
+        if not _has_host_chapter(entry.get("tournament_row") or {})
+    ]
+    if missing_host_chapter:
+        raise ValueError(
+            "Host chapter is required before production commit for tournament(s): "
+            + ", ".join(missing_host_chapter)
+        )
+    for entry in staged_tournaments:
+        _ensure_reward_event_defaults(entry.get("tournament_row") or {})
     staged_games = list(payload.get("staged_games") or [])
     if any(_optional_int((entry.get("game_row") or {}).get("Game_ID")) is not None for entry in staged_games):
         raise ValueError(f"RunID {run_id_int} already has production game IDs and appears to have been committed.")
@@ -335,6 +359,12 @@ SELECT
     [City],
     [State_Code],
     [Country_Code],
+    [Host_ChapterID],
+    [Host_ChapterCode],
+    [Host_ChapterName],
+    [Reward_Event_Key],
+    [Reward_Event_Name],
+    [Reward_Is_State_Championship],
     [Rounds],
     [Total_Players],
     [Wallist],
@@ -533,6 +563,12 @@ def build_tournament_upsert_statement(tournament: dict[str, Any]) -> SqlStatemen
         row.get("City"),
         row.get("State_Code"),
         row.get("Country_Code"),
+        _optional_int(row.get("Host_ChapterID")),
+        row.get("Host_ChapterCode"),
+        row.get("Host_ChapterName"),
+        row.get("Reward_Event_Key"),
+        row.get("Reward_Event_Name"),
+        1 if _coerce_bool(row.get("Reward_Is_State_Championship")) else 0,
         _coerce_int(row.get("Rounds")),
         _coerce_int(row.get("Total_Players")),
         row.get("Wallist"),
@@ -544,6 +580,12 @@ def build_tournament_upsert_statement(tournament: dict[str, Any]) -> SqlStatemen
         row.get("City"),
         row.get("State_Code"),
         row.get("Country_Code"),
+        _optional_int(row.get("Host_ChapterID")),
+        row.get("Host_ChapterCode"),
+        row.get("Host_ChapterName"),
+        row.get("Reward_Event_Key"),
+        row.get("Reward_Event_Name"),
+        1 if _coerce_bool(row.get("Reward_Is_State_Championship")) else 0,
         _coerce_int(row.get("Rounds")),
         _coerce_int(row.get("Total_Players")),
         row.get("Wallist"),
@@ -704,6 +746,34 @@ def _ordered_unique(values: Iterable[Any]) -> list[str]:
         seen.add(text)
         result.append(text)
     return result
+
+
+def _has_host_chapter(row: dict[str, Any]) -> bool:
+    return _optional_int(row.get("Host_ChapterID")) is not None and bool(str(row.get("Host_ChapterCode") or "").strip())
+
+
+def _ensure_reward_event_defaults(row: dict[str, Any]) -> None:
+    if not str(row.get("Reward_Event_Key") or "").strip():
+        row["Reward_Event_Key"] = str(row.get("Tournament_Code") or "").strip() or None
+    if not str(row.get("Reward_Event_Name") or "").strip():
+        row["Reward_Event_Name"] = str(row.get("Tournament_Descr") or "").strip() or None
+    row["Reward_Is_State_Championship"] = 1 if _coerce_bool(row.get("Reward_Is_State_Championship")) else 0
+
+
+def _coerce_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "n", "off", ""}:
+        return False
+    try:
+        return bool(_optional_int(value))
+    except ValueError:
+        return False
 
 
 def _id_range(values: Iterable[int]) -> dict[str, int | None]:

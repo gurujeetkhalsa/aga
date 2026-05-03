@@ -114,6 +114,20 @@ FROM [membership].[members]
 WHERE [AGAID] IN ({placeholders})
 """
 
+HOST_CHAPTER_OPTIONS_SQL = """
+SELECT
+    [ChapterID],
+    [ChapterCode],
+    [ChapterName],
+    [City],
+    [State]
+FROM [membership].[chapters]
+WHERE [ChapterID] IS NOT NULL
+  AND NULLIF(LTRIM(RTRIM([ChapterCode])), N'') IS NOT NULL
+  AND NULLIF(LTRIM(RTRIM([ChapterName])), N'') IS NOT NULL
+ORDER BY [ChapterCode], [ChapterName], [ChapterID]
+"""
+
 CURRENT_RATINGS_BEFORE_DATE_SQL_TEMPLATE = """
 WITH ranked AS (
     SELECT
@@ -285,6 +299,12 @@ def build_staging_payload(
         source_name = str(report["source_name"])
         raw_text = str(report.get("raw_text") or "")
         tournament_row = dict(report["tournament_row"])
+        tournament_row.setdefault("Host_ChapterID", None)
+        tournament_row.setdefault("Host_ChapterCode", None)
+        tournament_row.setdefault("Host_ChapterName", None)
+        tournament_row.setdefault("Reward_Event_Key", None)
+        tournament_row.setdefault("Reward_Event_Name", None)
+        tournament_row.setdefault("Reward_Is_State_Championship", 0)
         game_rows = [dict(row) for row in report["game_rows"]]
         player_rows = [dict(row) for row in report.get("players") or []]
         parser_warnings = [dict(warning) for warning in report.get("warnings") or []]
@@ -358,6 +378,8 @@ def build_staging_payload(
                     }
                 )
 
+        _ensure_reward_event_defaults(tournament_row)
+
         if adapter is not None:
             try:
                 membership_records = load_membership_records(adapter, _players_from_games(game_rows))
@@ -396,6 +418,8 @@ def build_staging_payload(
                         "message": f"Rating-system rank lookup was unavailable: {exc}",
                     }
                 )
+        if not report.get("parse_error") and not _has_host_chapter(tournament_row):
+            parser_warnings.append(_host_chapter_required_warning())
         tournament_errors = []
         if report.get("parse_error"):
             tournament_errors.append(f"Report parse failed: {report['parse_error']}")
@@ -1129,6 +1153,12 @@ def apply_tournament_review_decision(
     use_duplicate_code: bool = False,
     mark_ready: bool = False,
     operator_note: str | None = None,
+    host_chapter_id: int | str | None = None,
+    host_chapter_code: str | None = None,
+    host_chapter_name: str | None = None,
+    reward_event_key: str | None = None,
+    reward_event_name: str | None = None,
+    reward_is_state_championship: Any = None,
 ) -> dict[str, Any]:
     tournament = _find_staged_tournament(payload, source_report_ordinal)
     if tournament is None:
@@ -1137,7 +1167,23 @@ def apply_tournament_review_decision(
         raise ValueError("Cannot mark a tournament ready while validation errors are present.")
 
     tournament_row = tournament["tournament_row"]
+    if reward_event_key is not None or reward_event_name is not None or reward_is_state_championship is not None:
+        set_tournament_reward_event(
+            tournament,
+            reward_event_key=reward_event_key,
+            reward_event_name=reward_event_name,
+            reward_is_state_championship=reward_is_state_championship,
+        )
+    if host_chapter_id is not None:
+        set_tournament_host_chapter(
+            tournament,
+            host_chapter_id,
+            host_chapter_code=host_chapter_code,
+            host_chapter_name=host_chapter_name,
+        )
     old_code = tournament_row.get("Tournament_Code")
+    old_reward_key = _clean_text(tournament_row.get("Reward_Event_Key"))
+    reward_key_tracks_code = not old_reward_key or old_reward_key == _clean_text(old_code)
     duplicate = tournament.get("duplicate_candidate") or {}
     if use_duplicate_code:
         duplicate_code = duplicate.get("tournament_code")
@@ -1147,6 +1193,8 @@ def apply_tournament_review_decision(
             tournament["original_tournament_code"] = tournament.get("original_tournament_code") or old_code
             tournament_row["Tournament_Code"] = duplicate_code
             tournament["code_source"] = "reused"
+            if reward_key_tracks_code:
+                tournament_row["Reward_Event_Key"] = duplicate_code
             tournament.setdefault("parser_warnings", []).append(
                 {
                     "type": "operator_reused_duplicate_tournament_code",
@@ -1159,6 +1207,8 @@ def apply_tournament_review_decision(
                 game["game_row"]["Tournament_Code"] = duplicate_code
 
     if mark_ready:
+        if not _has_host_chapter(tournament_row):
+            raise ValueError("Host chapter must be selected before a tournament can be marked ready_for_rating.")
         tournament["status"] = "ready_for_rating"
         if use_duplicate_code and duplicate.get("tournament_code"):
             tournament["review_reason"] = (
@@ -1189,6 +1239,63 @@ def apply_tournament_review_decision(
         else:
             tournament["review_reason"] = f"Operator note: {note}"
     return refresh_payload_summary(payload)
+
+
+def set_tournament_reward_event(
+    tournament: dict[str, Any],
+    *,
+    reward_event_key: str | None = None,
+    reward_event_name: str | None = None,
+    reward_is_state_championship: Any = None,
+) -> None:
+    row = tournament["tournament_row"]
+    key = _clean_text(reward_event_key) if reward_event_key is not None else _clean_text(row.get("Reward_Event_Key"))
+    name = _clean_text(reward_event_name) if reward_event_name is not None else _clean_text(row.get("Reward_Event_Name"))
+    if key is None:
+        key = _clean_text(row.get("Tournament_Code"))
+    if key is None:
+        raise ValueError("Reward_Event_Key is required.")
+    if len(key) > 128:
+        raise ValueError("Reward_Event_Key must be 128 characters or fewer.")
+    if name is not None and len(name) > 255:
+        raise ValueError("Reward_Event_Name must be 255 characters or fewer.")
+    row["Reward_Event_Key"] = key
+    row["Reward_Event_Name"] = name or _clean_text(row.get("Tournament_Descr"))
+    if reward_is_state_championship is not None:
+        row["Reward_Is_State_Championship"] = 1 if _coerce_bool(reward_is_state_championship) else 0
+    if tournament.get("status") != "validation_failed":
+        tournament["status"] = "needs_review"
+        tournament["review_reason"] = f"Reward event group set: {key}. Mark ready after review."
+
+
+def set_tournament_host_chapter(
+    tournament: dict[str, Any],
+    host_chapter_id: int | str,
+    *,
+    host_chapter_code: str | None = None,
+    host_chapter_name: str | None = None,
+) -> None:
+    row = tournament["tournament_row"]
+    parsed_id = _coerce_int(host_chapter_id)
+    if parsed_id is None:
+        raise ValueError("Host_ChapterID is required.")
+    code = _clean_text(host_chapter_code)
+    if not code:
+        raise ValueError("Host_ChapterCode is required when Host_ChapterID is set.")
+    row["Host_ChapterID"] = parsed_id
+    row["Host_ChapterCode"] = code
+    row["Host_ChapterName"] = _clean_text(host_chapter_name)
+    tournament["parser_warnings"] = [
+        warning
+        for warning in tournament.get("parser_warnings") or []
+        if warning.get("type") != "host_chapter_required"
+    ]
+    label = code
+    if row.get("Host_ChapterName"):
+        label = f"{code} - {row['Host_ChapterName']}"
+    if tournament.get("status") != "validation_failed":
+        tournament["status"] = "needs_review"
+        tournament["review_reason"] = f"Host chapter selected: {label}. Mark ready after review."
 
 
 def _find_staged_tournament(payload: dict[str, Any], source_report_ordinal: int) -> dict[str, Any] | None:
@@ -1279,6 +1386,12 @@ INSERT INTO [ratings].[bayrate_staged_tournaments]
     [City],
     [State_Code],
     [Country_Code],
+    [Host_ChapterID],
+    [Host_ChapterCode],
+    [Host_ChapterName],
+    [Reward_Event_Key],
+    [Reward_Event_Name],
+    [Reward_Is_State_Championship],
     [Rounds],
     [Total_Players],
     [Wallist],
@@ -1291,7 +1404,7 @@ INSERT INTO [ratings].[bayrate_staged_tournaments]
     [Review_Reason],
     [MetadataJson]
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """,
                 (
                     entry["run_id"],
@@ -1307,6 +1420,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     row.get("City"),
                     row.get("State_Code"),
                     row.get("Country_Code"),
+                    _coerce_int(row.get("Host_ChapterID")),
+                    row.get("Host_ChapterCode"),
+                    row.get("Host_ChapterName"),
+                    row.get("Reward_Event_Key"),
+                    row.get("Reward_Event_Name"),
+                    1 if _coerce_bool(row.get("Reward_Is_State_Championship")) else 0,
                     row.get("Rounds"),
                     row.get("Total_Players"),
                     row.get("Wallist"),
@@ -1425,6 +1544,12 @@ SELECT
     [City],
     [State_Code],
     [Country_Code],
+    [Host_ChapterID],
+    [Host_ChapterCode],
+    [Host_ChapterName],
+    [Reward_Event_Key],
+    [Reward_Event_Name],
+    [Reward_Is_State_Championship],
     [Rounds],
     [Total_Players],
     [Wallist],
@@ -1508,6 +1633,12 @@ SET
     [Tournament_Code] = ?,
     [Original_Tournament_Code] = ?,
     [Tournament_Code_Source] = ?,
+    [Host_ChapterID] = ?,
+    [Host_ChapterCode] = ?,
+    [Host_ChapterName] = ?,
+    [Reward_Event_Key] = ?,
+    [Reward_Event_Name] = ?,
+    [Reward_Is_State_Championship] = ?,
     [Validation_Status] = ?,
     [Validation_Errors] = ?,
     [Parser_Warnings] = ?,
@@ -1520,6 +1651,12 @@ WHERE [RunID] = ?
                     row.get("Tournament_Code"),
                     entry.get("original_tournament_code"),
                     entry.get("code_source"),
+                    _coerce_int(row.get("Host_ChapterID")),
+                    row.get("Host_ChapterCode"),
+                    row.get("Host_ChapterName"),
+                    row.get("Reward_Event_Key"),
+                    row.get("Reward_Event_Name"),
+                    1 if _coerce_bool(row.get("Reward_Is_State_Championship")) else 0,
                     entry.get("status"),
                     _json_dumps(entry.get("validation_errors") or []),
                     _json_dumps(entry.get("parser_warnings") or []),
@@ -1602,6 +1739,34 @@ WHERE [RunID] = ?
 
 def update_staged_run_review(adapter: StageSqlAdapter, payload: dict[str, Any]) -> None:
     adapter.execute_statements(build_review_update_statements(refresh_payload_summary(payload)))
+
+
+def load_host_chapter_options(adapter: StageSqlAdapter) -> list[dict[str, Any]]:
+    rows = adapter.query_rows(HOST_CHAPTER_OPTIONS_SQL)
+    options: list[dict[str, Any]] = []
+    seen_ids: set[int] = set()
+    for row in rows:
+        chapter_id = _coerce_int(row.get("ChapterID"))
+        code = _clean_text(row.get("ChapterCode"))
+        name = _clean_text(row.get("ChapterName"))
+        if chapter_id is None or not code or not name or chapter_id in seen_ids:
+            continue
+        seen_ids.add(chapter_id)
+        label = f"{code} - {name}"
+        state = _clean_text(row.get("State"))
+        if state:
+            label = f"{label} ({state})"
+        options.append(
+            {
+                "chapter_id": chapter_id,
+                "chapter_code": code,
+                "chapter_name": name,
+                "city": _clean_text(row.get("City")),
+                "state": state,
+                "label": label,
+            }
+        )
+    return options
 
 
 def explain_staged_run_review(adapter: StageSqlAdapter, payload: dict[str, Any]) -> dict[str, Any]:
@@ -1771,6 +1936,12 @@ def _payload_tournament_from_sql_row(row: dict[str, Any]) -> dict[str, Any]:
             "City": row.get("City"),
             "State_Code": row.get("State_Code"),
             "Country_Code": row.get("Country_Code"),
+            "Host_ChapterID": row.get("Host_ChapterID"),
+            "Host_ChapterCode": row.get("Host_ChapterCode"),
+            "Host_ChapterName": row.get("Host_ChapterName"),
+            "Reward_Event_Key": row.get("Reward_Event_Key"),
+            "Reward_Event_Name": row.get("Reward_Event_Name"),
+            "Reward_Is_State_Championship": 1 if _coerce_bool(row.get("Reward_Is_State_Championship")) else 0,
             "Rounds": row.get("Rounds"),
             "Total_Players": row.get("Total_Players"),
             "Wallist": row.get("Wallist"),
@@ -1854,6 +2025,13 @@ def printable_payload(payload: dict[str, Any], *, include_games: bool = False) -
                 "code_source": entry["code_source"],
                 "description": entry["tournament_row"].get("Tournament_Descr"),
                 "tournament_date": entry["tournament_row"].get("Tournament_Date"),
+                "host_chapter_id": entry["tournament_row"].get("Host_ChapterID"),
+                "host_chapter_code": entry["tournament_row"].get("Host_ChapterCode"),
+                "host_chapter_name": entry["tournament_row"].get("Host_ChapterName"),
+                "host_chapter_label": _host_chapter_label(entry["tournament_row"]),
+                "reward_event_key": entry["tournament_row"].get("Reward_Event_Key"),
+                "reward_event_name": entry["tournament_row"].get("Reward_Event_Name"),
+                "reward_is_state_championship": bool(_coerce_bool(entry["tournament_row"].get("Reward_Is_State_Championship"))),
                 "status": entry["status"],
                 "validation_errors": entry["validation_errors"],
                 "warnings": entry["parser_warnings"],
@@ -1912,6 +2090,19 @@ def _coerce_int(value: Any) -> int | None:
         return None
 
 
+def _coerce_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "n", "off", ""}:
+        return False
+    return bool(_coerce_int(value))
+
+
 def _coerce_run_id(value: Any) -> int:
     if value is None:
         raise ValueError("BayRate RunID is required.")
@@ -1944,6 +2135,34 @@ def _clean_text(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _has_host_chapter(row: dict[str, Any]) -> bool:
+    return _coerce_int(row.get("Host_ChapterID")) is not None and bool(_clean_text(row.get("Host_ChapterCode")))
+
+
+def _ensure_reward_event_defaults(row: dict[str, Any]) -> None:
+    if not _clean_text(row.get("Reward_Event_Key")):
+        row["Reward_Event_Key"] = _clean_text(row.get("Tournament_Code"))
+    if not _clean_text(row.get("Reward_Event_Name")):
+        row["Reward_Event_Name"] = _clean_text(row.get("Tournament_Descr"))
+
+
+def _host_chapter_label(row: dict[str, Any]) -> str | None:
+    code = _clean_text(row.get("Host_ChapterCode"))
+    name = _clean_text(row.get("Host_ChapterName"))
+    if code and name:
+        return f"{code} - {name}"
+    return code or name
+
+
+def _host_chapter_required_warning() -> dict[str, Any]:
+    return {
+        "type": "host_chapter_required",
+        "severity": "review",
+        "review_required": True,
+        "message": "Host chapter must be selected before this tournament can be marked ready for rating.",
+    }
 
 
 def _json_default(value: Any) -> Any:

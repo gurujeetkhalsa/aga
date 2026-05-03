@@ -39,11 +39,25 @@ app = func.FunctionApp()
 GMAIL_API_BASE_URL = "https://gmail.googleapis.com/gmail/v1"
 GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token"
 DEFAULT_MAILBOX_POLL_SCHEDULE = "0 */5 * * * *"
+DEFAULT_REWARDS_SNAPSHOT_SCHEDULE = os.environ.get("REWARDS_SNAPSHOT_SCHEDULE", "0 10 5 * * *")
+DEFAULT_REWARDS_MEMBERSHIP_AWARDS_SCHEDULE = os.environ.get("REWARDS_MEMBERSHIP_AWARDS_SCHEDULE", "0 20 5 * * *")
+DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE = os.environ.get("REWARDS_RATED_GAME_AWARDS_SCHEDULE", "0 30 5 * * *")
+DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE = os.environ.get("REWARDS_TOURNAMENT_AWARDS_SCHEDULE", "0 35 5 * * *")
+DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHEDULE", "0 40 5 * * *")
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
+CHAPTER_MESSAGE_TYPE = "chapter_csv"
 NEW_MEMBER_MESSAGE_TYPE = "new_member_signup"
 RENEWAL_MESSAGE_TYPE = "member_renewal"
 JOURNAL_MESSAGE_TYPE = "american_go_e_journal"
+REWARDS_MEMBERSHIP_EVENT_PROC = "rewards.sp_record_membership_event"
+REWARDS_DAILY_SNAPSHOT_PROC = "rewards.sp_create_daily_snapshot"
+REWARDS_MEMBERSHIP_AWARDS_PROC = "rewards.sp_process_membership_awards"
+REWARDS_RATED_GAME_AWARDS_PROC = "rewards.sp_process_rated_game_awards"
+REWARDS_TOURNAMENT_AWARDS_PROC = "rewards.sp_process_tournament_awards"
+REWARDS_EXPIRATIONS_PROC = "rewards.sp_process_point_expirations"
+REWARDS_NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
+REWARDS_RENEWAL_EVENT_TYPE = "renewal"
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
 JOURNAL_EXCLUDED_MATCH_NAMES = {"chris garlock"}
 DEFAULT_JOURNAL_NAME_PREFIXES = (
@@ -207,6 +221,34 @@ STRING_COLUMNS = set(STAGING_COLUMNS) - INT_COLUMNS - DATE_COLUMNS - DATETIME_CO
 EXPECTED_HEADER_LOOKUP = {re.sub(r"[^a-z0-9]+", "", column.lower()): column for column in STAGING_COLUMNS}
 CATEGORY_COLUMNS = ["AGAID", "Category"]
 CATEGORY_HEADER_LOOKUP = {"agaid": "AGAID", "category": "Category"}
+CHAPTER_COLUMNS = ["ChapterID", "ChapterCode", "ChapterName", "City", "State", "ChapterRepID", "CreatedDate", "Status"]
+CHAPTER_INT_COLUMNS = {"ChapterID", "ChapterRepID"}
+CHAPTER_DATETIME_COLUMNS = {"CreatedDate"}
+CHAPTER_HEADER_ALIASES = {
+    "chapterid": "ChapterID",
+    "clubexpressid": "ChapterID",
+    "id": "ChapterID",
+    "chaptercode": "ChapterCode",
+    "chaptershortname": "ChapterCode",
+    "shortname": "ChapterCode",
+    "code": "ChapterCode",
+    "chaptername": "ChapterName",
+    "name": "ChapterName",
+    "city": "City",
+    "state": "State",
+    "chapterrepid": "ChapterRepID",
+    "chapterrepagaid": "ChapterRepID",
+    "chapterrepresentativeid": "ChapterRepID",
+    "chapterrepresentativeagaid": "ChapterRepID",
+    "primarycontactid": "ChapterRepID",
+    "primarycontactmemberid": "ChapterRepID",
+    "contactid": "ChapterRepID",
+    "contactmemberid": "ChapterRepID",
+    "presidentid": "ChapterRepID",
+    "createddate": "CreatedDate",
+    "datecreated": "CreatedDate",
+    "status": "Status",
+}
 JOURNAL_NLP_MODEL = "en_core_web_sm"
 JOURNAL_NLP_EXCLUDE = ["tagger", "parser", "lemmatizer", "attribute_ruler"]
 _journal_name_nlp = None
@@ -356,6 +398,188 @@ def poll_clubexpress_mailbox(timer: func.TimerRequest) -> None:
         logging.exception("ClubExpress Gmail poll failed")
 
 
+@app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("REWARDS_SNAPSHOT_ENABLED", "true")):
+        logging.info("Chapter Rewards daily snapshot is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    snapshot_date = _rewards_snapshot_date()
+    try:
+        rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_DAILY_SNAPSHOT_PROC,
+            _rewards_snapshot_params(snapshot_date),
+        )
+        row = rows[0] if rows else {}
+        logging.info(
+            "Chapter Rewards snapshot complete. date=%s run_id=%s already_existed=%s members=%s chapters=%s current_chapters=%s multipliers=1x:%s 2x:%s 3x:%s",
+            snapshot_date.isoformat(),
+            row.get("RunID"),
+            row.get("AlreadyExisted"),
+            row.get("MemberSnapshotCount"),
+            row.get("ChapterSnapshotCount"),
+            row.get("CurrentChapterCount"),
+            row.get("Multiplier1ChapterCount"),
+            row.get("Multiplier2ChapterCount"),
+            row.get("Multiplier3ChapterCount"),
+        )
+    except Exception:
+        logging.exception("Chapter Rewards daily snapshot failed for %s", snapshot_date.isoformat())
+
+
+@app.timer_trigger(schedule=DEFAULT_REWARDS_MEMBERSHIP_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_rewards_membership_awards(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("REWARDS_MEMBERSHIP_AWARDS_ENABLED", "true")):
+        logging.info("Chapter Rewards membership awards are disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    as_of_date = _rewards_snapshot_date()
+    try:
+        rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_MEMBERSHIP_AWARDS_PROC,
+            _rewards_membership_awards_params(as_of_date),
+        )
+        row = rows[0] if rows else {}
+        logging.info(
+            "Chapter Rewards membership awards complete. as_of=%s run_id=%s pending=%s eligible=%s already_awarded=%s new_awards=%s points=%s expiring_no_chapter=%s waiting_for_chapter=%s missing_snapshot_coverage=%s ineligible=%s",
+            as_of_date.isoformat(),
+            row.get("RunID"),
+            row.get("PendingEventCount"),
+            row.get("EligibleEventCount"),
+            row.get("AlreadyAwardedCount"),
+            row.get("NewAwardCount"),
+            row.get("PointTotal"),
+            row.get("ExpiringNoChapterCount"),
+            row.get("WaitingForChapterCount"),
+            row.get("MissingSnapshotCoverageCount"),
+            row.get("IneligibleCount"),
+        )
+    except Exception:
+        logging.exception("Chapter Rewards membership awards failed for %s", as_of_date.isoformat())
+
+
+@app.timer_trigger(schedule=DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_rewards_rated_game_awards(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("REWARDS_RATED_GAME_AWARDS_ENABLED", "true")):
+        logging.info("Chapter Rewards rated-game awards are disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    game_date = _rewards_snapshot_date()
+    try:
+        rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_RATED_GAME_AWARDS_PROC,
+            _rewards_rated_game_awards_params(game_date),
+        )
+        row = rows[0] if rows else {}
+        logging.info(
+            "Chapter Rewards rated-game awards complete. game_date=%s run_id=%s participants=%s eligible=%s already_awarded=%s new_awards=%s points=%s missing_member_snapshot=%s missing_chapter_snapshot=%s inactive_player=%s no_chapter=%s chapter_not_current=%s",
+            game_date.isoformat(),
+            row.get("RunID"),
+            row.get("ParticipantCount"),
+            row.get("EligibleAwardCount"),
+            row.get("AlreadyAwardedCount"),
+            row.get("NewAwardCount"),
+            row.get("PointTotal"),
+            row.get("MissingMemberSnapshotCount"),
+            row.get("MissingChapterSnapshotCount"),
+            row.get("InactivePlayerCount"),
+            row.get("NoChapterCount"),
+            row.get("ChapterNotCurrentCount"),
+        )
+    except Exception:
+        logging.exception("Chapter Rewards rated-game awards failed for %s", game_date.isoformat())
+
+
+@app.timer_trigger(schedule=DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_rewards_tournament_awards(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("REWARDS_TOURNAMENT_AWARDS_ENABLED", "true")):
+        logging.info("Chapter Rewards tournament awards are disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    tournament_date_to = _rewards_snapshot_date()
+    try:
+        rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_TOURNAMENT_AWARDS_PROC,
+            _rewards_tournament_awards_params(tournament_date_to),
+        )
+        row = rows[0] if rows else {}
+        logging.info(
+            "Chapter Rewards tournament awards complete. date_to=%s run_id=%s groups=%s sections=%s rated_games=%s host_new_awards=%s host_points=%s state_new_awards=%s state_points=%s new_awards=%s points=%s missing_host=%s missing_reward_event_key=%s",
+            tournament_date_to.isoformat(),
+            row.get("RunID"),
+            row.get("EventGroupCount"),
+            row.get("TournamentSectionCount"),
+            row.get("RatedGameCount"),
+            row.get("HostNewAwardCount"),
+            row.get("HostPointTotal"),
+            row.get("StateNewAwardCount"),
+            row.get("StateChampionshipPointTotal"),
+            row.get("NewAwardCount"),
+            row.get("PointTotal"),
+            row.get("MissingHostChapterCount"),
+            row.get("MissingRewardEventKeyCount"),
+        )
+    except Exception:
+        logging.exception("Chapter Rewards tournament awards failed through %s", tournament_date_to.isoformat())
+
+
+@app.timer_trigger(schedule=DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_rewards_point_expirations(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("REWARDS_EXPIRATIONS_ENABLED", "true")):
+        logging.info("Chapter Rewards point expirations are disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    as_of_date = _rewards_snapshot_date()
+    try:
+        rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_EXPIRATIONS_PROC,
+            _rewards_point_expirations_params(as_of_date),
+        )
+        row = rows[0] if rows else {}
+        logging.info(
+            "Chapter Rewards point expirations complete. as_of=%s run_id=%s expiring_lots=%s already_expired=%s new_expirations=%s points=%s chapters=%s",
+            as_of_date.isoformat(),
+            row.get("RunID"),
+            row.get("ExpiringLotCount"),
+            row.get("AlreadyExpiredCount"),
+            row.get("NewExpirationCount"),
+            row.get("ExpiredPointTotal"),
+            row.get("ChapterCount"),
+        )
+    except Exception:
+        logging.exception("Chapter Rewards point expirations failed for %s", as_of_date.isoformat())
+
+
 def _process_mailbox_message(access_token: str, message: dict) -> None:
     sender = _get_header_value(message, "From")
     subject = _get_header_value(message, "Subject")
@@ -424,6 +648,56 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             )
             raise
         logging.info("Nightly MemChap message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
+    elif message_type == CHAPTER_MESSAGE_TYPE:
+        message_id = _message_identifier(message)
+        rows_staged = None
+        try:
+            _execute_stored_procedure(
+                conn_str,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "received",
+                    "ErrorMessage": None,
+                },
+            )
+            rows_staged = _handle_chapter_email(conn_str, attachments)
+            _execute_stored_procedure(
+                conn_str,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "processed",
+                    "ErrorMessage": None,
+                },
+            )
+        except Exception as exc:
+            _execute_stored_procedure(
+                conn_str,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "error",
+                    "ErrorMessage": str(exc),
+                },
+            )
+            raise
+        logging.info("Chapter CSV message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
     elif message_type == NIGHTLY_CATEGORY_MESSAGE_TYPE:
         message_id = _message_identifier(message)
         rows_staged = None
@@ -476,44 +750,74 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
         logging.info("Nightly category message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
     elif message_type == NEW_MEMBER_MESSAGE_TYPE:
         parsed = _parse_new_member_email(_message_body_to_text(message))
-        _execute_stored_procedure(
+        membership_params = {
+            "MessageId": _message_identifier(message),
+            "ReceivedAt": received_at,
+            "AGAID": parsed["AGAID"],
+            "MemberType": parsed["MemberType"],
+            "FirstName": parsed["FirstName"],
+            "LastName": parsed["LastName"],
+            "EmailAddress": parsed.get("EmailAddress"),
+            "JoinDate": received_date,
+            "ExpirationDate": received_date + timedelta(days=365),
+            "Sender": sender or None,
+            "Subject": subject or None,
+            "BlobPath": archive_path,
+        }
+        _execute_stored_procedures(
             conn_str,
-            "membership.sp_process_new_member_email",
-            {
-                "MessageId": _message_identifier(message),
-                "ReceivedAt": received_at,
-                "AGAID": parsed["AGAID"],
-                "MemberType": parsed["MemberType"],
-                "FirstName": parsed["FirstName"],
-                "LastName": parsed["LastName"],
-                "EmailAddress": parsed.get("EmailAddress"),
-                "JoinDate": received_date,
-                "ExpirationDate": received_date + timedelta(days=365),
-                "Sender": sender or None,
-                "Subject": subject or None,
-                "BlobPath": archive_path,
-            },
+            [
+                ("membership.sp_process_new_member_email", membership_params),
+                (
+                    REWARDS_MEMBERSHIP_EVENT_PROC,
+                    _membership_reward_event_params(
+                        message,
+                        received_at,
+                        REWARDS_NEW_MEMBERSHIP_EVENT_TYPE,
+                        received_date,
+                        parsed,
+                        sender=sender,
+                        subject=subject,
+                        blob_path=archive_path,
+                    ),
+                ),
+            ],
         )
         logging.info("New member email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == RENEWAL_MESSAGE_TYPE:
         parsed = _parse_renewal_email(_message_body_to_text(message))
-        _execute_stored_procedure(
+        membership_params = {
+            "MessageId": _message_identifier(message),
+            "ReceivedAt": received_at,
+            "AGAID": parsed["AGAID"],
+            "ExpirationDate": received_date + timedelta(days=365),
+            "PhoneNumber": parsed.get("PhoneNumber"),
+            "EmailAddress": parsed.get("EmailAddress"),
+            "LoginName": parsed.get("LoginName"),
+            "MemberType": parsed.get("MemberType"),
+            "IsChapterMember": 1 if parsed["IsChapterMember"] else 0,
+            "Sender": sender or None,
+            "Subject": subject or None,
+            "BlobPath": archive_path,
+        }
+        _execute_stored_procedures(
             conn_str,
-            "membership.sp_process_membership_renewal",
-            {
-                "MessageId": _message_identifier(message),
-                "ReceivedAt": received_at,
-                "AGAID": parsed["AGAID"],
-                "ExpirationDate": received_date + timedelta(days=365),
-                "PhoneNumber": parsed.get("PhoneNumber"),
-                "EmailAddress": parsed.get("EmailAddress"),
-                "LoginName": parsed.get("LoginName"),
-                "MemberType": parsed.get("MemberType"),
-                "IsChapterMember": 1 if parsed["IsChapterMember"] else 0,
-                "Sender": sender or None,
-                "Subject": subject or None,
-                "BlobPath": archive_path,
-            },
+            [
+                ("membership.sp_process_membership_renewal", membership_params),
+                (
+                    REWARDS_MEMBERSHIP_EVENT_PROC,
+                    _membership_reward_event_params(
+                        message,
+                        received_at,
+                        REWARDS_RENEWAL_EVENT_TYPE,
+                        received_date,
+                        parsed,
+                        sender=sender,
+                        subject=subject,
+                        blob_path=archive_path,
+                    ),
+                ),
+            ],
         )
         logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == JOURNAL_MESSAGE_TYPE:
@@ -732,6 +1036,18 @@ def _handle_memchap_email(conn_str: str, attachments: list[dict]) -> int:
     raise EmailProcessingError("No MemChap attachment was found on the nightly ClubExpress email.")
 
 
+def _handle_chapter_email(conn_str: str, attachments: list[dict]) -> int:
+    for attachment in attachments:
+        content_bytes = attachment.get("contentBytes")
+        if not content_bytes:
+            continue
+        if _detect_attachment_report_type(attachment.get("name", ""), content_bytes) != CHAPTER_MESSAGE_TYPE:
+            continue
+        return _import_chapter_bytes(conn_str, content_bytes)
+
+    raise EmailProcessingError("No Chapter attachment was found on the ClubExpress email.")
+
+
 def _handle_member_categories_email(conn_str: str, attachments: list[dict]) -> int:
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
@@ -750,6 +1066,12 @@ def _import_memchap_bytes(conn_str: str, csv_bytes: bytes) -> int:
     return len(rows)
 
 
+def _import_chapter_bytes(conn_str: str, csv_bytes: bytes) -> int:
+    rows = _parse_chapter_rows(csv_bytes)
+    _stage_and_import_chapters(conn_str, rows)
+    return len(rows)
+
+
 def _import_member_categories_bytes(conn_str: str, csv_bytes: bytes) -> int:
     rows = _parse_member_category_rows(csv_bytes)
     _stage_and_import_member_categories(conn_str, rows)
@@ -759,6 +1081,11 @@ def _import_member_categories_bytes(conn_str: str, csv_bytes: bytes) -> int:
 def _is_memchap_attachment_name(name: str) -> bool:
     normalized_name = (name or "").strip().lower()
     return normalized_name.endswith('.csv') and 'memchap' in normalized_name
+
+
+def _is_chapter_attachment_name(name: str) -> bool:
+    normalized_name = (name or "").strip().lower()
+    return normalized_name.endswith(".csv") and "chapterx" in normalized_name
 
 
 def _classify_message(sender: str, subject: str, attachments: list[dict]) -> str:
@@ -1687,6 +2014,8 @@ def _detect_message_report_type(attachments: list[dict]) -> Optional[str]:
 def _detect_attachment_report_type(name: str, content_bytes: bytes) -> Optional[str]:
     if _is_memchap_attachment_name(name):
         return NIGHTLY_MESSAGE_TYPE
+    if _is_chapter_attachment_name(name):
+        return CHAPTER_MESSAGE_TYPE
 
     canonical_headers = _read_csv_header_canonical(content_bytes)
     if not canonical_headers:
@@ -1695,6 +2024,8 @@ def _detect_attachment_report_type(name: str, content_bytes: bytes) -> Optional[
         return NIGHTLY_MESSAGE_TYPE
     if _is_member_category_header(canonical_headers):
         return NIGHTLY_CATEGORY_MESSAGE_TYPE
+    if _is_chapter_header(canonical_headers):
+        return CHAPTER_MESSAGE_TYPE
     return None
 
 
@@ -1705,7 +2036,7 @@ def _read_csv_header_canonical(csv_bytes: bytes) -> list[str]:
 
     for row in rows[:2]:
         canonical = [_canonicalize_header(value) for value in row if value is not None]
-        if _is_memchap_header(canonical) or _is_member_category_header(canonical):
+        if _is_memchap_header(canonical) or _is_member_category_header(canonical) or _is_chapter_header(canonical):
             return canonical
 
     return [_canonicalize_header(value) for value in rows[0] if value is not None]
@@ -1718,6 +2049,11 @@ def _is_memchap_header(headers: list[str]) -> bool:
 
 def _is_member_category_header(headers: list[str]) -> bool:
     return {_canonicalize_header("AGAID"), _canonicalize_header("Category")}.issubset(set(headers))
+
+
+def _is_chapter_header(headers: list[str]) -> bool:
+    mapped = {CHAPTER_HEADER_ALIASES.get(header, "") for header in headers}
+    return {"ChapterID", "ChapterCode", "ChapterName"}.issubset(mapped)
 
 
 def _message_body_to_text(message: dict) -> str:
@@ -1862,14 +2198,121 @@ def _json_safe_value(value: object) -> object:
     if isinstance(value, date):
         return value.isoformat()
     return value
-def _execute_stored_procedure(conn_str: str, proc_name: str, params: dict) -> None:
+
+
+def _membership_reward_event_params(
+    message: dict,
+    received_at: datetime,
+    event_type: str,
+    event_date: date,
+    parsed: dict,
+    *,
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> dict:
+    source_payload = {
+        "message_id": _message_identifier(message),
+        "sender": sender,
+        "subject": subject,
+        "blob_path": blob_path,
+        "parsed": {key: _json_safe_value(value) for key, value in parsed.items()},
+    }
+    return {
+        "MessageId": _message_identifier(message),
+        "ReceivedAt": received_at,
+        "AGAID": parsed["AGAID"],
+        "EventType": event_type,
+        "EventDate": event_date,
+        "MemberType": parsed.get("MemberType"),
+        "SourcePayloadJson": json.dumps(source_payload, sort_keys=True),
+    }
+
+
+def _rewards_snapshot_date(today: Optional[date] = None) -> date:
+    return today or date.today()
+
+
+def _rewards_snapshot_params(snapshot_date: date) -> dict:
+    return {
+        "SnapshotDate": snapshot_date,
+        "RunType": "daily",
+        "ReplaceExisting": 0,
+    }
+
+
+def _rewards_membership_awards_params(as_of_date: date) -> dict:
+    return {
+        "AsOfDate": as_of_date,
+        "RunType": "daily",
+        "DryRun": 0,
+    }
+
+
+def _rewards_rated_game_awards_params(game_date: date) -> dict:
+    return {
+        "GameDateFrom": game_date,
+        "GameDateTo": game_date,
+        "RunType": "daily",
+        "DryRun": 0,
+    }
+
+
+def _rewards_tournament_awards_params(tournament_date_to: date) -> dict:
+    return {
+        "TournamentDateFrom": None,
+        "TournamentDateTo": tournament_date_to,
+        "RunType": "daily",
+        "DryRun": 0,
+    }
+
+
+def _rewards_point_expirations_params(as_of_date: date) -> dict:
+    return {
+        "AsOfDate": as_of_date,
+        "RunType": "daily",
+        "DryRun": 0,
+    }
+
+
+def _stored_procedure_call(proc_name: str, params: dict) -> tuple[str, list]:
     ordered_items = [(key, value) for key, value in params.items()]
     sql = f"EXEC {proc_name} " + ", ".join(f"@{name} = ?" for name, _ in ordered_items)
+    return sql, [value for _, value in ordered_items]
+
+
+def _execute_stored_procedure(conn_str: str, proc_name: str, params: dict) -> None:
+    _execute_stored_procedures(conn_str, [(proc_name, params)])
+
+
+def _execute_stored_procedure_rows(conn_str: str, proc_name: str, params: dict) -> list[dict]:
+    sql, values = _stored_procedure_call(proc_name, params)
 
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
-        cursor.execute(sql, [value for _, value in ordered_items])
+        cursor.execute(sql, values)
+        rows = []
+        if cursor.description:
+            columns = [column[0] for column in cursor.description]
+            rows = [dict(zip(columns, record)) for record in cursor.fetchall()]
+        conn.commit()
+        cursor.close()
+        return rows
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, dict]]) -> None:
+    conn = pyodbc.connect(conn_str)
+    try:
+        cursor = conn.cursor()
+        for proc_name, params in procedures:
+            sql, values = _stored_procedure_call(proc_name, params)
+            cursor.execute(sql, values)
         conn.commit()
         cursor.close()
     except Exception:
@@ -2320,6 +2763,87 @@ def _parse_member_category_rows(csv_bytes: bytes) -> list[tuple[int, str]]:
     return rows
 
 
+def _parse_chapter_rows(csv_bytes: bytes) -> list[tuple]:
+    csv_rows = _read_csv_matrix(csv_bytes)
+    if not csv_rows:
+        raise CsvValidationError("CSV is missing a header row.")
+
+    header_index = None
+    original_header = None
+    for idx, row in enumerate(csv_rows[:2]):
+        canonical = [_canonicalize_header(value) for value in row]
+        if _is_chapter_header(canonical):
+            header_index = idx
+            original_header = row
+            break
+
+    if header_index is None or original_header is None:
+        raise CsvValidationError("CSV is missing required chapter columns: ChapterID, ChapterCode, ChapterName")
+
+    incoming_header = _normalize_header(original_header)
+    source_columns_by_target = {}
+    duplicate_columns = []
+
+    for column_index, normalized_name in enumerate(incoming_header):
+        canonical_name = _canonicalize_header(normalized_name)
+        mapped = CHAPTER_HEADER_ALIASES.get(canonical_name)
+        if not mapped:
+            continue
+        if mapped in source_columns_by_target:
+            duplicate_columns.append(mapped)
+            continue
+        source_columns_by_target[mapped] = column_index
+
+    if duplicate_columns:
+        raise CsvValidationError(f"CSV contains duplicate chapter columns: {', '.join(sorted(set(duplicate_columns)))}")
+    if "ChapterID" not in source_columns_by_target:
+        raise CsvValidationError("CSV is missing required column: ChapterID")
+    if "ChapterCode" not in source_columns_by_target:
+        raise CsvValidationError("CSV is missing required column: ChapterCode")
+    if "ChapterName" not in source_columns_by_target:
+        raise CsvValidationError("CSV is missing required column: ChapterName")
+
+    rows = []
+    seen_chapters = set()
+    for row_number, row in enumerate(csv_rows[header_index + 1 :], start=header_index + 2):
+        if not any((value or "").strip() for value in row):
+            continue
+        padded = list(row) + [""] * (len(original_header) - len(row))
+        converted_row = []
+        for column in CHAPTER_COLUMNS:
+            column_index = source_columns_by_target.get(column)
+            raw_value = padded[column_index] if column_index is not None and column_index < len(padded) else ""
+            try:
+                converted_row.append(_convert_chapter_value(column, raw_value or ""))
+            except CsvValidationError as exc:
+                raise CsvValidationError(f"Row {row_number}: {exc}") from exc
+        chapter_id = converted_row[0]
+        if chapter_id in seen_chapters:
+            raise CsvValidationError(f"Row {row_number}: Duplicate ChapterID {chapter_id}.")
+        seen_chapters.add(chapter_id)
+        rows.append(tuple(converted_row))
+
+    if not rows:
+        raise CsvValidationError("CSV did not contain any chapter data rows.")
+    return rows
+
+
+def _convert_chapter_value(column: str, raw_value: str):
+    value = raw_value.strip()
+    if value == "":
+        if column in {"ChapterID", "ChapterCode", "ChapterName"}:
+            raise CsvValidationError(f"Column {column} is required.")
+        return None
+    if column in CHAPTER_INT_COLUMNS:
+        try:
+            return int(value)
+        except ValueError as exc:
+            raise CsvValidationError(f"Column {column} requires an integer. Received '{raw_value}'.") from exc
+    if column in CHAPTER_DATETIME_COLUMNS:
+        return _parse_datetime(value)
+    return value
+
+
 def _read_csv_matrix(csv_bytes: bytes, *, raise_on_error: bool = True) -> list[list[str]]:
     try:
         csv_text = csv_bytes.decode("utf-8-sig")
@@ -2357,6 +2881,31 @@ def _stage_and_import(conn_str: str, rows: list[tuple]) -> None:
         cursor.fast_executemany = True
         cursor.executemany(insert_sql, rows)
         cursor.execute("EXEC membership.sp_import_memchap")
+        conn.commit()
+        cursor.close()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def _stage_and_import_chapters(conn_str: str, rows: list[tuple]) -> None:
+    insert_sql = (
+        "INSERT INTO staging.chapters ("
+        + ", ".join(f"[{column}]" for column in CHAPTER_COLUMNS)
+        + ") VALUES ("
+        + ", ".join("?" for _ in CHAPTER_COLUMNS)
+        + ")"
+    )
+
+    conn = pyodbc.connect(conn_str)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("TRUNCATE TABLE staging.chapters")
+        cursor.fast_executemany = True
+        cursor.executemany(insert_sql, rows)
+        cursor.execute("EXEC membership.sp_import_chapters")
         conn.commit()
         cursor.close()
     except Exception:

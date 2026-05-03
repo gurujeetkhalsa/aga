@@ -44,6 +44,9 @@ NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
 NEW_MEMBER_MESSAGE_TYPE = "new_member_signup"
 RENEWAL_MESSAGE_TYPE = "member_renewal"
 JOURNAL_MESSAGE_TYPE = "american_go_e_journal"
+REWARDS_MEMBERSHIP_EVENT_PROC = "rewards.sp_record_membership_event"
+REWARDS_NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
+REWARDS_RENEWAL_EVENT_TYPE = "renewal"
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
 JOURNAL_EXCLUDED_MATCH_NAMES = {"chris garlock"}
 DEFAULT_JOURNAL_NAME_PREFIXES = (
@@ -610,44 +613,74 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
         logging.info("Nightly category message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
     elif message_type == NEW_MEMBER_MESSAGE_TYPE:
         parsed = _parse_new_member_email(_message_body_to_text(message))
-        _execute_stored_procedure(
+        membership_params = {
+            "MessageId": _message_identifier(message),
+            "ReceivedAt": received_at,
+            "AGAID": parsed["AGAID"],
+            "MemberType": parsed["MemberType"],
+            "FirstName": parsed["FirstName"],
+            "LastName": parsed["LastName"],
+            "EmailAddress": parsed.get("EmailAddress"),
+            "JoinDate": received_date,
+            "ExpirationDate": received_date + timedelta(days=365),
+            "Sender": sender or None,
+            "Subject": subject or None,
+            "BlobPath": archive_path,
+        }
+        _execute_stored_procedures(
             conn_str,
-            "membership.sp_process_new_member_email",
-            {
-                "MessageId": _message_identifier(message),
-                "ReceivedAt": received_at,
-                "AGAID": parsed["AGAID"],
-                "MemberType": parsed["MemberType"],
-                "FirstName": parsed["FirstName"],
-                "LastName": parsed["LastName"],
-                "EmailAddress": parsed.get("EmailAddress"),
-                "JoinDate": received_date,
-                "ExpirationDate": received_date + timedelta(days=365),
-                "Sender": sender or None,
-                "Subject": subject or None,
-                "BlobPath": archive_path,
-            },
+            [
+                ("membership.sp_process_new_member_email", membership_params),
+                (
+                    REWARDS_MEMBERSHIP_EVENT_PROC,
+                    _membership_reward_event_params(
+                        message,
+                        received_at,
+                        REWARDS_NEW_MEMBERSHIP_EVENT_TYPE,
+                        received_date,
+                        parsed,
+                        sender=sender,
+                        subject=subject,
+                        blob_path=archive_path,
+                    ),
+                ),
+            ],
         )
         logging.info("New member email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == RENEWAL_MESSAGE_TYPE:
         parsed = _parse_renewal_email(_message_body_to_text(message))
-        _execute_stored_procedure(
+        membership_params = {
+            "MessageId": _message_identifier(message),
+            "ReceivedAt": received_at,
+            "AGAID": parsed["AGAID"],
+            "ExpirationDate": received_date + timedelta(days=365),
+            "PhoneNumber": parsed.get("PhoneNumber"),
+            "EmailAddress": parsed.get("EmailAddress"),
+            "LoginName": parsed.get("LoginName"),
+            "MemberType": parsed.get("MemberType"),
+            "IsChapterMember": 1 if parsed["IsChapterMember"] else 0,
+            "Sender": sender or None,
+            "Subject": subject or None,
+            "BlobPath": archive_path,
+        }
+        _execute_stored_procedures(
             conn_str,
-            "membership.sp_process_membership_renewal",
-            {
-                "MessageId": _message_identifier(message),
-                "ReceivedAt": received_at,
-                "AGAID": parsed["AGAID"],
-                "ExpirationDate": received_date + timedelta(days=365),
-                "PhoneNumber": parsed.get("PhoneNumber"),
-                "EmailAddress": parsed.get("EmailAddress"),
-                "LoginName": parsed.get("LoginName"),
-                "MemberType": parsed.get("MemberType"),
-                "IsChapterMember": 1 if parsed["IsChapterMember"] else 0,
-                "Sender": sender or None,
-                "Subject": subject or None,
-                "BlobPath": archive_path,
-            },
+            [
+                ("membership.sp_process_membership_renewal", membership_params),
+                (
+                    REWARDS_MEMBERSHIP_EVENT_PROC,
+                    _membership_reward_event_params(
+                        message,
+                        received_at,
+                        REWARDS_RENEWAL_EVENT_TYPE,
+                        received_date,
+                        parsed,
+                        sender=sender,
+                        subject=subject,
+                        blob_path=archive_path,
+                    ),
+                ),
+            ],
         )
         logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == JOURNAL_MESSAGE_TYPE:
@@ -1996,14 +2029,54 @@ def _json_safe_value(value: object) -> object:
     if isinstance(value, date):
         return value.isoformat()
     return value
-def _execute_stored_procedure(conn_str: str, proc_name: str, params: dict) -> None:
+
+
+def _membership_reward_event_params(
+    message: dict,
+    received_at: datetime,
+    event_type: str,
+    event_date: date,
+    parsed: dict,
+    *,
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> dict:
+    source_payload = {
+        "message_id": _message_identifier(message),
+        "sender": sender,
+        "subject": subject,
+        "blob_path": blob_path,
+        "parsed": {key: _json_safe_value(value) for key, value in parsed.items()},
+    }
+    return {
+        "MessageId": _message_identifier(message),
+        "ReceivedAt": received_at,
+        "AGAID": parsed["AGAID"],
+        "EventType": event_type,
+        "EventDate": event_date,
+        "MemberType": parsed.get("MemberType"),
+        "SourcePayloadJson": json.dumps(source_payload, sort_keys=True),
+    }
+
+
+def _stored_procedure_call(proc_name: str, params: dict) -> tuple[str, list]:
     ordered_items = [(key, value) for key, value in params.items()]
     sql = f"EXEC {proc_name} " + ", ".join(f"@{name} = ?" for name, _ in ordered_items)
+    return sql, [value for _, value in ordered_items]
 
+
+def _execute_stored_procedure(conn_str: str, proc_name: str, params: dict) -> None:
+    _execute_stored_procedures(conn_str, [(proc_name, params)])
+
+
+def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, dict]]) -> None:
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
-        cursor.execute(sql, [value for _, value in ordered_items])
+        for proc_name, params in procedures:
+            sql, values = _stored_procedure_call(proc_name, params)
+            cursor.execute(sql, values)
         conn.commit()
         cursor.close()
     except Exception:

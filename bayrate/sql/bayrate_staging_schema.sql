@@ -106,6 +106,12 @@ BEGIN
         [City] nvarchar(128) NULL,
         [State_Code] nvarchar(16) NULL,
         [Country_Code] nvarchar(16) NULL,
+        [Host_ChapterID] int NULL,
+        [Host_ChapterCode] nvarchar(20) NULL,
+        [Host_ChapterName] nvarchar(200) NULL,
+        [Reward_Event_Key] nvarchar(128) NULL,
+        [Reward_Event_Name] nvarchar(255) NULL,
+        [Reward_Is_State_Championship] bit NOT NULL CONSTRAINT [DF_bayrate_staged_tournaments_Reward_Is_State_Championship] DEFAULT 0,
         [Rounds] int NULL,
         [Total_Players] int NULL,
         [Wallist] nvarchar(255) NULL,
@@ -123,6 +129,92 @@ BEGIN
         CONSTRAINT [CK_bayrate_staged_tournaments_Validation_Status] CHECK ([Validation_Status] IN (N'staged', N'validation_failed', N'needs_review', N'ready_for_rating')),
         CONSTRAINT [CK_bayrate_staged_tournaments_Code_Source] CHECK ([Tournament_Code_Source] IN (N'generated', N'reused', N'parser'))
     );
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_staged_tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.bayrate_staged_tournaments', N'Host_ChapterID') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[bayrate_staged_tournaments]
+        ADD [Host_ChapterID] int NULL;
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_staged_tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.bayrate_staged_tournaments', N'Host_ChapterCode') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[bayrate_staged_tournaments]
+        ADD [Host_ChapterCode] nvarchar(20) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_staged_tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.bayrate_staged_tournaments', N'Host_ChapterName') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[bayrate_staged_tournaments]
+        ADD [Host_ChapterName] nvarchar(200) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_staged_tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.bayrate_staged_tournaments', N'Reward_Event_Key') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[bayrate_staged_tournaments]
+        ADD [Reward_Event_Key] nvarchar(128) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_staged_tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.bayrate_staged_tournaments', N'Reward_Event_Name') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[bayrate_staged_tournaments]
+        ADD [Reward_Event_Name] nvarchar(255) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_staged_tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.bayrate_staged_tournaments', N'Reward_Is_State_Championship') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[bayrate_staged_tournaments]
+        ADD [Reward_Is_State_Championship] bit NOT NULL
+            CONSTRAINT [DF_bayrate_staged_tournaments_Reward_Is_State_Championship] DEFAULT 0;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.tournaments', N'Host_ChapterID') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[tournaments]
+        ADD [Host_ChapterID] int NULL;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.tournaments', N'Host_ChapterCode') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[tournaments]
+        ADD [Host_ChapterCode] nvarchar(20) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.tournaments', N'Host_ChapterName') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[tournaments]
+        ADD [Host_ChapterName] nvarchar(200) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.tournaments', N'Reward_Event_Key') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[tournaments]
+        ADD [Reward_Event_Key] nvarchar(128) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.tournaments', N'Reward_Event_Name') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[tournaments]
+        ADD [Reward_Event_Name] nvarchar(255) NULL;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND COL_LENGTH(N'ratings.tournaments', N'Reward_Is_State_Championship') IS NULL
+BEGIN
+    ALTER TABLE [ratings].[tournaments]
+        ADD [Reward_Is_State_Championship] bit NOT NULL
+            CONSTRAINT [DF_tournaments_Reward_Is_State_Championship] DEFAULT 0;
 END;
 
 IF OBJECT_ID(N'ratings.bayrate_staged_games', N'U') IS NULL
@@ -204,6 +296,33 @@ IF NOT EXISTS
 BEGIN
     CREATE INDEX [IX_bayrate_staged_tournaments_Status]
         ON [ratings].[bayrate_staged_tournaments] ([Validation_Status], [Tournament_Date], [Tournament_Code]);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE [name] = N'IX_bayrate_staged_tournaments_Host_Chapter'
+      AND [object_id] = OBJECT_ID(N'ratings.bayrate_staged_tournaments')
+)
+BEGIN
+    CREATE INDEX [IX_bayrate_staged_tournaments_Host_Chapter]
+        ON [ratings].[bayrate_staged_tournaments] ([Host_ChapterID], [Reward_Event_Key], [Tournament_Date])
+        WHERE [Host_ChapterID] IS NOT NULL;
+END;
+
+IF OBJECT_ID(N'ratings.tournaments', N'U') IS NOT NULL
+   AND NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE [name] = N'IX_tournaments_Host_Chapter'
+      AND [object_id] = OBJECT_ID(N'ratings.tournaments')
+)
+BEGIN
+    CREATE INDEX [IX_tournaments_Host_Chapter]
+        ON [ratings].[tournaments] ([Host_ChapterID], [Reward_Event_Key], [Tournament_Date])
+        WHERE [Host_ChapterID] IS NOT NULL;
 END;
 
 IF NOT EXISTS

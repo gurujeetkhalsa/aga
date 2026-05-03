@@ -45,6 +45,12 @@ class CommitAdapter:
                     "City": "Seattle",
                     "State_Code": "WA",
                     "Country_Code": "US",
+                    "Host_ChapterID": 10,
+                    "Host_ChapterCode": "SEAG",
+                    "Host_ChapterName": "Seattle Go Center",
+                    "Reward_Event_Key": "new20260101",
+                    "Reward_Event_Name": "New Test Tournament",
+                    "Reward_Is_State_Championship": 1,
                     "Rounds": 1,
                     "Total_Players": 2,
                     "Wallist": None,
@@ -200,6 +206,23 @@ class CommitStagedRunTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "only ready_for_rating"):
             build_commit_plan(CommitAdapter(status="needs_review"), 1)
 
+    def test_build_commit_plan_rejects_ready_run_without_host_chapter(self) -> None:
+        adapter = CommitAdapter()
+        original_query_rows = adapter.query_rows
+
+        def query_rows(query, params=()):
+            rows = original_query_rows(query, params)
+            if "FROM [ratings].[bayrate_staged_tournaments]" in query:
+                rows[0]["Host_ChapterID"] = None
+                rows[0]["Host_ChapterCode"] = None
+                rows[0]["Host_ChapterName"] = None
+            return rows
+
+        adapter.query_rows = query_rows
+
+        with self.assertRaisesRegex(ValueError, "Host chapter is required"):
+            build_commit_plan(adapter, 1)
+
     def test_build_commit_statements_include_production_and_staging_updates(self) -> None:
         plan = build_commit_plan(CommitAdapter(), 1)
         statements = build_commit_statements(plan)
@@ -231,6 +254,16 @@ class CommitStagedRunTest(unittest.TestCase):
         game_insert = next(statement for statement in statements if "INSERT INTO [ratings].[games]" in statement[0])
 
         self.assertEqual(game_insert[1][11], 6)
+
+    def test_tournament_upsert_carries_host_chapter(self) -> None:
+        plan = build_commit_plan(CommitAdapter(), 1)
+        statements = build_commit_statements(plan)
+        tournament_upsert = next(statement for statement in statements if "INSERT INTO [ratings].[tournaments]" in statement[0])
+
+        self.assertIn("[Host_ChapterID]", tournament_upsert[0])
+        self.assertEqual(tournament_upsert[1][5:8], (10, "SEAG", "Seattle Go Center"))
+        self.assertEqual(tournament_upsert[1][8:10], ("new20260101", "New Test Tournament"))
+        self.assertEqual(tournament_upsert[1][10], 1)
 
     def test_commit_staged_run_requires_confirmation(self) -> None:
         with self.assertRaisesRegex(ValueError, "confirm_production_commit"):

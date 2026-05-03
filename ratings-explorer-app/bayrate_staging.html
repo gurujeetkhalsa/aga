@@ -38,6 +38,16 @@
       font: inherit;
     }
 
+    select {
+      font: inherit;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      background: #fff;
+      color: var(--ink);
+    }
+
     button {
       border: 1px solid var(--line);
       border-radius: 6px;
@@ -346,6 +356,48 @@
       flex-wrap: wrap;
     }
 
+    .host-chapter-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr) minmax(180px, 1fr) auto auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .host-chapter-row label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .host-chapter-row select,
+    .host-chapter-row input:not([type="checkbox"]) {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .checkbox-field {
+      min-height: 36px;
+      display: inline-flex;
+      flex-direction: row !important;
+      align-items: center;
+      gap: 8px !important;
+      white-space: nowrap;
+      color: var(--ink) !important;
+    }
+
+    .checkbox-field input {
+      width: 16px;
+      height: 16px;
+    }
+
     .message {
       border-color: #ecd09a;
       background: var(--warn-soft);
@@ -423,6 +475,10 @@
 
       .metrics {
         grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+
+      .host-chapter-row {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -529,6 +585,7 @@
       replaySummary: null,
       commitPreview: null,
       commitState: null,
+      hostChapterOptions: [],
     };
 
     const els = {
@@ -609,6 +666,13 @@
       state.commitState = null;
       els.previewStatus.textContent = "No preview yet";
       els.previewOutput.innerHTML = "";
+    }
+
+    function storeBayratePayload(payload) {
+      state.previewPayload = payload;
+      if (Array.isArray(payload.host_chapter_options)) {
+        state.hostChapterOptions = payload.host_chapter_options;
+      }
     }
 
     function hasDroppedFiles(event) {
@@ -810,7 +874,7 @@
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Preview failed with HTTP ${response.status}`);
-        state.previewPayload = payload;
+        storeBayratePayload(payload);
         els.previewStatus.textContent = payload.duplicate_check ? "Preview complete" : "Preview complete; duplicate checks skipped";
         renderPreview(payload);
       } catch (error) {
@@ -842,7 +906,7 @@
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Stage failed with HTTP ${response.status}`);
-        state.previewPayload = payload;
+        storeBayratePayload(payload);
         state.stagedSummary = payload.summary;
         state.replaySummary = null;
         state.commitPreview = null;
@@ -860,6 +924,12 @@
 
     async function approveDuplicate(sourceReportOrdinal, duplicateCode) {
       if (!state.stagedSummary || state.busy) return;
+      const hostChapterId = selectedHostChapterId(sourceReportOrdinal);
+      if (!hostChapterId) {
+        window.alert("Select a host chapter before approving this tournament.");
+        return;
+      }
+      const rewardEvent = selectedRewardEvent(sourceReportOrdinal);
       if (!window.confirm(`Reuse production Tournament_Code ${duplicateCode} and mark this tournament ready_for_rating?`)) return;
       const note = window.prompt("Approval note", `Operator approved reuse of ${duplicateCode}.`) || "";
       state.busy = true;
@@ -876,11 +946,15 @@
             use_duplicate_code: true,
             mark_ready: true,
             operator_note: note,
+            host_chapter_id: Number(hostChapterId),
+            reward_event_key: rewardEvent.key,
+            reward_event_name: rewardEvent.name,
+            reward_is_state_championship: rewardEvent.isStateChampionship,
           }),
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Review failed with HTTP ${response.status}`);
-        state.previewPayload = payload;
+        storeBayratePayload(payload);
         state.stagedSummary = payload.summary;
         state.replaySummary = null;
         state.commitPreview = null;
@@ -898,6 +972,12 @@
 
     async function markReady(sourceReportOrdinal, tournamentCode) {
       if (!state.stagedSummary || state.busy) return;
+      const hostChapterId = selectedHostChapterId(sourceReportOrdinal);
+      if (!hostChapterId) {
+        window.alert("Select a host chapter before marking this tournament ready.");
+        return;
+      }
+      const rewardEvent = selectedRewardEvent(sourceReportOrdinal);
       if (!window.confirm(`Mark ${tournamentCode} ready_for_rating?`)) return;
       const note = window.prompt("Approval note", `Operator reviewed warnings for ${tournamentCode}.`) || "";
       state.busy = true;
@@ -914,11 +994,15 @@
             use_duplicate_code: false,
             mark_ready: true,
             operator_note: note,
+            host_chapter_id: Number(hostChapterId),
+            reward_event_key: rewardEvent.key,
+            reward_event_name: rewardEvent.name,
+            reward_is_state_championship: rewardEvent.isStateChampionship,
           }),
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Review failed with HTTP ${response.status}`);
-        state.previewPayload = payload;
+        storeBayratePayload(payload);
         state.stagedSummary = payload.summary;
         state.replaySummary = null;
         state.commitPreview = null;
@@ -927,6 +1011,55 @@
         renderPreview(payload);
       } catch (error) {
         els.previewStatus.textContent = "Review failed";
+        els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function saveHostChapter(sourceReportOrdinal) {
+      if (!state.stagedSummary || state.busy) return;
+      const hostChapterId = selectedHostChapterId(sourceReportOrdinal);
+      if (!hostChapterId) {
+        window.alert("Select a host chapter before saving.");
+        return;
+      }
+      const option = hostChapterOptionById(hostChapterId);
+      const label = option ? option.label : `chapter ${hostChapterId}`;
+      const rewardEvent = selectedRewardEvent(sourceReportOrdinal);
+      if (!window.confirm(`Save ${label} and reward group ${rewardEvent.key || "default"}?`)) return;
+      state.busy = true;
+      els.previewStatus.textContent = "Saving host chapter...";
+      render();
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            confirm_review: true,
+            run_id: state.stagedSummary.run_id,
+            source_report_ordinal: sourceReportOrdinal,
+            use_duplicate_code: false,
+            mark_ready: false,
+            operator_note: `Host chapter set to ${label}.`,
+            host_chapter_id: Number(hostChapterId),
+            reward_event_key: rewardEvent.key,
+            reward_event_name: rewardEvent.name,
+            reward_is_state_championship: rewardEvent.isStateChampionship,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Review failed with HTTP ${response.status}`);
+        storeBayratePayload(payload);
+        state.stagedSummary = payload.summary;
+        state.replaySummary = null;
+        state.commitPreview = null;
+        state.commitState = payload.commit_state || null;
+        els.previewStatus.textContent = "Host chapter saved";
+        renderPreview(payload);
+      } catch (error) {
+        els.previewStatus.textContent = "Host chapter save failed";
         els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);
       } finally {
         state.busy = false;
@@ -1025,7 +1158,7 @@
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Load failed with HTTP ${response.status}`);
-        state.previewPayload = payload;
+        storeBayratePayload(payload);
         state.stagedSummary = payload.summary;
         state.commitState = payload.commit_state || null;
         els.previewStatus.textContent = `Loaded RunID ${runId}`;
@@ -1169,6 +1302,7 @@
             : "";
       const duplicate = tournament.duplicate_candidate;
       const warnings = tournament.warnings || [];
+      const hostLabel = tournament.host_chapter_label || "Host chapter needed";
       const canApproveDuplicate = Boolean(
         state.stagedSummary
         && duplicate
@@ -1190,10 +1324,14 @@
                 <span>${escapeHtml(tournament.tournament_code)}</span>
                 <span>${escapeHtml(tournament.tournament_date)}</span>
                 <span>${escapeHtml(tournament.source_report_name)}</span>
+                <span>${escapeHtml(hostLabel)}</span>
+                <span>${escapeHtml(tournament.reward_event_key || tournament.tournament_code)}</span>
+                ${tournament.reward_is_state_championship ? "<span>State Championship</span>" : ""}
               </div>
             </div>
             <span class="status-label ${statusClass}">${escapeHtml(tournament.status)}</span>
           </div>
+          ${renderHostChapterControl(tournament)}
           ${duplicate ? `<div class="message">Duplicate candidate: ${escapeHtml(duplicate.tournament_code)} score ${escapeHtml(duplicate.score)}</div>` : ""}
           ${warnings.map(renderWarning).join("")}
           ${(tournament.validation_errors || []).map((error) => `<div class="error">${escapeHtml(error)}</div>`).join("")}
@@ -1221,6 +1359,87 @@
           ` : ""}
         </article>
       `;
+    }
+
+    function renderHostChapterControl(tournament) {
+      const currentId = tournament.host_chapter_id ? String(tournament.host_chapter_id) : "";
+      if (!state.stagedSummary) {
+        return `<div class="message review">Host chapter will be selected after the run is written to staging.</div>`;
+      }
+      if (!state.hostChapterOptions.length) {
+        return `<div class="message review">Host chapter options are unavailable.</div>`;
+      }
+      const rewardKey = tournament.reward_event_key || tournament.tournament_code || "";
+      const rewardName = tournament.reward_event_name || tournament.description || "";
+      const isStateChampionship = Boolean(tournament.reward_is_state_championship);
+      return `
+        <div class="host-chapter-row">
+          <label>
+            Host chapter
+            <select data-host-chapter="${escapeHtml(tournament.source_report_ordinal)}">
+              <option value="">Select host chapter</option>
+              ${state.hostChapterOptions.map((option) => {
+                const value = String(option.chapter_id || "");
+                return `<option value="${escapeHtml(value)}" ${value === currentId ? "selected" : ""}>${escapeHtml(option.label || option.chapter_code || value)}</option>`;
+              }).join("")}
+            </select>
+          </label>
+          <label>
+            Reward group
+            <input
+              type="text"
+              maxlength="128"
+              value="${escapeHtml(rewardKey)}"
+              data-reward-event-key="${escapeHtml(tournament.source_report_ordinal)}"
+            />
+          </label>
+          <label>
+            Group name
+            <input
+              type="text"
+              maxlength="255"
+              value="${escapeHtml(rewardName)}"
+              data-reward-event-name="${escapeHtml(tournament.source_report_ordinal)}"
+            />
+          </label>
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              ${isStateChampionship ? "checked" : ""}
+              data-reward-state-championship="${escapeHtml(tournament.source_report_ordinal)}"
+            />
+            State Championship
+          </label>
+          <button
+            type="button"
+            data-action="save-host"
+            data-ordinal="${escapeHtml(tournament.source_report_ordinal)}"
+          >Save Details</button>
+        </div>
+      `;
+    }
+
+    function selectedHostChapterId(sourceReportOrdinal) {
+      const selector = `select[data-host-chapter="${String(sourceReportOrdinal).replace(/"/g, "")}"]`;
+      const select = document.querySelector(selector);
+      return String(select ? select.value : "").trim();
+    }
+
+    function selectedRewardEvent(sourceReportOrdinal) {
+      const ordinal = String(sourceReportOrdinal).replace(/"/g, "");
+      const keyInput = document.querySelector(`input[data-reward-event-key="${ordinal}"]`);
+      const nameInput = document.querySelector(`input[data-reward-event-name="${ordinal}"]`);
+      const stateChampionshipInput = document.querySelector(`input[data-reward-state-championship="${ordinal}"]`);
+      return {
+        key: String(keyInput ? keyInput.value : "").trim(),
+        name: String(nameInput ? nameInput.value : "").trim(),
+        isStateChampionship: Boolean(stateChampionshipInput && stateChampionshipInput.checked),
+      };
+    }
+
+    function hostChapterOptionById(hostChapterId) {
+      const id = String(hostChapterId || "");
+      return state.hostChapterOptions.find((option) => String(option.chapter_id || "") === id) || null;
     }
 
     function renderWarning(warning) {
@@ -1511,6 +1730,9 @@
       }
       if (button.dataset.action === "mark-ready") {
         markReady(Number(button.dataset.ordinal), button.dataset.code || "");
+      }
+      if (button.dataset.action === "save-host") {
+        saveHostChapter(Number(button.dataset.ordinal));
       }
     });
 

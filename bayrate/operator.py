@@ -12,6 +12,7 @@ from bayrate.stage_reports import (
     build_staging_payload,
     ensure_payload_run_id,
     explain_staged_run_review,
+    load_host_chapter_options,
     load_staged_run,
     refresh_payload_summary,
     update_staged_run_review,
@@ -110,7 +111,7 @@ def run_operator(
         print("Explain-only mode: no SQL rows were written.", file=out)
         return payload
 
-    review_tournaments(payload, read_answer, out, explanations=explanations)
+    review_tournaments(payload, read_answer, out, adapter=adapter, explanations=explanations)
     print_report_summary(payload, out, title="After Review")
 
     if payload["validation_failed_count"]:
@@ -153,7 +154,7 @@ def run_existing_run_review(
         payload["updated"] = False
         return payload
 
-    review_tournaments(payload, read_answer, out, explanations=explanations)
+    review_tournaments(payload, read_answer, out, adapter=adapter, explanations=explanations)
     print_report_summary(payload, out, title="After Review")
 
     if not ask_yes_no("Save these review changes to SQL?", default=False, input_func=read_answer, output=out):
@@ -223,8 +224,10 @@ def review_tournaments(
     input_func: InputFunc,
     output: TextIO,
     *,
+    adapter: StageSqlAdapter | None = None,
     explanations: dict[str, Any] | None = None,
 ) -> None:
+    chapter_options = load_host_chapter_options(adapter) if adapter is not None else []
     explanation_by_ordinal = {
         explanation.get("source_report_ordinal"): explanation
         for explanation in (explanations or {}).get("tournaments", [])
@@ -236,6 +239,26 @@ def review_tournaments(
             print_validation_errors(tournament, output)
             continue
         if status == "ready_for_rating":
+            if not tournament_has_host_chapter(tournament):
+                print(
+                    f"Report {ordinal}: {tournament['tournament_row'].get('Tournament_Code')} is ready but missing host chapter.",
+                    file=output,
+                )
+                host_chapter = ask_host_chapter(chapter_options, input_func=input_func, output=output)
+                if host_chapter:
+                    reward_event = ask_reward_event(tournament, input_func=input_func, output=output)
+                    apply_tournament_review_decision(
+                        payload,
+                        ordinal,
+                        mark_ready=True,
+                        host_chapter_id=host_chapter["chapter_id"],
+                        host_chapter_code=host_chapter["chapter_code"],
+                        host_chapter_name=host_chapter["chapter_name"],
+                        reward_event_key=reward_event["key"],
+                        reward_event_name=reward_event["name"],
+                        reward_is_state_championship=reward_event["is_state_championship"],
+                    )
+                continue
             print(
                 f"Report {ordinal}: {tournament['tournament_row'].get('Tournament_Code')} is ready_for_rating.",
                 file=output,
@@ -247,6 +270,7 @@ def review_tournaments(
                 tournament,
                 input_func,
                 output,
+                chapter_options=chapter_options,
                 explanation=explanation_by_ordinal.get(ordinal),
             )
             continue
@@ -259,12 +283,28 @@ def review_tournaments(
                 output=output,
             )
             if mark_ready:
+                host_chapter = ask_host_chapter(chapter_options, input_func=input_func, output=output)
+                if not host_chapter:
+                    print("Host chapter was not selected; leaving tournament in review.", file=output)
+                    continue
+                reward_event = ask_reward_event(tournament, input_func=input_func, output=output)
                 note = ask_optional_text(
                     "Optional approval note",
                     input_func=input_func,
                     output=output,
                 )
-                apply_tournament_review_decision(payload, ordinal, mark_ready=True, operator_note=note)
+                apply_tournament_review_decision(
+                    payload,
+                    ordinal,
+                    mark_ready=True,
+                    operator_note=note,
+                    host_chapter_id=host_chapter["chapter_id"],
+                    host_chapter_code=host_chapter["chapter_code"],
+                    host_chapter_name=host_chapter["chapter_name"],
+                    reward_event_key=reward_event["key"],
+                    reward_event_name=reward_event["name"],
+                    reward_is_state_championship=reward_event["is_state_championship"],
+                )
     refresh_payload_summary(payload)
 
 
@@ -274,6 +314,7 @@ def review_duplicate_tournament(
     input_func: InputFunc,
     output: TextIO,
     *,
+    chapter_options: list[dict[str, Any]] | None = None,
     explanation: dict[str, Any] | None = None,
 ) -> None:
     ordinal = int(tournament["source_report_ordinal"])
@@ -311,18 +352,36 @@ def review_duplicate_tournament(
             output=output,
         )
         note = None
+        host_chapter = None
         if mark_ready:
-            note = ask_optional_text(
-                "Optional approval note",
-                input_func=input_func,
-                output=output,
-            )
+            host_chapter = ask_host_chapter(chapter_options or [], input_func=input_func, output=output)
+            if not host_chapter:
+                print("Host chapter was not selected; leaving tournament in review.", file=output)
+                mark_ready = False
+            else:
+                reward_event = ask_reward_event(
+                    tournament,
+                    input_func=input_func,
+                    output=output,
+                    default_key=duplicate.get("tournament_code"),
+                )
+                note = ask_optional_text(
+                    "Optional approval note",
+                    input_func=input_func,
+                    output=output,
+                )
         apply_tournament_review_decision(
             payload,
             ordinal,
             use_duplicate_code=True,
             mark_ready=mark_ready,
             operator_note=note,
+            host_chapter_id=host_chapter["chapter_id"] if host_chapter else None,
+            host_chapter_code=host_chapter["chapter_code"] if host_chapter else None,
+            host_chapter_name=host_chapter["chapter_name"] if host_chapter else None,
+            reward_event_key=reward_event["key"] if mark_ready and host_chapter else None,
+            reward_event_name=reward_event["name"] if mark_ready and host_chapter else None,
+            reward_is_state_championship=reward_event["is_state_championship"] if mark_ready and host_chapter else None,
         )
         return
 
@@ -333,18 +392,31 @@ def review_duplicate_tournament(
         output=output,
     )
     note = None
+    host_chapter = None
     if mark_ready:
-        note = ask_optional_text(
-            "Optional approval note",
-            input_func=input_func,
-            output=output,
-        )
+        host_chapter = ask_host_chapter(chapter_options or [], input_func=input_func, output=output)
+        if not host_chapter:
+            print("Host chapter was not selected; leaving tournament in review.", file=output)
+            mark_ready = False
+        else:
+            reward_event = ask_reward_event(tournament, input_func=input_func, output=output)
+            note = ask_optional_text(
+                "Optional approval note",
+                input_func=input_func,
+                output=output,
+            )
     apply_tournament_review_decision(
         payload,
         ordinal,
         use_duplicate_code=False,
         mark_ready=mark_ready,
         operator_note=note,
+        host_chapter_id=host_chapter["chapter_id"] if host_chapter else None,
+        host_chapter_code=host_chapter["chapter_code"] if host_chapter else None,
+        host_chapter_name=host_chapter["chapter_name"] if host_chapter else None,
+        reward_event_key=reward_event["key"] if mark_ready and host_chapter else None,
+        reward_event_name=reward_event["name"] if mark_ready and host_chapter else None,
+        reward_is_state_championship=reward_event["is_state_championship"] if mark_ready and host_chapter else None,
     )
 
 
@@ -449,6 +521,69 @@ def print_validation_errors(tournament: dict[str, Any], output: TextIO) -> None:
     print(f"Report {tournament['source_report_ordinal']} has validation errors for {row.get('Tournament_Code')}:", file=output)
     for error in tournament.get("validation_errors") or []:
         print(f"  - {error}", file=output)
+
+
+def tournament_has_host_chapter(tournament: dict[str, Any]) -> bool:
+    row = tournament.get("tournament_row") or {}
+    return bool(row.get("Host_ChapterID") and str(row.get("Host_ChapterCode") or "").strip())
+
+
+def ask_host_chapter(
+    chapter_options: list[dict[str, Any]],
+    *,
+    input_func: InputFunc,
+    output: TextIO,
+) -> dict[str, Any] | None:
+    if not chapter_options:
+        print("No host chapter options were available from membership.chapters.", file=output)
+        return None
+    by_id = {str(option["chapter_id"]): option for option in chapter_options}
+    by_code = {str(option["chapter_code"]).strip().lower(): option for option in chapter_options}
+    while True:
+        answer = ask_optional_text(
+            "Host ChapterID or ChapterCode",
+            input_func=input_func,
+            output=output,
+        )
+        if not answer:
+            return None
+        option = by_id.get(answer.strip()) or by_code.get(answer.strip().lower())
+        if option:
+            print(f"Selected host chapter: {option.get('label')}", file=output)
+            return option
+        print("Chapter not found. Enter a ChapterID or ChapterCode from membership.chapters.", file=output)
+
+
+def ask_reward_event(
+    tournament: dict[str, Any],
+    *,
+    input_func: InputFunc,
+    output: TextIO,
+    default_key: str | None = None,
+) -> dict[str, str | None]:
+    row = tournament.get("tournament_row") or {}
+    key_default = (
+        str(default_key or row.get("Reward_Event_Key") or row.get("Tournament_Code") or "").strip()
+    )
+    name_default = str(row.get("Reward_Event_Name") or row.get("Tournament_Descr") or "").strip()
+    state_championship_default = bool(row.get("Reward_Is_State_Championship"))
+    print(f"Reward event key [{key_default}] (press Enter for default): ", end="", file=output)
+    output.flush()
+    key_answer = input_func().strip()
+    print(f"Reward event name [{name_default}] (press Enter for default): ", end="", file=output)
+    output.flush()
+    name_answer = input_func().strip()
+    is_state_championship = ask_yes_no(
+        "State Championship?",
+        default=state_championship_default,
+        input_func=input_func,
+        output=output,
+    )
+    return {
+        "key": key_answer or key_default or None,
+        "name": name_answer or name_default or None,
+        "is_state_championship": is_state_championship,
+    }
 
 
 def ask_yes_no(
