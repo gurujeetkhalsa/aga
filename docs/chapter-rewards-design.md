@@ -19,6 +19,7 @@ Opening balance import procedure: `rewards.sp_import_opening_balances`.
 Opening balance import CLI: `py -3 -m rewards.opening_balances C:\path\to\balances.pdf --effective-date YYYY-MM-DD --dry-run`.
 Point expiration procedure: `rewards.sp_process_point_expirations`.
 Point expiration CLI: `py -3 -m rewards.expirations --date YYYY-MM-DD --dry-run`.
+Legacy redemption procedure: `rewards.sp_import_legacy_redemptions`.
 Reporting views: `rewards/sql/reporting_views.sql`.
 Reporting CLI: `py -3 -m rewards.reports balances`.
 
@@ -316,6 +317,9 @@ Current implementation:
 - Opening balance lots use the chosen effective date as `earned_date`, `valuation_date`, and the start of the two-year expiration window.
 - Opening balance imports also count current snapshot chapters that are absent from the PDF as zero-balance setup rows. Those chapters do not receive zero-point transactions because the ledger stores only nonzero point movements.
 - The imported `data1.pdf` opening balance sheet reports balances as of `2026-02-08`, but the legacy balances are intentionally grandfathered into the new ledger as of the system start date, `2026-05-02`. Those grandfathered lots expire on `2028-05-02`.
+- `rewards.sp_import_legacy_redemptions` loads redemptions that happened after the `2026-02-08` source balance report and on or before the `2026-05-02` ledger start. These rows keep their actual redemption request date as `effective_date`/`valuation_date`, are metadata-tagged `legacy_gap`, and allocate against opening-balance lots.
+- `rewards.sp_import_legacy_redemptions_with_adjustments` can also create tagged `legacy_dues_credit_adjustment` lots when a chapter-dues credit exceeds the available opening-balance lot. These adjustments are for non-cash dues credits only and should not be used for reimbursement redemptions.
+- Legacy redemption payment modes distinguish chapter dues credits (`dues_credit`, no cash payment) from promotion reimbursements (`reimbursement`).
 - `rewards.expirations` consumes expired point lots by creating `expire` debit transactions, writing `lot_allocations`, and setting each consumed lot's `remaining_points` to zero. Lots are still available on their `expires_on` date and first expire when `expires_on < as_of_date`.
 - `rewards.tournament_awards` groups committed `ratings.tournaments` rows by host chapter plus `Reward_Event_Key`, totals rated, non-excluded games across all sections in the group, and posts only the positive top-up if a later section increases the formula result.
 - The tournament-host formula is `0` points when `games <= 15`, `1,000,000` points when `games >= 700`, otherwise `1000 * ((games - 15) / (700 - 15)) ^ 0.93 * 1000`, rounded to the nearest whole point.
