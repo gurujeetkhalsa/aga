@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter Rewards</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-soft: #f9fafb;
+      --border: #d8dee7;
+      --border-strong: #b8c2d0;
+      --text: #18202b;
+      --muted: #5f6d7d;
+      --blue: #2458a6;
+      --green: #1f7a4d;
+      --amber: #a86700;
+      --red: #b3261e;
+      --focus: #2f6fed;
+      --shadow: 0 8px 24px rgba(22, 34, 51, 0.08);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 36px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      padding: 7px 11px;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      border-color: var(--focus);
+      color: var(--blue);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    tr[tabindex]:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    input,
+    select {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 7px 10px;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      min-height: 16px;
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .topbar-inner {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .title-block {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status.error {
+      color: var(--red);
+      font-weight: 650;
+    }
+
+    .summary {
+      max-width: 1480px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 14px 20px 0;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .metric-value {
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 760;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric-value.good {
+      color: var(--green);
+    }
+
+    .metric-value.warn {
+      color: var(--amber);
+    }
+
+    .metric-value.bad {
+      color: var(--red);
+    }
+
+    .workspace {
+      max-width: 1480px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 14px 20px 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      flex: 1;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .panel-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search {
+      width: min(100%, 250px);
+    }
+
+    .check {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 36px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 620px;
+    }
+
+    .balances-panel .table-wrap {
+      height: 384px;
+      max-height: 384px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 7px 9px;
+      border-bottom: 1px solid #e7ebf0;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--panel-soft);
+      font-size: 12px;
+      font-weight: 740;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    .balances-panel tbody tr {
+      height: 28px;
+    }
+
+    tbody tr:hover {
+      background: #f2f6fb;
+    }
+
+    tbody tr.selected {
+      background: #eaf2ff;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .chapter-cell {
+      display: grid;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .code {
+      font-weight: 760;
+      color: var(--text);
+    }
+
+    .name {
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      min-height: 22px;
+      max-width: 100%;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef2f6;
+      color: #354152;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pill.good {
+      background: #e6f4ec;
+      color: var(--green);
+    }
+
+    .pill.warn {
+      background: #fff4df;
+      color: var(--amber);
+    }
+
+    .pill.bad {
+      background: #fdebea;
+      color: var(--red);
+    }
+
+    .detail {
+      width: 100%;
+    }
+
+    .detail-head {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 780;
+      letter-spacing: 0;
+    }
+
+    .detail-name {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mini {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px;
+      background: var(--panel-soft);
+      min-width: 0;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .mini-value {
+      margin-top: 3px;
+      font-weight: 760;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .tab {
+      border-color: transparent;
+      background: transparent;
+      min-height: 32px;
+      padding: 5px 10px;
+    }
+
+    .tab.active {
+      background: #eaf2ff;
+      border-color: #bdd2f3;
+      color: var(--blue);
+      font-weight: 760;
+    }
+
+    .detail-tools {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-body {
+      min-height: 320px;
+      max-height: 620px;
+      overflow: auto;
+    }
+
+    .empty {
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .loading {
+      opacity: .72;
+      pointer-events: none;
+    }
+
+    .positive {
+      color: var(--green);
+      font-weight: 720;
+    }
+
+    .negative {
+      color: var(--red);
+      font-weight: 720;
+    }
+
+    .fineprint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mobile-detail-button {
+      display: none;
+    }
+
+    @media (max-width: 1120px) {
+      .summary {
+        grid-template-columns: repeat(3, minmax(130px, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .summary {
+        padding: 12px 12px 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workspace {
+        padding: 12px;
+      }
+
+      .panel-header {
+        align-items: stretch;
+      }
+
+      .filters,
+      .search,
+      .filters select {
+        width: 100%;
+      }
+
+      .check {
+        width: 100%;
+      }
+
+      .detail-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      th,
+      td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="title-block">
+          <h1>Chapter Rewards</h1>
+          <div class="subtle" id="reportMeta">Loading balances</div>
+        </div>
+        <div class="top-actions">
+          <button id="refreshBtn" type="button">Refresh</button>
+          <button id="exportBalancesBtn" type="button">Export CSV</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Rewards summary">
+      <div class="metric">
+        <div class="metric-label">Available</div>
+        <div class="metric-value good" id="summaryAvailable">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Value</div>
+        <div class="metric-value" id="summaryValue">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Chapters</div>
+        <div class="metric-value" id="summaryChapters">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Credits</div>
+        <div class="metric-value" id="summaryCredits">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Debits</div>
+        <div class="metric-value" id="summaryDebits">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Expiring 30</div>
+        <div class="metric-value warn" id="summaryExpiring">-</div>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="panel balances-panel" aria-label="Chapter balances">
+        <div class="panel-header">
+          <h2 class="panel-title">Balances</h2>
+          <div class="filters">
+            <input class="search" id="searchInput" type="search" placeholder="Search chapters" autocomplete="off">
+            <select id="sortSelect" aria-label="Sort balances">
+              <option value="available_desc">Available high to low</option>
+              <option value="available_asc">Available low to high</option>
+              <option value="code_asc">Chapter code</option>
+              <option value="expiring_desc">Expiring soon</option>
+              <option value="activity_desc">Recent activity</option>
+            </select>
+            <label class="check"><input id="nonzeroOnly" type="checkbox" checked> Nonzero</label>
+            <label class="check"><input id="expiringOnly" type="checkbox"> Expiring</label>
+            <label class="check"><input id="issuesOnly" type="checkbox"> Issues</label>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <colgroup>
+              <col style="width: 28%">
+              <col style="width: 15%">
+              <col style="width: 14%">
+              <col style="width: 14%">
+              <col style="width: 12%">
+              <col style="width: 9%">
+              <col style="width: 8%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Chapter</th>
+                <th class="num">Available</th>
+                <th class="num">Value</th>
+                <th class="num">Exp 30</th>
+                <th>Next Exp</th>
+                <th class="num">Mult</th>
+                <th class="num">Delta</th>
+              </tr>
+            </thead>
+            <tbody id="balancesBody">
+              <tr><td colspan="7" class="empty">Loading</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel detail" aria-label="Chapter detail">
+        <div id="detailContent" class="empty">No chapter selected</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const apiRoot = window.location.pathname.replace(/\/$/, "");
+    const state = {
+      balances: [],
+      filtered: [],
+      summary: null,
+      generatedAt: null,
+      selectedCode: null,
+      detail: null,
+      detailLoading: false,
+      tab: "ledger",
+      sourceFilter: "all",
+      error: null
+    };
+
+    const els = {
+      app: document.getElementById("app"),
+      reportMeta: document.getElementById("reportMeta"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      exportBalancesBtn: document.getElementById("exportBalancesBtn"),
+      summaryAvailable: document.getElementById("summaryAvailable"),
+      summaryValue: document.getElementById("summaryValue"),
+      summaryChapters: document.getElementById("summaryChapters"),
+      summaryCredits: document.getElementById("summaryCredits"),
+      summaryDebits: document.getElementById("summaryDebits"),
+      summaryExpiring: document.getElementById("summaryExpiring"),
+      searchInput: document.getElementById("searchInput"),
+      sortSelect: document.getElementById("sortSelect"),
+      nonzeroOnly: document.getElementById("nonzeroOnly"),
+      expiringOnly: document.getElementById("expiringOnly"),
+      issuesOnly: document.getElementById("issuesOnly"),
+      balancesBody: document.getElementById("balancesBody"),
+      detailContent: document.getElementById("detailContent")
+    };
+
+    function points(value) {
+      return Number(value || 0).toLocaleString("en-US");
+    }
+
+    function moneyFromPoints(value) {
+      return "$" + (Number(value || 0) / 1000).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function dateOnly(value) {
+      if (!value) return "";
+      const text = String(value);
+      return text.length >= 10 ? text.slice(0, 10) : text;
+    }
+
+    function dateTime(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value).replace("T", " ").slice(0, 19);
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function labelize(value) {
+      return String(value || "")
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    function signedPoints(value) {
+      const n = Number(value || 0);
+      if (n > 0) return "+" + points(n);
+      return points(n);
+    }
+
+    function html(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    async function getJson(url) {
+      const response = await fetch(url, { headers: { "Accept": "application/json" }, cache: "no-store" });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Request failed with ${response.status}`);
+      }
+      return await response.json();
+    }
+
+    async function loadBalances({ keepSelection = true } = {}) {
+      state.error = null;
+      setLoading(true);
+      try {
+        const payload = await getJson(`${apiRoot}/balances`);
+        state.balances = Array.isArray(payload.chapters) ? payload.chapters : [];
+        state.summary = payload.summary || null;
+        state.generatedAt = payload.generated_at || null;
+        const requested = new URLSearchParams(window.location.search).get("chapter");
+        const previous = keepSelection ? state.selectedCode : null;
+        applyFilters();
+        const nextSelection = requested || previous || (state.filtered[0] && state.filtered[0].chapter_code);
+        render();
+        if (nextSelection) {
+          await selectChapter(nextSelection, { replaceUrl: false });
+        }
+      } catch (error) {
+        state.error = error.message || String(error);
+        render();
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function selectChapter(chapterCode, { replaceUrl = true } = {}) {
+      if (!chapterCode) return;
+      state.selectedCode = chapterCode;
+      state.detailLoading = true;
+      state.detail = null;
+      renderBalances();
+      renderDetail();
+      try {
+        const payload = await getJson(`${apiRoot}/chapter?chapter_code=${encodeURIComponent(chapterCode)}&limit=300`);
+        state.detail = payload;
+        if (replaceUrl) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("chapter", chapterCode);
+          window.history.replaceState({}, "", url);
+        }
+      } catch (error) {
+        state.detail = { ok: false, error: error.message || String(error) };
+      } finally {
+        state.detailLoading = false;
+        renderBalances();
+        renderDetail();
+      }
+    }
+
+    function setLoading(isLoading) {
+      els.app.classList.toggle("loading", isLoading);
+    }
+
+    function applyFilters() {
+      const search = els.searchInput.value.trim().toLowerCase();
+      const nonzeroOnly = els.nonzeroOnly.checked;
+      const expiringOnly = els.expiringOnly.checked;
+      const issuesOnly = els.issuesOnly.checked;
+      let rows = state.balances.filter(row => {
+        const haystack = `${row.chapter_code || ""} ${row.chapter_name || ""}`.toLowerCase();
+        if (search && !haystack.includes(search)) return false;
+        if (nonzeroOnly && !row.available_points && !row.ledger_balance) return false;
+        if (expiringOnly && !row.expiring_30_days && !row.expiring_60_days && !row.expiring_90_days) return false;
+        if (issuesOnly && !row.balance_reconciliation_delta && !row.expired_unallocated_points) return false;
+        return true;
+      });
+      const sort = els.sortSelect.value;
+      rows.sort((a, b) => {
+        if (sort === "available_asc") return (a.available_points || 0) - (b.available_points || 0) || String(a.chapter_code).localeCompare(String(b.chapter_code));
+        if (sort === "code_asc") return String(a.chapter_code).localeCompare(String(b.chapter_code));
+        if (sort === "expiring_desc") return (b.expiring_30_days || 0) - (a.expiring_30_days || 0) || (b.expiring_60_days || 0) - (a.expiring_60_days || 0);
+        if (sort === "activity_desc") return String(b.last_transaction_posted_at || "").localeCompare(String(a.last_transaction_posted_at || ""));
+        return (b.available_points || 0) - (a.available_points || 0) || String(a.chapter_code).localeCompare(String(b.chapter_code));
+      });
+      state.filtered = rows;
+    }
+
+    function render() {
+      renderSummary();
+      renderBalances();
+      renderDetail();
+    }
+
+    function renderSummary() {
+      const summary = state.summary || {};
+      els.summaryAvailable.textContent = points(summary.available_points);
+      els.summaryValue.textContent = moneyFromPoints(summary.available_points);
+      els.summaryChapters.textContent = points(summary.chapter_count);
+      els.summaryCredits.textContent = points(summary.total_credits);
+      els.summaryDebits.textContent = points(summary.total_debits);
+      els.summaryExpiring.textContent = points(summary.expiring_30_days);
+      els.summaryExpiring.classList.toggle("warn", Number(summary.expiring_30_days || 0) > 0);
+      els.summaryExpiring.classList.toggle("good", Number(summary.expiring_30_days || 0) === 0);
+      if (state.error) {
+        els.reportMeta.textContent = state.error;
+        els.reportMeta.classList.add("error");
+      } else {
+        els.reportMeta.classList.remove("error");
+        const stamp = state.generatedAt ? dateTime(state.generatedAt) : "";
+        els.reportMeta.textContent = stamp ? `Updated ${stamp}` : "Ready";
+      }
+    }
+
+    function renderBalances() {
+      if (state.error) {
+        els.balancesBody.innerHTML = `<tr><td colspan="7" class="empty">${html(state.error)}</td></tr>`;
+        return;
+      }
+      if (!state.filtered.length) {
+        els.balancesBody.innerHTML = `<tr><td colspan="7" class="empty">No balances</td></tr>`;
+        return;
+      }
+      els.balancesBody.innerHTML = state.filtered.map(row => {
+        const selected = row.chapter_code === state.selectedCode ? " selected" : "";
+        const deltaClass = row.balance_reconciliation_delta ? "bad" : "good";
+        return `
+          <tr class="${selected}" tabindex="0" data-chapter="${html(row.chapter_code)}">
+            <td>
+              <div class="chapter-cell">
+                <span class="code">${html(row.chapter_code)}</span>
+                <span class="name">${html(row.chapter_name || "")}</span>
+              </div>
+            </td>
+            <td class="num">${points(row.available_points)}</td>
+            <td class="num">${moneyFromPoints(row.available_points)}</td>
+            <td class="num">${points(row.expiring_30_days)}</td>
+            <td>${html(dateOnly(row.next_expiration_date))}</td>
+            <td class="num">${points(row.multiplier)}</td>
+            <td class="num"><span class="pill ${deltaClass}">${points(row.balance_reconciliation_delta)}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderDetail() {
+      if (!state.selectedCode) {
+        els.detailContent.className = "empty";
+        els.detailContent.textContent = "No chapter selected";
+        return;
+      }
+      if (state.detailLoading) {
+        els.detailContent.className = "empty";
+        els.detailContent.textContent = "Loading";
+        return;
+      }
+      if (state.detail && state.detail.ok === false) {
+        els.detailContent.className = "empty";
+        els.detailContent.textContent = state.detail.error || "Chapter detail failed";
+        return;
+      }
+      const detail = state.detail;
+      if (!detail || !detail.chapter) {
+        els.detailContent.className = "empty";
+        els.detailContent.textContent = "No chapter selected";
+        return;
+      }
+      const chapter = detail.chapter;
+      els.detailContent.className = "";
+      els.detailContent.innerHTML = `
+        <div class="detail-head">
+          <h2 class="detail-title">${html(chapter.chapter_code)}</h2>
+          <div class="detail-name">${html(chapter.chapter_name || "")}</div>
+          <div class="detail-metrics">
+            <div class="mini">
+              <div class="mini-label">Available</div>
+              <div class="mini-value">${points(chapter.available_points)}</div>
+            </div>
+            <div class="mini">
+              <div class="mini-label">Value</div>
+              <div class="mini-value">${moneyFromPoints(chapter.available_points)}</div>
+            </div>
+            <div class="mini">
+              <div class="mini-label">Exp 30</div>
+              <div class="mini-value">${points(chapter.expiring_30_days)}</div>
+            </div>
+            <div class="mini">
+              <div class="mini-label">Credits</div>
+              <div class="mini-value">${points(chapter.total_credits)}</div>
+            </div>
+            <div class="mini">
+              <div class="mini-label">Debits</div>
+              <div class="mini-value">${points(chapter.total_debits)}</div>
+            </div>
+            <div class="mini">
+              <div class="mini-label">Delta</div>
+              <div class="mini-value">${points(chapter.balance_reconciliation_delta)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="tabs">
+          ${tabButton("ledger", "Ledger")}
+          ${tabButton("lots", "Lots")}
+          ${tabButton("breakdown", "Breakdown")}
+          ${tabButton("redemptions", "Redemptions")}
+        </div>
+        <div class="detail-tools">
+          ${renderDetailTools(detail)}
+        </div>
+        <div class="detail-body">
+          ${renderActiveTab(detail)}
+        </div>
+      `;
+    }
+
+    function tabButton(id, label) {
+      return `<button class="tab ${state.tab === id ? "active" : ""}" type="button" data-tab="${id}">${html(label)}</button>`;
+    }
+
+    function renderDetailTools(detail) {
+      if (state.tab === "ledger") {
+        const categories = Array.from(new Map((detail.breakdown || []).map(item => [item.source_category, item.source_label])).entries());
+        const options = [`<option value="all">All sources</option>`]
+          .concat(categories.map(([value, label]) => `<option value="${html(value)}" ${state.sourceFilter === value ? "selected" : ""}>${html(label)}</option>`))
+          .join("");
+        return `
+          <select id="sourceFilter" aria-label="Source filter">${options}</select>
+          <button id="exportActivityBtn" type="button">Export CSV</button>
+        `;
+      }
+      return `<span class="fineprint">Snapshot ${html(dateOnly(detail.chapter.latest_snapshot_date))}</span>`;
+    }
+
+    function filteredTransactions(detail) {
+      const rows = detail.transactions || [];
+      if (state.sourceFilter === "all") return rows;
+      return rows.filter(row => row.source_category === state.sourceFilter);
+    }
+
+    function renderActiveTab(detail) {
+      if (state.tab === "lots") return renderLots(detail.lots || []);
+      if (state.tab === "breakdown") return renderBreakdown(detail.breakdown || []);
+      if (state.tab === "redemptions") return renderRedemptions(detail.redemptions || []);
+      return renderLedger(filteredTransactions(detail));
+    }
+
+    function renderLedger(rows) {
+      if (!rows.length) return `<div class="empty">No activity</div>`;
+      return `
+        <table>
+          <colgroup>
+            <col style="width: 22%">
+            <col style="width: 22%">
+            <col style="width: 24%">
+            <col style="width: 13%">
+            <col style="width: 13%">
+            <col style="width: 6%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Posted</th>
+              <th>Source</th>
+              <th>Detail</th>
+              <th class="num">Points</th>
+              <th class="num">Balance</th>
+              <th class="num">Items</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(row => `
+              <tr>
+                <td>${html(dateTime(row.posted_at))}</td>
+                <td><span class="pill">${html(row.source_label)}</span></td>
+                <td>${html(row.public_detail)}</td>
+                <td class="num ${row.points_delta < 0 ? "negative" : "positive"}">${signedPoints(row.points_delta)}</td>
+                <td class="num">${points(row.running_balance)}</td>
+                <td class="num">${points(row.entry_count)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderLots(rows) {
+      if (!rows.length) return `<div class="empty">No lots</div>`;
+      return `
+        <table>
+          <colgroup>
+            <col style="width: 10%">
+            <col style="width: 20%">
+            <col style="width: 14%">
+            <col style="width: 14%">
+            <col style="width: 14%">
+            <col style="width: 14%">
+            <col style="width: 14%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="num">Lots</th>
+              <th>Source</th>
+              <th class="num">Original</th>
+              <th class="num">Remaining</th>
+              <th>Earned</th>
+              <th>Expires</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(row => `
+              <tr>
+                <td class="num">${points(row.lot_count)}</td>
+                <td>${html(row.source_label)}</td>
+                <td class="num">${points(row.original_points)}</td>
+                <td class="num">${points(row.remaining_points)}</td>
+                <td>${html(dateOnly(row.earned_date))}</td>
+                <td>${html(dateOnly(row.expires_on))}</td>
+                <td><span class="pill ${lotStatusClass(row.aging_status)}">${html(labelize(row.aging_status))}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function lotStatusClass(status) {
+      if (status === "active") return "good";
+      if (status === "expired_unallocated") return "bad";
+      if (String(status || "").startsWith("expiring")) return "warn";
+      return "";
+    }
+
+    function renderBreakdown(rows) {
+      if (!rows.length) return `<div class="empty">No breakdown</div>`;
+      return `
+        <table>
+          <colgroup>
+            <col style="width: 34%">
+            <col style="width: 16%">
+            <col style="width: 17%">
+            <col style="width: 17%">
+            <col style="width: 16%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th class="num">Txns</th>
+              <th class="num">Credits</th>
+              <th class="num">Debits</th>
+              <th class="num">Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(row => `
+              <tr>
+                <td>${html(row.source_label)}</td>
+                <td class="num">${points(row.transaction_count)}</td>
+                <td class="num positive">${points(row.credit_points)}</td>
+                <td class="num negative">${points(row.debit_points)}</td>
+                <td class="num">${points(row.net_points)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderRedemptions(rows) {
+      if (!rows.length) return `<div class="empty">No redemptions</div>`;
+      return `
+        <table>
+          <colgroup>
+            <col style="width: 20%">
+            <col style="width: 24%">
+            <col style="width: 24%">
+            <col style="width: 16%">
+            <col style="width: 16%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Payment</th>
+              <th class="num">Points</th>
+              <th class="num">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(row => `
+              <tr>
+                <td>${html(dateOnly(row.request_date))}</td>
+                <td>${html(labelize(row.redemption_category))}</td>
+                <td>${html(labelize(row.payment_mode))}</td>
+                <td class="num negative">${points(row.points)}</td>
+                <td class="num">${moneyFromPoints(row.points)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function toCsv(rows, columns) {
+      const escapeCell = value => {
+        const text = String(value ?? "");
+        return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+      };
+      return [
+        columns.map(column => escapeCell(column.label)).join(","),
+        ...rows.map(row => columns.map(column => escapeCell(column.value(row))).join(","))
+      ].join("\r\n");
+    }
+
+    function downloadCsv(filename, csv) {
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportBalances() {
+      const csv = toCsv(state.filtered, [
+        { label: "Chapter", value: row => row.chapter_code },
+        { label: "Name", value: row => row.chapter_name },
+        { label: "Available Points", value: row => row.available_points },
+        { label: "Value USD", value: row => (row.available_points || 0) / 1000 },
+        { label: "Ledger Balance", value: row => row.ledger_balance },
+        { label: "Expiring 30 Days", value: row => row.expiring_30_days },
+        { label: "Expiring 60 Days", value: row => row.expiring_60_days },
+        { label: "Expiring 90 Days", value: row => row.expiring_90_days },
+        { label: "Next Expiration", value: row => dateOnly(row.next_expiration_date) },
+        { label: "Active Members", value: row => row.active_member_count },
+        { label: "Multiplier", value: row => row.multiplier },
+        { label: "Reconciliation Delta", value: row => row.balance_reconciliation_delta }
+      ]);
+      downloadCsv("chapter-rewards-balances.csv", csv);
+    }
+
+    function exportActivity() {
+      if (!state.detail) return;
+      const rows = filteredTransactions(state.detail);
+      const code = state.detail.chapter && state.detail.chapter.chapter_code || "chapter";
+      const csv = toCsv(rows, [
+        { label: "Posted", value: row => dateTime(row.posted_at) },
+        { label: "Effective", value: row => dateOnly(row.effective_date) },
+        { label: "Source", value: row => row.source_label },
+        { label: "Detail", value: row => row.public_detail },
+        { label: "Points", value: row => row.points_delta },
+        { label: "Running Balance", value: row => row.running_balance },
+        { label: "Entries", value: row => row.entry_count },
+        { label: "Run", value: row => row.run_id }
+      ]);
+      downloadCsv(`chapter-rewards-${code}-activity.csv`, csv);
+    }
+
+    els.refreshBtn.addEventListener("click", () => loadBalances());
+    els.exportBalancesBtn.addEventListener("click", exportBalances);
+    els.searchInput.addEventListener("input", () => { applyFilters(); renderBalances(); });
+    els.sortSelect.addEventListener("change", () => { applyFilters(); renderBalances(); });
+    els.nonzeroOnly.addEventListener("change", () => { applyFilters(); renderBalances(); });
+    els.expiringOnly.addEventListener("change", () => { applyFilters(); renderBalances(); });
+    els.issuesOnly.addEventListener("change", () => { applyFilters(); renderBalances(); });
+    els.balancesBody.addEventListener("click", event => {
+      const row = event.target.closest("tr[data-chapter]");
+      if (row) selectChapter(row.dataset.chapter);
+    });
+    els.balancesBody.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const row = event.target.closest("tr[data-chapter]");
+      if (!row) return;
+      event.preventDefault();
+      selectChapter(row.dataset.chapter);
+    });
+    els.detailContent.addEventListener("click", event => {
+      const tab = event.target.closest("[data-tab]");
+      if (tab) {
+        state.tab = tab.dataset.tab;
+        renderDetail();
+        return;
+      }
+      if (event.target.id === "exportActivityBtn") {
+        exportActivity();
+      }
+    });
+    els.detailContent.addEventListener("change", event => {
+      if (event.target.id === "sourceFilter") {
+        state.sourceFilter = event.target.value;
+        renderDetail();
+      }
+    });
+
+    loadBalances();
+  </script>
+</body>
+</html>

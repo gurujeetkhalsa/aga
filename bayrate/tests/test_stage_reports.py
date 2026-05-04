@@ -117,6 +117,40 @@ class StageReportsTest(unittest.TestCase):
         self.assertEqual(tournament["tournament_row"]["Reward_Is_State_Championship"], 1)
         self.assertFalse(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
 
+    def test_report_metadata_is_applied_before_payload_review(self) -> None:
+        payload = build_staging_payload(
+            [(str(FIXTURE_DIR / "report_compact_one.txt"), (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"))],
+            adapter=FakeAdapter(),
+            report_metadata=[
+                {
+                    "tournament_descr": "Operator Edited Open",
+                    "city": "Portland",
+                    "state_code": "or",
+                    "country_code": "us",
+                    "host_chapter_id": 4207,
+                    "host_chapter_code": "PORT",
+                    "host_chapter_name": "Portland Go Club",
+                    "reward_event_key": "operator-linked-event",
+                    "reward_event_name": "Operator Linked Event",
+                    "reward_is_state_championship": True,
+                }
+            ],
+        )
+
+        tournament = payload["staged_tournaments"][0]
+        row = tournament["tournament_row"]
+
+        self.assertEqual(row["Tournament_Descr"], "Operator Edited Open")
+        self.assertEqual(row["City"], "Portland")
+        self.assertEqual(row["State_Code"], "OR")
+        self.assertEqual(row["Country_Code"], "US")
+        self.assertEqual(row["Host_ChapterID"], 4207)
+        self.assertEqual(row["Host_ChapterCode"], "PORT")
+        self.assertEqual(row["Reward_Event_Key"], "operator-linked-event")
+        self.assertEqual(row["Reward_Event_Name"], "Operator Linked Event")
+        self.assertEqual(row["Reward_Is_State_Championship"], 1)
+        self.assertFalse(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
+
     def test_duplicate_candidate_with_different_code_needs_review(self) -> None:
         adapter = FakeAdapter(
             [

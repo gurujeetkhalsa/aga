@@ -279,10 +279,16 @@ def build_staging_payload(
     duplicate_check: bool = True,
     run_id: int | str | None = None,
     today: date | None = None,
+    report_metadata: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     run_identifier = _coerce_run_id(run_id) if run_id is not None else None
     processing_date = today or date.today()
     parsed = parse_reports_to_rows(reports, continue_on_error=True)
+    metadata_by_ordinal = {
+        index + 1: dict(metadata or {})
+        for index, metadata in enumerate(report_metadata or [])
+        if isinstance(metadata, dict)
+    }
     staged_tournaments: list[dict[str, Any]] = []
     staged_games: list[dict[str, Any]] = []
     run_warnings: list[dict[str, Any]] = []
@@ -305,6 +311,8 @@ def build_staging_payload(
         tournament_row.setdefault("Reward_Event_Key", None)
         tournament_row.setdefault("Reward_Event_Name", None)
         tournament_row.setdefault("Reward_Is_State_Championship", 0)
+        operator_metadata = metadata_by_ordinal.get(report_ordinal, {})
+        apply_report_metadata_to_tournament_row(tournament_row, operator_metadata)
         game_rows = [dict(row) for row in report["game_rows"]]
         player_rows = [dict(row) for row in report.get("players") or []]
         parser_warnings = [dict(warning) for warning in report.get("warnings") or []]
@@ -470,6 +478,9 @@ def build_staging_payload(
             else:
                 status = "ready_for_rating"
 
+        entry_metadata = dict(report.get("metadata") or {})
+        if operator_metadata:
+            entry_metadata["operator_metadata"] = operator_metadata
         tournament_entry = {
             "run_id": run_identifier,
             "source_report_ordinal": report_ordinal,
@@ -484,7 +495,7 @@ def build_staging_payload(
             "parser_warnings": parser_warnings,
             "duplicate_candidate": duplicate_candidate,
             "review_reason": review_reason,
-            "metadata": dict(report.get("metadata") or {}),
+            "metadata": entry_metadata,
         }
         staged_tournaments.append(tournament_entry)
         assigned_code = str(tournament_row.get("Tournament_Code") or "").strip()
@@ -1144,6 +1155,33 @@ def refresh_payload_summary(payload: dict[str, Any]) -> dict[str, Any]:
     payload["validation_failed_count"] = sum(1 for entry in tournaments if entry.get("status") == "validation_failed")
     payload["status"] = rollup_status([entry.get("status") for entry in tournaments])
     return payload
+
+
+def apply_report_metadata_to_tournament_row(tournament_row: dict[str, Any], metadata: dict[str, Any] | None) -> None:
+    if not metadata:
+        return
+    text_fields = {
+        "tournament_descr": "Tournament_Descr",
+        "city": "City",
+        "state_code": "State_Code",
+        "country_code": "Country_Code",
+        "host_chapter_code": "Host_ChapterCode",
+        "host_chapter_name": "Host_ChapterName",
+        "reward_event_key": "Reward_Event_Key",
+        "reward_event_name": "Reward_Event_Name",
+    }
+    for input_key, row_key in text_fields.items():
+        if input_key not in metadata:
+            continue
+        value = _clean_text(metadata.get(input_key))
+        if row_key in {"State_Code", "Country_Code", "Host_ChapterCode"} and value:
+            value = value.upper()
+        tournament_row[row_key] = value
+
+    if "host_chapter_id" in metadata:
+        tournament_row["Host_ChapterID"] = _coerce_int(metadata.get("host_chapter_id"))
+    if "reward_is_state_championship" in metadata:
+        tournament_row["Reward_Is_State_Championship"] = 1 if _coerce_bool(metadata.get("reward_is_state_championship")) else 0
 
 
 def apply_tournament_review_decision(
@@ -2025,6 +2063,9 @@ def printable_payload(payload: dict[str, Any], *, include_games: bool = False) -
                 "code_source": entry["code_source"],
                 "description": entry["tournament_row"].get("Tournament_Descr"),
                 "tournament_date": entry["tournament_row"].get("Tournament_Date"),
+                "city": entry["tournament_row"].get("City"),
+                "state_code": entry["tournament_row"].get("State_Code"),
+                "country_code": entry["tournament_row"].get("Country_Code"),
                 "host_chapter_id": entry["tournament_row"].get("Host_ChapterID"),
                 "host_chapter_code": entry["tournament_row"].get("Host_ChapterCode"),
                 "host_chapter_name": entry["tournament_row"].get("Host_ChapterName"),

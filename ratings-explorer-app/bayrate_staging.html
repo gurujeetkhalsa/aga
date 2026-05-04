@@ -93,6 +93,123 @@
       font-weight: 700;
     }
 
+    .workflow-panel {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .workflow-summary {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.7fr) minmax(260px, 1.3fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .workflow-status,
+    .workflow-waiting {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 10px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .workflow-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .workflow-main {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+      gap: 8px;
+    }
+
+    .workflow-step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 8px;
+      min-height: 66px;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+
+    .workflow-step.done {
+      border-color: #a7d7bb;
+      background: var(--ready-soft);
+    }
+
+    .workflow-step.current {
+      border-color: #e0a05a;
+      background: var(--warn-soft);
+      box-shadow: inset 0 0 0 2px rgba(155, 91, 22, 0.16);
+    }
+
+    .workflow-step.blocked {
+      border-color: #efb1b1;
+      background: var(--danger-soft);
+    }
+
+    .workflow-step-title {
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .workflow-step-state {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .workflow-actions,
+    .workflow-review {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .workflow-review {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    .workflow-review-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 6px 8px;
+      max-width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .workflow-review-title {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
     .page {
       width: min(1480px, 100%);
       margin: 0 auto;
@@ -356,13 +473,14 @@
       flex-wrap: wrap;
     }
 
-    .host-chapter-row {
+    .metadata-grid {
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr) minmax(180px, 1fr) auto auto;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
       gap: 8px;
       align-items: end;
     }
 
+    .metadata-grid label,
     .host-chapter-row label {
       display: grid;
       gap: 4px;
@@ -371,6 +489,8 @@
       font-weight: 700;
     }
 
+    .metadata-grid input:not([type="checkbox"]),
+    .metadata-grid select,
     .host-chapter-row select,
     .host-chapter-row input:not([type="checkbox"]) {
       width: 100%;
@@ -381,6 +501,17 @@
       background: #fff;
       color: var(--ink);
       font-weight: 600;
+    }
+
+    .metadata-wide {
+      grid-column: span 2;
+    }
+
+    .host-chapter-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr) minmax(180px, 1fr) auto auto;
+      gap: 8px;
+      align-items: end;
     }
 
     .checkbox-field {
@@ -473,12 +604,28 @@
         grid-template-columns: 1fr;
       }
 
+      .workflow-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow-steps {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+      }
+
       .metrics {
         grid-template-columns: repeat(2, minmax(120px, 1fr));
       }
 
       .host-chapter-row {
         grid-template-columns: 1fr;
+      }
+
+      .metadata-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metadata-wide {
+        grid-column: span 1;
       }
     }
 
@@ -498,6 +645,10 @@
       .metrics {
         grid-template-columns: 1fr;
       }
+
+      .workflow-steps {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -512,11 +663,32 @@
         <a href="/api/ratings-explorer"><button type="button">Ratings Explorer</button></a>
         <input id="runIdInput" class="run-id-input" type="number" min="1" step="1" placeholder="RunID" aria-label="RunID" />
         <button type="button" id="loadRunBtn">Load Run</button>
-        <button type="button" id="previewBtn" class="primary">Preview Run</button>
-        <button type="button" id="stageBtn" class="success" disabled>Write Staged Run</button>
-        <button type="button" id="replayBtn" disabled>Run Replay</button>
       </div>
     </header>
+
+    <section class="workflow-panel" aria-live="polite">
+      <div class="workflow-summary">
+        <div class="workflow-status">
+          <div class="workflow-label">Last action</div>
+          <div id="workflowLastAction" class="workflow-main">No preview yet</div>
+        </div>
+        <div class="workflow-waiting">
+          <div class="workflow-label">Waiting for</div>
+          <div id="workflowWaiting" class="workflow-main">Add reports or load a RunID.</div>
+          <div id="workflowWaitingDetail" class="muted"></div>
+        </div>
+      </div>
+      <div id="workflowSteps" class="workflow-steps"></div>
+      <div class="workflow-actions">
+        <button type="button" id="previewBtn" class="primary">Preview Run</button>
+        <button type="button" id="confirmRewardLinksBtn" disabled>Confirm Reward Links</button>
+        <button type="button" id="stageBtn" class="success" disabled>Write Staged Run</button>
+        <button type="button" id="replayBtn" disabled>Run Replay</button>
+        <button type="button" id="commitPreviewBtn" data-action="commit-preview" disabled>Preview Production Commit</button>
+        <button type="button" id="commitRunBtn" data-action="commit-run" class="danger" disabled>Commit to Production</button>
+      </div>
+      <div id="workflowReview" class="workflow-review"></div>
+    </section>
 
     <section class="grid">
       <div class="panel">
@@ -544,9 +716,13 @@
         <div>
           <div class="section-head">
             <h2>Source Reports</h2>
-            <span id="sourceCount" class="pill">0 reports</span>
+            <div class="row-actions">
+              <span id="sourceCount" class="pill">0 reports</span>
+              <button type="button" id="linkAllRewardsBtn" disabled>Link All Rewards</button>
+            </div>
           </div>
           <div id="sourceList" class="source-list"></div>
+          <datalist id="rewardGroupOptions"></datalist>
         </div>
       </div>
 
@@ -572,6 +748,14 @@
 
   <script>
     const API_BASE = "__RATINGS_EXPLORER_API_BASE__";
+    const STATE_OPTIONS = [
+      "", "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA",
+      "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI",
+      "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
+      "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA",
+      "WA", "WV", "WI", "WY"
+    ];
+    const COUNTRY_OPTIONS = ["US", "CA", ""];
     const state = {
       reports: [],
       nextId: 1,
@@ -586,6 +770,8 @@
       commitPreview: null,
       commitState: null,
       hostChapterOptions: [],
+      metadataOptionsLoaded: false,
+      rewardLinksConfirmed: false,
     };
 
     const els = {
@@ -595,13 +781,23 @@
       pasteBox: document.getElementById("pasteBox"),
       addPasteBtn: document.getElementById("addPasteBtn"),
       clearAllBtn: document.getElementById("clearAllBtn"),
+      linkAllRewardsBtn: document.getElementById("linkAllRewardsBtn"),
       runIdInput: document.getElementById("runIdInput"),
       loadRunBtn: document.getElementById("loadRunBtn"),
       previewBtn: document.getElementById("previewBtn"),
       stageBtn: document.getElementById("stageBtn"),
       replayBtn: document.getElementById("replayBtn"),
+      confirmRewardLinksBtn: document.getElementById("confirmRewardLinksBtn"),
+      commitPreviewBtn: document.getElementById("commitPreviewBtn"),
+      commitRunBtn: document.getElementById("commitRunBtn"),
+      workflowLastAction: document.getElementById("workflowLastAction"),
+      workflowWaiting: document.getElementById("workflowWaiting"),
+      workflowWaitingDetail: document.getElementById("workflowWaitingDetail"),
+      workflowSteps: document.getElementById("workflowSteps"),
+      workflowReview: document.getElementById("workflowReview"),
       sourceCount: document.getElementById("sourceCount"),
       sourceList: document.getElementById("sourceList"),
+      rewardGroupOptions: document.getElementById("rewardGroupOptions"),
       sameDateList: document.getElementById("sameDateList"),
       previewStatus: document.getElementById("previewStatus"),
       previewOutput: document.getElementById("previewOutput"),
@@ -624,11 +820,16 @@
       }
       const startMatch = String(text || "").match(/^\s*start\s*=\s*['"]?([^'"\r\n]+)/im);
       const eventDate = startMatch ? normalizeDate(startMatch[1].trim()) : "";
+      const locationMatch = String(text || "").match(/^\s*location\s*=\s*([^'"\r\n]+)/im);
+      const location = parseLocation(locationMatch ? locationMatch[1] : "");
       const gameMatch = String(text || "").match(/^\s*GAMES(?:\s+\d+|\s*\((\d+)\))?/gim);
       const playerMatch = String(text || "").match(/^\s*PLAYERS(?:\s*\((\d+)\))?/im);
       return {
         title,
         eventDate,
+        city: location.city,
+        stateCode: location.stateCode,
+        countryCode: location.countryCode,
         playerCountHint: playerMatch && playerMatch[1] ? Number(playerMatch[1]) : null,
         gameSectionCount: gameMatch ? gameMatch.length : 0,
       };
@@ -643,8 +844,45 @@
       return "";
     }
 
+    function parseLocation(value) {
+      const text = String(value || "").trim();
+      if (!text) return { city: "", stateCode: "", countryCode: "US" };
+      const parts = text.split(",").map((part) => part.trim()).filter(Boolean);
+      const city = parts.length > 1 ? parts.slice(0, -1).join(", ") : parts[0] || "";
+      const regionParts = (parts.length > 1 ? parts[parts.length - 1] : "").split(/\s+/).filter(Boolean);
+      const stateCode = regionParts[0] ? regionParts[0].toUpperCase() : "";
+      const countryCode = regionParts[1] ? regionParts[1].toUpperCase() : "US";
+      return { city, stateCode, countryCode };
+    }
+
+    function defaultReportMetadata(summary) {
+      return {
+        tournamentDescr: summary.title || "",
+        city: summary.city || "",
+        stateCode: summary.stateCode || "",
+        countryCode: summary.countryCode || "US",
+        hostChapterId: "",
+        hostChapterCode: "",
+        hostChapterName: "",
+        rewardEventKey: makeRewardEventKey(summary.title, summary.eventDate),
+        rewardEventName: summary.title || "",
+        rewardIsStateChampionship: false,
+      };
+    }
+
+    function makeRewardEventKey(title, eventDate) {
+      const titleSlug = String(title || "event")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 72) || "event";
+      const dateSlug = String(eventDate || "").replace(/-/g, "");
+      return [titleSlug, dateSlug].filter(Boolean).join("-");
+    }
+
     function addReport(sourceName, content) {
       resetPreviewState();
+      state.rewardLinksConfirmed = false;
       const summary = parseLocalReport(content, sourceName);
       state.reports.push({
         id: state.nextId,
@@ -652,6 +890,7 @@
         sourceName,
         content,
         ...summary,
+        metadata: defaultReportMetadata(summary),
       });
       state.nextId += 1;
       state.nextSequence += 1;
@@ -666,12 +905,31 @@
       state.commitState = null;
       els.previewStatus.textContent = "No preview yet";
       els.previewOutput.innerHTML = "";
+      els.stageBtn.disabled = true;
+      els.replayBtn.disabled = true;
     }
 
     function storeBayratePayload(payload) {
       state.previewPayload = payload;
       if (Array.isArray(payload.host_chapter_options)) {
         state.hostChapterOptions = payload.host_chapter_options;
+        state.metadataOptionsLoaded = true;
+      }
+    }
+
+    async function loadMetadataOptions() {
+      try {
+        const response = await fetch(`${API_BASE}/api/ratings-explorer/bayrate/metadata-options`);
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `Metadata lookup failed with HTTP ${response.status}`);
+        if (Array.isArray(payload.host_chapter_options)) {
+          state.hostChapterOptions = payload.host_chapter_options;
+          state.metadataOptionsLoaded = true;
+          render();
+        }
+      } catch (error) {
+        state.metadataOptionsLoaded = false;
+        els.previewStatus.textContent = `Metadata options unavailable: ${error.message}`;
       }
     }
 
@@ -777,25 +1035,401 @@
     function removeReport(reportId) {
       state.reports = state.reports.filter((report) => report.id !== reportId);
       resetPreviewState();
+      state.rewardLinksConfirmed = false;
       render();
+    }
+
+    function updateReportMetadataFromControl(control) {
+      const reportId = Number(control.dataset.id);
+      const key = control.dataset.reportMeta;
+      const report = state.reports.find((item) => item.id === reportId);
+      if (!report || !key) return;
+      if (!report.metadata) report.metadata = defaultReportMetadata(report);
+      if (control.type === "checkbox") {
+        report.metadata[key] = Boolean(control.checked);
+      } else {
+        report.metadata[key] = control.value;
+      }
+      if (key === "hostChapterId") {
+        const option = hostChapterOptionById(control.value);
+        report.metadata.hostChapterCode = option ? option.chapter_code : "";
+        report.metadata.hostChapterName = option ? option.chapter_name : "";
+      }
+      if (key === "tournamentDescr" && !String(report.metadata.rewardEventName || "").trim()) {
+        report.metadata.rewardEventName = control.value;
+      }
+      resetPreviewState();
+      state.rewardLinksConfirmed = false;
+    }
+
+    function linkDateGroup(eventDate) {
+      const reports = state.reports
+        .filter((report) => report.eventDate === eventDate)
+        .sort((left, right) => left.sequence - right.sequence);
+      if (reports.length < 2) return;
+      const first = reports[0];
+      const groupKey = first.metadata?.rewardEventKey || makeRewardEventKey(first.title, eventDate);
+      const groupName = first.metadata?.rewardEventName || first.title || `Rewards event ${eventDate}`;
+      for (const report of reports) {
+        if (!report.metadata) report.metadata = defaultReportMetadata(report);
+        report.metadata.rewardEventKey = groupKey;
+        report.metadata.rewardEventName = groupName;
+      }
+      resetPreviewState();
+      state.rewardLinksConfirmed = true;
+      render();
+    }
+
+    function linkReportToRewardGroup(reportId, groupKey) {
+      const report = state.reports.find((item) => item.id === reportId);
+      const source = state.reports.find((item) => String(item.metadata?.rewardEventKey || "").trim() === groupKey);
+      if (!report || !source || !groupKey) return;
+      if (!report.metadata) report.metadata = defaultReportMetadata(report);
+      report.metadata.rewardEventKey = groupKey;
+      report.metadata.rewardEventName = source.metadata?.rewardEventName || source.title || groupKey;
+      resetPreviewState();
+      state.rewardLinksConfirmed = true;
+      render();
+    }
+
+    function linkAllRewardGroups() {
+      const reports = orderedReports();
+      if (reports.length < 2) return;
+      const first = reports[0];
+      const groupKey = first.metadata?.rewardEventKey || makeRewardEventKey(first.title, first.eventDate);
+      const groupName = first.metadata?.rewardEventName || first.title || groupKey;
+      for (const report of reports) {
+        if (!report.metadata) report.metadata = defaultReportMetadata(report);
+        report.metadata.rewardEventKey = groupKey;
+        report.metadata.rewardEventName = groupName;
+      }
+      resetPreviewState();
+      state.rewardLinksConfirmed = true;
+      render();
+    }
+
+    function confirmRewardLinks() {
+      if (state.reports.length < 2 || state.busy) return;
+      state.rewardLinksConfirmed = true;
+      els.previewStatus.textContent = "Reward links confirmed";
+      render();
+    }
+
+    function activeSummary() {
+      return state.stagedSummary || (state.previewPayload && state.previewPayload.summary) || null;
+    }
+
+    function isCommitted() {
+      return Boolean(
+        (state.commitState && state.commitState.committed)
+        || (state.commitPreview && state.commitPreview.executed)
+      );
+    }
+
+    function hasPartialCommitMarker() {
+      return Boolean(state.commitState && state.commitState.state === "partial_commit_marker");
+    }
+
+    function summaryTournaments(summary = activeSummary()) {
+      return summary && Array.isArray(summary.tournaments) ? summary.tournaments : [];
+    }
+
+    function isReviewComplete(summary = activeSummary()) {
+      if (!state.stagedSummary) return false;
+      const tournaments = summaryTournaments(summary);
+      if (!tournaments.length) return state.stagedSummary.status === "ready_for_rating";
+      return tournaments.every((tournament) => tournament.status === "ready_for_rating");
+    }
+
+    function hasReplayRatings() {
+      return Boolean(
+        state.replaySummary
+        || state.commitPreview
+        || (state.commitState && (state.commitState.has_staged_ratings || state.commitState.committed))
+      );
+    }
+
+    function reportMetadataIssues() {
+      if (state.stagedSummary || !state.reports.length) return [];
+      return orderedReports().flatMap((report) => {
+        const metadata = report.metadata || {};
+        const missing = [];
+        if (!String(metadata.tournamentDescr || "").trim()) missing.push("tournament name");
+        if (!String(metadata.hostChapterId || "").trim()) missing.push("host chapter");
+        if (!String(metadata.rewardEventKey || "").trim()) missing.push("reward group");
+        if (!String(metadata.rewardEventName || "").trim()) missing.push("group name");
+        return missing.length ? [`${report.sourceName}: ${missing.join(", ")}`] : [];
+      });
+    }
+
+    function reportMetadataComplete() {
+      return Boolean(state.stagedSummary || (state.reports.length > 0 && reportMetadataIssues().length === 0));
+    }
+
+    function rewardLinkConfirmationNeeded() {
+      return Boolean(!state.stagedSummary && state.reports.length > 1);
+    }
+
+    function rewardLinksComplete() {
+      return Boolean(state.stagedSummary || !rewardLinkConfirmationNeeded() || state.rewardLinksConfirmed);
+    }
+
+    function rewardLinkSummary() {
+      if (!state.reports.length) return "";
+      const groups = new Map();
+      for (const report of orderedReports()) {
+        const key = String(report.metadata?.rewardEventKey || "").trim() || "unassigned";
+        groups.set(key, (groups.get(key) || 0) + 1);
+      }
+      return [...groups.entries()].map(([key, count]) => `${key} (${count})`).join(", ");
+    }
+
+    function canRunReplay() {
+      return Boolean(state.stagedSummary && isReviewComplete() && !isCommitted() && !hasPartialCommitMarker());
+    }
+
+    function canPreviewProductionCommit() {
+      return Boolean(
+        state.stagedSummary
+        && isReviewComplete()
+        && hasReplayRatings()
+        && !isCommitted()
+        && !hasPartialCommitMarker()
+      );
+    }
+
+    function canCommitProduction() {
+      return Boolean(canPreviewProductionCommit() && state.commitPreview && !state.commitPreview.executed);
+    }
+
+    function tournamentHasHost(tournament) {
+      return Boolean(tournament && tournament.host_chapter_id && tournament.host_chapter_code);
+    }
+
+    function tournamentHasHostOrSelection(tournament) {
+      return Boolean(
+        tournamentHasHost(tournament)
+        || selectedHostChapterId(tournament.source_report_ordinal)
+      );
+    }
+
+    function reviewWaitingItems(summary = activeSummary()) {
+      if (!state.stagedSummary) return [];
+      return summaryTournaments(summary)
+        .filter((tournament) => tournament.status !== "ready_for_rating")
+        .map((tournament) => {
+          const duplicate = tournament.duplicate_candidate;
+          const errors = tournament.validation_errors || [];
+          const hasHost = tournamentHasHostOrSelection(tournament);
+          let waiting = "Mark ready.";
+          if (tournament.status === "validation_failed" || errors.length) {
+            waiting = "Resolve validation errors.";
+          } else if (!hasHost) {
+            waiting = "Select a host chapter.";
+          } else if (duplicate && duplicate.tournament_code) {
+            waiting = "Approve duplicate or choose a new code.";
+          } else if (tournament.status === "needs_review" || tournament.status === "staged") {
+            waiting = "Mark ready.";
+          }
+          return { tournament, waiting, hasHost, duplicate, errors };
+        });
+    }
+
+    function workflowWaitingState() {
+      const summary = activeSummary();
+      const reportsReady = state.reports.length > 0 || Boolean(state.stagedSummary);
+      if (state.busy) {
+        return { main: "Current request to finish.", detail: els.previewStatus.textContent || "" };
+      }
+      if (isCommitted()) {
+        return { main: "Workflow complete.", detail: "Production ratings were committed for this run." };
+      }
+      if (hasPartialCommitMarker()) {
+        return { main: "Manual inspection.", detail: "This RunID has a partial commit marker, so production commit controls are blocked." };
+      }
+      if (!reportsReady) {
+        return { main: "Reports or RunID.", detail: "Add report files, paste a report, or load an existing staged RunID." };
+      }
+      if (!reportMetadataComplete()) {
+        return { main: "Enter tournament metadata.", detail: reportMetadataIssues().join(" ") };
+      }
+      if (!rewardLinksComplete()) {
+        return {
+          main: "Confirm reward links.",
+          detail: "Link sections that belong to one rewards event, or confirm the current groups are intentionally independent.",
+        };
+      }
+      if (!state.previewPayload && !state.stagedSummary) {
+        return { main: "Preview Run.", detail: "Preview parses the reports and checks duplicate/same-date issues." };
+      }
+      if (!state.stagedSummary) {
+        return { main: "Write Staged Run.", detail: "The preview is ready; write it to BayRate staging tables before review." };
+      }
+      const waitingItems = reviewWaitingItems(summary);
+      if (waitingItems.length) {
+        return {
+          main: "Review and Mark Ready.",
+          detail: waitingItems.map((item) => `${item.tournament.tournament_code}: ${item.waiting}`).join(" "),
+        };
+      }
+      if (!hasReplayRatings()) {
+        return { main: "Run Replay.", detail: "The staged tournaments are ready; replay will stage the rating rows and cascade events." };
+      }
+      if (!state.commitPreview) {
+        return { main: "Preview Production Commit.", detail: "Replay is complete; build the final production write plan." };
+      }
+      return { main: "Commit to Production.", detail: "Review the commit preview, then confirm the production write." };
+    }
+
+    function workflowSteps() {
+      const reportsDone = state.reports.length > 0 || Boolean(state.stagedSummary);
+      const metadataDone = reportMetadataComplete();
+      const linksDone = rewardLinksComplete();
+      const previewDone = Boolean(state.previewPayload || state.stagedSummary);
+      const stageDone = Boolean(state.stagedSummary);
+      const reviewDone = isReviewComplete();
+      const replayDone = hasReplayRatings();
+      const commitPreviewDone = Boolean(state.commitPreview);
+      const commitDone = isCommitted();
+      const definitions = [
+        { id: "reports", label: "Reports", done: reportsDone, state: reportsDone ? "loaded" : "waiting" },
+        { id: "metadata", label: "Metadata", done: metadataDone, state: metadataDone ? "complete" : "needed" },
+        { id: "links", label: "Reward Links", done: linksDone, state: linksDone ? (state.rewardLinksConfirmed ? "confirmed" : "not needed") : "confirm" },
+        { id: "preview", label: "Preview", done: previewDone, state: previewDone ? "done" : "waiting" },
+        { id: "stage", label: "Stage", done: stageDone, state: stageDone ? "written" : "waiting" },
+        { id: "review", label: "Review", done: reviewDone, state: reviewDone ? "ready" : "waiting" },
+        { id: "replay", label: "Replay", done: replayDone, state: replayDone ? "ratings staged" : "waiting" },
+        { id: "plan", label: "Commit Plan", done: commitPreviewDone, state: commitPreviewDone ? "previewed" : "waiting" },
+        { id: "commit", label: "Commit", done: commitDone, state: commitDone ? "complete" : "waiting" },
+      ];
+      const current = definitions.find((step) => !step.done);
+      return definitions.map((step) => ({
+        ...step,
+        current: current && current.id === step.id,
+        blocked: hasPartialCommitMarker() && (step.id === "plan" || step.id === "commit"),
+      }));
+    }
+
+    function renderWorkflow() {
+      const waiting = workflowWaitingState();
+      els.workflowLastAction.textContent = els.previewStatus.textContent || "No preview yet";
+      els.workflowWaiting.textContent = waiting.main;
+      els.workflowWaitingDetail.textContent = waiting.detail || "";
+      els.workflowSteps.innerHTML = workflowSteps().map((step) => {
+        const className = step.blocked ? "blocked" : step.done ? "done" : step.current ? "current" : "";
+        return `
+          <div class="workflow-step ${className}">
+            <div class="workflow-step-title">${escapeHtml(step.label)}</div>
+            <div class="workflow-step-state">${escapeHtml(step.blocked ? "blocked" : step.state)}</div>
+          </div>
+        `;
+      }).join("");
+      renderWorkflowReview();
+    }
+
+    function renderWorkflowReview() {
+      if (!state.stagedSummary && state.reports.length) {
+        const metadataIssues = reportMetadataIssues();
+        const rewardLinkText = rewardLinkConfirmationNeeded()
+          ? (state.rewardLinksConfirmed ? `Reward groups confirmed: ${rewardLinkSummary()}` : `Reward groups need confirmation: ${rewardLinkSummary()}`)
+          : "Single-report run; no reward linking needed.";
+        els.workflowReview.innerHTML = `
+          <span class="workflow-label">Pre-stage setup</span>
+          ${metadataIssues.length ? `<span class="workflow-review-item"><span class="workflow-review-title">Metadata</span><span class="muted">${escapeHtml(metadataIssues.join(" "))}</span></span>` : '<span class="workflow-review-item"><span class="workflow-review-title">Metadata</span><span class="muted">Complete</span></span>'}
+          <span class="workflow-review-item"><span class="workflow-review-title">Reward Links</span><span class="muted">${escapeHtml(rewardLinkText)}</span></span>
+        `;
+        return;
+      }
+      if (!state.stagedSummary) {
+        els.workflowReview.innerHTML = '<span class="muted">Review actions appear here after staging.</span>';
+        return;
+      }
+      const waitingItems = reviewWaitingItems();
+      if (!waitingItems.length) {
+        els.workflowReview.innerHTML = '<span class="message ready">All staged tournaments are marked ready.</span>';
+        return;
+      }
+      els.workflowReview.innerHTML = `
+        <span class="workflow-label">Review queue</span>
+        ${waitingItems.map(renderWorkflowReviewItem).join("")}
+      `;
+    }
+
+    function renderWorkflowReviewItem(item) {
+      const tournament = item.tournament;
+      const duplicate = item.duplicate;
+      const canApproveDuplicate = Boolean(
+        duplicate
+        && duplicate.tournament_code
+        && item.hasHost
+        && tournament.status === "needs_review"
+        && !item.errors.length
+      );
+      const canMarkReady = Boolean(
+        item.hasHost
+        && !duplicate
+        && !item.errors.length
+        && ["needs_review", "staged"].includes(tournament.status)
+      );
+      return `
+        <span class="workflow-review-item">
+          <span class="workflow-review-title">${escapeHtml(tournament.tournament_code || tournament.description)}</span>
+          <span class="muted">${escapeHtml(item.waiting)}</span>
+          ${canApproveDuplicate ? `
+            <button
+              type="button"
+              class="success"
+              data-action="approve-duplicate"
+              data-ordinal="${escapeHtml(tournament.source_report_ordinal)}"
+              data-code="${escapeHtml(duplicate.tournament_code)}"
+            >Approve Duplicate</button>
+          ` : ""}
+          ${canMarkReady ? `
+            <button
+              type="button"
+              class="success"
+              data-action="mark-ready"
+              data-ordinal="${escapeHtml(tournament.source_report_ordinal)}"
+              data-code="${escapeHtml(tournament.tournament_code)}"
+            >Mark Ready</button>
+          ` : ""}
+          <button type="button" data-action="scroll-tournament" data-ordinal="${escapeHtml(tournament.source_report_ordinal)}">Details</button>
+        </span>
+      `;
+    }
+
+    function scrollToTournament(sourceReportOrdinal) {
+      const element = document.getElementById(`tournament-${String(sourceReportOrdinal).replace(/"/g, "")}`);
+      if (!element) return;
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("drop-target");
+      window.setTimeout(() => element.classList.remove("drop-target"), 1200);
     }
 
     function render() {
       els.sourceCount.textContent = `${state.reports.length} report${state.reports.length === 1 ? "" : "s"}`;
       els.loadRunBtn.disabled = state.busy;
-      els.previewBtn.disabled = state.busy || state.reports.length === 0;
-      els.stageBtn.disabled = state.busy || !state.previewPayload || Boolean(state.stagedSummary);
-      els.replayBtn.disabled = (
+      els.linkAllRewardsBtn.disabled = state.busy || state.reports.length < 2;
+      els.previewBtn.disabled = state.busy || state.reports.length === 0 || !reportMetadataComplete() || !rewardLinksComplete();
+      els.confirmRewardLinksBtn.disabled = state.busy || state.reports.length < 2 || state.rewardLinksConfirmed || Boolean(state.stagedSummary);
+      els.stageBtn.disabled = (
         state.busy
-        || !state.stagedSummary
-        || Boolean(state.commitState && (state.commitState.committed || state.commitState.state === "partial_commit_marker"))
+        || !state.previewPayload
+        || Boolean(state.stagedSummary)
+        || !reportMetadataComplete()
+        || !rewardLinksComplete()
       );
+      els.replayBtn.disabled = state.busy || !canRunReplay();
+      els.commitPreviewBtn.disabled = state.busy || !canPreviewProductionCommit();
+      els.commitRunBtn.disabled = state.busy || !canCommitProduction();
+      renderWorkflow();
       renderSources();
       renderSameDates();
     }
 
     function renderSources() {
       const reports = orderedReports();
+      renderRewardGroupOptions();
       if (!reports.length) {
         els.sourceList.innerHTML = '<div class="empty">No source reports loaded.</div>';
         return;
@@ -813,11 +1447,105 @@
             </div>
             <span class="pill">#${index + 1}</span>
           </div>
+          ${renderReportMetadata(report)}
           <div class="row-actions">
             <button type="button" data-action="remove" data-id="${report.id}">Remove</button>
           </div>
         </article>
       `).join("");
+    }
+
+    function renderReportMetadata(report) {
+      const metadata = report.metadata || defaultReportMetadata(report);
+      const hostId = String(metadata.hostChapterId || "");
+      const countryCode = metadata.countryCode === "" ? "" : String(metadata.countryCode || "US").toUpperCase();
+      return `
+        <div class="metadata-grid">
+          <label class="metadata-wide">
+            Tournament name
+            <input type="text" maxlength="255" value="${escapeHtml(metadata.tournamentDescr || "")}" data-report-meta="tournamentDescr" data-id="${report.id}" />
+          </label>
+          <label>
+            Host chapter
+            <select data-report-meta="hostChapterId" data-id="${report.id}" ${state.metadataOptionsLoaded ? "" : "disabled"}>
+              <option value="">${state.metadataOptionsLoaded ? "Select host chapter" : "Loading chapters"}</option>
+              ${state.hostChapterOptions.map((option) => {
+                const value = String(option.chapter_id || "");
+                return `<option value="${escapeHtml(value)}" ${value === hostId ? "selected" : ""}>${escapeHtml(option.label || option.chapter_code || value)}</option>`;
+              }).join("")}
+            </select>
+          </label>
+          <label>
+            City
+            <input type="text" maxlength="100" value="${escapeHtml(metadata.city || "")}" data-report-meta="city" data-id="${report.id}" />
+          </label>
+          <label>
+            State
+            <select data-report-meta="stateCode" data-id="${report.id}">
+              ${STATE_OPTIONS.map((option) => `<option value="${escapeHtml(option)}" ${String(metadata.stateCode || "").toUpperCase() === option ? "selected" : ""}>${escapeHtml(option || "None")}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            Country
+            <select data-report-meta="countryCode" data-id="${report.id}">
+              ${COUNTRY_OPTIONS.map((option) => `<option value="${escapeHtml(option)}" ${countryCode === option ? "selected" : ""}>${escapeHtml(option || "Other")}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            Reward group
+            <input type="text" maxlength="128" list="rewardGroupOptions" value="${escapeHtml(metadata.rewardEventKey || "")}" data-report-meta="rewardEventKey" data-id="${report.id}" />
+          </label>
+          <label>
+            Link to
+            <select data-link-reward-group="${report.id}">
+              <option value="">Independent group</option>
+              ${rewardGroupChoicesFor(report.id).map((choice) => `
+                <option value="${escapeHtml(choice.key)}" ${String(metadata.rewardEventKey || "") === choice.key ? "selected" : ""}>
+                  ${escapeHtml(choice.label)}
+                </option>
+              `).join("")}
+            </select>
+          </label>
+          <label class="metadata-wide">
+            Group name
+            <input type="text" maxlength="255" value="${escapeHtml(metadata.rewardEventName || "")}" data-report-meta="rewardEventName" data-id="${report.id}" />
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" ${metadata.rewardIsStateChampionship ? "checked" : ""} data-report-meta="rewardIsStateChampionship" data-id="${report.id}" />
+            State Championship
+          </label>
+        </div>
+      `;
+    }
+
+    function renderRewardGroupOptions() {
+      const values = [];
+      const seen = new Set();
+      for (const report of orderedReports()) {
+        const key = String(report.metadata?.rewardEventKey || "").trim();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        values.push(key);
+      }
+      els.rewardGroupOptions.innerHTML = values.map((value) => `<option value="${escapeHtml(value)}"></option>`).join("");
+    }
+
+    function rewardGroupChoicesFor(reportId) {
+      const choices = [];
+      const seen = new Set();
+      for (const report of orderedReports()) {
+        if (report.id === reportId) continue;
+        const key = String(report.metadata?.rewardEventKey || "").trim();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        const groupName = String(report.metadata?.rewardEventName || report.title || "").trim();
+        choices.push({
+          key,
+          name: groupName,
+          label: groupName ? `${groupName} (${key})` : key,
+        });
+      }
+      return choices;
     }
 
     function renderSameDates() {
@@ -830,7 +1558,10 @@
         <section class="same-date-group">
           <div class="section-head">
             <h3>${eventDate}</h3>
-            <span class="pill">${reports.length} events</span>
+            <div class="row-actions">
+              <span class="pill">${reports.length} events</span>
+              <button type="button" data-action="link-date-group" data-date="${escapeHtml(eventDate)}">Link Rewards</button>
+            </div>
           </div>
           ${reports.map((report, index) => `
             <div class="event-row" draggable="true" data-id="${report.id}">
@@ -847,6 +1578,31 @@
           `).join("")}
         </section>
       `).join("");
+    }
+
+    function reportRequestItems() {
+      return orderedReports().map((report) => ({
+        source_name: report.sourceName,
+        content: report.content,
+        metadata: reportMetadataForRequest(report),
+      }));
+    }
+
+    function reportMetadataForRequest(report) {
+      const metadata = report.metadata || {};
+      const hostOption = hostChapterOptionById(metadata.hostChapterId);
+      return {
+        tournament_descr: String(metadata.tournamentDescr || "").trim(),
+        city: String(metadata.city || "").trim(),
+        state_code: String(metadata.stateCode || "").trim().toUpperCase(),
+        country_code: String(metadata.countryCode || "").trim().toUpperCase(),
+        host_chapter_id: metadata.hostChapterId ? Number(metadata.hostChapterId) : null,
+        host_chapter_code: hostOption ? hostOption.chapter_code : metadata.hostChapterCode || null,
+        host_chapter_name: hostOption ? hostOption.chapter_name : metadata.hostChapterName || null,
+        reward_event_key: String(metadata.rewardEventKey || "").trim(),
+        reward_event_name: String(metadata.rewardEventName || "").trim(),
+        reward_is_state_championship: Boolean(metadata.rewardIsStateChampionship),
+      };
     }
 
     async function previewRun() {
@@ -866,10 +1622,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             duplicate_check: true,
-            reports: orderedReports().map((report) => ({
-              source_name: report.sourceName,
-              content: report.content,
-            })),
+            reports: reportRequestItems(),
           }),
         });
         const payload = await response.json();
@@ -898,10 +1651,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             confirm_stage: true,
-            reports: orderedReports().map((report) => ({
-              source_name: report.sourceName,
-              content: report.content,
-            })),
+            reports: reportRequestItems(),
           }),
         });
         const payload = await response.json();
@@ -1147,6 +1897,7 @@
       state.replaySummary = null;
       state.commitPreview = null;
       state.commitState = null;
+      state.rewardLinksConfirmed = false;
       els.previewStatus.textContent = `Loading RunID ${runId}...`;
       els.previewOutput.innerHTML = "";
       render();
@@ -1262,8 +2013,6 @@
       const commitState = state.commitState || {};
       const committed = Boolean(commitState.committed);
       const partialCommitMarker = commitState.state === "partial_commit_marker";
-      const canPreviewCommit = written && !committed && !partialCommitMarker;
-      const canCommit = canPreviewCommit && state.commitPreview && !state.commitPreview.executed;
       return `
         <div class="run-banner">
           <div>
@@ -1274,10 +2023,7 @@
             </div>
           </div>
           <div class="row-actions">
-            ${!written ? '<button type="button" data-action="stage-preview" class="success">Write Staged Run</button>' : ""}
-            ${written && !committed && !partialCommitMarker ? '<button type="button" data-action="replay-run">Run Replay</button>' : ""}
-            ${canPreviewCommit ? '<button type="button" data-action="commit-preview">Preview Production Commit</button>' : ""}
-            ${canCommit ? '<button type="button" data-action="commit-run" class="danger">Commit to Production</button>' : ""}
+            <span class="muted">${committed ? "Production commit is complete." : partialCommitMarker ? "Commit controls are blocked for manual inspection." : "Use the workflow controls at the top."}</span>
           </div>
         </div>
       `;
@@ -1316,13 +2062,14 @@
         && ["needs_review", "staged"].includes(tournament.status)
       );
       return `
-        <article class="preview-card">
+        <article class="preview-card" id="tournament-${escapeHtml(tournament.source_report_ordinal)}">
           <div class="preview-title">
             <div>
               <div class="source-title">${escapeHtml(tournament.description || tournament.tournament_code)}</div>
               <div class="source-meta">
                 <span>${escapeHtml(tournament.tournament_code)}</span>
                 <span>${escapeHtml(tournament.tournament_date)}</span>
+                <span>${escapeHtml([tournament.city, tournament.state_code].filter(Boolean).join(", ") || "location not set")}</span>
                 <span>${escapeHtml(tournament.source_report_name)}</span>
                 <span>${escapeHtml(hostLabel)}</span>
                 <span>${escapeHtml(tournament.reward_event_key || tournament.tournament_code)}</span>
@@ -1364,7 +2111,7 @@
     function renderHostChapterControl(tournament) {
       const currentId = tournament.host_chapter_id ? String(tournament.host_chapter_id) : "";
       if (!state.stagedSummary) {
-        return `<div class="message review">Host chapter will be selected after the run is written to staging.</div>`;
+        return `<div class="message ${currentId ? "ready" : "review"}">${currentId ? "Metadata from Source Reports will be written with this staged run." : "Select a host chapter in Source Reports before writing the staged run."}</div>`;
       }
       if (!state.hostChapterOptions.length) {
         return `<div class="message review">Host chapter options are unavailable.</div>`;
@@ -1699,6 +2446,7 @@
 
     els.clearAllBtn.addEventListener("click", () => {
       state.reports = [];
+      state.rewardLinksConfirmed = false;
       resetPreviewState();
       render();
     });
@@ -1706,6 +2454,8 @@
     els.previewBtn.addEventListener("click", previewRun);
     els.stageBtn.addEventListener("click", stageRun);
     els.replayBtn.addEventListener("click", replayRun);
+    els.confirmRewardLinksBtn.addEventListener("click", confirmRewardLinks);
+    els.linkAllRewardsBtn.addEventListener("click", linkAllRewardGroups);
     els.loadRunBtn.addEventListener("click", loadRun);
     els.runIdInput.addEventListener("input", render);
     els.runIdInput.addEventListener("keydown", (event) => {
@@ -1733,6 +2483,42 @@
       }
       if (button.dataset.action === "save-host") {
         saveHostChapter(Number(button.dataset.ordinal));
+      }
+      if (button.dataset.action === "link-date-group") {
+        linkDateGroup(button.dataset.date || "");
+      }
+      if (button.dataset.action === "scroll-tournament") {
+        scrollToTournament(button.dataset.ordinal || "");
+      }
+    });
+
+    els.previewOutput.addEventListener("input", (event) => {
+      if (event.target.closest("[data-host-chapter], [data-reward-event-key], [data-reward-event-name], [data-reward-state-championship]")) {
+        renderWorkflow();
+      }
+    });
+
+    els.previewOutput.addEventListener("change", (event) => {
+      if (event.target.closest("[data-host-chapter], [data-reward-event-key], [data-reward-event-name], [data-reward-state-championship]")) {
+        renderWorkflow();
+      }
+    });
+
+    els.sourceList.addEventListener("input", (event) => {
+      const control = event.target.closest("[data-report-meta]");
+      if (control) updateReportMetadataFromControl(control);
+    });
+
+    els.sourceList.addEventListener("change", (event) => {
+      const linkSelect = event.target.closest("[data-link-reward-group]");
+      if (linkSelect) {
+        linkReportToRewardGroup(Number(linkSelect.dataset.linkRewardGroup), String(linkSelect.value || "").trim());
+        return;
+      }
+      const control = event.target.closest("[data-report-meta]");
+      if (control) {
+        updateReportMetadataFromControl(control);
+        if (control.dataset.reportMeta === "hostChapterId") render();
       }
     });
 
@@ -1783,6 +2569,7 @@
     });
 
     const initialRunId = new URLSearchParams(window.location.search).get("run_id");
+    loadMetadataOptions();
     if (initialRunId) {
       els.runIdInput.value = initialRunId;
       loadRun();

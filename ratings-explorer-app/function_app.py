@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from datetime import date, datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 from time import perf_counter
 from urllib.parse import quote, urlsplit
@@ -73,6 +74,26 @@ def _with_debug(payload: dict, **debug_fields) -> dict:
     enriched = dict(payload)
     enriched["_debug"] = {key: value for key, value in debug_fields.items() if value is not None}
     return enriched
+
+
+def _public_json_default(value):
+    if isinstance(value, Decimal):
+        if value == value.to_integral_value():
+            return int(value)
+        return float(value)
+    return explorer.json_safe_value(value)
+
+
+def _public_json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    return func.HttpResponse(
+        json.dumps(payload, default=_public_json_default),
+        status_code=status_code,
+        headers=explorer.response_headers("application/json; charset=utf-8"),
+    )
+
+
+def _utc_now_text() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _bayrate_json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
@@ -169,25 +190,94 @@ def _bayrate_request_json(req: func.HttpRequest) -> tuple[dict | None, func.Http
     return body, None
 
 
-def _bayrate_report_inputs_from_body(body: dict) -> tuple[list[tuple[str, str]] | None, func.HttpResponse | None]:
+def _bayrate_report_inputs_from_body(
+    body: dict,
+    adapter: object | None = None,
+) -> tuple[list[tuple[str, str]] | None, list[dict] | None, func.HttpResponse | None]:
     reports = body.get("reports")
     if not isinstance(reports, list) or not reports:
-        return None, _bayrate_preview_error("At least one report is required.")
+        return None, None, _bayrate_preview_error("At least one report is required.")
     if len(reports) > 20:
-        return None, _bayrate_preview_error("At most 20 reports can be previewed at once.")
+        return None, None, _bayrate_preview_error("At most 20 reports can be previewed at once.")
 
     report_inputs = []
+    report_metadata = []
+    host_options_by_id = None
     for index, item in enumerate(reports, start=1):
         if not isinstance(item, dict):
-            return None, _bayrate_preview_error(f"Report {index} must be an object.")
+            return None, None, _bayrate_preview_error(f"Report {index} must be an object.")
         source_name = str(item.get("source_name") or f"pasted-report-{index}.txt").strip()
         content = str(item.get("content") or "")
         if not content.strip():
-            return None, _bayrate_preview_error(f"Report {index} is empty.")
+            return None, None, _bayrate_preview_error(f"Report {index} is empty.")
         if len(content) > 500_000:
-            return None, _bayrate_preview_error(f"Report {index} is too large.")
+            return None, None, _bayrate_preview_error(f"Report {index} is too large.")
+        metadata, metadata_error, host_options_by_id = _bayrate_report_metadata_from_item(
+            item,
+            adapter=adapter,
+            host_options_by_id=host_options_by_id,
+        )
+        if metadata_error:
+            return None, None, _bayrate_preview_error(f"Report {index}: {metadata_error}")
         report_inputs.append((source_name, content))
-    return report_inputs, None
+        report_metadata.append(metadata)
+    return report_inputs, report_metadata, None
+
+
+def _bayrate_report_metadata_from_item(
+    item: dict,
+    *,
+    adapter: object | None,
+    host_options_by_id: dict | None,
+) -> tuple[dict, str | None, dict | None]:
+    raw_metadata = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
+    metadata = {}
+    text_fields = {
+        "tournament_descr": 255,
+        "city": 100,
+        "state_code": 20,
+        "country_code": 20,
+        "reward_event_key": 128,
+        "reward_event_name": 255,
+    }
+    for key, max_length in text_fields.items():
+        if key not in raw_metadata:
+            continue
+        value = str(raw_metadata.get(key) or "").strip()
+        if value and len(value) > max_length:
+            return {}, f"{key} must be {max_length} characters or fewer.", host_options_by_id
+        metadata[key] = value or None
+
+    if "reward_is_state_championship" in raw_metadata:
+        metadata["reward_is_state_championship"] = bool(raw_metadata.get("reward_is_state_championship"))
+
+    raw_host_id = raw_metadata.get("host_chapter_id")
+    if raw_host_id in (None, ""):
+        return metadata, None, host_options_by_id
+    try:
+        host_chapter_id = int(str(raw_host_id).strip())
+    except (TypeError, ValueError):
+        return {}, "host_chapter_id must be an integer.", host_options_by_id
+    if host_chapter_id <= 0:
+        return {}, "host_chapter_id must be a positive integer.", host_options_by_id
+    if adapter is not None and load_host_chapter_options is not None:
+        if host_options_by_id is None:
+            host_options_by_id = {
+                int(option.get("chapter_id")): option
+                for option in load_host_chapter_options(adapter)
+                if option.get("chapter_id") is not None
+            }
+        option = host_options_by_id.get(host_chapter_id)
+        if option is None:
+            return {}, f"Host chapter {host_chapter_id} was not found.", host_options_by_id
+        metadata["host_chapter_id"] = host_chapter_id
+        metadata["host_chapter_code"] = option.get("chapter_code")
+        metadata["host_chapter_name"] = option.get("chapter_name")
+    else:
+        metadata["host_chapter_id"] = host_chapter_id
+        metadata["host_chapter_code"] = str(raw_metadata.get("host_chapter_code") or "").strip() or None
+        metadata["host_chapter_name"] = str(raw_metadata.get("host_chapter_name") or "").strip() or None
+    return metadata, None, host_options_by_id
 
 
 def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, written: bool = False) -> dict:
@@ -341,6 +431,534 @@ def _bayrate_same_date_groups(payload: dict) -> list[dict]:
         for tournament_date, events in sorted(groups.items())
         if tournament_date and len(events) > 1
     ]
+
+
+REWARDS_PUBLIC_BALANCES_SQL = """
+SELECT
+    [Chapter_Code],
+    [Chapter_Name],
+    [As_Of_Date],
+    [Latest_Snapshot_Date],
+    [Is_Current],
+    [Active_Member_Count],
+    [Multiplier],
+    [Available_Points],
+    [Total_Remaining_Points],
+    [Expired_Unallocated_Points],
+    [Original_Points],
+    [Consumed_Points],
+    [Ledger_Balance],
+    [Balance_Reconciliation_Delta],
+    [Total_Credits],
+    [Total_Debits],
+    [Lot_Count],
+    [Transaction_Count],
+    [Expiring_30_Days],
+    [Expiring_60_Days],
+    [Expiring_90_Days],
+    [Next_Expiration_Date],
+    [Last_Transaction_Posted_At]
+FROM [rewards].[v_chapter_balances]
+WHERE COALESCE([Available_Points], 0) <> 0
+   OR COALESCE([Ledger_Balance], 0) <> 0
+   OR COALESCE([Total_Credits], 0) <> 0
+   OR COALESCE([Total_Debits], 0) <> 0
+ORDER BY [Available_Points] DESC, [Chapter_Code]
+"""
+
+
+REWARDS_PUBLIC_CHAPTER_BALANCE_SQL = """
+SELECT TOP 1
+    [Chapter_Code],
+    [Chapter_Name],
+    [As_Of_Date],
+    [Latest_Snapshot_Date],
+    [Is_Current],
+    [Active_Member_Count],
+    [Multiplier],
+    [Available_Points],
+    [Total_Remaining_Points],
+    [Expired_Unallocated_Points],
+    [Original_Points],
+    [Consumed_Points],
+    [Ledger_Balance],
+    [Balance_Reconciliation_Delta],
+    [Total_Credits],
+    [Total_Debits],
+    [Lot_Count],
+    [Transaction_Count],
+    [Expiring_30_Days],
+    [Expiring_60_Days],
+    [Expiring_90_Days],
+    [Next_Expiration_Date],
+    [Last_Transaction_Posted_At]
+FROM [rewards].[v_chapter_balances]
+WHERE UPPER([Chapter_Code]) = UPPER(?)
+"""
+
+
+REWARDS_PUBLIC_TRANSACTIONS_SQL = """
+WITH [chapter_tx] AS
+(
+    SELECT
+        [TransactionID],
+        [Transaction_Type],
+        [Points_Delta],
+        [Base_Points],
+        [Multiplier],
+        [Effective_Date],
+        [Earned_Date],
+        [Posted_At],
+        [RunID],
+        [Run_Type],
+        [Run_Snapshot_Date],
+        [Run_Status],
+        [Run_Processor],
+        [Source_Type],
+        [Rule_Version],
+        [LotID],
+        [Lot_Remaining_Points],
+        [Lot_Expires_On],
+        [Allocated_From_Lots],
+        [Allocated_Lot_Count],
+        [MetadataJson]
+    FROM [rewards].[v_chapter_transaction_history]
+    WHERE UPPER([Chapter_Code]) = UPPER(?)
+),
+[public_tx] AS
+(
+    SELECT
+        tx.*,
+        CASE
+            WHEN tx.[Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN N'membership'
+            WHEN tx.[Source_Type] = N'rated_game_participation' THEN N'rated_games'
+            WHEN tx.[Source_Type] = N'tournament_host' THEN N'tournament_host'
+            WHEN tx.[Source_Type] = N'state_championship' THEN N'state_championship'
+            WHEN tx.[Source_Type] = N'redemption' THEN N'redemption'
+            WHEN tx.[Source_Type] = N'opening_balance' THEN N'opening_balance'
+            WHEN tx.[Source_Type] = N'point_expiration' THEN N'expiration'
+            WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            ELSE N'other'
+        END AS [Source_Category],
+        CASE
+            WHEN tx.[Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN N'Membership awards'
+            WHEN tx.[Source_Type] = N'rated_game_participation' THEN N'Rated games'
+            WHEN tx.[Source_Type] = N'tournament_host' THEN N'Tournament host'
+            WHEN tx.[Source_Type] = N'state_championship' THEN N'State Championship'
+            WHEN tx.[Source_Type] = N'redemption' THEN N'Redemption'
+            WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
+            WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expiration'
+            WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            ELSE N'Other'
+        END AS [Source_Label],
+        CASE
+        WHEN tx.[Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN
+            CONCAT(
+                CASE JSON_VALUE(tx.[MetadataJson], '$.event_type')
+                    WHEN N'new_membership' THEN N'New membership'
+                    WHEN N'renewal' THEN N'Renewal'
+                    WHEN N'lifetime' THEN N'Lifetime membership'
+                    ELSE N'Membership award'
+                END,
+                CASE
+                    WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.member_count'), N'') IS NOT NULL
+                        THEN CONCAT(N' x ', JSON_VALUE(tx.[MetadataJson], '$.member_count'))
+                    ELSE N''
+                END,
+                CASE
+                    WHEN COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.member_type'), N''), NULLIF(JSON_VALUE(tx.[MetadataJson], '$.event_member_type'), N'')) IS NOT NULL
+                        THEN CONCAT(N' - ', COALESCE(JSON_VALUE(tx.[MetadataJson], '$.member_type'), JSON_VALUE(tx.[MetadataJson], '$.event_member_type')))
+                    ELSE N''
+                END
+            )
+        WHEN tx.[Source_Type] = N'rated_game_participation' THEN
+            CONCAT(
+                N'Rated game participation',
+                CASE
+                    WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.tournament_code'), N'') IS NOT NULL
+                        THEN CONCAT(N' - ', JSON_VALUE(tx.[MetadataJson], '$.tournament_code'))
+                    ELSE N''
+                END
+            )
+        WHEN tx.[Source_Type] = N'tournament_host' THEN
+            CONCAT(
+                COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.reward_event_name'), N''), N'Tournament host award'),
+                CASE
+                    WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.rated_game_count'), N'') IS NOT NULL
+                        THEN CONCAT(N' - ', JSON_VALUE(tx.[MetadataJson], '$.rated_game_count'), N' rated games')
+                    ELSE N''
+                END
+            )
+        WHEN tx.[Source_Type] = N'state_championship' THEN
+            CONCAT(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.reward_event_name'), N''), N'State Championship'), N' - State Championship award')
+        WHEN tx.[Source_Type] = N'redemption' THEN
+            CONCAT(
+                N'Redemption - ',
+                REPLACE(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.redemption_category'), N''), N'other'), N'_', N' '),
+                N', ',
+                REPLACE(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.payment_mode'), N''), N'other'), N'_', N' ')
+            )
+        WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
+        WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expired unused points'
+        WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+        ELSE REPLACE(tx.[Source_Type], N'_', N' ')
+        END AS [Public_Detail]
+    FROM [chapter_tx] AS tx
+),
+[public_entries] AS
+(
+    SELECT
+        COUNT(*) AS [Public_Entry_Count],
+        MAX([TransactionID]) AS [Sort_TransactionID],
+        [Transaction_Type],
+        SUM([Points_Delta]) AS [Points_Delta],
+        CASE WHEN MIN([Base_Points]) = MAX([Base_Points]) THEN MAX([Base_Points]) ELSE NULL END AS [Base_Points],
+        CASE WHEN MIN([Multiplier]) = MAX([Multiplier]) THEN MAX([Multiplier]) ELSE NULL END AS [Multiplier],
+        [Effective_Date],
+        [Earned_Date],
+        MAX([Posted_At]) AS [Posted_At],
+        [RunID],
+        [Run_Type],
+        [Run_Snapshot_Date],
+        [Run_Status],
+        [Run_Processor],
+        [Rule_Version],
+        SUM([Allocated_From_Lots]) AS [Allocated_From_Lots],
+        SUM([Allocated_Lot_Count]) AS [Allocated_Lot_Count],
+        [Source_Category],
+        [Source_Label],
+        [Public_Detail]
+    FROM [public_tx]
+    GROUP BY
+        [Transaction_Type],
+        [Effective_Date],
+        [Earned_Date],
+        [RunID],
+        [Run_Type],
+        [Run_Snapshot_Date],
+        [Run_Status],
+        [Run_Processor],
+        [Rule_Version],
+        [Source_Category],
+        [Source_Label],
+        [Public_Detail]
+),
+[scored] AS
+(
+    SELECT
+        entries.*,
+        SUM(entries.[Points_Delta]) OVER
+        (
+            ORDER BY entries.[Effective_Date], entries.[Posted_At], entries.[Sort_TransactionID]
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS [Running_Balance]
+    FROM [public_entries] AS entries
+)
+SELECT TOP (?)
+    [Public_Entry_Count],
+    [Transaction_Type],
+    [Points_Delta],
+    [Base_Points],
+    [Multiplier],
+    [Effective_Date],
+    [Earned_Date],
+    [Posted_At],
+    [RunID],
+    [Run_Type],
+    [Run_Snapshot_Date],
+    [Run_Status],
+    [Run_Processor],
+    [Rule_Version],
+    [Allocated_From_Lots],
+    [Allocated_Lot_Count],
+    [Running_Balance],
+    [Source_Category],
+    [Source_Label],
+    [Public_Detail]
+FROM [scored]
+ORDER BY [Posted_At] DESC, [Sort_TransactionID] DESC
+"""
+
+
+REWARDS_PUBLIC_LOTS_SQL = """
+WITH [public_lots] AS
+(
+    SELECT
+        [Original_Points],
+        [Remaining_Points],
+        [Allocated_Points],
+        [Allocation_Count],
+        [Earned_Date],
+        [Expires_On],
+        [Days_Until_Expiration],
+        [Aging_Status],
+        [RunID],
+        CASE
+            WHEN [Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN N'membership'
+            WHEN [Source_Type] = N'rated_game_participation' THEN N'rated_games'
+            WHEN [Source_Type] = N'tournament_host' THEN N'tournament_host'
+            WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
+            WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
+            WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            ELSE N'other'
+        END AS [Source_Category],
+        CASE
+            WHEN [Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN N'Membership awards'
+            WHEN [Source_Type] = N'rated_game_participation' THEN N'Rated games'
+            WHEN [Source_Type] = N'tournament_host' THEN N'Tournament host'
+            WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
+            WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
+            WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            ELSE N'Other'
+        END AS [Source_Label]
+    FROM [rewards].[v_point_lot_aging]
+    WHERE UPPER([Chapter_Code]) = UPPER(?)
+)
+SELECT TOP (?)
+    COUNT(*) AS [Lot_Count],
+    SUM([Original_Points]) AS [Original_Points],
+    SUM([Remaining_Points]) AS [Remaining_Points],
+    SUM([Allocated_Points]) AS [Allocated_Points],
+    SUM([Allocation_Count]) AS [Allocation_Count],
+    [Earned_Date],
+    [Expires_On],
+    MIN([Days_Until_Expiration]) AS [Days_Until_Expiration],
+    [Aging_Status],
+    [RunID],
+    [Source_Category],
+    [Source_Label]
+FROM [public_lots]
+GROUP BY
+    [Earned_Date],
+    [Expires_On],
+    [Aging_Status],
+    [RunID],
+    [Source_Category],
+    [Source_Label]
+ORDER BY
+    CASE WHEN SUM([Remaining_Points]) > 0 THEN 0 ELSE 1 END,
+    [Expires_On],
+    [Earned_Date],
+    [Source_Label]
+"""
+
+
+REWARDS_PUBLIC_BREAKDOWN_SQL = """
+WITH [public_tx] AS
+(
+    SELECT
+        CASE
+            WHEN [Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN N'membership'
+            WHEN [Source_Type] = N'rated_game_participation' THEN N'rated_games'
+            WHEN [Source_Type] = N'tournament_host' THEN N'tournament_host'
+            WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
+            WHEN [Source_Type] = N'redemption' THEN N'redemption'
+            WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
+            WHEN [Source_Type] = N'point_expiration' THEN N'expiration'
+            WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            ELSE N'other'
+        END AS [Source_Category],
+        CASE
+            WHEN [Source_Type] IN (N'membership_event', N'legacy_membership_gap_award') THEN N'Membership awards'
+            WHEN [Source_Type] = N'rated_game_participation' THEN N'Rated games'
+            WHEN [Source_Type] = N'tournament_host' THEN N'Tournament host'
+            WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
+            WHEN [Source_Type] = N'redemption' THEN N'Redemption'
+            WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
+            WHEN [Source_Type] = N'point_expiration' THEN N'Expiration'
+            WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            ELSE N'Other'
+        END AS [Source_Label],
+        [Points_Delta]
+    FROM [rewards].[v_chapter_transaction_history]
+    WHERE UPPER([Chapter_Code]) = UPPER(?)
+)
+SELECT
+    [Source_Category],
+    [Source_Label],
+    COUNT(*) AS [Transaction_Count],
+    SUM(CASE WHEN [Points_Delta] > 0 THEN [Points_Delta] ELSE 0 END) AS [Credit_Points],
+    SUM(CASE WHEN [Points_Delta] < 0 THEN -[Points_Delta] ELSE 0 END) AS [Debit_Points],
+    SUM([Points_Delta]) AS [Net_Points]
+FROM [public_tx]
+GROUP BY [Source_Category], [Source_Label]
+ORDER BY [Net_Points] DESC, [Source_Label]
+"""
+
+
+REWARDS_PUBLIC_REDEMPTIONS_SQL = """
+SELECT TOP (?)
+    [Request_Date],
+    [Points],
+    [Amount_USD],
+    [Redemption_Category],
+    [Payment_Mode],
+    [Status],
+    [Posted_At]
+FROM [rewards].[redemption_requests]
+WHERE UPPER([Chapter_Code]) = UPPER(?)
+  AND [Status] = N'posted'
+ORDER BY [Request_Date] DESC, [Posted_At] DESC
+"""
+
+
+def _rewards_int(value) -> int:
+    if value is None:
+        return 0
+    return int(value)
+
+
+def _rewards_optional_int(value) -> int | None:
+    if value is None:
+        return None
+    return int(value)
+
+
+def _rewards_text(value) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _rewards_balance_payload(row: dict) -> dict:
+    available_points = _rewards_int(row.get("Available_Points"))
+    return {
+        "chapter_code": _rewards_text(row.get("Chapter_Code")),
+        "chapter_name": _rewards_text(row.get("Chapter_Name")),
+        "as_of_date": explorer.json_safe_value(row.get("As_Of_Date")),
+        "latest_snapshot_date": explorer.json_safe_value(row.get("Latest_Snapshot_Date")),
+        "is_current": bool(row.get("Is_Current")) if row.get("Is_Current") is not None else None,
+        "active_member_count": _rewards_int(row.get("Active_Member_Count")),
+        "multiplier": _rewards_int(row.get("Multiplier")),
+        "available_points": available_points,
+        "available_value_usd": round(available_points / 1000, 3),
+        "total_remaining_points": _rewards_int(row.get("Total_Remaining_Points")),
+        "expired_unallocated_points": _rewards_int(row.get("Expired_Unallocated_Points")),
+        "original_points": _rewards_int(row.get("Original_Points")),
+        "consumed_points": _rewards_int(row.get("Consumed_Points")),
+        "ledger_balance": _rewards_int(row.get("Ledger_Balance")),
+        "balance_reconciliation_delta": _rewards_int(row.get("Balance_Reconciliation_Delta")),
+        "total_credits": _rewards_int(row.get("Total_Credits")),
+        "total_debits": _rewards_int(row.get("Total_Debits")),
+        "lot_count": _rewards_int(row.get("Lot_Count")),
+        "transaction_count": _rewards_int(row.get("Transaction_Count")),
+        "expiring_30_days": _rewards_int(row.get("Expiring_30_Days")),
+        "expiring_60_days": _rewards_int(row.get("Expiring_60_Days")),
+        "expiring_90_days": _rewards_int(row.get("Expiring_90_Days")),
+        "next_expiration_date": explorer.json_safe_value(row.get("Next_Expiration_Date")),
+        "last_transaction_posted_at": explorer.json_safe_value(row.get("Last_Transaction_Posted_At")),
+    }
+
+
+def _rewards_transaction_payload(row: dict) -> dict:
+    points = _rewards_int(row.get("Points_Delta"))
+    return {
+        "entry_count": _rewards_int(row.get("Public_Entry_Count")) or 1,
+        "transaction_type": _rewards_text(row.get("Transaction_Type")),
+        "points_delta": points,
+        "value_delta_usd": round(points / 1000, 3),
+        "base_points": _rewards_optional_int(row.get("Base_Points")),
+        "multiplier": _rewards_optional_int(row.get("Multiplier")),
+        "effective_date": explorer.json_safe_value(row.get("Effective_Date")),
+        "earned_date": explorer.json_safe_value(row.get("Earned_Date")),
+        "posted_at": explorer.json_safe_value(row.get("Posted_At")),
+        "run_id": _rewards_optional_int(row.get("RunID")),
+        "run_type": _rewards_text(row.get("Run_Type")),
+        "run_snapshot_date": explorer.json_safe_value(row.get("Run_Snapshot_Date")),
+        "run_status": _rewards_text(row.get("Run_Status")),
+        "run_processor": _rewards_text(row.get("Run_Processor")),
+        "rule_version": _rewards_text(row.get("Rule_Version")),
+        "allocated_from_lots": _rewards_int(row.get("Allocated_From_Lots")),
+        "allocated_lot_count": _rewards_int(row.get("Allocated_Lot_Count")),
+        "running_balance": _rewards_int(row.get("Running_Balance")),
+        "source_category": _rewards_text(row.get("Source_Category")) or "other",
+        "source_label": _rewards_text(row.get("Source_Label")) or "Other",
+        "public_detail": _rewards_text(row.get("Public_Detail")) or "Rewards activity",
+    }
+
+
+def _rewards_lot_payload(row: dict) -> dict:
+    return {
+        "lot_count": _rewards_int(row.get("Lot_Count")) or 1,
+        "original_points": _rewards_int(row.get("Original_Points")),
+        "remaining_points": _rewards_int(row.get("Remaining_Points")),
+        "allocated_points": _rewards_int(row.get("Allocated_Points")),
+        "allocation_count": _rewards_int(row.get("Allocation_Count")),
+        "earned_date": explorer.json_safe_value(row.get("Earned_Date")),
+        "expires_on": explorer.json_safe_value(row.get("Expires_On")),
+        "days_until_expiration": _rewards_optional_int(row.get("Days_Until_Expiration")),
+        "aging_status": _rewards_text(row.get("Aging_Status")),
+        "run_id": _rewards_optional_int(row.get("RunID")),
+        "source_category": _rewards_text(row.get("Source_Category")) or "other",
+        "source_label": _rewards_text(row.get("Source_Label")) or "Other",
+    }
+
+
+def _rewards_breakdown_payload(row: dict) -> dict:
+    return {
+        "source_category": _rewards_text(row.get("Source_Category")) or "other",
+        "source_label": _rewards_text(row.get("Source_Label")) or "Other",
+        "transaction_count": _rewards_int(row.get("Transaction_Count")),
+        "credit_points": _rewards_int(row.get("Credit_Points")),
+        "debit_points": _rewards_int(row.get("Debit_Points")),
+        "net_points": _rewards_int(row.get("Net_Points")),
+    }
+
+
+def _rewards_redemption_payload(row: dict) -> dict:
+    points = _rewards_int(row.get("Points"))
+    amount = row.get("Amount_USD")
+    return {
+        "request_date": explorer.json_safe_value(row.get("Request_Date")),
+        "points": points,
+        "amount_usd": float(amount) if amount is not None else round(points / 1000, 3),
+        "redemption_category": _rewards_text(row.get("Redemption_Category")),
+        "payment_mode": _rewards_text(row.get("Payment_Mode")),
+        "status": _rewards_text(row.get("Status")),
+        "posted_at": explorer.json_safe_value(row.get("Posted_At")),
+    }
+
+
+def _rewards_summary_payload(chapters: list[dict]) -> dict:
+    available_points = sum(chapter["available_points"] for chapter in chapters)
+    ledger_balance = sum(chapter["ledger_balance"] for chapter in chapters)
+    total_credits = sum(chapter["total_credits"] for chapter in chapters)
+    total_debits = sum(chapter["total_debits"] for chapter in chapters)
+    return {
+        "chapter_count": len(chapters),
+        "available_points": available_points,
+        "available_value_usd": round(available_points / 1000, 3),
+        "ledger_balance": ledger_balance,
+        "total_credits": total_credits,
+        "total_debits": total_debits,
+        "expiring_30_days": sum(chapter["expiring_30_days"] for chapter in chapters),
+        "expiring_60_days": sum(chapter["expiring_60_days"] for chapter in chapters),
+        "expiring_90_days": sum(chapter["expiring_90_days"] for chapter in chapters),
+        "reconciliation_delta": sum(chapter["balance_reconciliation_delta"] for chapter in chapters),
+    }
+
+
+def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int = 500) -> tuple[int | None, func.HttpResponse | None]:
+    raw_limit = (req.params.get("limit") or "").strip()
+    if not raw_limit:
+        return default, None
+    if not raw_limit.isdigit():
+        return None, func.HttpResponse("Query parameter 'limit' must be a positive integer.", status_code=400)
+    limit = int(raw_limit)
+    if limit < 1 or limit > maximum:
+        return None, func.HttpResponse(f"Query parameter 'limit' must be between 1 and {maximum}.", status_code=400)
+    return limit, None
+
+
+def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func.HttpResponse | None]:
+    chapter_code = (req.params.get("chapter_code") or req.params.get("chapter") or "").strip()
+    if not chapter_code:
+        return None, func.HttpResponse("Query parameter 'chapter_code' is required.", status_code=400)
+    if len(chapter_code) > 64:
+        return None, func.HttpResponse("Query parameter 'chapter_code' is too long.", status_code=400)
+    return chapter_code, None
+
 
 def _load_snapshot_or_error() -> tuple[dict | None, func.HttpResponse | None]:
     if (os.environ.get("RATINGS_EXPLORER_DISABLE_SNAPSHOT") or "").strip().lower() in {"1", "true", "yes", "on"}:
@@ -503,6 +1121,88 @@ def _is_default_player_startup_search(
     )
 
 
+@app.function_name(name="RewardsPublicReportPage")
+@app.route(route="ratings-explorer/rewards", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def rewards_public_report_page(req: func.HttpRequest) -> func.HttpResponse:
+    return func.HttpResponse(
+        explorer.load_ratings_explorer_html("", "rewards_report.html"),
+        status_code=200,
+        headers=explorer.response_headers("text/html; charset=utf-8"),
+    )
+
+
+@app.function_name(name="RewardsPublicBalances")
+@app.route(route="ratings-explorer/rewards/balances", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def rewards_public_balances(req: func.HttpRequest) -> func.HttpResponse:
+    started = perf_counter()
+    try:
+        rows = explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_BALANCES_SQL, [])
+        chapters = [_rewards_balance_payload(row) for row in rows]
+        return _public_json_response(
+            _with_debug(
+                {
+                    "ok": True,
+                    "generated_at": _utc_now_text(),
+                    "summary": _rewards_summary_payload(chapters),
+                    "chapters": chapters,
+                },
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return func.HttpResponse(f"Rewards balance report failed: {exc}", status_code=500)
+
+
+@app.function_name(name="RewardsPublicChapter")
+@app.route(route="ratings-explorer/rewards/chapter", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def rewards_public_chapter(req: func.HttpRequest) -> func.HttpResponse:
+    started = perf_counter()
+    chapter_code, error = _parse_rewards_chapter_code(req)
+    if error:
+        return error
+    limit, error = _parse_rewards_limit(req)
+    if error:
+        return error
+    try:
+        balance_rows = explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_CHAPTER_BALANCE_SQL, [chapter_code])
+        if not balance_rows:
+            return func.HttpResponse(f"No rewards balance found for chapter '{chapter_code}'.", status_code=404)
+        transactions = [
+            _rewards_transaction_payload(row)
+            for row in explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_TRANSACTIONS_SQL, [chapter_code, limit])
+        ]
+        lots = [
+            _rewards_lot_payload(row)
+            for row in explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_LOTS_SQL, [chapter_code, limit])
+        ]
+        breakdown = [
+            _rewards_breakdown_payload(row)
+            for row in explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_BREAKDOWN_SQL, [chapter_code])
+        ]
+        redemptions = [
+            _rewards_redemption_payload(row)
+            for row in explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_REDEMPTIONS_SQL, [limit, chapter_code])
+        ]
+        return _public_json_response(
+            _with_debug(
+                {
+                    "ok": True,
+                    "generated_at": _utc_now_text(),
+                    "chapter": _rewards_balance_payload(balance_rows[0]),
+                    "transactions": transactions,
+                    "lots": lots,
+                    "breakdown": breakdown,
+                    "redemptions": redemptions,
+                },
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return func.HttpResponse(f"Rewards chapter report failed: {exc}", status_code=500)
+
+
 @app.function_name(name="RatingsExplorerPage")
 @app.route(route="ratings-explorer", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_page(req: func.HttpRequest) -> func.HttpResponse:
@@ -555,7 +1255,7 @@ def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
     body, error = _bayrate_request_json(req)
     if error:
         return error
-    report_inputs, error = _bayrate_report_inputs_from_body(body)
+    report_inputs, report_metadata, error = _bayrate_report_inputs_from_body(body, adapter)
     if error:
         return error
 
@@ -565,6 +1265,7 @@ def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
             report_inputs,
             adapter=adapter,
             duplicate_check=duplicate_check,
+            report_metadata=report_metadata,
         )
     except Exception as exc:
         return _bayrate_preview_error(str(exc))
@@ -576,6 +1277,26 @@ def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
             "duplicate_check": duplicate_check and bool(adapter),
         }
     )
+
+
+@app.function_name(name="BayRateMetadataOptions")
+@app.route(route="ratings-explorer/bayrate/metadata-options", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def bayrate_metadata_options(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
+    if load_host_chapter_options is None:
+        return _bayrate_preview_error("BayRate metadata option lookup is not available in this deployment.", status_code=500)
+    adapter, error = _bayrate_adapter_or_error()
+    if error:
+        return error
+    _, auth_error = _bayrate_authorization_response(req, adapter)
+    if auth_error:
+        return auth_error
+    try:
+        host_chapter_options = load_host_chapter_options(adapter)
+    except Exception as exc:
+        return _bayrate_preview_error(str(exc), status_code=500)
+    return _bayrate_json_response({"ok": True, "host_chapter_options": host_chapter_options})
 
 
 @app.function_name(name="BayRateStagingWrite")
@@ -596,11 +1317,16 @@ def bayrate_staging_write(req: func.HttpRequest) -> func.HttpResponse:
         return error
     if body.get("confirm_stage") is not True:
         return _bayrate_preview_error("confirm_stage=true is required.")
-    report_inputs, error = _bayrate_report_inputs_from_body(body)
+    report_inputs, report_metadata, error = _bayrate_report_inputs_from_body(body, adapter)
     if error:
         return error
     try:
-        payload = build_staging_payload(report_inputs, adapter=adapter, duplicate_check=True)
+        payload = build_staging_payload(
+            report_inputs,
+            adapter=adapter,
+            duplicate_check=True,
+            report_metadata=report_metadata,
+        )
         ensure_payload_run_id(payload, adapter)
         adapter.execute_statements(build_insert_statements(payload))
         payload["written"] = True
