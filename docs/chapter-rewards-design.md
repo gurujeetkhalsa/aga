@@ -20,6 +20,10 @@ Opening balance import CLI: `py -3 -m rewards.opening_balances C:\path\to\balanc
 Point expiration procedure: `rewards.sp_process_point_expirations`.
 Point expiration CLI: `py -3 -m rewards.expirations --date YYYY-MM-DD --dry-run`.
 Legacy redemption procedure: `rewards.sp_import_legacy_redemptions`.
+Legacy rated-game gap procedure: `rewards.sp_process_legacy_gap_rated_game_awards`.
+Legacy membership gap procedure: `rewards.sp_import_legacy_gap_membership_awards`.
+Legacy tournament gap procedure: `rewards.sp_import_legacy_gap_tournament_awards`.
+Chapter renewal notice procedure: `rewards.sp_process_chapter_renewal_notices`.
 Reporting views: `rewards/sql/reporting_views.sql`.
 Reporting CLI: `py -3 -m rewards.reports balances`.
 
@@ -309,10 +313,12 @@ Current implementation:
 - `rewards.rated_game_awards` creates one earn transaction and point lot per eligible rated-game player appearance.
 - Rated-game awards require member and chapter snapshots for the game date; missing snapshots block awards rather than using current membership state.
 - Rated-game source keys use `rated_game_participation:<Game_ID>:<AGAID>` to prevent duplicate awards on reruns.
+- `rewards.sp_process_legacy_gap_rated_game_awards` credits rated games after the `2026-02-08` source balance report and on or before the `2026-05-02` ledger start for a specified `ratings.games.Game_ID` range. These awards keep the game date as `earned_date`/`effective_date`, use the `2026-05-02` snapshot as `valuation_date`, and are metadata-tagged `legacy_gap`.
 - `rewards.membership_awards` creates one earn transaction and point lot per eligible pending membership event, then marks the source event `credited`.
+- `rewards.sp_import_legacy_gap_membership_awards` credits aggregate chapter new-membership and renewal counts after the `2026-02-08` source balance report and on or before the `2026-05-02` ledger start. These rows use `2026-05-02` as `earned_date`/`effective_date` and as the chapter multiplier snapshot, and are metadata-tagged `legacy_gap`.
 - Pending membership events expire as `expired_no_chapter` only after the 30-day deadline and only when snapshot coverage exists through the deadline.
 - `rewards.sql.reporting_views` exposes balances, transaction history, point-lot aging, run history, and membership event audit views.
-- `rewards.reports` provides terminal reports for `balances`, `transactions`, `lots`, `runs`, and `membership-events`.
+- `rewards.reports` provides terminal reports for `balances`, `transactions`, `lots`, `runs`, `membership-events`, and `chapter-renewal-notices`.
 - `rewards.opening_balances` imports the legacy balance sheet as one grandfathered earn transaction and point lot per chapter with a positive opening balance.
 - Opening balance lots use the chosen effective date as `earned_date`, `valuation_date`, and the start of the two-year expiration window.
 - Opening balance imports also count current snapshot chapters that are absent from the PDF as zero-balance setup rows. Those chapters do not receive zero-point transactions because the ledger stores only nonzero point movements.
@@ -320,8 +326,13 @@ Current implementation:
 - `rewards.sp_import_legacy_redemptions` loads redemptions that happened after the `2026-02-08` source balance report and on or before the `2026-05-02` ledger start. These rows keep their actual redemption request date as `effective_date`/`valuation_date`, are metadata-tagged `legacy_gap`, and allocate against opening-balance lots.
 - `rewards.sp_import_legacy_redemptions_with_adjustments` can also create tagged `legacy_dues_credit_adjustment` lots when a chapter-dues credit exceeds the available opening-balance lot. These adjustments are for non-cash dues credits only and should not be used for reimbursement redemptions.
 - Legacy redemption payment modes distinguish chapter dues credits (`dues_credit`, no cash payment) from promotion reimbursements (`reimbursement`).
+- ClubExpress emails with subject `Membership Renewal Emails` are parsed as chapter renewal notices. Rows where `Type = Chapter` use the `Member` column as the `ChapterID`; if the chapter has at least `35,000` unexpired available points on the notice date, `rewards.sp_process_chapter_renewal_notices` creates a posted `chapter_renewal` / `dues_credit` redemption and a `redeem` transaction.
+- Automatic chapter renewal debits consume available point lots FIFO by earned date. Rows that cannot be mapped or have fewer than `35,000` available points do not debit the chapter.
+- Every automatic chapter renewal decision is recorded in `rewards.chapter_renewal_notice_results`. If `CHAPTER_RENEWAL_NOTICE_EMAIL_TO` is configured on `aga-clubexpress-mail`, the mailbox processor sends a summary email showing debited, already-debited, insufficient-point, and unmapped chapters.
+- Debited chapter renewals remain pending until a later ClubExpress `American Go Association - Member Renewal` email is processed with `Member Type = Chapter`. That confirmation records the renewal email message id and removes the chapter from the pending-renewal digest. The pending digest runs nightly and goes to `CHAPTER_RENEWAL_PENDING_EMAIL_TO`, falling back to `CHAPTER_RENEWAL_NOTICE_EMAIL_TO`.
 - `rewards.expirations` consumes expired point lots by creating `expire` debit transactions, writing `lot_allocations`, and setting each consumed lot's `remaining_points` to zero. Lots are still available on their `expires_on` date and first expire when `expires_on < as_of_date`.
 - `rewards.tournament_awards` groups committed `ratings.tournaments` rows by host chapter plus `Reward_Event_Key`, totals rated, non-excluded games across all sections in the group, and posts only the positive top-up if a later section increases the formula result.
+- `rewards.sp_import_legacy_gap_tournament_awards` credits aggregate tournament rows after the `2026-02-08` source balance report and on or before the `2026-05-02` ledger start. These rows use the tournament date as `earned_date`, `effective_date`, and `valuation_date`, are metadata-tagged `legacy_gap`, and share the normal tournament host and State Championship source types so future reruns do not duplicate the same tournament code.
 - The tournament-host formula is `0` points when `games <= 15`, `1,000,000` points when `games >= 700`, otherwise `1000 * ((games - 15) / (700 - 15)) ^ 0.93 * 1000`, rounded to the nearest whole point.
 - If any tournament section in a grouped event is marked `Reward_Is_State_Championship`, `rewards.tournament_awards` posts a separate `200,000` point State Championship award once for that host chapter and grouped event.
 

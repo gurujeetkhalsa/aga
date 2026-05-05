@@ -178,6 +178,112 @@ class RewardsPointExpirationsTest(unittest.TestCase):
         )
 
 
+class ChapterRenewalNoticeTest(unittest.TestCase):
+    def test_membership_renewal_emails_subject_is_classified(self):
+        self.assertEqual(
+            mailapp._classify_message("ClubExpress <scheduler@mail2.clubexpress.com>", "Membership Renewal Emails", []),
+            mailapp.CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
+        )
+
+    def test_parse_chapter_renewal_notice_html_table_extracts_chapters_only(self):
+        html_body = """
+        <html><body>
+          <table>
+            <tr><th>Member</th><th>Name</th><th>Type</th><th>Expiration</th></tr>
+            <tr><td>13529</td><td>Providence Go Club</td><td>Chapter</td><td>5/31/2026</td></tr>
+            <tr><td>12345</td><td>Jane Player</td><td>Adult Full</td><td>5/31/2026</td></tr>
+            <tr><td>25495 - Ghost City Go</td><td>Ghost City Go</td><td>Chapter</td><td>6/1/2026</td></tr>
+          </table>
+        </body></html>
+        """
+
+        rows = mailapp._extract_chapter_renewal_notice_rows_from_html(html_body)
+
+        self.assertEqual([row["chapter_id"] for row in rows], [13529, 25495])
+        self.assertEqual(rows[0]["member_type"], "Chapter")
+        self.assertEqual(rows[0]["row_payload"]["name"], "Providence Go Club")
+        self.assertEqual(rows[1]["member_raw"], "25495 - Ghost City Go")
+
+    def test_chapter_renewal_notice_params_include_points_and_payload(self):
+        received_at = datetime(2026, 5, 5, 1, 15, tzinfo=timezone.utc)
+        parsed_rows = [
+            {
+                "source_row_number": 2,
+                "chapter_id": 13529,
+                "member_raw": "13529",
+                "member_type": "Chapter",
+                "row_payload": {"member": "13529", "type": "Chapter"},
+            }
+        ]
+
+        params = mailapp._chapter_renewal_notice_params(
+            {"id": "msg-renewals"},
+            received_at,
+            date(2026, 5, 5),
+            parsed_rows,
+            sender="ClubExpress <scheduler@example.test>",
+            subject="Membership Renewal Emails",
+            blob_path="chapter_renewal_notice/2026/05/05/msg-renewals",
+        )
+
+        self.assertEqual(params["MessageId"], "msg-renewals")
+        self.assertEqual(params["PointsPerRenewal"], 35000)
+        notices = json.loads(params["NoticesJson"])
+        self.assertEqual(notices[0]["chapter_id"], 13529)
+        self.assertEqual(notices[0]["source_payload"]["subject"], "Membership Renewal Emails")
+
+    def test_chapter_renewal_confirmation_params_use_chapter_id(self):
+        received_at = datetime(2026, 5, 5, 14, 30, tzinfo=timezone.utc)
+        parsed = {
+            "AGAID": 14182,
+            "MemberType": "Chapter",
+            "IsChapterMember": True,
+            "EmailAddress": "chapter@example.test",
+        }
+
+        params = mailapp._chapter_renewal_confirmation_params(
+            {"id": "msg-confirm"},
+            received_at,
+            parsed,
+            sender="ClubExpress <scheduler@example.test>",
+            subject="American Go Association - Member Renewal",
+            blob_path="member_renewal/2026/05/05/msg-confirm",
+        )
+
+        self.assertEqual(params["MessageId"], "msg-confirm")
+        self.assertEqual(params["ChapterID"], 14182)
+        self.assertEqual(params["MemberType"], "Chapter")
+        payload = json.loads(params["SourcePayloadJson"])
+        self.assertEqual(payload["parsed"]["IsChapterMember"], True)
+        self.assertEqual(payload["blob_path"], "member_renewal/2026/05/05/msg-confirm")
+
+    def test_pending_chapter_renewals_email_body_lists_debited_chapters(self):
+        body = mailapp._pending_chapter_renewals_email_body(
+            [
+                {
+                    "ChapterID": 14182,
+                    "Chapter_Code": "SHPO",
+                    "Chapter_Name": "Shreveport-Bossier Go Club",
+                    "Notice_Date": date(2026, 5, 4),
+                    "Points_Required": 35000,
+                    "Pending_Days": 2,
+                    "TransactionID": 1269,
+                }
+            ],
+            date(2026, 5, 6),
+        )
+
+        self.assertIn("Pending debited chapters: 1", body)
+        self.assertIn("SHPO Shreveport-Bossier Go Club (14182)", body)
+        self.assertIn("txn 1269", body)
+
+    def test_pending_chapter_renewals_email_body_handles_empty_list(self):
+        body = mailapp._pending_chapter_renewals_email_body([], date(2026, 5, 6))
+
+        self.assertIn("Pending debited chapters: 0", body)
+        self.assertIn("No chapters are currently debited", body)
+
+
 class ChapterCsvImportTest(unittest.TestCase):
     def test_chapterx_filename_is_classified_as_chapter_csv(self):
         report_type = mailapp._detect_attachment_report_type(

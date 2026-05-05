@@ -115,6 +115,10 @@ Important settings:
 - `REWARDS_TOURNAMENT_AWARDS_SCHEDULE`
 - `REWARDS_EXPIRATIONS_ENABLED`
 - `REWARDS_EXPIRATIONS_SCHEDULE`
+- `PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED`
+- `PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE`
+- `CHAPTER_RENEWAL_NOTICE_EMAIL_TO`
+- `CHAPTER_RENEWAL_PENDING_EMAIL_TO`
 - `GOOGLE_WORKSPACE_CLIENT_ID`
 - `GOOGLE_WORKSPACE_CLIENT_SECRET`
 - `GOOGLE_WORKSPACE_REFRESH_TOKEN`
@@ -201,6 +205,7 @@ Apply these SQL files to the AGA Azure SQL database before relying on the automa
 - `rewards/sql/tournament_award_processing.sql`
 - `rewards/sql/opening_balance_import.sql`
 - `rewards/sql/point_expiration_processing.sql`
+- `rewards/sql/chapter_renewal_notice_processing.sql`
 - `rewards/sql/reporting_views.sql`
 
 ## Membership Import SQL

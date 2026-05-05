@@ -53,6 +53,29 @@ class RewardsReportsTest(unittest.TestCase):
             [(reports.TRANSACTIONS_SQL, (5, "SEA", "SEA", "rated_game_participation", "rated_game_participation"))],
         )
 
+    def test_fetch_chapter_renewal_notices_filters_by_chapter_and_status(self):
+        adapter = FakeReportAdapter()
+
+        reports.fetch_chapter_renewal_notices(
+            adapter,
+            report_args(top=8, chapter_code="NYG", status="insufficient_points"),
+        )
+
+        self.assertEqual(
+            adapter.queries,
+            [(reports.CHAPTER_RENEWAL_NOTICES_SQL, (8, "NYG", "NYG", "insufficient_points", "insufficient_points"))],
+        )
+
+    def test_fetch_pending_chapter_renewals_filters_by_chapter(self):
+        adapter = FakeReportAdapter()
+
+        reports.fetch_pending_chapter_renewals(adapter, report_args(top=7, chapter_code="SHPO"))
+
+        self.assertEqual(
+            adapter.queries,
+            [(reports.PENDING_CHAPTER_RENEWALS_SQL, (7, "SHPO", "SHPO"))],
+        )
+
     def test_format_table_renders_dates_datetimes_and_decimals(self):
         rows = [
             {

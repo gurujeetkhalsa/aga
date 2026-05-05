@@ -8,6 +8,7 @@ import re
 import threading
 from datetime import date, datetime, timedelta, timezone
 from email import message_from_bytes, policy
+from email.message import EmailMessage
 from email.parser import BytesParser
 from html.parser import HTMLParser
 from io import StringIO
@@ -44,9 +45,11 @@ DEFAULT_REWARDS_MEMBERSHIP_AWARDS_SCHEDULE = os.environ.get("REWARDS_MEMBERSHIP_
 DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE = os.environ.get("REWARDS_RATED_GAME_AWARDS_SCHEDULE", "0 30 5 * * *")
 DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE = os.environ.get("REWARDS_TOURNAMENT_AWARDS_SCHEDULE", "0 35 5 * * *")
 DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHEDULE", "0 40 5 * * *")
+DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE = os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE", "0 50 5 * * *")
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
 CHAPTER_MESSAGE_TYPE = "chapter_csv"
+CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE = "chapter_renewal_notice"
 NEW_MEMBER_MESSAGE_TYPE = "new_member_signup"
 RENEWAL_MESSAGE_TYPE = "member_renewal"
 JOURNAL_MESSAGE_TYPE = "american_go_e_journal"
@@ -56,8 +59,13 @@ REWARDS_MEMBERSHIP_AWARDS_PROC = "rewards.sp_process_membership_awards"
 REWARDS_RATED_GAME_AWARDS_PROC = "rewards.sp_process_rated_game_awards"
 REWARDS_TOURNAMENT_AWARDS_PROC = "rewards.sp_process_tournament_awards"
 REWARDS_EXPIRATIONS_PROC = "rewards.sp_process_point_expirations"
+REWARDS_CHAPTER_RENEWAL_NOTICES_PROC = "rewards.sp_process_chapter_renewal_notices"
+REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC = "rewards.sp_record_chapter_renewal_confirmation"
+REWARDS_PENDING_CHAPTER_RENEWALS_PROC = "rewards.sp_get_pending_chapter_renewals"
 REWARDS_NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
 REWARDS_RENEWAL_EVENT_TYPE = "renewal"
+CHAPTER_RENEWAL_NOTICE_SUBJECT = "Membership Renewal Emails"
+CHAPTER_RENEWAL_POINTS = 35000
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
 JOURNAL_EXCLUDED_MATCH_NAMES = {"chris garlock"}
 DEFAULT_JOURNAL_NAME_PREFIXES = (
@@ -374,6 +382,65 @@ class _JournalVisibleTextParser(HTMLParser):
         return lines
 
 
+class _HtmlTableParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.tables: list[list[list[str]]] = []
+        self._table_depth = 0
+        self._current_table: list[list[str]] | None = None
+        self._current_row: list[str] | None = None
+        self._cell_parts: list[str] | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        normalized_tag = tag.lower()
+        if normalized_tag == "table":
+            self._table_depth += 1
+            if self._table_depth == 1:
+                self._current_table = []
+            return
+
+        if self._table_depth < 1:
+            return
+
+        if normalized_tag == "tr":
+            self._current_row = []
+        elif normalized_tag in {"td", "th"}:
+            self._cell_parts = []
+        elif normalized_tag == "br" and self._cell_parts is not None:
+            self._cell_parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        normalized_tag = tag.lower()
+        if normalized_tag == "table":
+            if self._table_depth == 1 and self._current_table is not None:
+                table = [row for row in self._current_table if any(cell.strip() for cell in row)]
+                if table:
+                    self.tables.append(table)
+                self._current_table = None
+                self._current_row = None
+                self._cell_parts = None
+            if self._table_depth:
+                self._table_depth -= 1
+            return
+
+        if self._table_depth < 1:
+            return
+
+        if normalized_tag in {"td", "th"} and self._cell_parts is not None:
+            text = re.sub(r"\s+", " ", "".join(self._cell_parts)).strip()
+            if self._current_row is not None:
+                self._current_row.append(text)
+            self._cell_parts = None
+        elif normalized_tag == "tr" and self._current_row is not None:
+            if self._current_table is not None and any(cell.strip() for cell in self._current_row):
+                self._current_table.append(self._current_row)
+            self._current_row = None
+
+    def handle_data(self, data: str) -> None:
+        if self._cell_parts is not None and data:
+            self._cell_parts.append(data)
+
+
 @app.timer_trigger(schedule=DEFAULT_MAILBOX_POLL_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def poll_clubexpress_mailbox(timer: func.TimerRequest) -> None:
     if not _is_truthy(os.environ.get("CLUBEXPRESS_MAILBOX_ENABLED", "false")):
@@ -578,6 +645,36 @@ def process_rewards_point_expirations(timer: func.TimerRequest) -> None:
         )
     except Exception:
         logging.exception("Chapter Rewards point expirations failed for %s", as_of_date.isoformat())
+
+
+@app.timer_trigger(schedule=DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def send_pending_chapter_renewals_email(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED", "true")):
+        logging.info("Pending chapter renewal email is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    as_of_date = _rewards_snapshot_date()
+    try:
+        rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_PENDING_CHAPTER_RENEWALS_PROC,
+            {"AsOfDate": as_of_date},
+        )
+        access_token = _get_gmail_access_token()
+        sent = _send_pending_chapter_renewals_email_if_configured(access_token, rows, as_of_date)
+        logging.info(
+            "Pending chapter renewal email complete. as_of=%s pending=%s sent=%s",
+            as_of_date.isoformat(),
+            len(rows),
+            sent,
+        )
+    except Exception:
+        logging.exception("Pending chapter renewal email failed for %s", as_of_date.isoformat())
 
 
 def _process_mailbox_message(access_token: str, message: dict) -> None:
@@ -819,7 +916,53 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
                 ),
             ],
         )
+        if parsed["IsChapterMember"]:
+            confirmation_rows = _execute_stored_procedure_rows(
+                conn_str,
+                REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC,
+                _chapter_renewal_confirmation_params(
+                    message,
+                    received_at,
+                    parsed,
+                    sender=sender,
+                    subject=subject,
+                    blob_path=archive_path,
+                ),
+            )
+            confirmation = confirmation_rows[0] if confirmation_rows else {}
+            logging.info(
+                "Chapter renewal confirmation processed for ChapterID=%s recorded=%s reason=%s notice_id=%s",
+                parsed["AGAID"],
+                confirmation.get("Recorded"),
+                confirmation.get("Reason"),
+                confirmation.get("NoticeID"),
+            )
         logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
+    elif message_type == CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE:
+        parsed_rows = _parse_chapter_renewal_notice_email(message)
+        result_rows = _execute_stored_procedure_rows(
+            conn_str,
+            REWARDS_CHAPTER_RENEWAL_NOTICES_PROC,
+            _chapter_renewal_notice_params(
+                message,
+                received_at,
+                received_date,
+                parsed_rows,
+                sender=sender,
+                subject=subject,
+                blob_path=archive_path,
+            ),
+        )
+        _send_chapter_renewal_notice_summary_if_configured(access_token, result_rows, subject, received_at)
+        posted_count = sum(1 for row in result_rows if str(row.get("Decision") or "").lower() in {"posted", "already_posted"})
+        insufficient_count = sum(1 for row in result_rows if str(row.get("Decision") or "").lower() == "insufficient_points")
+        logging.info(
+            "Chapter renewal notice processed. chapter_rows=%s posted_or_existing=%s insufficient=%s archive_path=%s",
+            len(parsed_rows),
+            posted_count,
+            insufficient_count,
+            archive_path,
+        )
     elif message_type == JOURNAL_MESSAGE_TYPE:
         parsed = _parse_journal_email(conn_str, message)
         _execute_stored_procedure(
@@ -1101,6 +1244,8 @@ def _classify_message(sender: str, subject: str, attachments: list[dict]) -> str
         return NEW_MEMBER_MESSAGE_TYPE
     if "American Go Association - Member Renewal" in normalized_subject:
         return RENEWAL_MESSAGE_TYPE
+    if normalized_subject == CHAPTER_RENEWAL_NOTICE_SUBJECT:
+        return CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE
     if "scheduler@mail2.clubexpress.com" in normalized_sender and attachments:
         return IGNORE_MESSAGE_TYPE
     return IGNORE_MESSAGE_TYPE
@@ -1142,6 +1287,141 @@ def _parse_renewal_email(text: str) -> dict:
         "MemberType": member_type,
         "IsChapterMember": member_type.strip().lower().startswith("chapter"),
     }
+
+
+def _parse_chapter_renewal_notice_email(message: dict) -> list[dict]:
+    html_body = _message_body_to_html(message)
+    rows = _extract_chapter_renewal_notice_rows_from_html(html_body or "")
+    if not rows:
+        rows = _extract_chapter_renewal_notice_rows_from_text(_message_body_to_text(message))
+    return _dedupe_chapter_renewal_notice_rows(rows)
+
+
+def _extract_chapter_renewal_notice_rows_from_html(html_body: str) -> list[dict]:
+    if not html_body:
+        return []
+
+    parser = _HtmlTableParser()
+    parser.feed(html_body)
+    parser.close()
+
+    rows: list[dict] = []
+    for table in parser.tables:
+        rows.extend(_extract_chapter_renewal_notice_rows_from_matrix(table))
+    return rows
+
+
+def _extract_chapter_renewal_notice_rows_from_text(text: str) -> list[dict]:
+    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
+    if not lines:
+        return []
+
+    for index, line in enumerate(lines):
+        cells = _split_renewal_notice_text_row(line)
+        header_lookup = _chapter_renewal_notice_header_lookup(cells)
+        if "member" not in header_lookup or "type" not in header_lookup:
+            continue
+
+        matrix = [cells]
+        for body_line in lines[index + 1:]:
+            body_cells = _split_renewal_notice_text_row(body_line)
+            if len(body_cells) < 2:
+                continue
+            matrix.append(body_cells)
+        return _extract_chapter_renewal_notice_rows_from_matrix(matrix)
+
+    return []
+
+
+def _extract_chapter_renewal_notice_rows_from_matrix(matrix: list[list[str]]) -> list[dict]:
+    rows: list[dict] = []
+    for header_index, header_row in enumerate(matrix):
+        header_lookup = _chapter_renewal_notice_header_lookup(header_row)
+        if "member" not in header_lookup or "type" not in header_lookup:
+            continue
+
+        for source_row_number, row in enumerate(matrix[header_index + 1:], start=header_index + 2):
+            record = _chapter_renewal_notice_record(header_row, row)
+            if not record:
+                continue
+            member_type = str(record.get("type") or "").strip()
+            if member_type.lower() != "chapter":
+                continue
+            member_raw = str(record.get("member") or "").strip()
+            chapter_id = _extract_chapter_id_from_member_cell(member_raw)
+            if chapter_id is None:
+                raise EmailProcessingError(f"Could not parse ChapterID from renewal notice member cell {member_raw!r}.")
+            rows.append(
+                {
+                    "source_row_number": source_row_number,
+                    "chapter_id": chapter_id,
+                    "member_raw": member_raw,
+                    "member_type": member_type,
+                    "row_payload": record,
+                }
+            )
+        if rows:
+            return rows
+    return rows
+
+
+def _chapter_renewal_notice_record(header_row: list[str], row: list[str]) -> dict[str, str]:
+    if not any(str(cell or "").strip() for cell in row):
+        return {}
+    record: dict[str, str] = {}
+    for index, header in enumerate(header_row):
+        key = _chapter_renewal_notice_header_key(header)
+        if not key:
+            continue
+        record[key] = row[index].strip() if index < len(row) and row[index] is not None else ""
+    return record
+
+
+def _chapter_renewal_notice_header_lookup(header_row: list[str]) -> dict[str, int]:
+    lookup: dict[str, int] = {}
+    for index, header in enumerate(header_row):
+        key = _chapter_renewal_notice_header_key(header)
+        if key:
+            lookup.setdefault(key, index)
+    return lookup
+
+
+def _chapter_renewal_notice_header_key(header: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "", str(header or "").strip().lower())
+    aliases = {
+        "member": "member",
+        "memberid": "member",
+        "chapterid": "member",
+        "type": "type",
+        "membertype": "type",
+        "membershiptype": "type",
+    }
+    return aliases.get(normalized, re.sub(r"[^a-z0-9]+", "_", str(header or "").strip().lower()).strip("_"))
+
+
+def _split_renewal_notice_text_row(line: str) -> list[str]:
+    if "\t" in line:
+        return [cell.strip() for cell in line.split("\t")]
+    if "|" in line:
+        return [cell.strip() for cell in line.split("|")]
+    return [cell.strip() for cell in re.split(r"\s{2,}", line.strip())]
+
+
+def _extract_chapter_id_from_member_cell(value: str) -> int | None:
+    match = re.search(r"\d+", value or "")
+    return int(match.group(0)) if match else None
+
+
+def _dedupe_chapter_renewal_notice_rows(rows: list[dict]) -> list[dict]:
+    deduped = []
+    seen: set[int] = set()
+    for row in rows:
+        chapter_id = int(row["chapter_id"])
+        if chapter_id in seen:
+            raise EmailProcessingError(f"Duplicate ChapterID {chapter_id} in chapter renewal notice email.")
+        seen.add(chapter_id)
+        deduped.append(row)
+    return deduped
 
 
 def _parse_journal_email(conn_str: str, message: dict) -> dict:
@@ -2229,6 +2509,31 @@ def _membership_reward_event_params(
     }
 
 
+def _chapter_renewal_confirmation_params(
+    message: dict,
+    received_at: datetime,
+    parsed: dict,
+    *,
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> dict:
+    source_payload = {
+        "message_id": _message_identifier(message),
+        "sender": sender,
+        "subject": subject,
+        "blob_path": blob_path,
+        "parsed": {key: _json_safe_value(value) for key, value in parsed.items()},
+    }
+    return {
+        "MessageId": _message_identifier(message),
+        "ReceivedAt": received_at,
+        "ChapterID": parsed["AGAID"],
+        "MemberType": parsed.get("MemberType"),
+        "SourcePayloadJson": json.dumps(source_payload, sort_keys=True),
+    }
+
+
 def _rewards_snapshot_date(today: Optional[date] = None) -> date:
     return today or date.today()
 
@@ -2273,6 +2578,185 @@ def _rewards_point_expirations_params(as_of_date: date) -> dict:
         "RunType": "daily",
         "DryRun": 0,
     }
+
+
+def _chapter_renewal_notice_params(
+    message: dict,
+    received_at: datetime,
+    notice_date: date,
+    parsed_rows: list[dict],
+    *,
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> dict:
+    notices = []
+    for row in parsed_rows:
+        payload = {
+            "message_id": _message_identifier(message),
+            "sender": sender,
+            "subject": subject,
+            "blob_path": blob_path,
+            "parsed": row,
+        }
+        notices.append(
+            {
+                "source_row_number": row["source_row_number"],
+                "chapter_id": row["chapter_id"],
+                "member_raw": row["member_raw"],
+                "member_type": row["member_type"],
+                "row_payload": row.get("row_payload") or {},
+                "source_payload": payload,
+            }
+        )
+
+    return {
+        "MessageId": _message_identifier(message),
+        "ReceivedAt": received_at,
+        "NoticeDate": notice_date,
+        "NoticesJson": json.dumps(notices, sort_keys=True, default=str),
+        "PointsPerRenewal": CHAPTER_RENEWAL_POINTS,
+        "DryRun": 0,
+        "RunType": "daily",
+    }
+
+
+def _send_chapter_renewal_notice_summary_if_configured(
+    access_token: str,
+    result_rows: list[dict],
+    source_subject: str,
+    received_at: datetime,
+) -> bool:
+    recipients = _configured_email_recipients("CHAPTER_RENEWAL_NOTICE_EMAIL_TO")
+    if not recipients:
+        return False
+
+    subject = f"Chapter renewal points processing - {received_at.date().isoformat()}"
+    body = _chapter_renewal_notice_summary_body(result_rows, source_subject, received_at)
+    try:
+        _send_gmail_plain_text(access_token, recipients, subject, body)
+        return True
+    except Exception:
+        logging.exception("Failed to send Chapter Rewards renewal notice summary email.")
+        return False
+
+
+def _send_pending_chapter_renewals_email_if_configured(access_token: str, rows: list[dict], as_of_date: date) -> bool:
+    recipients = _configured_email_recipients("CHAPTER_RENEWAL_PENDING_EMAIL_TO")
+    if not recipients:
+        recipients = _configured_email_recipients("CHAPTER_RENEWAL_NOTICE_EMAIL_TO")
+    if not recipients:
+        return False
+
+    subject = f"Pending chapter renewals after rewards debit - {as_of_date.isoformat()}"
+    body = _pending_chapter_renewals_email_body(rows, as_of_date)
+    try:
+        _send_gmail_plain_text(access_token, recipients, subject, body)
+        return True
+    except Exception:
+        logging.exception("Failed to send pending Chapter Rewards renewal email.")
+        return False
+
+
+def _pending_chapter_renewals_email_body(rows: list[dict], as_of_date: date) -> str:
+    lines = [
+        "Chapter Rewards pending ClubExpress renewal follow-up.",
+        "",
+        f"As of: {as_of_date.isoformat()}",
+        f"Pending debited chapters: {len(rows)}",
+        "",
+    ]
+
+    if not rows:
+        lines.append("No chapters are currently debited for renewal and waiting on a ClubExpress renewal confirmation email.")
+        return "\n".join(lines).rstrip() + "\n"
+
+    lines.extend(
+        [
+            "These chapters had Chapter Rewards points debited for ClubExpress chapter renewal, but no matching ClubExpress chapter renewal email has been received yet.",
+            "",
+        ]
+    )
+    for row in rows:
+        chapter_id = row.get("ChapterID")
+        code = row.get("Chapter_Code") or ""
+        name = row.get("Chapter_Name") or ""
+        notice_date = _format_email_value(row.get("Notice_Date"))
+        pending_days = row.get("Pending_Days")
+        points = row.get("Points_Required")
+        transaction_id = row.get("TransactionID")
+        lines.append(
+            f"- {code} {name} ({chapter_id}): {points} points debited on {notice_date}; "
+            f"pending {pending_days} day(s); txn {transaction_id}"
+        )
+
+    lines.extend(
+        [
+            "",
+            "A chapter drops from this list after the mailbox processes its ClubExpress renewal email with Member Type = Chapter.",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _chapter_renewal_notice_summary_body(result_rows: list[dict], source_subject: str, received_at: datetime) -> str:
+    posted = [row for row in result_rows if str(row.get("Decision") or "").lower() == "posted"]
+    already_posted = [row for row in result_rows if str(row.get("Decision") or "").lower() == "already_posted"]
+    insufficient = [row for row in result_rows if str(row.get("Decision") or "").lower() == "insufficient_points"]
+    not_found = [row for row in result_rows if str(row.get("Decision") or "").lower() == "chapter_not_found"]
+
+    lines = [
+        "Chapter Rewards automatic chapter renewal processing is complete.",
+        "",
+        f"Source email: {source_subject or CHAPTER_RENEWAL_NOTICE_SUBJECT}",
+        f"Received: {received_at.isoformat()}",
+        f"Renewal points required per chapter: {CHAPTER_RENEWAL_POINTS}",
+        "",
+        f"Debited: {len(posted)}",
+        f"Already debited: {len(already_posted)}",
+        f"Insufficient points: {len(insufficient)}",
+        f"Chapter not found: {len(not_found)}",
+        "",
+    ]
+
+    lines.extend(_chapter_renewal_notice_summary_section("Debited", posted))
+    lines.extend(_chapter_renewal_notice_summary_section("Already Debited", already_posted))
+    lines.extend(_chapter_renewal_notice_summary_section("Insufficient Points", insufficient))
+    lines.extend(_chapter_renewal_notice_summary_section("Chapter Not Found", not_found))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _chapter_renewal_notice_summary_section(title: str, rows: list[dict]) -> list[str]:
+    if not rows:
+        return [f"{title}: none", ""]
+
+    lines = [f"{title}:"]
+    for row in rows:
+        chapter_id = row.get("ChapterID")
+        code = row.get("Chapter_Code") or ""
+        name = row.get("Chapter_Name") or ""
+        available = row.get("Available_Points")
+        required = row.get("Points_Required")
+        transaction_id = row.get("TransactionID")
+        suffix = f", txn {transaction_id}" if transaction_id else ""
+        lines.append(f"- {chapter_id} {code} {name}: available {available}, required {required}{suffix}")
+    lines.append("")
+    return lines
+
+
+def _format_email_value(value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.isoformat(sep=" ", timespec="seconds")
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)
+
+
+def _configured_email_recipients(setting_name: str) -> list[str]:
+    raw_value = os.environ.get(setting_name, "")
+    return [part.strip() for part in re.split(r"[;,]", raw_value) if part.strip()]
 
 
 def _stored_procedure_call(proc_name: str, params: dict) -> tuple[str, list]:
@@ -2374,7 +2858,7 @@ def _list_gmail_messages(access_token: str) -> list[dict]:
     max_results = int(os.environ.get("CLUBEXPRESS_MAILBOX_BATCH_SIZE", "10"))
     query_text = os.environ.get(
         "GOOGLE_WORKSPACE_QUERY",
-        'in:inbox -label:ProcessedByFunction (subject:"New Member Signup - Payment" OR subject:"American Go Association - Member Renewal" OR has:attachment)',
+        'in:inbox -label:ProcessedByFunction (subject:"New Member Signup - Payment" OR subject:"American Go Association - Member Renewal" OR subject:"Membership Renewal Emails" OR subject:"American Go E - Journal" OR subject:"Weekly American Go E - Journal" OR has:attachment)',
     )
     response = _gmail_json_request(
         access_token,
@@ -2424,6 +2908,25 @@ def _ensure_gmail_label(access_token: str, label_name: str) -> str:
         },
     )
     return created["id"]
+
+
+def _send_gmail_plain_text(access_token: str, recipients: list[str], subject: str, body: str) -> None:
+    mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
+    sender = os.environ.get("CHAPTER_RENEWAL_NOTICE_EMAIL_FROM", mailbox_user)
+
+    message = EmailMessage()
+    message["To"] = ", ".join(recipients)
+    message["From"] = sender
+    message["Subject"] = subject
+    message.set_content(body)
+
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode("ascii").rstrip("=")
+    _gmail_json_request(
+        access_token,
+        f"/users/{parse.quote(mailbox_user)}/messages/send",
+        method="POST",
+        body={"raw": raw},
+    )
 
 
 def _gmail_json_request(

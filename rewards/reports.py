@@ -138,6 +138,66 @@ ORDER BY [Event_Date] DESC, [Membership_Event_ID] DESC
 """
 
 
+CHAPTER_RENEWAL_NOTICES_SQL = """
+SELECT TOP (?)
+    [NoticeID],
+    [Message_ID],
+    [Source_Row_Number],
+    [ChapterID],
+    [Chapter_Code],
+    [Chapter_Name],
+    [Notice_Date],
+    [Received_At],
+    [Points_Required],
+    [Available_Points],
+    [Decision],
+    [RedemptionID],
+    [TransactionID],
+    [RunID],
+    [ClubExpress_Renewal_Message_ID],
+    [ClubExpress_Renewed_At],
+    [ClubExpress_Renewal_Recorded_At],
+    CASE
+        WHEN [Decision] IN (N'posted', N'already_posted')
+         AND [TransactionID] IS NOT NULL
+         AND [ClubExpress_Renewal_Message_ID] IS NULL
+        THEN DATEDIFF(day, [Notice_Date], CONVERT(date, SYSUTCDATETIME()))
+        ELSE NULL
+    END AS [Pending_Days],
+    [Created_At]
+FROM [rewards].[chapter_renewal_notice_results]
+WHERE (? IS NULL OR [Chapter_Code] = ?)
+  AND (? IS NULL OR [Decision] = ?)
+ORDER BY [Created_At] DESC, [NoticeID] DESC
+"""
+
+
+PENDING_CHAPTER_RENEWALS_SQL = """
+SELECT TOP (?)
+    [NoticeID],
+    [Message_ID],
+    [ChapterID],
+    [Chapter_Code],
+    [Chapter_Name],
+    [Notice_Date],
+    [Received_At],
+    [Points_Required],
+    [Available_Points],
+    [Decision],
+    [RedemptionID],
+    [TransactionID],
+    [RunID],
+    DATEDIFF(day, [Notice_Date], CONVERT(date, SYSUTCDATETIME())) AS [Pending_Days],
+    [Created_At]
+FROM [rewards].[chapter_renewal_notice_results]
+WHERE [Decision] IN (N'posted', N'already_posted')
+  AND [TransactionID] IS NOT NULL
+  AND [ClubExpress_Renewal_Message_ID] IS NULL
+  AND (? IS NULL OR [Chapter_Code] = ?)
+ORDER BY [Notice_Date], [Chapter_Code], [ChapterID], [NoticeID]
+"""
+
+
 BALANCE_COLUMNS: tuple[Column, ...] = (
     ("Chapter_Code", "Chapter"),
     ("Chapter_Name", "Name"),
@@ -221,6 +281,41 @@ MEMBERSHIP_EVENT_COLUMNS: tuple[Column, ...] = (
 )
 
 
+CHAPTER_RENEWAL_NOTICE_COLUMNS: tuple[Column, ...] = (
+    ("NoticeID", "Notice"),
+    ("Message_ID", "Message"),
+    ("Source_Row_Number", "Row"),
+    ("ChapterID", "ChapterID"),
+    ("Chapter_Code", "Chapter"),
+    ("Chapter_Name", "Name"),
+    ("Notice_Date", "Notice Date"),
+    ("Received_At", "Received"),
+    ("Points_Required", "Required"),
+    ("Available_Points", "Available"),
+    ("Decision", "Decision"),
+    ("RedemptionID", "Redemption"),
+    ("TransactionID", "Txn"),
+    ("RunID", "Run"),
+    ("ClubExpress_Renewal_Message_ID", "Renewal Msg"),
+    ("ClubExpress_Renewed_At", "Renewed"),
+    ("Pending_Days", "Pending Days"),
+    ("Created_At", "Created"),
+)
+
+
+PENDING_CHAPTER_RENEWAL_COLUMNS: tuple[Column, ...] = (
+    ("NoticeID", "Notice"),
+    ("ChapterID", "ChapterID"),
+    ("Chapter_Code", "Chapter"),
+    ("Chapter_Name", "Name"),
+    ("Notice_Date", "Notice Date"),
+    ("Received_At", "Debit Email"),
+    ("Points_Required", "Points"),
+    ("TransactionID", "Txn"),
+    ("Pending_Days", "Pending Days"),
+)
+
+
 def fetch_balances(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
     return adapter.query_rows(BALANCES_SQL, (args.top, args.chapter_code, args.chapter_code))
 
@@ -247,12 +342,36 @@ def fetch_membership_events(adapter: RewardsReportAdapter, args: argparse.Namesp
     return adapter.query_rows(MEMBERSHIP_EVENTS_SQL, (args.top, args.status, args.status))
 
 
+def fetch_chapter_renewal_notices(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    return adapter.query_rows(
+        CHAPTER_RENEWAL_NOTICES_SQL,
+        (args.top, args.chapter_code, args.chapter_code, args.status, args.status),
+    )
+
+
+def fetch_pending_chapter_renewals(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    return adapter.query_rows(
+        PENDING_CHAPTER_RENEWALS_SQL,
+        (args.top, args.chapter_code, args.chapter_code),
+    )
+
+
 REPORTS: dict[str, ReportSpec] = {
     "balances": ReportSpec("Chapter Balances", BALANCE_COLUMNS, fetch_balances),
     "transactions": ReportSpec("Chapter Reward Transactions", TRANSACTION_COLUMNS, fetch_transactions),
     "lots": ReportSpec("Point Lot Aging", LOT_COLUMNS, fetch_lots),
     "runs": ReportSpec("Reward Run History", RUN_COLUMNS, fetch_runs),
     "membership-events": ReportSpec("Membership Event Audit", MEMBERSHIP_EVENT_COLUMNS, fetch_membership_events),
+    "chapter-renewal-notices": ReportSpec(
+        "Chapter Renewal Notice Audit",
+        CHAPTER_RENEWAL_NOTICE_COLUMNS,
+        fetch_chapter_renewal_notices,
+    ),
+    "pending-chapter-renewals": ReportSpec(
+        "Pending Chapter Renewals",
+        PENDING_CHAPTER_RENEWAL_COLUMNS,
+        fetch_pending_chapter_renewals,
+    ),
 }
 
 
