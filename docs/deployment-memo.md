@@ -58,8 +58,8 @@ Notes:
 
 - staging has historically used `aga-ratings-explorer-sgf-20260407t2105`
 - generated snapshot data under `data/` should not be committed
-- BayRate routes require Azure App Service Authentication plus `BAYRATE_TRUST_EASY_AUTH=true`.
-- BayRate operators are controlled in SQL with `ratings.bayrate_admins`; apply `bayrate/sql/bayrate_authorization_schema.sql` before enabling the BayRate UI in Azure.
+- Admin routes require Azure App Service Authentication plus `BAYRATE_TRUST_EASY_AUTH=true`.
+- Operators are controlled in SQL with `ratings.admin_permissions`; apply `bayrate/sql/bayrate_authorization_schema.sql` before enabling protected UIs in Azure. Use `bayrate_run` for BayRate, `rewards_redemptions` for Chapter Rewards debit/receipt entry, or `admin_all` for both. Grant or revoke scoped admins with `ratings.sp_grant_admin_permission` and `ratings.sp_revoke_admin_permission`.
 - BayRate tournament host chapter, reward-event grouping, and State Championship flags require `bayrate/sql/bayrate_staging_schema.sql`; it adds those reward metadata columns to `ratings.bayrate_staged_tournaments` and `ratings.tournaments`.
 
 ### `aga-clubexpress-mail`
@@ -80,11 +80,8 @@ Purpose:
 Primary functions in this app:
 
 - `poll_clubexpress_mailbox`
-- `create_rewards_daily_snapshot`
-- `process_rewards_membership_awards`
-- `process_rewards_rated_game_awards`
-- `process_rewards_tournament_awards`
-- `process_rewards_point_expirations`
+
+Legacy rewards timers may still be present during the migration, but should be disabled on this host after `aga-chapter-rewards-automation` is deployed.
 
 Production host:
 
@@ -105,20 +102,6 @@ Important settings:
 - `CLUBEXPRESS_MAILBOX_BATCH_SIZE`
 - `CLUBEXPRESS_PROCESSED_CATEGORY`
 - `CLUBEXPRESS_ARCHIVE_CONTAINER`
-- `REWARDS_SNAPSHOT_ENABLED`
-- `REWARDS_SNAPSHOT_SCHEDULE`
-- `REWARDS_MEMBERSHIP_AWARDS_ENABLED`
-- `REWARDS_MEMBERSHIP_AWARDS_SCHEDULE`
-- `REWARDS_RATED_GAME_AWARDS_ENABLED`
-- `REWARDS_RATED_GAME_AWARDS_SCHEDULE`
-- `REWARDS_TOURNAMENT_AWARDS_ENABLED`
-- `REWARDS_TOURNAMENT_AWARDS_SCHEDULE`
-- `REWARDS_EXPIRATIONS_ENABLED`
-- `REWARDS_EXPIRATIONS_SCHEDULE`
-- `PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED`
-- `PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE`
-- `CHAPTER_RENEWAL_NOTICE_EMAIL_TO`
-- `CHAPTER_RENEWAL_PENDING_EMAIL_TO`
 - `GOOGLE_WORKSPACE_CLIENT_ID`
 - `GOOGLE_WORKSPACE_CLIENT_SECRET`
 - `GOOGLE_WORKSPACE_REFRESH_TOKEN`
@@ -131,6 +114,69 @@ Notes:
 - this app should be the only production app with mailbox polling enabled
 - current poll schedule is every 5 minutes
 - spaCy-based journal person extraction and AGA title-prefix handling live here
+
+### `aga-chapter-rewards-automation`
+
+Repo folder:
+
+- `chapter-rewards-automation-app/`
+
+Purpose:
+
+- Chapter Rewards daily snapshots
+- membership, rated-game, tournament, and expiration award timers
+- pending ClubExpress chapter-renewal digest email
+
+Primary functions in this app:
+
+- `create_rewards_daily_snapshot`
+- `process_rewards_membership_awards`
+- `process_rewards_rated_game_awards`
+- `process_rewards_tournament_awards`
+- `process_rewards_point_expirations`
+- `send_pending_chapter_renewals_email`
+
+Production host:
+
+- `https://aga-chapter-rewards-automation.azurewebsites.net`
+
+Deploy logic:
+
+- publish from the app folder
+- command:
+  `func azure functionapp publish aga-chapter-rewards-automation --python --build remote`
+- working directory:
+  `C:\Users\guruj\OneDrive\Documents\Playground\aga\chapter-rewards-automation-app`
+
+Important settings:
+
+- `REWARDS_SNAPSHOT_ENABLED`
+- `REWARDS_SNAPSHOT_SCHEDULE`
+- `REWARDS_MEMBERSHIP_AWARDS_ENABLED`
+- `REWARDS_MEMBERSHIP_AWARDS_SCHEDULE`
+- `REWARDS_RATED_GAME_AWARDS_ENABLED`
+- `REWARDS_RATED_GAME_AWARDS_SCHEDULE`
+- `REWARDS_RATED_GAME_AWARDS_DATE_FROM`
+- `REWARDS_LEDGER_START_DATE`
+- `REWARDS_TOURNAMENT_AWARDS_ENABLED`
+- `REWARDS_TOURNAMENT_AWARDS_SCHEDULE`
+- `REWARDS_EXPIRATIONS_ENABLED`
+- `REWARDS_EXPIRATIONS_SCHEDULE`
+- `PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED`
+- `PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE`
+- `CHAPTER_RENEWAL_NOTICE_EMAIL_TO`
+- `CHAPTER_RENEWAL_PENDING_EMAIL_TO`
+- `CHAPTER_RENEWAL_NOTICE_EMAIL_FROM`
+- `GOOGLE_WORKSPACE_CLIENT_ID`
+- `GOOGLE_WORKSPACE_CLIENT_SECRET`
+- `GOOGLE_WORKSPACE_REFRESH_TOKEN`
+- `GOOGLE_WORKSPACE_MAILBOX`
+- `SQL_CONNECTION_STRING`
+
+Notes:
+
+- this app should not have `CLUBEXPRESS_MAILBOX_ENABLED`
+- after this app is live, disable the matching rewards timers on `aga-clubexpress-mail` to prevent duplicate scheduler executions
 
 ### `aga-membership-functions`
 
@@ -182,7 +228,7 @@ Notes:
 
 ## Current split summary
 
-Production is now intentionally split into three apps:
+Production is intentionally split into separate deployable apps:
 
 1. `aga-ratings-explorer`
    Ratings Explorer only
@@ -190,8 +236,10 @@ Production is now intentionally split into three apps:
    ClubExpress mailbox processing only
 3. `aga-membership-functions`
    membership data APIs and TD lists only
+4. `aga-chapter-rewards-automation`
+   Chapter Rewards background timers only
 
-This means mailbox parser changes should be deployed to `clubexpress-mail-app`, not to `membership-data-app`.
+This means mailbox parser changes should be deployed to `clubexpress-mail-app`, not to `membership-data-app` or `chapter-rewards-automation-app`.
 
 ## Chapter Rewards SQL
 

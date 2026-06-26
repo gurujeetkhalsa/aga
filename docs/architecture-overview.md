@@ -21,6 +21,10 @@ User-facing search and detail experience for players and tournaments, plus snaps
 
 Operational ingestion pipeline that polls Gmail, processes ClubExpress messages, archives artifacts, and routes parsed data into downstream storage/import flows.
 
+### Chapter Rewards Automation
+
+Background timer host for Chapter Rewards snapshots, awards, expirations, and pending-renewal digest emails.
+
 ### Membership Data
 
 Membership/chapter/category data import and lookup endpoints, plus TD list publishing endpoints.

@@ -48,6 +48,19 @@ Move here:
 - NAOL review parsing helpers
 - mailbox-driven membership/category import glue
 
+### `chapter-rewards-automation-app`
+
+Move here:
+
+- `create_rewards_daily_snapshot`
+- `process_rewards_membership_awards`
+- `process_rewards_rated_game_awards`
+- `process_rewards_tournament_awards`
+- `process_rewards_point_expirations`
+- `send_pending_chapter_renewals_email`
+- rewards timer parameter helpers
+- pending-renewal digest email sending helpers
+
 ### `membership-data-app`
 
 Move here:
@@ -87,10 +100,12 @@ Completed:
    - `aga-ratings-explorer`
    - `aga-clubexpress-mail`
    - `aga-membership-functions`
+5. `chapter-rewards-automation-app` created and deployed to `aga-chapter-rewards-automation`.
+6. Rewards timers cut over from `aga-clubexpress-mail` to `aga-chapter-rewards-automation`.
 
 Remaining cleanup:
 
-1. Reduce duplicated helper code across the two legacy-derived apps.
+1. Reduce duplicated helper code across the legacy-derived apps.
 2. Decide whether member category import should also become a direct endpoint in `membership-data-app`.
 3. Add app-specific deployment notes and environment variable documentation.
 4. Introduce `shared/` modules only where duplication is clearly stable.
