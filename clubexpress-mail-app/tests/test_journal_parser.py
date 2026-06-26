@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -17,6 +18,61 @@ spec.loader.exec_module(mailapp)
 
 
 class JournalParserTest(unittest.TestCase):
+    def test_naol_review_parser_does_not_shift_videos_after_missing_iframe(self):
+        html_body = """
+        <html><body>
+          <p><strong>Yilun Yang (7P) (8:30 to 9:30PM)</strong></p>
+          <p>Dawei Zhang 2k Zhaorong Ma 2k -
+            <a href="https://online-go.com/game/86799530">https://online-go.com/game/86799530</a></p>
+          <p><strong>Review Video - </strong></p>
+
+          <p><strong>Yoonyoung Kim (8P) (9 to 10 PM)</strong></p>
+          <p>Ivan Lo 7d Jia Chen 4d -
+            <a href="https://online-go.com/game/86922291">https://online-go.com/game/86922291</a></p>
+          <p><strong>Review Video - </strong></p>
+          <iframe src="https://www.youtube.com/embed/xip2xx7gFl4?si=test"></iframe>
+
+          <p><strong>Alexander Qi (3P)</strong> <strong>(9 to 10PM)</strong></p>
+          <p>Jonathan Buss 3d Riannie Duan 3d -
+            <a href="https://online-go.com/game/86922119">https://online-go.com/game/86922119</a></p>
+          <p><strong>Review Video - .</strong></p>
+          <iframe src="https://www.youtube.com/embed/8Z-yE9I2dyo?si=test"></iframe>
+
+          <p><strong>Soren Jaffe (6D) (9 to 10PM)</strong></p>
+          <p>Maria Aozono-Araldi 6k Laura Wu 5k -
+            <a href="https://online-go.com/game/86801165">https://online-go.com/game/86801165</a></p>
+          <p><strong>Review Video - </strong></p>
+          <iframe src="https://www.youtube.com/embed/6zUKJfdI6q0?si=test"></iframe>
+
+          <p><strong>BenKyo Baduk (5D) (9 to 10PM)</strong></p>
+          <p>Maria Aozono-Araldi 6k Benjamin Parrott 5k -
+            <a href="https://online-go.com/game/86922161">https://online-go.com/game/86922161</a></p>
+          <p><strong>Review Video - </strong></p>
+          <iframe src="https://www.youtube.com/embed/2vniusy7OUE?si=test"></iframe>
+        </body></html>
+        """
+
+        sections = mailapp._parse_naol_review_blog_html(html_body)["sections"]
+        by_reviewer = {section["reviewer_name"]: section for section in sections}
+
+        self.assertNotIn("Yilun Yang", by_reviewer)
+        self.assertEqual(
+            by_reviewer["Yoonyoung Kim"]["video_link"],
+            "https://www.youtube.com/watch?v=xip2xx7gFl4",
+        )
+        self.assertEqual(
+            by_reviewer["Alexander Qi"]["video_link"],
+            "https://www.youtube.com/watch?v=8Z-yE9I2dyo",
+        )
+        self.assertEqual(
+            by_reviewer["Soren Jaffe"]["video_link"],
+            "https://www.youtube.com/watch?v=6zUKJfdI6q0",
+        )
+        self.assertEqual(
+            by_reviewer["BenKyo Baduk"]["video_link"],
+            "https://www.youtube.com/watch?v=2vniusy7OUE",
+        )
+
     def test_heading_articles_use_linked_headlines_only_as_link_lookup(self):
         html_body = """
         <html><body>
@@ -63,6 +119,52 @@ class JournalParserTest(unittest.TestCase):
 
 
 class MembershipRewardEventTest(unittest.TestCase):
+    def test_mailbox_candidates_are_fetched_and_sorted_oldest_first(self):
+        messages_by_id = {
+            "newer": {"id": "newer", "internalDate": "2000"},
+            "older": {"id": "older", "internalDate": "1000"},
+        }
+        original_get_message = mailapp._get_gmail_message
+        try:
+            mailapp._get_gmail_message = lambda access_token, message_id: messages_by_id[message_id]
+            messages = mailapp._fetch_gmail_messages_for_processing(
+                "token",
+                [{"id": "newer"}, {"id": "older"}],
+            )
+        finally:
+            mailapp._get_gmail_message = original_get_message
+
+        self.assertEqual([message["id"] for message in messages], ["older", "newer"])
+
+    def test_renewal_parser_extracts_expiration_date_between_type_and_total(self):
+        text = """
+        A membership renewal has been processed for American Go Association.
+
+        Sam Ackerman
+        Member Number: 26265
+        Phone: 404-555-0100
+        Email: sam@example.test
+        Login Name: samackerman
+        Type: Tournament Pass
+        Expiration Date: 7/12/2026
+        Total: $10.00
+
+        Club Url
+        """
+
+        parsed = mailapp._parse_renewal_email(text)
+
+        self.assertEqual(parsed["AGAID"], 26265)
+        self.assertEqual(parsed["MemberType"], "Tournament Pass")
+        self.assertEqual(parsed["ExpirationDate"], date(2026, 7, 12))
+        self.assertFalse(parsed["IsChapterMember"])
+
+    def test_tournament_pass_default_expiration_is_thirty_day_window(self):
+        self.assertEqual(
+            mailapp._default_membership_expiration_date(date(2026, 6, 13), "Tournament Pass"),
+            date(2026, 7, 12),
+        )
+
     def test_membership_reward_event_params_preserve_source_context(self):
         received_at = datetime(2026, 5, 2, 15, 30, tzinfo=timezone.utc)
 
@@ -135,7 +237,7 @@ class RewardsMembershipAwardsTest(unittest.TestCase):
 
 
 class RewardsRatedGameAwardsTest(unittest.TestCase):
-    def test_rewards_rated_game_awards_params_write_daily_run(self):
+    def test_rewards_rated_game_awards_params_write_daily_run_on_ledger_start(self):
         params = mailapp._rewards_rated_game_awards_params(date(2026, 5, 2))
 
         self.assertEqual(
@@ -143,6 +245,40 @@ class RewardsRatedGameAwardsTest(unittest.TestCase):
             {
                 "GameDateFrom": date(2026, 5, 2),
                 "GameDateTo": date(2026, 5, 2),
+                "RunType": "daily",
+                "DryRun": 0,
+            },
+        )
+
+    def test_rewards_rated_game_awards_params_scan_from_ledger_start(self):
+        params = mailapp._rewards_rated_game_awards_params(date(2026, 5, 21))
+
+        self.assertEqual(
+            params,
+            {
+                "GameDateFrom": date(2026, 5, 2),
+                "GameDateTo": date(2026, 5, 21),
+                "RunType": "daily",
+                "DryRun": 0,
+            },
+        )
+
+    def test_rewards_rated_game_awards_params_allow_configured_start_date(self):
+        original = os.environ.get("REWARDS_RATED_GAME_AWARDS_DATE_FROM")
+        os.environ["REWARDS_RATED_GAME_AWARDS_DATE_FROM"] = "2026-05-16"
+        try:
+            params = mailapp._rewards_rated_game_awards_params(date(2026, 5, 21))
+        finally:
+            if original is None:
+                os.environ.pop("REWARDS_RATED_GAME_AWARDS_DATE_FROM", None)
+            else:
+                os.environ["REWARDS_RATED_GAME_AWARDS_DATE_FROM"] = original
+
+        self.assertEqual(
+            params,
+            {
+                "GameDateFrom": date(2026, 5, 16),
+                "GameDateTo": date(2026, 5, 21),
                 "RunType": "daily",
                 "DryRun": 0,
             },
@@ -328,6 +464,32 @@ class ChapterCsvImportTest(unittest.TestCase):
                 b"ChapterID,ChapterName,ChapterCode\r\n"
                 b"1,One,\r\n"
             )
+
+
+class MemChapCsvImportTest(unittest.TestCase):
+    def test_memchap_rows_accept_active_header_as_mislabeled_agaid(self):
+        header = ["Active", *mailapp.STAGING_COLUMNS[1:], "Member.DateCreated"]
+        values = {column: "" for column in mailapp.STAGING_COLUMNS}
+        values.update(
+            {
+                "AGAID": "12345",
+                "MemberType": "Adult Full",
+                "FirstName": "Test",
+                "LastName": "Member",
+                "Status": "Active",
+                "EmailAddress": "test@example.test",
+                "ChapterID": "32292",
+            }
+        )
+        row = [values["AGAID"], *[values[column] for column in mailapp.STAGING_COLUMNS[1:]], "ignored"]
+        csv_bytes = (",".join(header) + "\r\n" + ",".join(row) + "\r\n").encode("utf-8")
+
+        rows = mailapp._parse_csv_rows(csv_bytes)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][0], 12345)
+        self.assertEqual(rows[0][1], "Adult Full")
+        self.assertEqual(rows[0][mailapp.STAGING_COLUMNS.index("ChapterID")], 32292)
 
 
 if __name__ == "__main__":

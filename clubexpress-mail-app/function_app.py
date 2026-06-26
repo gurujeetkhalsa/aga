@@ -1,5 +1,4 @@
 ﻿import base64
-import csv
 import html
 import json
 import logging
@@ -11,13 +10,44 @@ from email import message_from_bytes, policy
 from email.message import EmailMessage
 from email.parser import BytesParser
 from html.parser import HTMLParser
-from io import StringIO
 from pathlib import Path
 from typing import Iterable, Optional
 from urllib import error, parse, request
 
 import azure.functions as func
 import certifi
+
+from clubexpress_csv_parsers import (
+    CHAPTER_COLUMNS,
+    STAGING_COLUMNS,
+    CsvValidationError,
+    canonicalize_header as csv_canonicalize_header,
+    decode_csv_text as csv_decode_csv_text,
+    detect_attachment_report_type as detect_csv_attachment_report_type,
+    is_chapter_header as csv_is_chapter_header,
+    is_chapter_attachment_name as csv_is_chapter_attachment_name,
+    is_member_agaid as csv_is_member_agaid,
+    is_member_category_header as csv_is_member_category_header,
+    is_memchap_header as csv_is_memchap_header,
+    is_memchap_attachment_name as csv_is_memchap_attachment_name,
+    normalize_header as csv_normalize_header,
+    parse_chapter_rows as parse_csv_chapter_rows,
+    parse_date as csv_parse_date,
+    parse_datetime as csv_parse_datetime,
+    parse_memchap_rows,
+    parse_member_category_rows as parse_csv_member_category_rows,
+    read_csv_header_canonical as csv_read_csv_header_canonical,
+    read_csv_matrix as csv_read_csv_matrix,
+)
+from clubexpress_parsers import (
+    EmailProcessingError,
+    extract_chapter_renewal_notice_rows_from_html,
+    extract_chapter_renewal_notice_rows_from_text,
+    parse_chapter_renewal_notice,
+    parse_new_member_email,
+    parse_renewal_email,
+)
+
 try:
     import pyodbc
 except Exception:
@@ -46,6 +76,7 @@ DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE = os.environ.get("REWARDS_RATED_GAME_
 DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE = os.environ.get("REWARDS_TOURNAMENT_AWARDS_SCHEDULE", "0 35 5 * * *")
 DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHEDULE", "0 40 5 * * *")
 DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE = os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE", "0 50 5 * * *")
+DEFAULT_REWARDS_LEDGER_START_DATE = "2026-05-02"
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
 CHAPTER_MESSAGE_TYPE = "chapter_csv"
@@ -149,13 +180,15 @@ WITH current_ratings AS
     SELECT
         ranked.[AGAID],
         ranked.[Rating],
-        ranked.[Sigma]
+        ranked.[Sigma],
+        ranked.[LastUpdate]
     FROM
     (
         SELECT
             r.[Pin_Player] AS [AGAID],
             r.[Rating],
             r.[Sigma],
+            r.[Elab_Date] AS [LastUpdate],
             ROW_NUMBER() OVER
             (
                 PARTITION BY r.[Pin_Player]
@@ -172,10 +205,10 @@ SELECT
     m.[LastName],
     m.[MemberType],
     m.[ExpirationDate],
-    m.[JoinDate],
     m.[State],
     cr.[Rating],
     cr.[Sigma],
+    cr.[LastUpdate],
     c.[ChapterCode],
     c.[ChapterName]
 FROM [membership].[members] AS m
@@ -184,92 +217,15 @@ LEFT JOIN [membership].[chapters] AS c
 LEFT JOIN current_ratings AS cr
     ON cr.[AGAID] = m.[AGAID]
 WHERE m.[AGAID] < ?
+  AND (m.[Status] IS NULL OR UPPER(LTRIM(RTRIM(m.[Status]))) <> N'DROPPED')
 ORDER BY m.[LastName], m.[FirstName], m.[AGAID]
 """
 
-STAGING_COLUMNS = [
-    "AGAID",
-    "MemberType",
-    "FirstName",
-    "MiddleInitial",
-    "LastName",
-    "Nickname",
-    "Pronouns",
-    "LoginName",
-    "Status",
-    "LastLogin",
-    "EmailAddress",
-    "CellPhone",
-    "PhoneNumber",
-    "Address1",
-    "Address2",
-    "City",
-    "State",
-    "ZipCode",
-    "Country",
-    "DateOfBirth",
-    "WorkTitle",
-    "Gender",
-    "JoinDate",
-    "ExpirationDate",
-    "LastRenewalDate",
-    "ChapterID",
-    "EmergencyContactName",
-    "EmergencyContactRelationship",
-    "EmergencyContactPhone",
-    "EmergencyContactEmail",
-]
-
-INT_COLUMNS = {"AGAID", "ChapterID"}
-DATE_COLUMNS = {"DateOfBirth", "JoinDate", "ExpirationDate", "LastRenewalDate"}
-DATETIME_COLUMNS = {"LastLogin"}
-OPTIONAL_SOURCE_COLUMNS = {"LastLogin"}
-IGNORED_SOURCE_COLUMNS = {"memberdatecreated"}
-STRING_COLUMNS = set(STAGING_COLUMNS) - INT_COLUMNS - DATE_COLUMNS - DATETIME_COLUMNS
-EXPECTED_HEADER_LOOKUP = {re.sub(r"[^a-z0-9]+", "", column.lower()): column for column in STAGING_COLUMNS}
-CATEGORY_COLUMNS = ["AGAID", "Category"]
-CATEGORY_HEADER_LOOKUP = {"agaid": "AGAID", "category": "Category"}
-CHAPTER_COLUMNS = ["ChapterID", "ChapterCode", "ChapterName", "City", "State", "ChapterRepID", "CreatedDate", "Status"]
-CHAPTER_INT_COLUMNS = {"ChapterID", "ChapterRepID"}
-CHAPTER_DATETIME_COLUMNS = {"CreatedDate"}
-CHAPTER_HEADER_ALIASES = {
-    "chapterid": "ChapterID",
-    "clubexpressid": "ChapterID",
-    "id": "ChapterID",
-    "chaptercode": "ChapterCode",
-    "chaptershortname": "ChapterCode",
-    "shortname": "ChapterCode",
-    "code": "ChapterCode",
-    "chaptername": "ChapterName",
-    "name": "ChapterName",
-    "city": "City",
-    "state": "State",
-    "chapterrepid": "ChapterRepID",
-    "chapterrepagaid": "ChapterRepID",
-    "chapterrepresentativeid": "ChapterRepID",
-    "chapterrepresentativeagaid": "ChapterRepID",
-    "primarycontactid": "ChapterRepID",
-    "primarycontactmemberid": "ChapterRepID",
-    "contactid": "ChapterRepID",
-    "contactmemberid": "ChapterRepID",
-    "presidentid": "ChapterRepID",
-    "createddate": "CreatedDate",
-    "datecreated": "CreatedDate",
-    "status": "Status",
-}
 JOURNAL_NLP_MODEL = "en_core_web_sm"
 JOURNAL_NLP_EXCLUDE = ["tagger", "parser", "lemmatizer", "attribute_ruler"]
 _journal_name_nlp = None
 _journal_name_nlp_attempted = False
 _journal_name_nlp_lock = threading.Lock()
-
-
-class CsvValidationError(ValueError):
-    pass
-
-
-class EmailProcessingError(ValueError):
-    pass
 
 
 class GmailApiError(RuntimeError):
@@ -382,63 +338,63 @@ class _JournalVisibleTextParser(HTMLParser):
         return lines
 
 
-class _HtmlTableParser(HTMLParser):
+class _NaolReviewHtmlParser(HTMLParser):
+    _BLOCK_TAGS = {"p", "div", "li", "tr", "table", "section", "article", "h1", "h2", "h3", "h4", "h5", "h6", "td"}
+    _SKIP_TAGS = {"script", "style", "svg", "noscript"}
+
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.tables: list[list[list[str]]] = []
-        self._table_depth = 0
-        self._current_table: list[list[str]] | None = None
-        self._current_row: list[str] | None = None
-        self._cell_parts: list[str] | None = None
+        self._skip_depth = 0
+        self._parts: list[str] = []
+        self._seen_video_links: set[str] = set()
+        self.tokens: list[dict[str, str]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
         normalized_tag = tag.lower()
-        if normalized_tag == "table":
-            self._table_depth += 1
-            if self._table_depth == 1:
-                self._current_table = []
+        if normalized_tag in self._SKIP_TAGS:
+            self._skip_depth += 1
             return
-
-        if self._table_depth < 1:
+        if self._skip_depth:
             return
-
-        if normalized_tag == "tr":
-            self._current_row = []
-        elif normalized_tag in {"td", "th"}:
-            self._cell_parts = []
-        elif normalized_tag == "br" and self._cell_parts is not None:
-            self._cell_parts.append("\n")
+        if normalized_tag in self._BLOCK_TAGS or normalized_tag == "br":
+            self._flush_text()
+        if normalized_tag == "iframe":
+            self._flush_text()
+            attr_map = {name.lower(): value for name, value in attrs if name and value}
+            video_link = _normalize_video_link(attr_map.get("src", ""))
+            if not video_link:
+                return
+            if video_link in self._seen_video_links:
+                return
+            self._seen_video_links.add(video_link)
+            self.tokens.append({"video_link": video_link[:1000]})
 
     def handle_endtag(self, tag: str) -> None:
         normalized_tag = tag.lower()
-        if normalized_tag == "table":
-            if self._table_depth == 1 and self._current_table is not None:
-                table = [row for row in self._current_table if any(cell.strip() for cell in row)]
-                if table:
-                    self.tables.append(table)
-                self._current_table = None
-                self._current_row = None
-                self._cell_parts = None
-            if self._table_depth:
-                self._table_depth -= 1
+        if normalized_tag in self._SKIP_TAGS:
+            if self._skip_depth:
+                self._skip_depth -= 1
             return
-
-        if self._table_depth < 1:
+        if self._skip_depth:
             return
-
-        if normalized_tag in {"td", "th"} and self._cell_parts is not None:
-            text = re.sub(r"\s+", " ", "".join(self._cell_parts)).strip()
-            if self._current_row is not None:
-                self._current_row.append(text)
-            self._cell_parts = None
-        elif normalized_tag == "tr" and self._current_row is not None:
-            if self._current_table is not None and any(cell.strip() for cell in self._current_row):
-                self._current_table.append(self._current_row)
-            self._current_row = None
+        if normalized_tag in self._BLOCK_TAGS:
+            self._flush_text()
 
     def handle_data(self, data: str) -> None:
-        if self._cell_parts is not None and data:
-            self._cell_parts.append(data)
+        if self._skip_depth:
+            return
+        if data:
+            self._parts.append(data)
+
+    def _flush_text(self) -> None:
+        text = re.sub(r"\s+", " ", "".join(self._parts)).strip()
+        if text:
+            self.tokens.append({"text": text})
+        self._parts = []
+
+    def get_tokens(self) -> list[dict[str, str]]:
+        self._flush_text()
+        return self.tokens
 
 
 @app.timer_trigger(schedule=DEFAULT_MAILBOX_POLL_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
@@ -452,17 +408,36 @@ def poll_clubexpress_mailbox(timer: func.TimerRequest) -> None:
         messages = _list_gmail_messages(access_token)
         logging.info("Fetched %s candidate Gmail messages", len(messages))
 
-        for item in messages:
-            message_id = item.get("id")
-            if not message_id:
-                continue
+        for message in _fetch_gmail_messages_for_processing(access_token, messages):
+            message_id = _message_identifier(message)
             try:
-                message = _get_gmail_message(access_token, message_id)
                 _process_mailbox_message(access_token, message)
             except Exception:
                 logging.exception("Failed processing Gmail message %s", message_id)
     except Exception:
         logging.exception("ClubExpress Gmail poll failed")
+
+
+def _fetch_gmail_messages_for_processing(access_token: str, items: list[dict]) -> list[dict]:
+    messages: list[dict] = []
+    for item in items:
+        message_id = item.get("id")
+        if not message_id:
+            continue
+        try:
+            messages.append(_get_gmail_message(access_token, message_id))
+        except Exception:
+            logging.exception("Failed fetching Gmail message %s", message_id)
+
+    messages.sort(key=lambda message: (_message_received_at(message), _message_identifier(message)))
+    if messages:
+        logging.info(
+            "Processing %s Gmail messages oldest-to-newest from %s to %s",
+            len(messages),
+            _message_received_at(messages[0]).isoformat(),
+            _message_received_at(messages[-1]).isoformat(),
+        )
+    return messages
 
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
@@ -549,15 +524,17 @@ def process_rewards_rated_game_awards(timer: func.TimerRequest) -> None:
         return
 
     game_date = _rewards_snapshot_date()
+    params = _rewards_rated_game_awards_params(game_date)
     try:
         rows = _execute_stored_procedure_rows(
             conn_str,
             REWARDS_RATED_GAME_AWARDS_PROC,
-            _rewards_rated_game_awards_params(game_date),
+            params,
         )
         row = rows[0] if rows else {}
         logging.info(
-            "Chapter Rewards rated-game awards complete. game_date=%s run_id=%s participants=%s eligible=%s already_awarded=%s new_awards=%s points=%s missing_member_snapshot=%s missing_chapter_snapshot=%s inactive_player=%s no_chapter=%s chapter_not_current=%s",
+            "Chapter Rewards rated-game awards complete. date_from=%s date_to=%s run_id=%s participants=%s eligible=%s already_awarded=%s new_awards=%s points=%s missing_member_snapshot=%s missing_chapter_snapshot=%s inactive_player=%s no_chapter=%s chapter_not_current=%s",
+            params["GameDateFrom"].isoformat(),
             game_date.isoformat(),
             row.get("RunID"),
             row.get("ParticipantCount"),
@@ -856,7 +833,7 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             "LastName": parsed["LastName"],
             "EmailAddress": parsed.get("EmailAddress"),
             "JoinDate": received_date,
-            "ExpirationDate": received_date + timedelta(days=365),
+            "ExpirationDate": parsed.get("ExpirationDate") or _default_membership_expiration_date(received_date, parsed.get("MemberType")),
             "Sender": sender or None,
             "Subject": subject or None,
             "BlobPath": archive_path,
@@ -887,7 +864,7 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             "MessageId": _message_identifier(message),
             "ReceivedAt": received_at,
             "AGAID": parsed["AGAID"],
-            "ExpirationDate": received_date + timedelta(days=365),
+            "ExpirationDate": parsed.get("ExpirationDate") or _default_membership_expiration_date(received_date, parsed.get("MemberType")),
             "PhoneNumber": parsed.get("PhoneNumber"),
             "EmailAddress": parsed.get("EmailAddress"),
             "LoginName": parsed.get("LoginName"),
@@ -1114,7 +1091,7 @@ def _render_tdlist_tab(rows: list[dict[str, object]], *, chapter_field: str) -> 
                     _tdlist_text(row.get(chapter_field)),
                     _tdlist_text(row.get("State")),
                     _format_tdlist_decimal(row.get("Sigma"), digits=5),
-                    _format_tdlist_date(row.get("JoinDate")),
+                    _format_tdlist_date(row.get("LastUpdate")),
                 ]
             )
         )
@@ -1222,13 +1199,11 @@ def _import_member_categories_bytes(conn_str: str, csv_bytes: bytes) -> int:
 
 
 def _is_memchap_attachment_name(name: str) -> bool:
-    normalized_name = (name or "").strip().lower()
-    return normalized_name.endswith('.csv') and 'memchap' in normalized_name
+    return csv_is_memchap_attachment_name(name)
 
 
 def _is_chapter_attachment_name(name: str) -> bool:
-    normalized_name = (name or "").strip().lower()
-    return normalized_name.endswith(".csv") and "chapterx" in normalized_name
+    return csv_is_chapter_attachment_name(name)
 
 
 def _classify_message(sender: str, subject: str, attachments: list[dict]) -> str:
@@ -1252,176 +1227,23 @@ def _classify_message(sender: str, subject: str, attachments: list[dict]) -> str
 
 
 def _parse_new_member_email(text: str) -> dict:
-    segment = _slice_between_markers(text, "membership in American Go Association.", "Club Url")
-    agaid = _extract_required_int(segment, r"Member Number:\s*(\d+)", "AGAID")
-    member_type = _extract_member_type(segment)
-    if member_type.strip().lower() == "chapter":
-        raise EmailProcessingError("Chapter member signup emails should be ignored before parsing.")
-
-    email_address = _extract_optional_text(segment, r"Email:\s*(.*?)\s*Login")
-    name_line = _extract_name_line(segment)
-    if not name_line:
-        raise EmailProcessingError("Could not determine member name from new member email.")
-
-    name_parts = [part for part in name_line.split() if part]
-    if len(name_parts) < 2:
-        raise EmailProcessingError(f"Full name line is not parseable: {name_line!r}")
-
-    return {
-        "AGAID": agaid,
-        "MemberType": member_type,
-        "FirstName": name_parts[0],
-        "LastName": name_parts[-1],
-        "EmailAddress": email_address,
-    }
+    return parse_new_member_email(text)
 
 
 def _parse_renewal_email(text: str) -> dict:
-    segment = _slice_between_markers(text, "A membership renewal has been processed for American Go Association.", "Club Url")
-    member_type = _extract_member_type(segment)
-    return {
-        "AGAID": _extract_required_int(segment, r"Member Number:\s*(\d+)", "AGAID"),
-        "PhoneNumber": _extract_optional_text(segment, r"Phone:\s*(.*?)\s*Email"),
-        "EmailAddress": _extract_optional_text(segment, r"Email:\s*(.*?)\s*Login Name"),
-        "LoginName": _extract_optional_text(segment, r"Login Name:\s*(.*?)\s*(?:Member\s+)?Type"),
-        "MemberType": member_type,
-        "IsChapterMember": member_type.strip().lower().startswith("chapter"),
-    }
+    return parse_renewal_email(text)
 
 
 def _parse_chapter_renewal_notice_email(message: dict) -> list[dict]:
-    html_body = _message_body_to_html(message)
-    rows = _extract_chapter_renewal_notice_rows_from_html(html_body or "")
-    if not rows:
-        rows = _extract_chapter_renewal_notice_rows_from_text(_message_body_to_text(message))
-    return _dedupe_chapter_renewal_notice_rows(rows)
+    return parse_chapter_renewal_notice(_message_body_to_html(message) or "", _message_body_to_text(message))
 
 
 def _extract_chapter_renewal_notice_rows_from_html(html_body: str) -> list[dict]:
-    if not html_body:
-        return []
-
-    parser = _HtmlTableParser()
-    parser.feed(html_body)
-    parser.close()
-
-    rows: list[dict] = []
-    for table in parser.tables:
-        rows.extend(_extract_chapter_renewal_notice_rows_from_matrix(table))
-    return rows
+    return extract_chapter_renewal_notice_rows_from_html(html_body)
 
 
 def _extract_chapter_renewal_notice_rows_from_text(text: str) -> list[dict]:
-    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
-    if not lines:
-        return []
-
-    for index, line in enumerate(lines):
-        cells = _split_renewal_notice_text_row(line)
-        header_lookup = _chapter_renewal_notice_header_lookup(cells)
-        if "member" not in header_lookup or "type" not in header_lookup:
-            continue
-
-        matrix = [cells]
-        for body_line in lines[index + 1:]:
-            body_cells = _split_renewal_notice_text_row(body_line)
-            if len(body_cells) < 2:
-                continue
-            matrix.append(body_cells)
-        return _extract_chapter_renewal_notice_rows_from_matrix(matrix)
-
-    return []
-
-
-def _extract_chapter_renewal_notice_rows_from_matrix(matrix: list[list[str]]) -> list[dict]:
-    rows: list[dict] = []
-    for header_index, header_row in enumerate(matrix):
-        header_lookup = _chapter_renewal_notice_header_lookup(header_row)
-        if "member" not in header_lookup or "type" not in header_lookup:
-            continue
-
-        for source_row_number, row in enumerate(matrix[header_index + 1:], start=header_index + 2):
-            record = _chapter_renewal_notice_record(header_row, row)
-            if not record:
-                continue
-            member_type = str(record.get("type") or "").strip()
-            if member_type.lower() != "chapter":
-                continue
-            member_raw = str(record.get("member") or "").strip()
-            chapter_id = _extract_chapter_id_from_member_cell(member_raw)
-            if chapter_id is None:
-                raise EmailProcessingError(f"Could not parse ChapterID from renewal notice member cell {member_raw!r}.")
-            rows.append(
-                {
-                    "source_row_number": source_row_number,
-                    "chapter_id": chapter_id,
-                    "member_raw": member_raw,
-                    "member_type": member_type,
-                    "row_payload": record,
-                }
-            )
-        if rows:
-            return rows
-    return rows
-
-
-def _chapter_renewal_notice_record(header_row: list[str], row: list[str]) -> dict[str, str]:
-    if not any(str(cell or "").strip() for cell in row):
-        return {}
-    record: dict[str, str] = {}
-    for index, header in enumerate(header_row):
-        key = _chapter_renewal_notice_header_key(header)
-        if not key:
-            continue
-        record[key] = row[index].strip() if index < len(row) and row[index] is not None else ""
-    return record
-
-
-def _chapter_renewal_notice_header_lookup(header_row: list[str]) -> dict[str, int]:
-    lookup: dict[str, int] = {}
-    for index, header in enumerate(header_row):
-        key = _chapter_renewal_notice_header_key(header)
-        if key:
-            lookup.setdefault(key, index)
-    return lookup
-
-
-def _chapter_renewal_notice_header_key(header: str) -> str:
-    normalized = re.sub(r"[^a-z0-9]+", "", str(header or "").strip().lower())
-    aliases = {
-        "member": "member",
-        "memberid": "member",
-        "chapterid": "member",
-        "type": "type",
-        "membertype": "type",
-        "membershiptype": "type",
-    }
-    return aliases.get(normalized, re.sub(r"[^a-z0-9]+", "_", str(header or "").strip().lower()).strip("_"))
-
-
-def _split_renewal_notice_text_row(line: str) -> list[str]:
-    if "\t" in line:
-        return [cell.strip() for cell in line.split("\t")]
-    if "|" in line:
-        return [cell.strip() for cell in line.split("|")]
-    return [cell.strip() for cell in re.split(r"\s{2,}", line.strip())]
-
-
-def _extract_chapter_id_from_member_cell(value: str) -> int | None:
-    match = re.search(r"\d+", value or "")
-    return int(match.group(0)) if match else None
-
-
-def _dedupe_chapter_renewal_notice_rows(rows: list[dict]) -> list[dict]:
-    deduped = []
-    seen: set[int] = set()
-    for row in rows:
-        chapter_id = int(row["chapter_id"])
-        if chapter_id in seen:
-            raise EmailProcessingError(f"Duplicate ChapterID {chapter_id} in chapter renewal notice email.")
-        seen.add(chapter_id)
-        deduped.append(row)
-    return deduped
+    return extract_chapter_renewal_notice_rows_from_text(text)
 
 
 def _parse_journal_email(conn_str: str, message: dict) -> dict:
@@ -2089,16 +1911,23 @@ def _fetch_external_html(url: str) -> Optional[str]:
 
 def _parse_naol_review_blog_html(html_body: str) -> dict[str, object]:
     lines = _extract_visible_lines_from_html(html_body)
-    title = _extract_naol_blog_title(lines)
-    iframe_links = _extract_iframe_video_links(html_body)
-    sections = _extract_naol_review_sections(lines, iframe_links)
+    title = _extract_naol_blog_title(lines, html_body)
+    tokens = _extract_naol_review_tokens_from_html(html_body)
+    sections = _extract_naol_review_sections(tokens)
     return {
         "title": title,
         "sections": sections,
     }
 
 
-def _extract_naol_blog_title(lines: list[str]) -> str:
+def _extract_naol_blog_title(lines: list[str], html_body: str = "") -> str:
+    title_match = re.search(r"<title\b[^>]*>(.*?)</title>", html_body or "", re.IGNORECASE | re.DOTALL)
+    if title_match:
+        title = re.sub(r"\s+", " ", _html_to_text(title_match.group(1))).strip()
+        title = re.sub(r"\s+-\s+American Go Association\s*$", "", title).strip()
+        if title and "naol" in title.lower():
+            return title[:500]
+
     for idx, line in enumerate(lines):
         if line.strip().lower() == "naol reviews" and idx + 1 < len(lines):
             return lines[idx + 1][:500]
@@ -2128,6 +1957,13 @@ def _extract_iframe_video_links(html_body: str) -> list[str]:
     return links
 
 
+def _extract_naol_review_tokens_from_html(html_body: str) -> list[dict[str, str]]:
+    parser = _NaolReviewHtmlParser()
+    parser.feed(html_body or "")
+    parser.close()
+    return parser.get_tokens()
+
+
 def _normalize_video_link(url: str) -> str:
     clean_url = (url or "").strip()
     if not clean_url.startswith(("http://", "https://")):
@@ -2145,13 +1981,21 @@ def _normalize_video_link(url: str) -> str:
     return clean_url
 
 
-def _extract_naol_review_sections(lines: list[str], iframe_links: list[str]) -> list[dict[str, object]]:
+def _extract_naol_review_sections(tokens: list[dict[str, str]]) -> list[dict[str, object]]:
     sections: list[dict[str, object]] = []
     current: Optional[dict[str, object]] = None
-    iframe_index = 0
     in_post_body = False
 
-    for raw_line in lines:
+    for token in tokens:
+        video_link = (token.get("video_link") or "").strip()
+        if video_link:
+            if current is not None and current.get("_awaiting_video"):
+                current["video_link"] = video_link
+                _append_naol_review_section(sections, current)
+                current = None
+            continue
+
+        raw_line = token.get("text", "")
         line = re.sub(r"\s+", " ", raw_line).strip().lstrip("\ufeff")
         if not line:
             continue
@@ -2167,13 +2011,13 @@ def _extract_naol_review_sections(lines: list[str], iframe_links: list[str]) -> 
 
         reviewer_match = _parse_naol_reviewer_header(line)
         if reviewer_match:
-            if current and current.get("video_link"):
-                sections.append(current)
+            _append_naol_review_section(sections, current)
             current = {
                 "reviewer_name": reviewer_match["reviewer_name"],
                 "reviewer_rank": reviewer_match["reviewer_rank"],
                 "games": [],
                 "video_link": "",
+                "_awaiting_video": False,
             }
             continue
 
@@ -2186,16 +2030,16 @@ def _extract_naol_review_sections(lines: list[str], iframe_links: list[str]) -> 
             continue
 
         if "review video" in lower_line:
-            if iframe_index < len(iframe_links):
-                current["video_link"] = iframe_links[iframe_index]
-                iframe_index += 1
-            if current.get("games") and current.get("video_link"):
-                sections.append(current)
-                current = None
+            current["_awaiting_video"] = True
 
-    if current and current.get("games") and current.get("video_link"):
-        sections.append(current)
+    _append_naol_review_section(sections, current)
     return sections
+
+
+def _append_naol_review_section(sections: list[dict[str, object]], section: Optional[dict[str, object]]) -> None:
+    if not section or not section.get("games") or not section.get("video_link"):
+        return
+    sections.append({key: value for key, value in section.items() if not key.startswith("_")})
 
 
 def _looks_like_naol_reviewer_header(line: str) -> bool:
@@ -2237,47 +2081,11 @@ def _normalize_person_name(value: str) -> Optional[str]:
     return f"{tokens[0].lower()} {tokens[-1].lower()}"
 
 
-def _slice_between_markers(text: str, start_marker: str, end_marker: str) -> str:
-    if start_marker in text:
-        text = text.split(start_marker, 1)[1]
-    if end_marker in text:
-        text = text.split(end_marker, 1)[0]
-    return text.strip()
-
-
-def _extract_name_line(text: str) -> Optional[str]:
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-    for line in lines[:8]:
-        if ":" in line:
-            continue
-        if len(line.split()) >= 2:
-            return line
-    return None
-
-
-def _extract_member_type(text: str) -> str:
-    return _extract_required_text(text, r"(?:Member\s+)?Type:\s*(.*?)\s*Total", "Member Type")
-
-
-def _extract_required_text(text: str, pattern: str, label: str) -> str:
-    value = _extract_optional_text(text, pattern)
-    if value is None or value == "":
-        raise EmailProcessingError(f"Could not extract required field {label}.")
-    return value
-
-
-def _extract_optional_text(text: str, pattern: str) -> Optional[str]:
-    match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-    if not match:
-        return None
-    return re.sub(r"\s+", " ", match.group(1)).strip()
-
-
-def _extract_required_int(text: str, pattern: str, label: str) -> int:
-    match = re.search(pattern, text, re.IGNORECASE)
-    if not match:
-        raise EmailProcessingError(f"Could not extract required integer field {label}.")
-    return int(match.group(1))
+def _default_membership_expiration_date(received_date: date, member_type: Optional[str]) -> date:
+    normalized_type = (member_type or "").strip().lower()
+    if normalized_type == "tournament pass":
+        return received_date + timedelta(days=29)
+    return received_date + timedelta(days=365)
 
 
 def _detect_message_report_type(attachments: list[dict]) -> Optional[str]:
@@ -2292,48 +2100,23 @@ def _detect_message_report_type(attachments: list[dict]) -> Optional[str]:
 
 
 def _detect_attachment_report_type(name: str, content_bytes: bytes) -> Optional[str]:
-    if _is_memchap_attachment_name(name):
-        return NIGHTLY_MESSAGE_TYPE
-    if _is_chapter_attachment_name(name):
-        return CHAPTER_MESSAGE_TYPE
-
-    canonical_headers = _read_csv_header_canonical(content_bytes)
-    if not canonical_headers:
-        return None
-    if _is_memchap_header(canonical_headers):
-        return NIGHTLY_MESSAGE_TYPE
-    if _is_member_category_header(canonical_headers):
-        return NIGHTLY_CATEGORY_MESSAGE_TYPE
-    if _is_chapter_header(canonical_headers):
-        return CHAPTER_MESSAGE_TYPE
-    return None
+    return detect_csv_attachment_report_type(name, content_bytes)
 
 
 def _read_csv_header_canonical(csv_bytes: bytes) -> list[str]:
-    rows = _read_csv_matrix(csv_bytes, raise_on_error=False)
-    if not rows:
-        return []
-
-    for row in rows[:2]:
-        canonical = [_canonicalize_header(value) for value in row if value is not None]
-        if _is_memchap_header(canonical) or _is_member_category_header(canonical) or _is_chapter_header(canonical):
-            return canonical
-
-    return [_canonicalize_header(value) for value in rows[0] if value is not None]
+    return csv_read_csv_header_canonical(csv_bytes)
 
 
 def _is_memchap_header(headers: list[str]) -> bool:
-    required = {_canonicalize_header("AGAID"), _canonicalize_header("MemberType"), _canonicalize_header("FirstName"), _canonicalize_header("LastName")}
-    return required.issubset(set(headers))
+    return csv_is_memchap_header(headers)
 
 
 def _is_member_category_header(headers: list[str]) -> bool:
-    return {_canonicalize_header("AGAID"), _canonicalize_header("Category")}.issubset(set(headers))
+    return csv_is_member_category_header(headers)
 
 
 def _is_chapter_header(headers: list[str]) -> bool:
-    mapped = {CHAPTER_HEADER_ALIASES.get(header, "") for header in headers}
-    return {"ChapterID", "ChapterCode", "ChapterName"}.issubset(mapped)
+    return csv_is_chapter_header(headers)
 
 
 def _message_body_to_text(message: dict) -> str:
@@ -2556,11 +2339,29 @@ def _rewards_membership_awards_params(as_of_date: date) -> dict:
 
 def _rewards_rated_game_awards_params(game_date: date) -> dict:
     return {
-        "GameDateFrom": game_date,
+        "GameDateFrom": _rewards_rated_game_awards_start_date(game_date),
         "GameDateTo": game_date,
         "RunType": "daily",
         "DryRun": 0,
     }
+
+
+def _rewards_rated_game_awards_start_date(game_date: date) -> date:
+    configured = (
+        os.environ.get("REWARDS_RATED_GAME_AWARDS_DATE_FROM")
+        or os.environ.get("REWARDS_LEDGER_START_DATE")
+        or DEFAULT_REWARDS_LEDGER_START_DATE
+    )
+    try:
+        start_date = date.fromisoformat(configured)
+    except ValueError:
+        logging.warning(
+            "Invalid rewards rated-game award start date %r; using %s.",
+            configured,
+            DEFAULT_REWARDS_LEDGER_START_DATE,
+        )
+        start_date = date.fromisoformat(DEFAULT_REWARDS_LEDGER_START_DATE)
+    return min(start_date, game_date)
 
 
 def _rewards_tournament_awards_params(tournament_date_to: date) -> dict:
@@ -3062,310 +2863,43 @@ def _extract_csv_bytes(req: func.HttpRequest) -> bytes:
 
 
 def _parse_date(value: str) -> date:
-    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y"):
-        try:
-            return datetime.strptime(value, fmt).date()
-        except ValueError:
-            continue
-    raise CsvValidationError(f"Invalid date value '{value}'.")
+    return csv_parse_date(value)
 
 
 def _parse_datetime(value: str) -> datetime:
-    normalized = value.strip()
-    if normalized.endswith("Z"):
-        normalized = normalized[:-1] + "+00:00"
-    try:
-        return datetime.fromisoformat(normalized)
-    except ValueError:
-        pass
-    for fmt in (
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d %H:%M",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M",
-        "%m/%d/%Y %H:%M:%S",
-        "%m/%d/%Y %H:%M",
-        "%m/%d/%Y %I:%M:%S %p",
-        "%m/%d/%Y %I:%M %p",
-    ):
-        try:
-            return datetime.strptime(normalized, fmt)
-        except ValueError:
-            continue
-    try:
-        return datetime.combine(_parse_date(normalized), datetime.min.time())
-    except CsvValidationError as exc:
-        raise CsvValidationError(f"Invalid datetime value '{value}'.") from exc
-
-
-def _convert_value(column: str, raw_value: str):
-    value = raw_value.strip()
-    if value == "":
-        return None
-    if column in INT_COLUMNS:
-        try:
-            return int(value)
-        except ValueError as exc:
-            raise CsvValidationError(f"Column {column} requires an integer. Received '{raw_value}'.") from exc
-    if column in DATE_COLUMNS:
-        return _parse_date(value)
-    if column in DATETIME_COLUMNS:
-        return _parse_datetime(value)
-    if column in STRING_COLUMNS:
-        return value
-    raise CsvValidationError(f"Unsupported column mapping for {column}.")
+    return csv_parse_datetime(value)
 
 
 def _normalize_header(fieldnames: Iterable[Optional[str]]) -> list[str]:
-    normalized = []
-    for field in fieldnames:
-        if field is None:
-            normalized.append("")
-            continue
-        normalized.append(field.strip())
-    return normalized
+    return csv_normalize_header(fieldnames)
 
 
 def _canonicalize_header(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "", value.strip().lower())
+    return csv_canonicalize_header(value)
 
 
 def _parse_csv_rows(csv_bytes: bytes) -> list[tuple]:
-    csv_text = _decode_csv_text(csv_bytes)
-
-    reader = csv.DictReader(StringIO(csv_text))
-    if not reader.fieldnames:
-        raise CsvValidationError("CSV is missing a header row.")
-
-    original_header = list(reader.fieldnames)
-    incoming_header = _normalize_header(original_header)
-    source_columns_by_target = {}
-    unknown_columns = []
-    duplicate_columns = []
-
-    for original_name, normalized_name in zip(original_header, incoming_header):
-        canonical_name = _canonicalize_header(normalized_name)
-        mapped = EXPECTED_HEADER_LOOKUP.get(canonical_name)
-        if not mapped:
-            if canonical_name in IGNORED_SOURCE_COLUMNS:
-                continue
-            unknown_columns.append(normalized_name)
-            continue
-        if mapped in source_columns_by_target:
-            duplicate_columns.append(mapped)
-            continue
-        source_columns_by_target[mapped] = original_name
-
-    if unknown_columns:
-        raise CsvValidationError(f"CSV contains unsupported columns: {', '.join(unknown_columns)}")
-    if duplicate_columns:
-        raise CsvValidationError(f"CSV contains duplicate columns: {', '.join(duplicate_columns)}")
-
-    missing_columns = [
-        column for column in STAGING_COLUMNS
-        if column not in source_columns_by_target and column not in OPTIONAL_SOURCE_COLUMNS
-    ]
-    if missing_columns:
-        raise CsvValidationError(f"CSV is missing required columns: {', '.join(missing_columns)}")
-
-    rows = []
-    skipped_non_member_rows = 0
-    for row_number, row in enumerate(reader, start=2):
-        converted_row = []
-        for column in STAGING_COLUMNS:
-            source_key = source_columns_by_target.get(column)
-            raw_value = row.get(source_key, "") if source_key else ""
-            try:
-                converted_row.append(_convert_value(column, raw_value or ""))
-            except CsvValidationError as exc:
-                raise CsvValidationError(f"Row {row_number}: {exc}") from exc
-        if not _is_member_agaid(converted_row[0]):
-            skipped_non_member_rows += 1
-            continue
-        rows.append(tuple(converted_row))
-
-    if skipped_non_member_rows:
-        logging.info("Skipped %s MemChap rows with non-member AGAIDs.", skipped_non_member_rows)
-    if not rows:
-        raise CsvValidationError("CSV did not contain any data rows.")
-    return rows
+    return parse_memchap_rows(csv_bytes)
 
 
 def _parse_member_category_rows(csv_bytes: bytes) -> list[tuple[int, str]]:
-    csv_rows = _read_csv_matrix(csv_bytes)
-    if not csv_rows:
-        raise CsvValidationError("CSV is missing a header row.")
-
-    header_index = None
-    original_header = None
-    for idx, row in enumerate(csv_rows[:2]):
-        canonical = [_canonicalize_header(value) for value in row]
-        if _is_member_category_header(canonical):
-            header_index = idx
-            original_header = row
-            break
-
-    if header_index is None or original_header is None:
-        raise CsvValidationError("CSV is missing required columns: AGAID, Category")
-
-    incoming_header = _normalize_header(original_header)
-    source_columns_by_target = {}
-    unknown_columns = []
-    duplicate_columns = []
-
-    for original_name, normalized_name in zip(original_header, incoming_header):
-        canonical_name = _canonicalize_header(normalized_name)
-        mapped = CATEGORY_HEADER_LOOKUP.get(canonical_name)
-        if not mapped:
-            if canonical_name:
-                unknown_columns.append(normalized_name)
-            continue
-        if mapped in source_columns_by_target:
-            duplicate_columns.append(mapped)
-            continue
-        source_columns_by_target[mapped] = original_name
-
-    if unknown_columns:
-        raise CsvValidationError(f"CSV contains unsupported columns: {', '.join(unknown_columns)}")
-    if duplicate_columns:
-        raise CsvValidationError(f"CSV contains duplicate columns: {', '.join(duplicate_columns)}")
-
-    missing_columns = [column for column in CATEGORY_COLUMNS if column not in source_columns_by_target]
-    if missing_columns:
-        raise CsvValidationError(f"CSV is missing required columns: {', '.join(missing_columns)}")
-
-    column_indexes = {name: original_header.index(source_columns_by_target[name]) for name in CATEGORY_COLUMNS}
-
-    rows = []
-    skipped_non_member_rows = 0
-    seen_pairs = set()
-    for row_number, row in enumerate(csv_rows[header_index + 1 :], start=header_index + 2):
-        padded = list(row) + [""] * (len(original_header) - len(row))
-        agaid_raw = padded[column_indexes["AGAID"]] or ""
-        category_raw = padded[column_indexes["Category"]] or ""
-        try:
-            agaid = int(agaid_raw.strip())
-        except ValueError as exc:
-            raise CsvValidationError(f"Row {row_number}: Column AGAID requires an integer. Received '{agaid_raw}'.") from exc
-
-        category = category_raw.strip()
-        if not category:
-            raise CsvValidationError(f"Row {row_number}: Column Category is required.")
-        if not _is_member_agaid(agaid):
-            skipped_non_member_rows += 1
-            continue
-
-        pair = (agaid, category)
-        if pair in seen_pairs:
-            raise CsvValidationError(f"Row {row_number}: Duplicate AGAID/category pair {agaid}/{category}.")
-        seen_pairs.add(pair)
-        rows.append(pair)
-
-    if skipped_non_member_rows:
-        logging.info("Skipped %s category rows with non-member AGAIDs.", skipped_non_member_rows)
-    return rows
+    return parse_csv_member_category_rows(csv_bytes)
 
 
 def _parse_chapter_rows(csv_bytes: bytes) -> list[tuple]:
-    csv_rows = _read_csv_matrix(csv_bytes)
-    if not csv_rows:
-        raise CsvValidationError("CSV is missing a header row.")
-
-    header_index = None
-    original_header = None
-    for idx, row in enumerate(csv_rows[:2]):
-        canonical = [_canonicalize_header(value) for value in row]
-        if _is_chapter_header(canonical):
-            header_index = idx
-            original_header = row
-            break
-
-    if header_index is None or original_header is None:
-        raise CsvValidationError("CSV is missing required chapter columns: ChapterID, ChapterCode, ChapterName")
-
-    incoming_header = _normalize_header(original_header)
-    source_columns_by_target = {}
-    duplicate_columns = []
-
-    for column_index, normalized_name in enumerate(incoming_header):
-        canonical_name = _canonicalize_header(normalized_name)
-        mapped = CHAPTER_HEADER_ALIASES.get(canonical_name)
-        if not mapped:
-            continue
-        if mapped in source_columns_by_target:
-            duplicate_columns.append(mapped)
-            continue
-        source_columns_by_target[mapped] = column_index
-
-    if duplicate_columns:
-        raise CsvValidationError(f"CSV contains duplicate chapter columns: {', '.join(sorted(set(duplicate_columns)))}")
-    if "ChapterID" not in source_columns_by_target:
-        raise CsvValidationError("CSV is missing required column: ChapterID")
-    if "ChapterCode" not in source_columns_by_target:
-        raise CsvValidationError("CSV is missing required column: ChapterCode")
-    if "ChapterName" not in source_columns_by_target:
-        raise CsvValidationError("CSV is missing required column: ChapterName")
-
-    rows = []
-    seen_chapters = set()
-    for row_number, row in enumerate(csv_rows[header_index + 1 :], start=header_index + 2):
-        if not any((value or "").strip() for value in row):
-            continue
-        padded = list(row) + [""] * (len(original_header) - len(row))
-        converted_row = []
-        for column in CHAPTER_COLUMNS:
-            column_index = source_columns_by_target.get(column)
-            raw_value = padded[column_index] if column_index is not None and column_index < len(padded) else ""
-            try:
-                converted_row.append(_convert_chapter_value(column, raw_value or ""))
-            except CsvValidationError as exc:
-                raise CsvValidationError(f"Row {row_number}: {exc}") from exc
-        chapter_id = converted_row[0]
-        if chapter_id in seen_chapters:
-            raise CsvValidationError(f"Row {row_number}: Duplicate ChapterID {chapter_id}.")
-        seen_chapters.add(chapter_id)
-        rows.append(tuple(converted_row))
-
-    if not rows:
-        raise CsvValidationError("CSV did not contain any chapter data rows.")
-    return rows
-
-
-def _convert_chapter_value(column: str, raw_value: str):
-    value = raw_value.strip()
-    if value == "":
-        if column in {"ChapterID", "ChapterCode", "ChapterName"}:
-            raise CsvValidationError(f"Column {column} is required.")
-        return None
-    if column in CHAPTER_INT_COLUMNS:
-        try:
-            return int(value)
-        except ValueError as exc:
-            raise CsvValidationError(f"Column {column} requires an integer. Received '{raw_value}'.") from exc
-    if column in CHAPTER_DATETIME_COLUMNS:
-        return _parse_datetime(value)
-    return value
+    return parse_csv_chapter_rows(csv_bytes)
 
 
 def _read_csv_matrix(csv_bytes: bytes, *, raise_on_error: bool = True) -> list[list[str]]:
-    try:
-        csv_text = csv_bytes.decode("utf-8-sig")
-    except UnicodeDecodeError as exc:
-        if raise_on_error:
-            raise CsvValidationError("CSV must be UTF-8 encoded.") from exc
-        return []
-    return list(csv.reader(StringIO(csv_text)))
+    return csv_read_csv_matrix(csv_bytes, raise_on_error=raise_on_error)
 
 
 def _decode_csv_text(csv_bytes: bytes) -> str:
-    try:
-        return csv_bytes.decode("utf-8-sig")
-    except UnicodeDecodeError as exc:
-        raise CsvValidationError("CSV must be UTF-8 encoded.") from exc
+    return csv_decode_csv_text(csv_bytes)
 
 
 def _is_member_agaid(agaid: Optional[int]) -> bool:
-    return agaid is not None and agaid < MAX_MEMBER_AGAID
+    return csv_is_member_agaid(agaid)
 
 
 def _stage_and_import(conn_str: str, rows: list[tuple]) -> None:
