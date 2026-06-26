@@ -8,6 +8,7 @@ This app contains:
 - journal parsing
 - NAOL review parsing
 - automatic Chapter Rewards chapter-renewal notice processing
+- optional durable parsed-event staging for parsed ClubExpress emails
 - mailbox-driven import orchestration
 
 Current migration source:
@@ -28,6 +29,13 @@ Chapter renewal notices:
 - set `CHAPTER_RENEWAL_NOTICE_EMAIL_TO` to send a processing summary email
 - chapter member renewal emails confirm the ClubExpress renewal side and clear matching debited chapters from the pending list
 - a nightly pending-renewal digest is sent to `CHAPTER_RENEWAL_PENDING_EMAIL_TO`, or `CHAPTER_RENEWAL_NOTICE_EMAIL_TO` when the pending-specific setting is not set
+
+Parsed-event staging:
+
+- migration: `sql/clubexpress_parsed_event_staging.sql`
+- setting: `CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED`
+- keep the setting false until the migration is applied
+- currently stages new-member signup, member-renewal, and chapter-renewal notice emails before the existing idempotent downstream procedures run
 
 Migration note:
 

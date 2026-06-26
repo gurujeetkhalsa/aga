@@ -47,6 +47,14 @@ from clubexpress_parsers import (
     parse_new_member_email,
     parse_renewal_email,
 )
+from clubexpress_staging import (
+    ClubExpressParsedEvent,
+    DownstreamProcedure,
+    build_chapter_renewal_notice_parsed_event,
+    build_membership_parsed_event,
+    result_payload_for_procedures,
+    status_params as parsed_event_status_params,
+)
 
 try:
     import pyodbc
@@ -93,6 +101,8 @@ REWARDS_EXPIRATIONS_PROC = "rewards.sp_process_point_expirations"
 REWARDS_CHAPTER_RENEWAL_NOTICES_PROC = "rewards.sp_process_chapter_renewal_notices"
 REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC = "rewards.sp_record_chapter_renewal_confirmation"
 REWARDS_PENDING_CHAPTER_RENEWALS_PROC = "rewards.sp_get_pending_chapter_renewals"
+CLUBEXPRESS_PARSED_EVENT_STAGING_PROC = "membership.sp_record_clubexpress_parsed_event"
+CLUBEXPRESS_PARSED_EVENT_STATUS_PROC = "membership.sp_update_clubexpress_parsed_event_status"
 REWARDS_NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
 REWARDS_RENEWAL_EVENT_TYPE = "renewal"
 CHAPTER_RENEWAL_NOTICE_SUBJECT = "Membership Renewal Emails"
@@ -823,9 +833,10 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             raise
         logging.info("Nightly category message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
     elif message_type == NEW_MEMBER_MESSAGE_TYPE:
+        message_id = _message_identifier(message)
         parsed = _parse_new_member_email(_message_body_to_text(message))
         membership_params = {
-            "MessageId": _message_identifier(message),
+            "MessageId": message_id,
             "ReceivedAt": received_at,
             "AGAID": parsed["AGAID"],
             "MemberType": parsed["MemberType"],
@@ -838,30 +849,49 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             "Subject": subject or None,
             "BlobPath": archive_path,
         }
-        _execute_stored_procedures(
-            conn_str,
-            [
-                ("membership.sp_process_new_member_email", membership_params),
-                (
-                    REWARDS_MEMBERSHIP_EVENT_PROC,
-                    _membership_reward_event_params(
-                        message,
-                        received_at,
-                        REWARDS_NEW_MEMBERSHIP_EVENT_TYPE,
-                        received_date,
-                        parsed,
-                        sender=sender,
-                        subject=subject,
-                        blob_path=archive_path,
-                    ),
-                ),
-            ],
+        rewards_params = _membership_reward_event_params(
+            message,
+            received_at,
+            REWARDS_NEW_MEMBERSHIP_EVENT_TYPE,
+            received_date,
+            parsed,
+            sender=sender,
+            subject=subject,
+            blob_path=archive_path,
         )
+        downstream_procedures = [
+            DownstreamProcedure("membership.sp_process_new_member_email", membership_params),
+            DownstreamProcedure(REWARDS_MEMBERSHIP_EVENT_PROC, rewards_params),
+        ]
+        parsed_event = build_membership_parsed_event(
+            message_id=message_id,
+            message_type=message_type,
+            event_type=REWARDS_NEW_MEMBERSHIP_EVENT_TYPE,
+            received_at=received_at,
+            event_date=received_date,
+            parsed=parsed,
+            downstream_procedures=downstream_procedures,
+            sender=sender or None,
+            subject=subject or None,
+            blob_path=archive_path,
+        )
+        _record_clubexpress_parsed_event(conn_str, parsed_event)
+        try:
+            _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures))
+            _mark_clubexpress_parsed_event_processed(
+                conn_str,
+                parsed_event,
+                result_payload_for_procedures(downstream_procedures),
+            )
+        except Exception as exc:
+            _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+            raise
         logging.info("New member email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == RENEWAL_MESSAGE_TYPE:
+        message_id = _message_identifier(message)
         parsed = _parse_renewal_email(_message_body_to_text(message))
         membership_params = {
-            "MessageId": _message_identifier(message),
+            "MessageId": message_id,
             "ReceivedAt": received_at,
             "AGAID": parsed["AGAID"],
             "ExpirationDate": parsed.get("ExpirationDate") or _default_membership_expiration_date(received_date, parsed.get("MemberType")),
@@ -874,65 +904,121 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             "Subject": subject or None,
             "BlobPath": archive_path,
         }
-        _execute_stored_procedures(
-            conn_str,
-            [
-                ("membership.sp_process_membership_renewal", membership_params),
-                (
-                    REWARDS_MEMBERSHIP_EVENT_PROC,
-                    _membership_reward_event_params(
-                        message,
-                        received_at,
-                        REWARDS_RENEWAL_EVENT_TYPE,
-                        received_date,
-                        parsed,
-                        sender=sender,
-                        subject=subject,
-                        blob_path=archive_path,
-                    ),
-                ),
-            ],
+        rewards_params = _membership_reward_event_params(
+            message,
+            received_at,
+            REWARDS_RENEWAL_EVENT_TYPE,
+            received_date,
+            parsed,
+            sender=sender,
+            subject=subject,
+            blob_path=archive_path,
         )
+        downstream_procedures = [
+            DownstreamProcedure("membership.sp_process_membership_renewal", membership_params),
+            DownstreamProcedure(REWARDS_MEMBERSHIP_EVENT_PROC, rewards_params),
+        ]
+        confirmation_params = None
         if parsed["IsChapterMember"]:
-            confirmation_rows = _execute_stored_procedure_rows(
-                conn_str,
-                REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC,
-                _chapter_renewal_confirmation_params(
-                    message,
-                    received_at,
-                    parsed,
-                    sender=sender,
-                    subject=subject,
-                    blob_path=archive_path,
-                ),
-            )
-            confirmation = confirmation_rows[0] if confirmation_rows else {}
-            logging.info(
-                "Chapter renewal confirmation processed for ChapterID=%s recorded=%s reason=%s notice_id=%s",
-                parsed["AGAID"],
-                confirmation.get("Recorded"),
-                confirmation.get("Reason"),
-                confirmation.get("NoticeID"),
-            )
-        logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
-    elif message_type == CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE:
-        parsed_rows = _parse_chapter_renewal_notice_email(message)
-        result_rows = _execute_stored_procedure_rows(
-            conn_str,
-            REWARDS_CHAPTER_RENEWAL_NOTICES_PROC,
-            _chapter_renewal_notice_params(
+            confirmation_params = _chapter_renewal_confirmation_params(
                 message,
                 received_at,
-                received_date,
-                parsed_rows,
+                parsed,
                 sender=sender,
                 subject=subject,
                 blob_path=archive_path,
-            ),
+            )
+            downstream_procedures.append(
+                DownstreamProcedure(REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC, confirmation_params)
+            )
+        parsed_event = build_membership_parsed_event(
+            message_id=message_id,
+            message_type=message_type,
+            event_type=REWARDS_RENEWAL_EVENT_TYPE,
+            received_at=received_at,
+            event_date=received_date,
+            parsed=parsed,
+            downstream_procedures=downstream_procedures,
+            sender=sender or None,
+            subject=subject or None,
+            blob_path=archive_path,
         )
-        _send_chapter_renewal_notice_summary_if_configured(access_token, result_rows, subject, received_at)
-        posted_count = sum(1 for row in result_rows if str(row.get("Decision") or "").lower() in {"posted", "already_posted"})
-        insufficient_count = sum(1 for row in result_rows if str(row.get("Decision") or "").lower() == "insufficient_points")
+        _record_clubexpress_parsed_event(conn_str, parsed_event)
+        try:
+            _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures[:2]))
+            confirmation = None
+            if confirmation_params:
+                confirmation_rows = _execute_stored_procedure_rows(
+                    conn_str,
+                    REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC,
+                    confirmation_params,
+                )
+                confirmation = confirmation_rows[0] if confirmation_rows else {}
+                logging.info(
+                    "Chapter renewal confirmation processed for ChapterID=%s recorded=%s reason=%s notice_id=%s",
+                    parsed["AGAID"],
+                    confirmation.get("Recorded"),
+                    confirmation.get("Reason"),
+                    confirmation.get("NoticeID"),
+                )
+            result_payload = result_payload_for_procedures(downstream_procedures)
+            if confirmation is not None:
+                result_payload["chapter_renewal_confirmation"] = confirmation
+            _mark_clubexpress_parsed_event_processed(conn_str, parsed_event, result_payload)
+        except Exception as exc:
+            _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+            raise
+        logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
+    elif message_type == CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE:
+        message_id = _message_identifier(message)
+        parsed_rows = _parse_chapter_renewal_notice_email(message)
+        notice_params = _chapter_renewal_notice_params(
+            message,
+            received_at,
+            received_date,
+            parsed_rows,
+            sender=sender,
+            subject=subject,
+            blob_path=archive_path,
+        )
+        downstream_procedures = [
+            DownstreamProcedure(REWARDS_CHAPTER_RENEWAL_NOTICES_PROC, notice_params),
+        ]
+        parsed_event = build_chapter_renewal_notice_parsed_event(
+            message_id=message_id,
+            message_type=message_type,
+            event_type=CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
+            received_at=received_at,
+            notice_date=received_date,
+            parsed_rows=parsed_rows,
+            downstream_procedures=downstream_procedures,
+            sender=sender or None,
+            subject=subject or None,
+            blob_path=archive_path,
+        )
+        _record_clubexpress_parsed_event(conn_str, parsed_event)
+        try:
+            result_rows = _execute_stored_procedure_rows(
+                conn_str,
+                REWARDS_CHAPTER_RENEWAL_NOTICES_PROC,
+                notice_params,
+            )
+            summary_email_sent = _send_chapter_renewal_notice_summary_if_configured(access_token, result_rows, subject, received_at)
+            decision_counts = _chapter_renewal_notice_decision_counts(result_rows)
+            result_payload = result_payload_for_procedures(
+                downstream_procedures,
+                extra={
+                    "decision_counts": decision_counts,
+                    "result_count": len(result_rows),
+                    "summary_email_sent": summary_email_sent,
+                },
+            )
+            _mark_clubexpress_parsed_event_processed(conn_str, parsed_event, result_payload)
+        except Exception as exc:
+            _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+            raise
+        posted_count = decision_counts.get("posted", 0) + decision_counts.get("already_posted", 0)
+        insufficient_count = decision_counts.get("insufficient_points", 0)
         logging.info(
             "Chapter renewal notice processed. chapter_rows=%s posted_or_existing=%s insufficient=%s archive_path=%s",
             len(parsed_rows),
@@ -2558,6 +2644,73 @@ def _format_email_value(value: object) -> str:
 def _configured_email_recipients(setting_name: str) -> list[str]:
     raw_value = os.environ.get(setting_name, "")
     return [part.strip() for part in re.split(r"[;,]", raw_value) if part.strip()]
+
+
+def _chapter_renewal_notice_decision_counts(result_rows: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in result_rows:
+        decision = str(row.get("Decision") or "").strip().lower()
+        if not decision:
+            decision = "unknown"
+        counts[decision] = counts.get(decision, 0) + 1
+    return counts
+
+
+def _downstream_procedure_calls(procedures: list[DownstreamProcedure]) -> list[tuple[str, dict]]:
+    return [(procedure.name, procedure.params) for procedure in procedures]
+
+
+def _clubexpress_parsed_event_staging_enabled() -> bool:
+    return _is_truthy(os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED", "false"))
+
+
+def _record_clubexpress_parsed_event(conn_str: str, parsed_event: ClubExpressParsedEvent) -> None:
+    if not _clubexpress_parsed_event_staging_enabled():
+        return
+    _execute_stored_procedure(
+        conn_str,
+        CLUBEXPRESS_PARSED_EVENT_STAGING_PROC,
+        parsed_event.record_params(),
+    )
+
+
+def _mark_clubexpress_parsed_event_processed(
+    conn_str: str,
+    parsed_event: ClubExpressParsedEvent,
+    result_payload: dict,
+) -> None:
+    if not _clubexpress_parsed_event_staging_enabled():
+        return
+    _execute_stored_procedure(
+        conn_str,
+        CLUBEXPRESS_PARSED_EVENT_STATUS_PROC,
+        parsed_event_status_params(
+            parsed_event.event_key,
+            "processed",
+            result_payload=result_payload,
+        ),
+    )
+
+
+def _mark_clubexpress_parsed_event_error(
+    conn_str: str,
+    parsed_event: ClubExpressParsedEvent,
+    exc: Exception,
+) -> None:
+    if not _clubexpress_parsed_event_staging_enabled():
+        return
+    try:
+        _execute_stored_procedure(
+            conn_str,
+            CLUBEXPRESS_PARSED_EVENT_STATUS_PROC,
+            parsed_event_status_params(
+                parsed_event.event_key,
+                "error",
+                error_message=str(exc),
+            ),
+        )
+    except Exception:
+        logging.exception("Failed updating ClubExpress parsed-event status for %s", parsed_event.event_key)
 
 
 def _stored_procedure_call(proc_name: str, params: dict) -> tuple[str, list]:

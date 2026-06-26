@@ -17,7 +17,7 @@ The mailbox poller should not directly post rewards transactions. Rewards postin
 5. Add replay/preview tooling before disabling old direct stored-procedure calls.
 6. Keep `aga-clubexpress-mail` as the only live Gmail poller throughout.
 
-## Current Step
+## Completed Steps
 
 `chapter-rewards-automation-app/` has been added and deployed as the standalone rewards timer host.
 
@@ -62,4 +62,27 @@ Extract the remaining parser functions from `clubexpress-mail-app/function_app.p
 - new-member emails, membership renewal emails, and chapter-renewal notice emails in `clubexpress-mail-app/clubexpress_parsers.py`
 - MemChap, ChapterX, and member-category CSV reports in `clubexpress-mail-app/clubexpress_csv_parsers.py`
 
-The next parser candidate is journal parsing.
+Parsed-event staging has been added for:
+
+- new-member signup emails
+- member-renewal emails
+- chapter-renewal notice emails
+
+The SQL migration is:
+
+`clubexpress-mail-app/sql/clubexpress_parsed_event_staging.sql`
+
+It creates:
+
+- `membership.clubexpress_parsed_events`
+- `membership.clubexpress_parsed_event_attempts`
+- `membership.sp_record_clubexpress_parsed_event`
+- `membership.sp_update_clubexpress_parsed_event_status`
+
+The mailbox app records parsed events only when `CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED=true`. Keep this false until the SQL migration has been applied in the target database.
+
+## Next Step
+
+Apply the parsed-event staging migration, enable staging in one environment, and verify that new ClubExpress membership and renewal emails create durable parsed-event rows while the existing membership and rewards procedures continue to run idempotently.
+
+After that, convert one email type at a time so downstream processors consume parsed-event records directly instead of being called from the Gmail poller.
