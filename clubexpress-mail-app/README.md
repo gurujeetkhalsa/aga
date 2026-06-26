@@ -37,6 +37,13 @@ Parsed-event staging:
 - keep the setting false until the migration is applied
 - currently stages new-member signup, member-renewal, and chapter-renewal notice emails before the existing idempotent downstream procedures run
 
+Parsed-event preview and replay:
+
+- list recent staged events: `py -3 clubexpress-mail-app\clubexpress_replay.py list`
+- preview one event: `py -3 clubexpress-mail-app\clubexpress_replay.py preview --event-key <event-key>`
+- replay one event: `py -3 clubexpress-mail-app\clubexpress_replay.py replay --event-key <event-key> --execute --confirm-replay`
+- replaying an event already marked `processed` also requires `--allow-processed`
+
 Migration note:
 
 - this is a first-pass split from the legacy monolith

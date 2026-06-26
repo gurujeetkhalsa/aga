@@ -81,8 +81,19 @@ It creates:
 
 The mailbox app records parsed events only when `CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED=true`. Keep this false until the SQL migration has been applied in the target database.
 
+Parsed-event preview/replay tooling has been added in:
+
+`clubexpress-mail-app/clubexpress_replay.py`
+
+It can:
+
+- list recent staged events
+- preview one staged event and its downstream procedure plan
+- replay one staged event with `--execute --confirm-replay`
+- require `--allow-processed` before replaying an event already marked `processed`
+
 ## Next Step
 
-Apply the parsed-event staging migration, enable staging in one environment, and verify that new ClubExpress membership and renewal emails create durable parsed-event rows while the existing membership and rewards procedures continue to run idempotently.
+Wait for the next real ClubExpress membership or renewal email, then confirm it creates a parsed-event row and a processed attempt row while the existing membership and rewards procedures continue to run idempotently.
 
 After that, convert one email type at a time so downstream processors consume parsed-event records directly instead of being called from the Gmail poller.
