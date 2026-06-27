@@ -130,6 +130,62 @@ def build_chapter_renewal_notice_parsed_event(
     )
 
 
+def build_csv_attachment_parsed_event(
+    *,
+    message_id: str,
+    message_type: str,
+    event_type: str,
+    received_at: datetime,
+    event_date: date,
+    attachment_name: str,
+    attachment_blob_name: str,
+    row_count: int,
+    action_name: str,
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> ClubExpressParsedEvent:
+    parsed_payload = _source_payload(
+        message_id=message_id,
+        sender=sender,
+        subject=subject,
+        blob_path=blob_path,
+        parsed={
+            "attachment_name": attachment_name,
+            "attachment_blob_name": attachment_blob_name,
+            "row_count": row_count,
+        },
+    )
+    return ClubExpressParsedEvent(
+        message_id=message_id,
+        event_key=parsed_event_key(message_id, event_type),
+        message_type=message_type,
+        event_type=event_type,
+        received_at=received_at,
+        event_date=event_date,
+        agaid=None,
+        chapter_id=None,
+        parsed_item_count=row_count,
+        sender=sender,
+        subject=subject,
+        blob_path=blob_path,
+        parsed_payload_json=_json_dumps(parsed_payload),
+        downstream_payload_json=_json_dumps(
+            {
+                "actions": [
+                    {
+                        "name": action_name,
+                        "params": {
+                            "blob_path": blob_path,
+                            "attachment_blob_name": attachment_blob_name,
+                        },
+                    }
+                ]
+            }
+        ),
+    )
+
+
 def status_params(
     event_key: str,
     status: str,

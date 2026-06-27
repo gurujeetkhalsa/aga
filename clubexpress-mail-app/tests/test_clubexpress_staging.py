@@ -12,6 +12,7 @@ if str(APP_DIR) not in sys.path:
 from clubexpress_staging import (
     DownstreamProcedure,
     build_chapter_renewal_notice_parsed_event,
+    build_csv_attachment_parsed_event,
     build_membership_parsed_event,
     result_payload_for_procedures,
     status_params,
@@ -88,6 +89,35 @@ class ClubExpressStagingTest(unittest.TestCase):
         parsed_payload = json.loads(params["ParsedPayloadJson"])
         self.assertEqual(parsed_payload["parsed"]["row_count"], 2)
         self.assertEqual(parsed_payload["parsed"]["rows"][1]["chapter_id"], 25495)
+
+    def test_csv_attachment_event_records_archive_action(self):
+        received_at = datetime(2026, 6, 26, 23, 0, tzinfo=timezone.utc)
+        event = build_csv_attachment_parsed_event(
+            message_id="csv-msg",
+            message_type="nightly_memchap_csv",
+            event_type="nightly_memchap_csv",
+            received_at=received_at,
+            event_date=date(2026, 6, 26),
+            attachment_name="MemChap Report.csv",
+            attachment_blob_name="MemChap_Report.csv",
+            row_count=123,
+            action_name="membership.import_memchap_csv",
+            sender="ClubExpress <notifications@example.test>",
+            subject="ClubExpress report",
+            blob_path="nightly_memchap_csv/2026/06/26/csv-msg",
+        )
+
+        params = event.record_params()
+        self.assertEqual(params["EventKey"], "csv-msg:nightly_memchap_csv")
+        self.assertEqual(params["ParsedItemCount"], 123)
+        parsed_payload = json.loads(params["ParsedPayloadJson"])
+        self.assertEqual(parsed_payload["parsed"]["attachment_blob_name"], "MemChap_Report.csv")
+        downstream_payload = json.loads(params["DownstreamPayloadJson"])
+        self.assertEqual(downstream_payload["actions"][0]["name"], "membership.import_memchap_csv")
+        self.assertEqual(
+            downstream_payload["actions"][0]["params"]["blob_path"],
+            "nightly_memchap_csv/2026/06/26/csv-msg",
+        )
 
     def test_status_params_truncate_error_and_serialize_result_payload(self):
         params = status_params(

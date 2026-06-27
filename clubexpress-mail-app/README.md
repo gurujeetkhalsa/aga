@@ -44,6 +44,7 @@ Parsed-event preview and replay:
 - replay one event: `py -3 clubexpress-mail-app\clubexpress_replay.py replay --event-key <event-key> --execute --confirm-replay`
 - process pending staged new-member events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-new-members --execute --confirm-replay`
 - process pending staged renewal events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-renewals --execute --confirm-replay`
+- process pending staged nightly MemChap CSV events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-nightly-memchap --execute --confirm-replay`
 - replaying an event already marked `processed` also requires `--allow-processed`
 
 Staged new-member consumption:
@@ -56,7 +57,11 @@ Staged new-member consumption:
 - `CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_ENABLED=true` enables the timer that consumes staged `renewal` events, including chapter-renewal confirmations
 - `CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_SCHEDULE` defaults to every 5 minutes
 - `CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_BATCH_SIZE` defaults to `25`
-- leave chapter-renewal notice emails on the direct path until renewal staged consumption proves itself
+- `CLUBEXPRESS_STAGED_MEMCHAP_CONSUMPTION_ENABLED=true` makes the Gmail poller stage nightly `MemChap` CSV emails without directly importing `staging.memchap`
+- `CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_ENABLED=true` enables the timer that consumes staged `nightly_memchap_csv` events from the archived CSV attachment
+- `CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_SCHEDULE` defaults to every 5 minutes
+- `CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_BATCH_SIZE` defaults to `5`
+- leave chapter and member-category CSV emails on the direct path until nightly MemChap staged consumption proves itself
 
 Migration note:
 

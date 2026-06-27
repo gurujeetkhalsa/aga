@@ -51,11 +51,12 @@ from clubexpress_staging import (
     ClubExpressParsedEvent,
     DownstreamProcedure,
     build_chapter_renewal_notice_parsed_event,
+    build_csv_attachment_parsed_event,
     build_membership_parsed_event,
     result_payload_for_procedures,
     status_params as parsed_event_status_params,
 )
-from clubexpress_staged_processor import process_pending_events
+from clubexpress_staged_processor import BatchProcessResult, json_safe_value, list_pending_events, mark_event_status, process_pending_events
 
 try:
     import pyodbc
@@ -87,6 +88,7 @@ DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHED
 DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE = os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE", "0 50 5 * * *")
 DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_SCHEDULE", "0 */5 * * * *")
+DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_REWARDS_LEDGER_START_DATE = "2026-05-02"
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
@@ -108,6 +110,7 @@ CLUBEXPRESS_PARSED_EVENT_STAGING_PROC = "membership.sp_record_clubexpress_parsed
 CLUBEXPRESS_PARSED_EVENT_STATUS_PROC = "membership.sp_update_clubexpress_parsed_event_status"
 REWARDS_NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
 REWARDS_RENEWAL_EVENT_TYPE = "renewal"
+MEMCHAP_IMPORT_ACTION = "membership.import_memchap_csv"
 CHAPTER_RENEWAL_NOTICE_SUBJECT = "Membership Renewal Emails"
 CHAPTER_RENEWAL_POINTS = 35000
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
@@ -515,6 +518,36 @@ def process_staged_renewal_events(timer: func.TimerRequest) -> None:
         logging.exception("ClubExpress staged renewal processing failed.")
 
 
+@app.timer_trigger(schedule=DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_staged_memchap_events(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_ENABLED", "false")):
+        logging.info("ClubExpress staged MemChap processor is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    batch_size = _env_positive_int("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_BATCH_SIZE", 5)
+    try:
+        result = _process_pending_memchap_events(
+            conn_str,
+            top=batch_size,
+            execute=True,
+            confirm_replay=True,
+            processor_name="staged_memchap_processor",
+        )
+        logging.info(
+            "ClubExpress staged MemChap processing complete. selected=%s processed=%s errors=%s",
+            result.selected_count,
+            result.processed_count,
+            result.error_count,
+        )
+    except Exception:
+        logging.exception("ClubExpress staged MemChap processing failed.")
+
+
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
     if not _is_truthy(os.environ.get("REWARDS_SNAPSHOT_ENABLED", "true")):
@@ -765,21 +798,49 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
                     "ErrorMessage": None,
                 },
             )
-            rows_staged = _handle_memchap_email(conn_str, attachments)
-            _execute_stored_procedure(
-                conn_str,
-                "membership.sp_log_clubexpress_email",
-                {
-                    "MessageId": message_id,
-                    "MessageType": message_type,
-                    "ReceivedAt": received_at,
-                    "Sender": sender or None,
-                    "Subject": subject or None,
-                    "BlobPath": archive_path,
-                    "Status": "processed",
-                    "ErrorMessage": None,
-                },
-            )
+            if _clubexpress_staged_memchap_consumption_enabled():
+                parsed_event = _build_memchap_parsed_event(
+                    message_id=message_id,
+                    message_type=message_type,
+                    received_at=received_at,
+                    event_date=received_date,
+                    attachments=attachments,
+                    sender=sender,
+                    subject=subject,
+                    blob_path=archive_path,
+                )
+                rows_staged = parsed_event.parsed_item_count
+                _record_clubexpress_parsed_event(conn_str, parsed_event)
+                _execute_stored_procedure(
+                    conn_str,
+                    "membership.sp_log_clubexpress_email",
+                    {
+                        "MessageId": message_id,
+                        "MessageType": message_type,
+                        "ReceivedAt": received_at,
+                        "Sender": sender or None,
+                        "Subject": subject or None,
+                        "BlobPath": archive_path,
+                        "Status": "staged",
+                        "ErrorMessage": None,
+                    },
+                )
+            else:
+                rows_staged = _handle_memchap_email(conn_str, attachments)
+                _execute_stored_procedure(
+                    conn_str,
+                    "membership.sp_log_clubexpress_email",
+                    {
+                        "MessageId": message_id,
+                        "MessageType": message_type,
+                        "ReceivedAt": received_at,
+                        "Sender": sender or None,
+                        "Subject": subject or None,
+                        "BlobPath": archive_path,
+                        "Status": "processed",
+                        "ErrorMessage": None,
+                    },
+                )
         except Exception as exc:
             _execute_stored_procedure(
                 conn_str,
@@ -796,7 +857,10 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
                 },
             )
             raise
-        logging.info("Nightly MemChap message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
+        if _clubexpress_staged_memchap_consumption_enabled():
+            logging.info("Nightly MemChap message staged. rows=%s archive_path=%s", rows_staged, archive_path)
+        else:
+            logging.info("Nightly MemChap message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
     elif message_type == CHAPTER_MESSAGE_TYPE:
         message_id = _message_identifier(message)
         rows_staged = None
@@ -1311,6 +1375,54 @@ def _format_tdlist_date(value: object) -> str:
     return str(value)
 
 
+def _build_memchap_parsed_event(
+    *,
+    message_id: str,
+    message_type: str,
+    received_at: datetime,
+    event_date: date,
+    attachments: list[dict],
+    sender: Optional[str],
+    subject: Optional[str],
+    blob_path: Optional[str],
+) -> ClubExpressParsedEvent:
+    if not blob_path:
+        raise RuntimeError("Staged MemChap processing requires CLUBEXPRESS_ARCHIVE_CONTAINER and Blob storage configuration.")
+
+    attachment = _find_report_attachment(attachments, NIGHTLY_MESSAGE_TYPE, "MemChap")
+    content_bytes = attachment.get("contentBytes")
+    if content_bytes is None:
+        raise EmailProcessingError("MemChap attachment did not include content bytes.")
+
+    rows = _parse_csv_rows(content_bytes)
+    attachment_name = attachment.get("name") or "attachment.csv"
+    return build_csv_attachment_parsed_event(
+        message_id=message_id,
+        message_type=message_type,
+        event_type=NIGHTLY_MESSAGE_TYPE,
+        received_at=received_at,
+        event_date=event_date,
+        attachment_name=attachment_name,
+        attachment_blob_name=_safe_blob_name(attachment_name),
+        row_count=len(rows),
+        action_name=MEMCHAP_IMPORT_ACTION,
+        sender=sender or None,
+        subject=subject or None,
+        blob_path=blob_path,
+    )
+
+
+def _find_report_attachment(attachments: list[dict], report_type: str, label: str) -> dict:
+    for attachment in attachments:
+        content_bytes = attachment.get("contentBytes")
+        if not content_bytes:
+            continue
+        if _detect_attachment_report_type(attachment.get("name", ""), content_bytes) == report_type:
+            return attachment
+
+    raise EmailProcessingError(f"No {label} attachment was found on the ClubExpress email.")
+
+
 def _handle_memchap_email(conn_str: str, attachments: list[dict]) -> int:
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
@@ -1351,6 +1463,113 @@ def _import_memchap_bytes(conn_str: str, csv_bytes: bytes) -> int:
     rows = _parse_csv_rows(csv_bytes)
     _stage_and_import(conn_str, rows)
     return len(rows)
+
+
+def _process_pending_memchap_events(
+    conn_str: str,
+    *,
+    top: int = 5,
+    execute: bool = False,
+    confirm_replay: bool = False,
+    processor_name: str = "staged_memchap_processor",
+    adapter: Optional[object] = None,
+) -> BatchProcessResult:
+    if execute and not confirm_replay:
+        raise ValueError("Executing staged MemChap processing requires confirm_replay=True.")
+
+    staged_adapter = adapter or _ClubExpressStagedEventSqlAdapter(conn_str)
+    events = list_pending_events(staged_adapter, event_type=NIGHTLY_MESSAGE_TYPE, top=top)
+    results = []
+    processed_count = 0
+    error_count = 0
+
+    for event in events:
+        if not execute:
+            results.append(
+                {
+                    "event_key": event.event_key,
+                    "executed": False,
+                    "status_before": event.status,
+                    "status_after": event.status,
+                    "procedure_results": [_memchap_action_preview(event)],
+                }
+            )
+            continue
+
+        try:
+            mark_event_status(staged_adapter, event.event_key, "processing")
+            action_result = _process_memchap_staged_event(conn_str, event)
+            result_payload = {
+                "processor": processor_name,
+                "replay": False,
+                "action_results": [action_result],
+            }
+            mark_event_status(staged_adapter, event.event_key, "processed", result_payload=json_safe_value(result_payload))
+            processed_count += 1
+            results.append(
+                {
+                    "event_key": event.event_key,
+                    "executed": True,
+                    "status_before": event.status,
+                    "status_after": "processed",
+                    "procedure_results": [action_result],
+                }
+            )
+        except Exception as exc:
+            error_count += 1
+            try:
+                mark_event_status(staged_adapter, event.event_key, "error", error_message=str(exc))
+            except Exception:
+                logging.exception("Failed marking staged MemChap event %s as error.", event.event_key)
+            results.append(
+                {
+                    "event_key": event.event_key,
+                    "executed": True,
+                    "status_before": event.status,
+                    "status_after": "error",
+                    "error": str(exc),
+                }
+            )
+
+    return BatchProcessResult(
+        event_type=NIGHTLY_MESSAGE_TYPE,
+        executed=execute,
+        selected_count=len(events),
+        processed_count=processed_count,
+        error_count=error_count,
+        results=results,
+    )
+
+
+def _process_memchap_staged_event(conn_str: str, event: object) -> dict:
+    parsed_payload = event.parsed_payload if isinstance(event.parsed_payload, dict) else {}
+    parsed = parsed_payload.get("parsed") if isinstance(parsed_payload.get("parsed"), dict) else {}
+    blob_path = event.blob_path or parsed_payload.get("blob_path")
+    attachment_blob_name = parsed.get("attachment_blob_name")
+    if not blob_path:
+        raise ValueError(f"Staged MemChap event {event.event_key} is missing Blob_Path.")
+    if not attachment_blob_name:
+        raise ValueError(f"Staged MemChap event {event.event_key} is missing attachment_blob_name.")
+
+    content_bytes = _download_archived_attachment_bytes(str(blob_path), str(attachment_blob_name))
+    rows_imported = _import_memchap_bytes(conn_str, content_bytes)
+    return {
+        "name": MEMCHAP_IMPORT_ACTION,
+        "returns_rows": False,
+        "parameter_count": 2,
+        "row_count": rows_imported,
+        "attachment_name": parsed.get("attachment_name"),
+        "attachment_blob_name": attachment_blob_name,
+    }
+
+
+def _memchap_action_preview(event: object) -> dict:
+    return {
+        "name": MEMCHAP_IMPORT_ACTION,
+        "returns_rows": False,
+        "parameter_count": 2,
+        "row_count": event.parsed_item_count,
+    }
 
 
 def _import_chapter_bytes(conn_str: str, csv_bytes: bytes) -> int:
@@ -2324,30 +2543,9 @@ def _html_to_text(value: str) -> str:
 
 
 def _archive_message_artifacts(message_type: str, message: dict, attachments: list[dict]) -> Optional[str]:
-    container_name = os.environ.get("CLUBEXPRESS_ARCHIVE_CONTAINER")
-    if not container_name:
+    container = _archive_container_client()
+    if container is None:
         return None
-
-    try:
-        from azure.identity import ManagedIdentityCredential
-        from azure.storage.blob import BlobServiceClient
-    except ImportError:
-        logging.warning("Archive container is configured, but azure-storage-blob or azure-identity is not installed.")
-        return None
-
-    blob_service_uri = os.environ.get("AzureWebJobsStorage__blobServiceUri")
-    connection_string = os.environ.get("AzureWebJobsStorage")
-    if connection_string:
-        client = BlobServiceClient.from_connection_string(connection_string)
-    elif blob_service_uri:
-        client_id = os.environ.get("AzureWebJobsStorage__clientId")
-        credential = ManagedIdentityCredential(client_id=client_id) if client_id else ManagedIdentityCredential()
-        client = BlobServiceClient(account_url=blob_service_uri, credential=credential)
-    else:
-        logging.warning("Archive container is configured, but no Blob service configuration is available.")
-        return None
-
-    container = client.get_container_client(container_name)
     try:
         container.create_container()
     except Exception:
@@ -2375,6 +2573,41 @@ def _archive_message_artifacts(message_type: str, message: dict, attachments: li
         container.upload_blob(f"{prefix}/attachments/{attachment_name}", content_bytes, overwrite=True)
 
     return prefix
+
+
+def _download_archived_attachment_bytes(blob_path: str, attachment_blob_name: str) -> bytes:
+    container = _archive_container_client()
+    if container is None:
+        raise RuntimeError("ClubExpress archive Blob container is not configured.")
+    blob_name = f"{blob_path}/attachments/{attachment_blob_name}"
+    return container.download_blob(blob_name).readall()
+
+
+def _archive_container_client() -> Optional[object]:
+    container_name = os.environ.get("CLUBEXPRESS_ARCHIVE_CONTAINER")
+    if not container_name:
+        return None
+
+    try:
+        from azure.identity import ManagedIdentityCredential
+        from azure.storage.blob import BlobServiceClient
+    except ImportError:
+        logging.warning("Archive container is configured, but azure-storage-blob or azure-identity is not installed.")
+        return None
+
+    blob_service_uri = os.environ.get("AzureWebJobsStorage__blobServiceUri")
+    connection_string = os.environ.get("AzureWebJobsStorage")
+    if connection_string:
+        client = BlobServiceClient.from_connection_string(connection_string)
+    elif blob_service_uri:
+        client_id = os.environ.get("AzureWebJobsStorage__clientId")
+        credential = ManagedIdentityCredential(client_id=client_id) if client_id else ManagedIdentityCredential()
+        client = BlobServiceClient(account_url=blob_service_uri, credential=credential)
+    else:
+        logging.warning("Archive container is configured, but no Blob service configuration is available.")
+        return None
+
+    return client.get_container_client(container_name)
 
 
 def _safe_blob_name(value: str) -> str:
@@ -2771,6 +3004,13 @@ def _clubexpress_staged_renewal_consumption_enabled() -> bool:
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED", "false"))
+    )
+
+
+def _clubexpress_staged_memchap_consumption_enabled() -> bool:
+    return (
+        _clubexpress_parsed_event_staging_enabled()
+        and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_CONSUMPTION_ENABLED", "false"))
     )
 
 
