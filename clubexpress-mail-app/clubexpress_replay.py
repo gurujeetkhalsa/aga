@@ -177,6 +177,22 @@ def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
                 print_batch_result(result, output)
             return 0
 
+        if args.command == "process-chapterx":
+            from function_app import _process_pending_chapter_events
+
+            result = _process_pending_chapter_events(
+                conn_str,
+                top=args.top,
+                execute=args.execute,
+                confirm_replay=args.confirm_replay,
+                processor_name="manual_chapter_processor",
+            )
+            if args.json:
+                print(json.dumps(result.as_dict(), indent=2, sort_keys=True), file=output)
+            else:
+                print_batch_result(result, output)
+            return 0
+
         event = load_event(adapter, event_key=args.event_key, parsed_event_id=args.id)
         if args.command == "preview":
             attempts = load_recent_attempts(adapter, event.event_key, top=args.attempts)
@@ -250,6 +266,12 @@ def build_parser() -> argparse.ArgumentParser:
     memchap_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
     memchap_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
     memchap_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+
+    chapter_process_parser = subparsers.add_parser("process-chapterx", help="Process pending staged ChapterX CSV events.")
+    chapter_process_parser.add_argument("--top", type=_positive_int, default=5, help="Maximum staged events to process.")
+    chapter_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
+    chapter_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
+    chapter_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     return parser
 
 

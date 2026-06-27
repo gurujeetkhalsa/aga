@@ -434,6 +434,74 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(direct_imports, [])
         self.assertEqual(gmail_marks, ["memchap-msg"])
 
+    def test_chapter_staged_consumption_skips_direct_import(self):
+        message = {
+            "id": "chapter-msg",
+            "internalDate": "1782518400000",
+            "payload": {
+                "headers": [
+                    {"name": "From", "value": "ClubExpress <notifications@example.test>"},
+                    {"name": "Subject", "value": "ClubExpress ChapterX Report"},
+                ],
+            },
+        }
+        attachments = [
+            {
+                "name": "Immediate_Chapterx.csv",
+                "mimeType": "text/csv",
+                "contentBytes": b"not parsed in this test",
+            }
+        ]
+
+        original_env = {
+            "CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED": os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"),
+            "CLUBEXPRESS_STAGED_CHAPTER_CONSUMPTION_ENABLED": os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_CONSUMPTION_ENABLED"),
+        }
+        originals = {
+            "_get_sql_connection_string": mailapp._get_sql_connection_string,
+            "_extract_gmail_attachments": mailapp._extract_gmail_attachments,
+            "_archive_message_artifacts": mailapp._archive_message_artifacts,
+            "_parse_chapter_rows": mailapp._parse_chapter_rows,
+            "_record_clubexpress_parsed_event": mailapp._record_clubexpress_parsed_event,
+            "_execute_stored_procedure": mailapp._execute_stored_procedure,
+            "_handle_chapter_email": mailapp._handle_chapter_email,
+            "_mark_gmail_message_processed": mailapp._mark_gmail_message_processed,
+        }
+        staged_events = []
+        email_log_statuses = []
+        direct_imports = []
+        gmail_marks = []
+        try:
+            os.environ["CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"] = "true"
+            os.environ["CLUBEXPRESS_STAGED_CHAPTER_CONSUMPTION_ENABLED"] = "true"
+            mailapp._get_sql_connection_string = lambda: "conn"
+            mailapp._extract_gmail_attachments = lambda access_token, msg: attachments
+            mailapp._archive_message_artifacts = lambda message_type, msg, attachment_list: "chapter_csv/2026/06/26/chapter-msg"
+            mailapp._parse_chapter_rows = lambda csv_bytes: [("row-1",), ("row-2",), ("row-3",)]
+            mailapp._record_clubexpress_parsed_event = lambda conn_str, parsed_event: staged_events.append(parsed_event)
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_log_statuses.append(params.get("Status"))
+            mailapp._handle_chapter_email = lambda conn_str, attachment_list: direct_imports.append(attachment_list) or 3
+            mailapp._mark_gmail_message_processed = lambda access_token, msg: gmail_marks.append(msg["id"])
+
+            mailapp._process_mailbox_message("token", message)
+        finally:
+            for name, value in original_env.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertEqual(email_log_statuses, ["received", "staged"])
+        self.assertEqual(len(staged_events), 1)
+        self.assertEqual(staged_events[0].event_type, mailapp.CHAPTER_MESSAGE_TYPE)
+        self.assertEqual(staged_events[0].parsed_item_count, 3)
+        downstream_payload = json.loads(staged_events[0].downstream_payload_json)
+        self.assertEqual(downstream_payload["actions"][0]["name"], mailapp.CHAPTER_IMPORT_ACTION)
+        self.assertEqual(direct_imports, [])
+        self.assertEqual(gmail_marks, ["chapter-msg"])
+
 
 class RewardsSnapshotTest(unittest.TestCase):
     def test_rewards_snapshot_params_do_not_replace_existing_snapshots(self):
@@ -799,6 +867,91 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual([batch[0][1][1] for batch in adapter.executed], ["processing", "processed"])
         self.assertEqual(email_logs[0][0], "membership.sp_log_clubexpress_email")
         self.assertEqual(email_logs[0][1]["MessageId"], "memchap-msg")
+        self.assertEqual(email_logs[0][1]["Status"], "processed")
+        self.assertIsNone(email_logs[0][1]["ErrorMessage"])
+        self.assertEqual(result.results[0]["status_after"], "processed")
+
+    def test_process_pending_chapter_events_imports_archived_attachment(self):
+        prefix = "chapter_csv/2026/06/26/chapter-msg"
+        row = {
+            "Parsed_Event_ID": 22,
+            "Message_ID": "chapter-msg",
+            "Event_Key": "chapter-msg:chapter_csv",
+            "Message_Type": mailapp.CHAPTER_MESSAGE_TYPE,
+            "Event_Type": mailapp.CHAPTER_MESSAGE_TYPE,
+            "Received_At": datetime(2026, 6, 26, 23, 0, tzinfo=timezone.utc),
+            "Event_Date": date(2026, 6, 26),
+            "AGAID": None,
+            "ChapterID": None,
+            "Parsed_Item_Count": 3,
+            "Sender": "ClubExpress <notifications@example.test>",
+            "Subject": "ClubExpress ChapterX Report",
+            "Blob_Path": prefix,
+            "Parsed_Payload_Json": json.dumps(
+                {
+                    "message_id": "chapter-msg",
+                    "blob_path": prefix,
+                    "parsed": {
+                        "attachment_name": "Immediate_Chapterx.csv",
+                        "attachment_blob_name": "Immediate_Chapterx.csv",
+                        "row_count": 3,
+                    },
+                }
+            ),
+            "Downstream_Payload_Json": json.dumps(
+                {
+                    "actions": [
+                        {
+                            "name": mailapp.CHAPTER_IMPORT_ACTION,
+                            "params": {"blob_path": prefix, "attachment_blob_name": "Immediate_Chapterx.csv"},
+                        }
+                    ]
+                }
+            ),
+            "Status": "staged",
+            "Attempt_Count": 0,
+            "Last_Processed_At": None,
+            "Last_Error_Message": None,
+            "Created_At": datetime(2026, 6, 26, 23, 1, tzinfo=timezone.utc),
+            "Updated_At": datetime(2026, 6, 26, 23, 1, tzinfo=timezone.utc),
+        }
+        adapter = _FakeStagedAdapter([row])
+        originals = {
+            "_download_archived_attachment_bytes": mailapp._download_archived_attachment_bytes,
+            "_import_chapter_bytes": mailapp._import_chapter_bytes,
+            "_execute_stored_procedure": mailapp._execute_stored_procedure,
+        }
+        downloads = []
+        imports = []
+        email_logs = []
+        try:
+            mailapp._download_archived_attachment_bytes = (
+                lambda blob_path, attachment_blob_name: downloads.append((blob_path, attachment_blob_name)) or b"csv"
+            )
+            mailapp._import_chapter_bytes = lambda conn_str, csv_bytes: imports.append((conn_str, csv_bytes)) or 3
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_logs.append((proc_name, params))
+
+            result = mailapp._process_pending_chapter_events(
+                "conn",
+                top=5,
+                execute=True,
+                confirm_replay=True,
+                processor_name="test_chapter_processor",
+                adapter=adapter,
+            )
+        finally:
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertTrue(result.executed)
+        self.assertEqual(result.selected_count, 1)
+        self.assertEqual(result.processed_count, 1)
+        self.assertEqual(result.error_count, 0)
+        self.assertEqual(downloads, [(prefix, "Immediate_Chapterx.csv")])
+        self.assertEqual(imports, [("conn", b"csv")])
+        self.assertEqual([batch[0][1][1] for batch in adapter.executed], ["processing", "processed"])
+        self.assertEqual(email_logs[0][0], "membership.sp_log_clubexpress_email")
+        self.assertEqual(email_logs[0][1]["MessageId"], "chapter-msg")
         self.assertEqual(email_logs[0][1]["Status"], "processed")
         self.assertIsNone(email_logs[0][1]["ErrorMessage"])
         self.assertEqual(result.results[0]["status_after"], "processed")
