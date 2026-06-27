@@ -1,0 +1,257 @@
+"""Render reached-rate bars by starting sigma bucket for an improver simulation."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class AlgorithmStyle:
+    key: str
+    label: str
+    color: str
+
+
+ALGORITHMS = [
+    AlgorithmStyle("baseline", "Baseline", "#275DAD"),
+    AlgorithmStyle("surprise_taper_floor_050", "Surprise/taper", "#C44900"),
+]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("simulation_dir", type=Path, help="Directory containing metadata.json and player_outcomes.csv.")
+    parser.add_argument("--name", default="sigma_bucket_reached", help="Output filename stem.")
+    parser.add_argument("--buckets", type=int, default=10, help="Number of equal-width starting sigma buckets.")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    if args.buckets <= 0:
+        raise SystemExit("--buckets must be positive")
+
+    simulation_dir = args.simulation_dir
+    metadata = json.loads((simulation_dir / "metadata.json").read_text(encoding="utf-8"))
+    rows = read_csv(simulation_dir / "player_outcomes.csv")
+    bucket_rows = build_bucket_rows(rows, bucket_count=args.buckets)
+
+    csv_path = simulation_dir / f"{args.name}.csv"
+    svg_path = simulation_dir / f"{args.name}.svg"
+    write_csv(csv_path, bucket_rows)
+    write_svg(svg_path, bucket_rows, metadata=metadata)
+
+    print(f"Chart written to {svg_path}")
+    print(f"Data written to {csv_path}")
+    for row in bucket_rows:
+        if row["algorithm"] == "baseline":
+            continue
+        bucket = row["bucket_label"]
+        baseline = next(
+            other
+            for other in bucket_rows
+            if other["bucket_index"] == row["bucket_index"] and other["algorithm"] == "baseline"
+        )
+        print(
+            f"{bucket}: baseline {baseline['percent']:.1f}% "
+            f"vs surprise/taper {row['percent']:.1f}% (n={row['players']})"
+        )
+
+
+def read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def build_bucket_rows(rows: list[dict[str, str]], *, bucket_count: int) -> list[dict[str, object]]:
+    sigmas_by_player: dict[str, float] = {}
+    for row in rows:
+        sigmas_by_player.setdefault(row["simulation_player_id"], float(row["start_sigma"]))
+    if not sigmas_by_player:
+        return []
+
+    min_sigma = min(sigmas_by_player.values())
+    max_sigma = max(sigmas_by_player.values())
+    width = (max_sigma - min_sigma) / bucket_count if max_sigma > min_sigma else 1.0
+    rows_by_algorithm: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        rows_by_algorithm.setdefault(row["algorithm"], []).append(row)
+
+    output: list[dict[str, object]] = []
+    for bucket_index in range(bucket_count):
+        bucket_min = min_sigma + bucket_index * width
+        bucket_max = max_sigma if bucket_index == bucket_count - 1 else bucket_min + width
+        bucket_player_ids = [
+            player_id
+            for player_id, sigma in sigmas_by_player.items()
+            if bucket_index_for(sigma, min_sigma=min_sigma, max_sigma=max_sigma, bucket_count=bucket_count) == bucket_index
+        ]
+        bucket_player_set = set(bucket_player_ids)
+        bucket_label = f"{bucket_min:.2f}-{bucket_max:.2f}"
+        for algorithm in ALGORITHMS:
+            algorithm_rows = [
+                row
+                for row in rows_by_algorithm.get(algorithm.key, [])
+                if row["simulation_player_id"] in bucket_player_set
+            ]
+            reached = sum(1 for row in algorithm_rows if row["reached"] == "True")
+            players = len(algorithm_rows)
+            output.append(
+                {
+                    "bucket_index": bucket_index + 1,
+                    "bucket_label": bucket_label,
+                    "bucket_min": bucket_min,
+                    "bucket_max": bucket_max,
+                    "algorithm": algorithm.key,
+                    "algorithm_label": algorithm.label,
+                    "players": players,
+                    "reached": reached,
+                    "percent": reached / players * 100 if players else 0.0,
+                }
+            )
+    return output
+
+
+def bucket_index_for(value: float, *, min_sigma: float, max_sigma: float, bucket_count: int) -> int:
+    if max_sigma <= min_sigma:
+        return 0
+    width = (max_sigma - min_sigma) / bucket_count
+    index = int((value - min_sigma) / width)
+    return min(max(index, 0), bucket_count - 1)
+
+
+def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    fieldnames = [
+        "bucket_index",
+        "bucket_label",
+        "bucket_min",
+        "bucket_max",
+        "algorithm",
+        "algorithm_label",
+        "players",
+        "reached",
+        "percent",
+    ]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, object]) -> None:
+    width = 1120
+    height = 700
+    margin_left = 82
+    margin_right = 44
+    margin_top = 84
+    margin_bottom = 116
+    inner_width = width - margin_left - margin_right
+    inner_height = height - margin_top - margin_bottom
+    bucket_count = max(int(row["bucket_index"]) for row in rows) if rows else 0
+    bucket_width = inner_width / bucket_count if bucket_count else inner_width
+    group_gap = 18
+    bar_gap = 5
+    bar_width = max(8, (bucket_width - group_gap - bar_gap) / 2)
+
+    def x_bucket(bucket_index: int) -> float:
+        return margin_left + (bucket_index - 1) * bucket_width
+
+    def y(percent: float) -> float:
+        return margin_top + (100 - percent) / 100 * inner_height
+
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
+        '<title id="title">Reached true strength by starting sigma bucket</title>',
+        f'<desc id="desc">Grouped bars compare baseline and surprise/taper reached rates in {bucket_count} equal-width starting sigma buckets.</desc>',
+        "<style>",
+        "text { font-family: Segoe UI, Arial, sans-serif; fill: #1f2933; }",
+        ".title { font-size: 27px; font-weight: 700; }",
+        ".subtitle { font-size: 14px; fill: #5b6472; }",
+        ".axis { stroke: #28313f; stroke-width: 1.4; }",
+        ".grid { stroke: #d8dee8; stroke-width: 1; }",
+        ".tick { font-size: 12px; fill: #4c5664; }",
+        ".barlabel { font-size: 10px; fill: #253041; font-weight: 600; }",
+        ".label { font-size: 14px; font-weight: 600; fill: #364152; }",
+        ".legend { font-size: 14px; font-weight: 600; }",
+        ".note { font-size: 12px; fill: #5b6472; }",
+        "</style>",
+        '<rect width="100%" height="100%" fill="#ffffff"/>',
+        f'<text x="{margin_left}" y="35" class="title">Catch-up rate by starting sigma</text>',
+        f'<text x="{margin_left}" y="58" class="subtitle">{bucket_count} equal-width sigma buckets; percent of simulated players reaching their hidden one-rank-stronger level</text>',
+    ]
+
+    for percent in (0, 20, 40, 60, 80, 100):
+        y_pos = y(percent)
+        lines.append(f'<line x1="{margin_left}" y1="{y_pos:.2f}" x2="{margin_left + inner_width:.2f}" y2="{y_pos:.2f}" class="grid"/>')
+        lines.append(f'<text x="{margin_left - 12}" y="{y_pos + 4:.2f}" text-anchor="end" class="tick">{percent}%</text>')
+
+    lines.extend(
+        [
+            f'<line x1="{margin_left}" y1="{margin_top + inner_height}" x2="{margin_left + inner_width}" y2="{margin_top + inner_height}" class="axis"/>',
+            f'<line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{margin_top + inner_height}" class="axis"/>',
+        ]
+    )
+
+    rows_by_bucket = {}
+    for row in rows:
+        rows_by_bucket.setdefault(int(row["bucket_index"]), []).append(row)
+    color_by_algorithm = {algorithm.key: algorithm.color for algorithm in ALGORITHMS}
+    label_by_algorithm = {algorithm.key: algorithm.label for algorithm in ALGORITHMS}
+
+    for bucket_index in sorted(rows_by_bucket):
+        bucket_rows = sorted(rows_by_bucket[bucket_index], key=lambda row: row["algorithm"])
+        bucket_left = x_bucket(bucket_index)
+        first_row = bucket_rows[0]
+        group_left = bucket_left + group_gap / 2
+        for algorithm_index, row in enumerate(bucket_rows):
+            percent = float(row["percent"])
+            bar_x = group_left + algorithm_index * (bar_width + bar_gap)
+            bar_y = y(percent)
+            bar_height = margin_top + inner_height - bar_y
+            color = color_by_algorithm[str(row["algorithm"])]
+            lines.append(
+                f'<rect x="{bar_x:.2f}" y="{bar_y:.2f}" width="{bar_width:.2f}" height="{bar_height:.2f}" fill="{color}"/>'
+            )
+            label_y = bar_y - 5 if bar_height >= 18 else bar_y - 3
+            lines.append(
+                f'<text x="{bar_x + bar_width / 2:.2f}" y="{label_y:.2f}" text-anchor="middle" class="barlabel">{percent:.0f}%</text>'
+            )
+        center = bucket_left + bucket_width / 2
+        lines.append(f'<text x="{center:.2f}" y="{margin_top + inner_height + 22}" text-anchor="middle" class="tick">{escape_xml(first_row["bucket_label"])}</text>')
+        lines.append(f'<text x="{center:.2f}" y="{margin_top + inner_height + 39}" text-anchor="middle" class="note">n={first_row["players"]}</text>')
+
+    lines.append(f'<text x="{margin_left + inner_width / 2:.2f}" y="{height - 42}" text-anchor="middle" class="label">Starting sigma bucket</text>')
+    lines.append(f'<text transform="translate(24 {margin_top + inner_height / 2:.2f}) rotate(-90)" text-anchor="middle" class="label">Percent reached</text>')
+
+    legend_x = margin_left + inner_width - 310
+    legend_y = margin_top - 10
+    for index, algorithm in enumerate(ALGORITHMS):
+        x_pos = legend_x + index * 150
+        lines.append(f'<rect x="{x_pos}" y="{legend_y - 12}" width="18" height="18" fill="{algorithm.color}"/>')
+        lines.append(f'<text x="{x_pos + 26}" y="{legend_y + 2}" class="legend">{escape_xml(label_by_algorithm[algorithm.key])}</text>')
+
+    lines.append(
+        f'<text x="{margin_left}" y="{height - 12}" class="note">Simulation: {escape_xml(metadata["name"])}; buckets are equal-width over observed starting sigma range.</text>'
+    )
+    lines.append("</svg>")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def escape_xml(value: object) -> str:
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+
+
+if __name__ == "__main__":
+    main()

@@ -4,11 +4,11 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-from bayrate.experiment_benchmark import distribution, run_experiment_benchmark
-from bayrate.export_experiment_dataset import export_experiment_dataset
+from research.bayrate_sigma.experiment_benchmark import distribution, load_config_from_json, run_experiment_benchmark
+from research.bayrate_sigma.export_experiment_dataset import export_experiment_dataset
 
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_DIR = Path(__file__).resolve().parents[3] / "bayrate" / "tests" / "fixtures"
 TMP_DIR = Path(__file__).parent / "tmp_experiment_tools"
 
 
@@ -86,6 +86,19 @@ class ExperimentToolTest(unittest.TestCase):
         self.assertEqual(distribution([])["count"], 0)
         self.assertEqual(distribution([1, 2, 3])["median"], 2.0)
         self.assertAlmostEqual(distribution([1, 2, 3])["p90"], 2.8)
+
+    def test_load_config_from_json_accepts_best_config_wrapper(self) -> None:
+        config_path = TMP_DIR / "best_config.json"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            '{"score": 1.0, "config": {"surprise_sigma_base": 0.3, "surprise_sigma_score_mode": "pre"}}',
+            encoding="utf-8",
+        )
+
+        config = load_config_from_json(config_path)
+
+        self.assertAlmostEqual(config.surprise_sigma_base, 0.3)
+        self.assertEqual(config.surprise_sigma_score_mode, "pre")
 
     def test_export_experiment_dataset_writes_csv_snapshot(self) -> None:
         adapter = FakeExperimentExportAdapter()

@@ -1,4 +1,8 @@
-# BayRate Sigma Experiment Environment
+# BayRate Sigma Research Environment
+
+This is non-production research tooling. It is intentionally outside the
+production `bayrate/` package and outside every standalone Azure Function App.
+Do not include this folder in BayRate deployment packages.
 
 ## Goal
 
@@ -18,7 +22,7 @@ Export one shared benchmark snapshot from production SQL. Put it under `data/`, 
 
 ```powershell
 cd C:\Users\guruj\OneDrive\Documents\Playground\aga
-py -3 -m bayrate.export_experiment_dataset `
+py -3 -m research.bayrate_sigma.export_experiment_dataset `
   --min-game-date 2024-01-01 `
   --max-game-date 2026-05-01 `
   --output-dir data\bayrate-sigma-20260526
@@ -41,7 +45,7 @@ From a clean clone or fork:
 ```powershell
 cd aga
 py -3 -m unittest discover bayrate\tests
-py -3 -m bayrate.experiment_benchmark `
+py -3 -m research.bayrate_sigma.experiment_benchmark `
   --games data\bayrate-sigma-20260526\games.csv `
   --ratings data\bayrate-sigma-20260526\ratings.csv `
   --name baseline
@@ -62,14 +66,14 @@ Change only the rating-engine code needed for the experiment. The likely startin
 Run the experiment against the same snapshot:
 
 ```powershell
-py -3 -m bayrate.experiment_benchmark `
+py -3 -m research.bayrate_sigma.experiment_benchmark `
   --games data\bayrate-sigma-20260526\games.csv `
   --ratings data\bayrate-sigma-20260526\ratings.csv `
   --name sigma-floor-025 `
-  --baseline-summary bayrate\output\experiments\baseline\summary.json
+  --baseline-summary research\bayrate_sigma\output\experiments\baseline\summary.json
 ```
 
-Artifacts are written under `bayrate\output\experiments\<name>\`, which is ignored by git:
+Artifacts are written under `research\bayrate_sigma\output\experiments\<name>\`, which is ignored by git:
 
 - `summary.json`
 - `comparison_vs_baseline.json`
@@ -116,11 +120,39 @@ Each experiment should include a short note with:
 - baseline vs candidate log loss, Brier, median sigma, p10 sigma, and improving capture ratio
 - any concerning calibration or rating-movement side effects
 
+## Optional Optuna Tuning
+
+Optuna is optional. Install it only in environments that will run automated parameter searches:
+
+```powershell
+py -3 -m pip install optuna
+```
+
+The tuning harness pre-generates simulated games, then asks Optuna to try sigma configurations against the same scenarios. A good first proxy run is intentionally small:
+
+```powershell
+py -3 -m research.bayrate_sigma.optuna_sigma_tuning `
+  --name sigma-optuna-smoke `
+  --trials 20 `
+  --max-players 250 `
+  --games-per-year-values 5,10,25,50 `
+  --self-promote-deltas 0,1
+```
+
+Outputs are written under `research\bayrate_sigma\output\simulations\optuna\<name>\`:
+
+- `trials.csv`: one row per Optuna trial, with config knobs and aggregate metrics
+- `trial_####_summary.csv`: scenario/year metrics for each trial
+- `best_config.json`: the winning BayRate config for the chosen objective
+- `best_summary.csv` and `best_milestones.csv`: detailed result rows for the winning config
+
+The default objective balances final-year catch-up, overshoot, severe overshoot, reached-rate shortfall, and excessive sigma. Treat it as a screening tool, not a final verdict. Promote the best few candidates to the full activity grid and historical log-loss/Brier benchmark before considering a production change.
+
 ## Guardrails
 
 Use the exact same dataset for baseline and candidate runs. Do not refresh the export halfway through comparing experiments.
 
-Do not commit `data/` or `bayrate/output/` artifacts. Commit source changes and, if useful, a short markdown writeup with copied summary numbers.
+Do not commit `data/` or `research/bayrate_sigma/output/` artifacts. Commit source changes and, if useful, a short markdown writeup with copied summary numbers.
 
 Do not give volunteers production SQL credentials unless they are also BayRate operators. The normal volunteer loop needs only the CSV snapshot.
 

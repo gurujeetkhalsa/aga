@@ -68,9 +68,9 @@ SELECT
     g.[Handicap],
     g.[Komi],
     g.[Result],
-    g.[Rated],
-    g.[Exclude],
-    g.[Online]
+    COALESCE(g.[Rated], 1) AS [Rated],
+    COALESCE(g.[Exclude], 0) AS [Exclude],
+    COALESCE(g.[Online], 0) AS [Online]
 FROM [ratings].[games] AS g
 INNER JOIN benchmark_events AS e
     ON e.[Event_Key] = COALESCE(g.[Tournament_Code], CONCAT(N'date:', CONVERT(nvarchar(10), g.[Game_Date], 23)))

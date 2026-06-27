@@ -36,9 +36,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        help="Artifact directory. Defaults to bayrate/output/experiments/<name>.",
+        help="Artifact directory. Defaults to research/bayrate_sigma/output/experiments/<name>.",
     )
     parser.add_argument("--baseline-summary", type=Path, help="Optional baseline summary.json to compare against.")
+    parser.add_argument("--config-json", type=Path, help="Optional BayrateConfig JSON, or best_config.json wrapper.")
     parser.add_argument("--write-full-result", action="store_true", help="Also write the full BayRate result JSON.")
     parser.add_argument("--allow-online-games", action="store_true", help="Include games marked as online.")
     parser.add_argument("--min-game-date", help="Earliest game date to include, YYYY-MM-DD.")
@@ -47,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--inactivity-growth-per-day",
         type=float,
-        default=BayrateConfig().inactivity_growth_per_day,
+        default=None,
         help="Daily sigma growth for inactive players.",
     )
     return parser.parse_args()
@@ -56,11 +57,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     output_dir = args.output_dir or default_output_dir(args.name)
-    config = BayrateConfig(
-        allow_online_games=args.allow_online_games,
-        max_events=args.max_events,
-        inactivity_growth_per_day=args.inactivity_growth_per_day,
-    )
+    config = load_config_from_json(args.config_json) if args.config_json else BayrateConfig()
+    config.allow_online_games = args.allow_online_games
+    config.max_events = args.max_events
+    if args.inactivity_growth_per_day is not None:
+        config.inactivity_growth_per_day = args.inactivity_growth_per_day
     if args.min_game_date:
         config.min_game_date = date.fromisoformat(args.min_game_date)
     if args.max_game_date:
@@ -516,6 +517,15 @@ def print_benchmark_summary(artifact: dict[str, Any], output: Any) -> None:
 
 def default_output_dir(name: str) -> Path:
     return Path(__file__).resolve().parent / "output" / "experiments" / safe_name(name)
+
+
+def load_config_from_json(path: Path) -> BayrateConfig:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    values = payload.get("config", payload)
+    if not isinstance(values, dict):
+        raise ValueError(f"Config JSON must contain an object: {path}")
+    allowed = set(BayrateConfig.__dataclass_fields__)
+    return BayrateConfig(**{key: value for key, value in values.items() if key in allowed})
 
 
 def safe_name(value: str) -> str:

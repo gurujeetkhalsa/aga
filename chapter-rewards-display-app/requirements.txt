@@ -1,0 +1,4 @@
+azure-functions
+certifi
+pyodbc
+python-tds

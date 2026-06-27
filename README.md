@@ -33,6 +33,8 @@ Primary public/operator URLs:
   replay, commit, auth, and SQL adapter modules used by `bayrate-app/`.
 - `rewards/` contains Chapter Rewards processors, SQL, reporting helpers, and
   tests used by the rewards apps.
+- `research/` contains non-production experiments and analysis tools. These are
+  intentionally outside the deployed app packages.
 - `shared/` contains helpers that are intentionally shared by more than one app.
 - `scripts/` contains deployment and operations scripts. Use app-specific
   deploy-prep scripts when present.
@@ -56,6 +58,7 @@ Generated and local-only material should not be treated as production source:
 - `_deploy/`
 - `data/`
 - `bayrate/output/`
+- `research/bayrate_sigma/output/`
 - `*.results.json`
 - local `__pycache__/`, `.python_packages/`, and `.venv/` directories
 

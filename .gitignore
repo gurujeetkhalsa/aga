@@ -27,5 +27,7 @@ Thumbs.db
 data/
 _deploy/
 bayrate/output/
+research/bayrate_sigma/output/
+research/bayrate_sigma/tests/tmp*/
 bayrate/tests/tmp*/
 
