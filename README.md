@@ -1,47 +1,75 @@
 # AGA Functions Monorepo
 
-This repository is the clean rebuild of the AGA Azure Functions codebase.
+This repository contains the AGA Azure Functions codebase split into focused,
+deployable apps.
 
-## App layout
+If you are looking for current production code, start with the standalone app
+folders below. Each app folder owns one operational surface and should be
+deployed independently.
 
-- `ratings-explorer-app/`
-  Ratings Explorer UI, APIs, SGF support, and snapshot jobs.
-- `clubexpress-mail-app/`
-  Gmail polling, ClubExpress mailbox ingestion, attachment processing, and message archiving.
-- `membership-data-app/`
-  Membership/chapter imports, member lookup, TD list publishing, and related SQL-backed data endpoints.
-- `shared/`
-  Shared helpers used by more than one app.
-- `docs/`
-  Architecture notes, migration notes, and setup documentation.
+## Official Standalone Apps
 
-## Current migration approach
+| Repo folder | Azure Function App | Responsibility |
+| --- | --- | --- |
+| `bayrate-app/` | `aga-bayrate` | BayRate tournament rating workflow: preview, stage, review, replay, and commit. |
+| `ratings-explorer-display-app/` | `aga-ratings-explorer-display` | Public Ratings Explorer display, search/detail APIs, SGF viewing, and snapshot refresh. |
+| `chapter-rewards-display-app/` | `aga-chapter-rewards-display` | Public read-only Chapter Rewards balances and chapter detail report. |
+| `chapter-rewards-admin-app/` | `aga-chapter-rewards-admin` | Authorized Chapter Rewards debit, redemption, notes, and receipt workflows. |
+| `chapter-rewards-automation-app/` | `aga-chapter-rewards-automation` | Rewards background timers: snapshots, awards, expirations, and pending-renewal digest. |
+| `clubexpress-mail-app/` | `aga-clubexpress-mail` | Gmail polling, ClubExpress mailbox ingestion, message classification, and parser orchestration. |
+| `membership-data-app/` | `aga-membership-functions` | Membership/chapter imports, member lookup, TD list publishing, and related data endpoints. |
+| `clubexpress-sso-probe-app/` | `aga-clubexpress-sso-probe` | Temporary diagnostic receiver for ClubExpress SSO callback discovery. |
 
-We are moving from a mixed local codebase into a clean monorepo in stages:
+Primary public/operator URLs:
 
-1. Create the repo structure and documentation.
-2. Move `ratings-explorer-app` in first because it is already mostly isolated.
-3. Split mailbox ingestion into `clubexpress-mail-app`.
-4. Split membership import, lookup, and TD list endpoints into `membership-data-app`.
-5. Pull only true cross-app helpers into `shared/`.
+- BayRate: `https://aga-bayrate.azurewebsites.net/api/bayrate`
+- Ratings Explorer: `https://aga-ratings-explorer-display.azurewebsites.net/api/ratings-explorer`
+- Chapter Rewards display: `https://aga-chapter-rewards-display.azurewebsites.net/api/chapter-rewards`
+- Chapter Rewards admin: `https://aga-chapter-rewards-admin.azurewebsites.net/api/chapter-rewards/admin`
 
-## Current production layout
+## Shared Code And SQL
 
-Production is now split into three Azure Function Apps:
+- `bayrate/` contains the BayRate rating engine, report parser, staging,
+  replay, commit, auth, and SQL adapter modules used by `bayrate-app/`.
+- `rewards/` contains Chapter Rewards processors, SQL, reporting helpers, and
+  tests used by the rewards apps.
+- `shared/` contains helpers that are intentionally shared by more than one app.
+- `scripts/` contains deployment and operations scripts. Use app-specific
+  deploy-prep scripts when present.
+- `docs/` contains separation notes, deployment notes, architecture notes, and
+  historical session memos.
 
-- `aga-ratings-explorer`
-  Ratings Explorer UI, APIs, SGF support, and snapshot jobs.
-- `aga-clubexpress-mail`
-  Gmail polling, ClubExpress mailbox ingestion, attachment processing, and message archiving.
-- `aga-membership-functions`
-  Membership/chapter imports, member lookup, and TD list publishing endpoints.
+## Legacy Or Miscellaneous Areas
 
-## Source of truth during migration
+`ratings-explorer-app/` is the older mixed host retained during the transition.
+Do not treat it as the source of truth for new BayRate, rewards, or public
+Ratings Explorer work unless you are explicitly maintaining that legacy mixed
+deployment.
 
-Until each app is copied into this repo, the current live source files remain in:
+The standalone BayRate deploy package is intentionally allowlisted by
+`scripts/prepare-bayrate-deploy.ps1`; sigma experiments, simulations, chart
+renderers, history overlays, member merge tooling, and generated BayRate output
+artifacts are not deployed to `aga-bayrate`.
 
-- `C:\Users\guruj\aga-functions\function_app.py`
-- `C:\Users\guruj\aga-functions\ratings-explorer-app\`
+Generated and local-only material should not be treated as production source:
 
-See `docs/migration-plan.md` for the function-by-function mapping.
+- `_deploy/`
+- `data/`
+- `bayrate/output/`
+- `*.results.json`
+- local `__pycache__/`, `.python_packages/`, and `.venv/` directories
 
+## Deployment Rule Of Thumb
+
+Deploy from the app folder that matches the Azure Function App you are changing.
+If a change touches more than one product surface, split it into app-specific
+changes or move truly shared logic into `shared/`, `bayrate/`, or `rewards/`.
+
+The current detailed production map is in `docs/deployment-memo.md`; the
+separation decisions are documented in:
+
+- `docs/ratings-explorer-display-separation.md`
+- `docs/chapter-rewards-display-separation.md`
+- `docs/chapter-rewards-admin-separation.md`
+- `docs/clubexpress-email-processing-separation.md`
+- `docs/bayrate-separation.md`

@@ -4,7 +4,24 @@
 
 This memo explains the current production Azure Function Apps, which repo folder maps to each one, what each app is responsible for, and the deployment path that should be used.
 
-## Production apps
+## Current Canonical App Map
+
+Use this table as the source of truth for current separated production deployments.
+
+| Azure Function App | Repo folder | Responsibility |
+| --- | --- | --- |
+| `aga-bayrate` | `bayrate-app/` | BayRate tournament rating workflow. |
+| `aga-ratings-explorer-display` | `ratings-explorer-display-app/` | Public Ratings Explorer display and read-only APIs. |
+| `aga-chapter-rewards-display` | `chapter-rewards-display-app/` | Public read-only Chapter Rewards display. |
+| `aga-chapter-rewards-admin` | `chapter-rewards-admin-app/` | Authorized Chapter Rewards debit/redemption/receipt administration. |
+| `aga-chapter-rewards-automation` | `chapter-rewards-automation-app/` | Rewards timers and pending-renewal digest. |
+| `aga-clubexpress-mail` | `clubexpress-mail-app/` | Mailbox polling and ClubExpress email processing. |
+| `aga-membership-functions` | `membership-data-app/` | Membership/chapter imports, member lookup, and TD list endpoints. |
+| `aga-clubexpress-sso-probe` | `clubexpress-sso-probe-app/` | Temporary ClubExpress SSO diagnostic receiver. |
+
+`ratings-explorer-app/` is the older mixed host retained during transition. Do not use it as the source of truth for new BayRate, rewards, or public Ratings Explorer changes unless explicitly maintaining that legacy mixed deployment.
+
+## App Detail Notes
 
 ### `aga-ratings-explorer`
 
@@ -230,16 +247,24 @@ Notes:
 
 Production is intentionally split into separate deployable apps:
 
-1. `aga-ratings-explorer`
-   Ratings Explorer only
-2. `aga-clubexpress-mail`
-   ClubExpress mailbox processing only
-3. `aga-membership-functions`
-   membership data APIs and TD lists only
-4. `aga-chapter-rewards-automation`
+1. `aga-bayrate`
+   BayRate tournament rating workflow only
+2. `aga-ratings-explorer-display`
+   public Ratings Explorer display only
+3. `aga-chapter-rewards-display`
+   public Chapter Rewards display only
+4. `aga-chapter-rewards-admin`
+   Chapter Rewards admin workflows only
+5. `aga-chapter-rewards-automation`
    Chapter Rewards background timers only
+6. `aga-clubexpress-mail`
+   ClubExpress mailbox processing only
+7. `aga-membership-functions`
+   membership data APIs and TD lists only
+8. `aga-clubexpress-sso-probe`
+   temporary SSO diagnostic receiver only
 
-This means mailbox parser changes should be deployed to `clubexpress-mail-app`, not to `membership-data-app` or `chapter-rewards-automation-app`.
+This means mailbox parser changes should be deployed to `clubexpress-mail-app`, BayRate changes to `bayrate-app`, display changes to `ratings-explorer-display-app`, and rewards timer changes to `chapter-rewards-automation-app`.
 
 ## Chapter Rewards SQL
 
@@ -279,7 +304,11 @@ Earlier production work often deployed from:
 
 That legacy monolith/deploy bundle was useful during transition, but the repo-aligned target going forward is:
 
-- deploy `ratings-explorer-app/` to `aga-ratings-explorer`
+- deploy `bayrate-app/` to `aga-bayrate`
+- deploy `ratings-explorer-display-app/` to `aga-ratings-explorer-display`
+- deploy `chapter-rewards-display-app/` to `aga-chapter-rewards-display`
+- deploy `chapter-rewards-admin-app/` to `aga-chapter-rewards-admin`
+- deploy `chapter-rewards-automation-app/` to `aga-chapter-rewards-automation`
 - deploy `clubexpress-mail-app/` to `aga-clubexpress-mail`
 - deploy `membership-data-app/` to `aga-membership-functions`
 
