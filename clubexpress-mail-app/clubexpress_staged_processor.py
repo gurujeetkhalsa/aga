@@ -12,6 +12,7 @@ ROW_RETURNING_PROCEDURES = {
 ALLOWED_DOWNSTREAM_PROCEDURES = {
     "membership.sp_process_new_member_email",
     "membership.sp_process_membership_renewal",
+    "membership.sp_process_journal_news_email",
     "rewards.sp_record_membership_event",
     "rewards.sp_process_chapter_renewal_notices",
     "rewards.sp_record_chapter_renewal_confirmation",

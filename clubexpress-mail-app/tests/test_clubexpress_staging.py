@@ -13,6 +13,7 @@ from clubexpress_staging import (
     DownstreamProcedure,
     build_chapter_renewal_notice_parsed_event,
     build_csv_attachment_parsed_event,
+    build_journal_parsed_event,
     build_membership_parsed_event,
     result_payload_for_procedures,
     status_params,
@@ -118,6 +119,41 @@ class ClubExpressStagingTest(unittest.TestCase):
             downstream_payload["actions"][0]["params"]["blob_path"],
             "nightly_memchap_csv/2026/06/26/csv-msg",
         )
+
+    def test_journal_event_records_news_and_review_match_counts(self):
+        received_at = datetime(2026, 6, 26, 12, 30, tzinfo=timezone.utc)
+        event = build_journal_parsed_event(
+            message_id="journal-msg",
+            message_type="american_go_e_journal",
+            event_type="american_go_e_journal",
+            received_at=received_at,
+            journal_date=date(2026, 6, 26),
+            parsed={
+                "JournalDate": date(2026, 6, 26),
+                "Articles": [{"title": "Tournament Results", "link": "https://example.test/news"}],
+                "Matches": [{"agaid": 12345, "name": "News Player"}],
+                "ReviewMatches": [{"agaid": 23456, "name": "Review Player"}],
+            },
+            downstream_procedures=[
+                DownstreamProcedure(
+                    "membership.sp_process_journal_news_email",
+                    {"MessageId": "journal-msg", "ReviewMatchesJson": "[]"},
+                )
+            ],
+            sender="ClubExpress <notifications@example.test>",
+            subject="American Go E - Journal 6/26/2026",
+            blob_path="american_go_e_journal/2026/06/26/journal-msg",
+        )
+
+        params = event.record_params()
+        self.assertEqual(params["EventKey"], "journal-msg:american_go_e_journal")
+        self.assertEqual(params["ParsedItemCount"], 3)
+        parsed_payload = json.loads(params["ParsedPayloadJson"])
+        self.assertEqual(parsed_payload["parsed"]["article_count"], 1)
+        self.assertEqual(parsed_payload["parsed"]["match_count"], 1)
+        self.assertEqual(parsed_payload["parsed"]["review_match_count"], 1)
+        downstream_payload = json.loads(params["DownstreamPayloadJson"])
+        self.assertEqual(downstream_payload["procedures"][0]["name"], "membership.sp_process_journal_news_email")
 
     def test_status_params_truncate_error_and_serialize_result_payload(self):
         params = status_params(

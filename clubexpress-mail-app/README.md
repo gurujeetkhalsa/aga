@@ -47,6 +47,7 @@ Parsed-event preview and replay:
 - process pending staged nightly MemChap CSV events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-nightly-memchap --execute --confirm-replay`
 - process pending staged ChapterX CSV events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-chapterx --execute --confirm-replay`
 - process pending staged member-category CSV events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-member-categories --execute --confirm-replay`
+- process pending staged E-Journal events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-ejournals --execute --confirm-replay`
 - replaying an event already marked `processed` also requires `--allow-processed`
 
 Staged new-member consumption:
@@ -71,6 +72,10 @@ Staged new-member consumption:
 - `CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_ENABLED=true` enables the timer that consumes staged `nightly_member_categories_csv` events from the archived CSV attachment
 - `CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE` defaults to every 5 minutes
 - `CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_BATCH_SIZE` defaults to `5`
+- `CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED=true` makes the Gmail poller stage E-Journal emails without directly running `membership.sp_process_journal_news_email`
+- `CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_ENABLED=true` enables the timer that consumes staged `american_go_e_journal` events, including NAOL review matches from the E-Journal blog section
+- `CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_SCHEDULE` defaults to every 5 minutes
+- `CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_BATCH_SIZE` defaults to `10`
 
 Migration note:
 

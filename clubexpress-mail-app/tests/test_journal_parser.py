@@ -366,6 +366,89 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(processed_marks, [])
         self.assertEqual(gmail_marks, ["renewal-msg"])
 
+    def test_journal_staged_consumption_skips_direct_downstream_writes(self):
+        text = """
+        News
+        Tournament Results
+
+        Blogs
+        NAOL Reviews
+        """
+        encoded_body = base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+        message = {
+            "id": "journal-msg",
+            "internalDate": "1782518400000",
+            "payload": {
+                "mimeType": "text/plain",
+                "headers": [
+                    {"name": "From", "value": "ClubExpress <notifications@example.test>"},
+                    {"name": "Subject", "value": "American Go E - Journal 6/26/2026"},
+                ],
+                "body": {"data": encoded_body},
+            },
+        }
+        parsed = {
+            "JournalDate": date(2026, 6, 26),
+            "Articles": [{"title": "Tournament Results", "link": "https://example.test/news"}],
+            "Matches": [{"AGAID": 12345, "Name": "News Player"}],
+            "ReviewMatches": [{"AGAID": 23456, "Name": "Review Player"}],
+        }
+
+        original_env = {
+            "CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED": os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"),
+            "CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED": os.environ.get("CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED"),
+        }
+        originals = {
+            "_get_sql_connection_string": mailapp._get_sql_connection_string,
+            "_archive_message_artifacts": mailapp._archive_message_artifacts,
+            "_parse_journal_email": mailapp._parse_journal_email,
+            "_record_clubexpress_parsed_event": mailapp._record_clubexpress_parsed_event,
+            "_execute_stored_procedure": mailapp._execute_stored_procedure,
+            "_execute_stored_procedures": mailapp._execute_stored_procedures,
+            "_mark_clubexpress_parsed_event_processed": mailapp._mark_clubexpress_parsed_event_processed,
+            "_mark_gmail_message_processed": mailapp._mark_gmail_message_processed,
+        }
+        staged_events = []
+        email_log_statuses = []
+        direct_calls = []
+        processed_marks = []
+        gmail_marks = []
+        try:
+            os.environ["CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"] = "true"
+            os.environ["CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED"] = "true"
+            mailapp._get_sql_connection_string = lambda: "conn"
+            mailapp._archive_message_artifacts = lambda message_type, msg, attachments: "american_go_e_journal/2026/06/26/journal-msg"
+            mailapp._parse_journal_email = lambda conn_str, msg: parsed
+            mailapp._record_clubexpress_parsed_event = lambda conn_str, parsed_event: staged_events.append(parsed_event)
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_log_statuses.append(params.get("Status"))
+            mailapp._execute_stored_procedures = lambda conn_str, procedures: direct_calls.append((conn_str, procedures))
+            mailapp._mark_clubexpress_parsed_event_processed = lambda conn_str, parsed_event, payload: processed_marks.append((parsed_event, payload))
+            mailapp._mark_gmail_message_processed = lambda access_token, msg: gmail_marks.append(msg["id"])
+
+            mailapp._process_mailbox_message("token", message)
+        finally:
+            for name, value in original_env.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertEqual(email_log_statuses, ["received", "staged"])
+        self.assertEqual(len(staged_events), 1)
+        self.assertEqual(staged_events[0].event_type, mailapp.JOURNAL_MESSAGE_TYPE)
+        self.assertEqual(staged_events[0].parsed_item_count, 3)
+        downstream_payload = json.loads(staged_events[0].downstream_payload_json)
+        self.assertEqual(downstream_payload["procedures"][0]["name"], mailapp.JOURNAL_NEWS_PROC)
+        self.assertEqual(
+            json.loads(downstream_payload["procedures"][0]["params"]["ReviewMatchesJson"])[0]["AGAID"],
+            23456,
+        )
+        self.assertEqual(direct_calls, [])
+        self.assertEqual(processed_marks, [])
+        self.assertEqual(gmail_marks, ["journal-msg"])
+
     def test_memchap_staged_consumption_skips_direct_import(self):
         message = {
             "id": "memchap-msg",
@@ -1105,6 +1188,90 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual([batch[0][1][1] for batch in adapter.executed], ["processing", "processed"])
         self.assertEqual(email_logs[0][0], "membership.sp_log_clubexpress_email")
         self.assertEqual(email_logs[0][1]["MessageId"], "category-msg")
+        self.assertEqual(email_logs[0][1]["Status"], "processed")
+        self.assertIsNone(email_logs[0][1]["ErrorMessage"])
+        self.assertEqual(result.results[0]["status_after"], "processed")
+
+    def test_process_pending_journal_events_replays_downstream_procedure(self):
+        prefix = "american_go_e_journal/2026/06/26/journal-msg"
+        row = {
+            "Parsed_Event_ID": 24,
+            "Message_ID": "journal-msg",
+            "Event_Key": "journal-msg:american_go_e_journal",
+            "Message_Type": mailapp.JOURNAL_MESSAGE_TYPE,
+            "Event_Type": mailapp.JOURNAL_MESSAGE_TYPE,
+            "Received_At": datetime(2026, 6, 26, 23, 0, tzinfo=timezone.utc),
+            "Event_Date": date(2026, 6, 26),
+            "AGAID": None,
+            "ChapterID": None,
+            "Parsed_Item_Count": 3,
+            "Sender": "ClubExpress <notifications@example.test>",
+            "Subject": "American Go E - Journal 6/26/2026",
+            "Blob_Path": prefix,
+            "Parsed_Payload_Json": json.dumps(
+                {
+                    "message_id": "journal-msg",
+                    "blob_path": prefix,
+                    "parsed": {
+                        "JournalDate": "2026-06-26",
+                        "article_count": 1,
+                        "match_count": 1,
+                        "review_match_count": 1,
+                    },
+                }
+            ),
+            "Downstream_Payload_Json": json.dumps(
+                {
+                    "procedures": [
+                        {
+                            "name": mailapp.JOURNAL_NEWS_PROC,
+                            "params": {
+                                "MessageId": "journal-msg",
+                                "ReceivedAt": "2026-06-26T23:00:00+00:00",
+                                "JournalDate": "2026-06-26",
+                                "MatchesJson": json.dumps([{"AGAID": 12345, "Name": "News Player"}]),
+                                "ReviewMatchesJson": json.dumps([{"AGAID": 23456, "Name": "Review Player"}]),
+                                "Sender": "ClubExpress <notifications@example.test>",
+                                "Subject": "American Go E - Journal 6/26/2026",
+                                "BlobPath": prefix,
+                            },
+                        }
+                    ]
+                }
+            ),
+            "Status": "staged",
+            "Attempt_Count": 0,
+            "Last_Processed_At": None,
+            "Last_Error_Message": None,
+            "Created_At": datetime(2026, 6, 26, 23, 1, tzinfo=timezone.utc),
+            "Updated_At": datetime(2026, 6, 26, 23, 1, tzinfo=timezone.utc),
+        }
+        adapter = _FakeStagedAdapter([row])
+        original = mailapp._execute_stored_procedure
+        email_logs = []
+        try:
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_logs.append((proc_name, params))
+
+            result = mailapp._process_pending_journal_events(
+                "conn",
+                top=5,
+                execute=True,
+                confirm_replay=True,
+                processor_name="test_journal_processor",
+                adapter=adapter,
+            )
+        finally:
+            mailapp._execute_stored_procedure = original
+
+        self.assertTrue(result.executed)
+        self.assertEqual(result.selected_count, 1)
+        self.assertEqual(result.processed_count, 1)
+        self.assertEqual(result.error_count, 0)
+        self.assertEqual(adapter.executed[0][0][1][1], "processing")
+        self.assertIn("[membership].[sp_process_journal_news_email]", adapter.executed[1][0][0])
+        self.assertEqual(adapter.executed[2][0][1][1], "processed")
+        self.assertEqual(email_logs[0][0], "membership.sp_log_clubexpress_email")
+        self.assertEqual(email_logs[0][1]["MessageId"], "journal-msg")
         self.assertEqual(email_logs[0][1]["Status"], "processed")
         self.assertIsNone(email_logs[0][1]["ErrorMessage"])
         self.assertEqual(result.results[0]["status_after"], "processed")

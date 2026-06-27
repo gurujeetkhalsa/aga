@@ -52,11 +52,20 @@ from clubexpress_staging import (
     DownstreamProcedure,
     build_chapter_renewal_notice_parsed_event,
     build_csv_attachment_parsed_event,
+    build_journal_parsed_event,
     build_membership_parsed_event,
     result_payload_for_procedures,
     status_params as parsed_event_status_params,
 )
-from clubexpress_staged_processor import BatchProcessResult, json_safe_value, list_pending_events, mark_event_status, process_pending_events
+from clubexpress_staged_processor import (
+    BatchProcessResult,
+    json_safe_value,
+    list_pending_events,
+    mark_event_status,
+    process_pending_events,
+    process_staged_event,
+    replay_event,
+)
 
 try:
     import pyodbc
@@ -91,6 +100,7 @@ DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_R
 DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_CHAPTER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE", "0 */5 * * * *")
+DEFAULT_STAGED_JOURNAL_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_REWARDS_LEDGER_START_DATE = "2026-05-02"
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
@@ -115,6 +125,7 @@ REWARDS_RENEWAL_EVENT_TYPE = "renewal"
 MEMCHAP_IMPORT_ACTION = "membership.import_memchap_csv"
 CHAPTER_IMPORT_ACTION = "membership.import_chapter_csv"
 MEMBER_CATEGORIES_IMPORT_ACTION = "membership.import_member_categories_csv"
+JOURNAL_NEWS_PROC = "membership.sp_process_journal_news_email"
 CHAPTER_RENEWAL_NOTICE_SUBJECT = "Membership Renewal Emails"
 CHAPTER_RENEWAL_POINTS = 35000
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
@@ -610,6 +621,36 @@ def process_staged_member_category_events(timer: func.TimerRequest) -> None:
         )
     except Exception:
         logging.exception("ClubExpress staged member-category processing failed.")
+
+
+@app.timer_trigger(schedule=DEFAULT_STAGED_JOURNAL_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_staged_journal_events(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_ENABLED", "false")):
+        logging.info("ClubExpress staged E-Journal processor is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    batch_size = _env_positive_int("CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_BATCH_SIZE", 10)
+    try:
+        result = _process_pending_journal_events(
+            conn_str,
+            top=batch_size,
+            execute=True,
+            confirm_replay=True,
+            processor_name="staged_journal_processor",
+        )
+        logging.info(
+            "ClubExpress staged E-Journal processing complete. selected=%s processed=%s errors=%s",
+            result.selected_count,
+            result.processed_count,
+            result.error_count,
+        )
+    except Exception:
+        logging.exception("ClubExpress staged E-Journal processing failed.")
 
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
@@ -1298,29 +1339,119 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             archive_path,
         )
     elif message_type == JOURNAL_MESSAGE_TYPE:
-        parsed = _parse_journal_email(conn_str, message)
-        _execute_stored_procedure(
-            conn_str,
-            "membership.sp_process_journal_news_email",
-            {
-                "MessageId": _message_identifier(message),
-                "ReceivedAt": received_at,
-                "JournalDate": parsed["JournalDate"],
-                "MatchesJson": json.dumps(parsed["Matches"]),
-                "ReviewMatchesJson": json.dumps(parsed["ReviewMatches"]),
-                "Sender": sender or None,
-                "Subject": subject or None,
-                "BlobPath": archive_path,
-            },
-        )
-        logging.info(
-            "Journal email processed for %s with %s articles, %s news matches, and %s review matches archive_path=%s",
-            parsed["JournalDate"],
-            len(parsed["Articles"]),
-            len(parsed["Matches"]),
-            len(parsed["ReviewMatches"]),
-            archive_path,
-        )
+        message_id = _message_identifier(message)
+        try:
+            _execute_stored_procedure(
+                conn_str,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "received",
+                    "ErrorMessage": None,
+                },
+            )
+            parsed = _parse_journal_email(conn_str, message)
+            journal_params = _journal_news_email_params(
+                message,
+                received_at,
+                parsed,
+                sender=sender,
+                subject=subject,
+                blob_path=archive_path,
+            )
+            downstream_procedures = [
+                DownstreamProcedure(JOURNAL_NEWS_PROC, journal_params),
+            ]
+            parsed_event = build_journal_parsed_event(
+                message_id=message_id,
+                message_type=message_type,
+                event_type=JOURNAL_MESSAGE_TYPE,
+                received_at=received_at,
+                journal_date=parsed["JournalDate"],
+                parsed=parsed,
+                downstream_procedures=downstream_procedures,
+                sender=sender or None,
+                subject=subject or None,
+                blob_path=archive_path,
+            )
+            _record_clubexpress_parsed_event(conn_str, parsed_event)
+            if _clubexpress_staged_journal_consumption_enabled():
+                _execute_stored_procedure(
+                    conn_str,
+                    "membership.sp_log_clubexpress_email",
+                    {
+                        "MessageId": message_id,
+                        "MessageType": message_type,
+                        "ReceivedAt": received_at,
+                        "Sender": sender or None,
+                        "Subject": subject or None,
+                        "BlobPath": archive_path,
+                        "Status": "staged",
+                        "ErrorMessage": None,
+                    },
+                )
+                logging.info(
+                    "Journal email staged for async processing. event_key=%s articles=%s news_matches=%s review_matches=%s archive_path=%s",
+                    parsed_event.event_key,
+                    len(parsed["Articles"]),
+                    len(parsed["Matches"]),
+                    len(parsed["ReviewMatches"]),
+                    archive_path,
+                )
+            else:
+                try:
+                    _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures))
+                    _mark_clubexpress_parsed_event_processed(
+                        conn_str,
+                        parsed_event,
+                        result_payload_for_procedures(downstream_procedures),
+                    )
+                    _execute_stored_procedure(
+                        conn_str,
+                        "membership.sp_log_clubexpress_email",
+                        {
+                            "MessageId": message_id,
+                            "MessageType": message_type,
+                            "ReceivedAt": received_at,
+                            "Sender": sender or None,
+                            "Subject": subject or None,
+                            "BlobPath": archive_path,
+                            "Status": "processed",
+                            "ErrorMessage": None,
+                        },
+                    )
+                except Exception as exc:
+                    _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+                    raise
+                logging.info(
+                    "Journal email processed for %s with %s articles, %s news matches, and %s review matches archive_path=%s",
+                    parsed["JournalDate"],
+                    len(parsed["Articles"]),
+                    len(parsed["Matches"]),
+                    len(parsed["ReviewMatches"]),
+                    archive_path,
+                )
+        except Exception as exc:
+            _execute_stored_procedure(
+                conn_str,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "error",
+                    "ErrorMessage": str(exc),
+                },
+            )
+            raise
     else:
         raise RuntimeError(f"Unsupported mailbox message type: {message_type}")
 
@@ -1728,6 +1859,58 @@ def _process_pending_member_category_events(
         confirm_replay=confirm_replay,
         processor_name=processor_name,
         adapter=adapter,
+    )
+
+
+def _process_pending_journal_events(
+    conn_str: str,
+    *,
+    top: int = 10,
+    execute: bool = False,
+    confirm_replay: bool = False,
+    processor_name: str = "staged_journal_processor",
+    adapter: Optional[object] = None,
+) -> BatchProcessResult:
+    if execute and not confirm_replay:
+        raise ValueError("Executing staged E-Journal processing requires confirm_replay=True.")
+
+    staged_adapter = adapter or _ClubExpressStagedEventSqlAdapter(conn_str)
+    events = list_pending_events(staged_adapter, event_type=JOURNAL_MESSAGE_TYPE, top=top)
+    results = []
+    processed_count = 0
+    error_count = 0
+
+    for event in events:
+        if not execute:
+            preview = replay_event(staged_adapter, event)
+            results.append(preview.as_dict())
+            continue
+
+        try:
+            result = process_staged_event(staged_adapter, event, processor_name=processor_name)
+            _update_clubexpress_email_log_for_staged_event(conn_str, event, "processed")
+            processed_count += 1
+            results.append(result.as_dict())
+        except Exception as exc:
+            error_count += 1
+            _update_clubexpress_email_log_for_staged_event(conn_str, event, "error", error_message=str(exc))
+            results.append(
+                {
+                    "event_key": event.event_key,
+                    "executed": True,
+                    "status_before": event.status,
+                    "status_after": "error",
+                    "error": str(exc),
+                }
+            )
+
+    return BatchProcessResult(
+        event_type=JOURNAL_MESSAGE_TYPE,
+        executed=execute,
+        selected_count=len(events),
+        processed_count=processed_count,
+        error_count=error_count,
+        results=results,
     )
 
 
@@ -2993,6 +3176,27 @@ def _membership_reward_event_params(
     }
 
 
+def _journal_news_email_params(
+    message: dict,
+    received_at: datetime,
+    parsed: dict,
+    *,
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> dict:
+    return {
+        "MessageId": _message_identifier(message),
+        "ReceivedAt": received_at,
+        "JournalDate": parsed["JournalDate"],
+        "MatchesJson": json.dumps(parsed["Matches"]),
+        "ReviewMatchesJson": json.dumps(parsed["ReviewMatches"]),
+        "Sender": sender or None,
+        "Subject": subject or None,
+        "BlobPath": blob_path,
+    }
+
+
 def _chapter_renewal_confirmation_params(
     message: dict,
     received_at: datetime,
@@ -3326,6 +3530,13 @@ def _clubexpress_staged_member_categories_consumption_enabled() -> bool:
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_CONSUMPTION_ENABLED", "false"))
+    )
+
+
+def _clubexpress_staged_journal_consumption_enabled() -> bool:
+    return (
+        _clubexpress_parsed_event_staging_enabled()
+        and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED", "false"))
     )
 
 

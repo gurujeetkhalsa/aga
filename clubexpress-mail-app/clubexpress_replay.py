@@ -209,6 +209,22 @@ def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
                 print_batch_result(result, output)
             return 0
 
+        if args.command == "process-ejournals":
+            from function_app import _process_pending_journal_events
+
+            result = _process_pending_journal_events(
+                conn_str,
+                top=args.top,
+                execute=args.execute,
+                confirm_replay=args.confirm_replay,
+                processor_name="manual_journal_processor",
+            )
+            if args.json:
+                print(json.dumps(result.as_dict(), indent=2, sort_keys=True), file=output)
+            else:
+                print_batch_result(result, output)
+            return 0
+
         event = load_event(adapter, event_key=args.event_key, parsed_event_id=args.id)
         if args.command == "preview":
             attempts = load_recent_attempts(adapter, event.event_key, top=args.attempts)
@@ -294,6 +310,12 @@ def build_parser() -> argparse.ArgumentParser:
     category_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
     category_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
     category_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+
+    journal_process_parser = subparsers.add_parser("process-ejournals", help="Process pending staged E-Journal events.")
+    journal_process_parser.add_argument("--top", type=_positive_int, default=10, help="Maximum staged events to process.")
+    journal_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
+    journal_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
+    journal_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     return parser
 
 

@@ -186,6 +186,53 @@ def build_csv_attachment_parsed_event(
     )
 
 
+def build_journal_parsed_event(
+    *,
+    message_id: str,
+    message_type: str,
+    event_type: str,
+    received_at: datetime,
+    journal_date: date,
+    parsed: dict,
+    downstream_procedures: list[DownstreamProcedure],
+    sender: Optional[str] = None,
+    subject: Optional[str] = None,
+    blob_path: Optional[str] = None,
+) -> ClubExpressParsedEvent:
+    articles = parsed.get("Articles") or []
+    matches = parsed.get("Matches") or []
+    review_matches = parsed.get("ReviewMatches") or []
+    parsed_payload = _source_payload(
+        message_id=message_id,
+        sender=sender,
+        subject=subject,
+        blob_path=blob_path,
+        parsed={
+            "JournalDate": journal_date,
+            "article_count": len(articles),
+            "match_count": len(matches),
+            "review_match_count": len(review_matches),
+            "articles": articles,
+        },
+    )
+    return ClubExpressParsedEvent(
+        message_id=message_id,
+        event_key=parsed_event_key(message_id, event_type),
+        message_type=message_type,
+        event_type=event_type,
+        received_at=received_at,
+        event_date=journal_date,
+        agaid=None,
+        chapter_id=None,
+        parsed_item_count=len(articles) + len(matches) + len(review_matches),
+        sender=sender,
+        subject=subject,
+        blob_path=blob_path,
+        parsed_payload_json=_json_dumps(parsed_payload),
+        downstream_payload_json=_downstream_payload_json(downstream_procedures),
+    )
+
+
 def status_params(
     event_key: str,
     status: str,
