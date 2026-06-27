@@ -90,6 +90,7 @@ DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGE
 DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_CHAPTER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
+DEFAULT_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_REWARDS_LEDGER_START_DATE = "2026-05-02"
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
@@ -113,6 +114,7 @@ REWARDS_NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
 REWARDS_RENEWAL_EVENT_TYPE = "renewal"
 MEMCHAP_IMPORT_ACTION = "membership.import_memchap_csv"
 CHAPTER_IMPORT_ACTION = "membership.import_chapter_csv"
+MEMBER_CATEGORIES_IMPORT_ACTION = "membership.import_member_categories_csv"
 CHAPTER_RENEWAL_NOTICE_SUBJECT = "Membership Renewal Emails"
 CHAPTER_RENEWAL_POINTS = 35000
 JOURNAL_SUBJECT_PREFIX = "American Go E - Journal"
@@ -580,6 +582,36 @@ def process_staged_chapter_events(timer: func.TimerRequest) -> None:
         logging.exception("ClubExpress staged ChapterX processing failed.")
 
 
+@app.timer_trigger(schedule=DEFAULT_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_staged_member_category_events(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_ENABLED", "false")):
+        logging.info("ClubExpress staged member-category processor is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    batch_size = _env_positive_int("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_BATCH_SIZE", 5)
+    try:
+        result = _process_pending_member_category_events(
+            conn_str,
+            top=batch_size,
+            execute=True,
+            confirm_replay=True,
+            processor_name="staged_member_category_processor",
+        )
+        logging.info(
+            "ClubExpress staged member-category processing complete. selected=%s processed=%s errors=%s",
+            result.selected_count,
+            result.processed_count,
+            result.error_count,
+        )
+    except Exception:
+        logging.exception("ClubExpress staged member-category processing failed.")
+
+
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
     if not _is_truthy(os.environ.get("REWARDS_SNAPSHOT_ENABLED", "true")):
@@ -992,21 +1024,49 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
                     "ErrorMessage": None,
                 },
             )
-            rows_staged = _handle_member_categories_email(conn_str, attachments)
-            _execute_stored_procedure(
-                conn_str,
-                "membership.sp_log_clubexpress_email",
-                {
-                    "MessageId": message_id,
-                    "MessageType": message_type,
-                    "ReceivedAt": received_at,
-                    "Sender": sender or None,
-                    "Subject": subject or None,
-                    "BlobPath": archive_path,
-                    "Status": "processed",
-                    "ErrorMessage": None,
-                },
-            )
+            if _clubexpress_staged_member_categories_consumption_enabled():
+                parsed_event = _build_member_categories_parsed_event(
+                    message_id=message_id,
+                    message_type=message_type,
+                    received_at=received_at,
+                    event_date=received_date,
+                    attachments=attachments,
+                    sender=sender,
+                    subject=subject,
+                    blob_path=archive_path,
+                )
+                rows_staged = parsed_event.parsed_item_count
+                _record_clubexpress_parsed_event(conn_str, parsed_event)
+                _execute_stored_procedure(
+                    conn_str,
+                    "membership.sp_log_clubexpress_email",
+                    {
+                        "MessageId": message_id,
+                        "MessageType": message_type,
+                        "ReceivedAt": received_at,
+                        "Sender": sender or None,
+                        "Subject": subject or None,
+                        "BlobPath": archive_path,
+                        "Status": "staged",
+                        "ErrorMessage": None,
+                    },
+                )
+            else:
+                rows_staged = _handle_member_categories_email(conn_str, attachments)
+                _execute_stored_procedure(
+                    conn_str,
+                    "membership.sp_log_clubexpress_email",
+                    {
+                        "MessageId": message_id,
+                        "MessageType": message_type,
+                        "ReceivedAt": received_at,
+                        "Sender": sender or None,
+                        "Subject": subject or None,
+                        "BlobPath": archive_path,
+                        "Status": "processed",
+                        "ErrorMessage": None,
+                    },
+                )
         except Exception as exc:
             _execute_stored_procedure(
                 conn_str,
@@ -1023,7 +1083,10 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
                 },
             )
             raise
-        logging.info("Nightly category message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
+        if _clubexpress_staged_member_categories_consumption_enabled():
+            logging.info("Nightly category message staged. rows=%s archive_path=%s", rows_staged, archive_path)
+        else:
+            logging.info("Nightly category message processed. rows_staged=%s archive_path=%s", rows_staged, archive_path)
     elif message_type == NEW_MEMBER_MESSAGE_TYPE:
         message_id = _message_identifier(message)
         parsed = _parse_new_member_email(_message_body_to_text(message))
@@ -1512,6 +1575,43 @@ def _build_chapter_parsed_event(
     )
 
 
+def _build_member_categories_parsed_event(
+    *,
+    message_id: str,
+    message_type: str,
+    received_at: datetime,
+    event_date: date,
+    attachments: list[dict],
+    sender: Optional[str],
+    subject: Optional[str],
+    blob_path: Optional[str],
+) -> ClubExpressParsedEvent:
+    if not blob_path:
+        raise RuntimeError("Staged member-category processing requires CLUBEXPRESS_ARCHIVE_CONTAINER and Blob storage configuration.")
+
+    attachment = _find_report_attachment(attachments, NIGHTLY_CATEGORY_MESSAGE_TYPE, "member category")
+    content_bytes = attachment.get("contentBytes")
+    if content_bytes is None:
+        raise EmailProcessingError("Member-category attachment did not include content bytes.")
+
+    rows = _parse_member_category_rows(content_bytes)
+    attachment_name = attachment.get("name") or "attachment.csv"
+    return build_csv_attachment_parsed_event(
+        message_id=message_id,
+        message_type=message_type,
+        event_type=NIGHTLY_CATEGORY_MESSAGE_TYPE,
+        received_at=received_at,
+        event_date=event_date,
+        attachment_name=attachment_name,
+        attachment_blob_name=_safe_blob_name(attachment_name),
+        row_count=len(rows),
+        action_name=MEMBER_CATEGORIES_IMPORT_ACTION,
+        sender=sender or None,
+        subject=subject or None,
+        blob_path=blob_path,
+    )
+
+
 def _find_report_attachment(attachments: list[dict], report_type: str, label: str) -> dict:
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
@@ -1601,6 +1701,28 @@ def _process_pending_chapter_events(
         event_type=CHAPTER_MESSAGE_TYPE,
         action_name=CHAPTER_IMPORT_ACTION,
         import_bytes=_import_chapter_bytes,
+        top=top,
+        execute=execute,
+        confirm_replay=confirm_replay,
+        processor_name=processor_name,
+        adapter=adapter,
+    )
+
+
+def _process_pending_member_category_events(
+    conn_str: str,
+    *,
+    top: int = 5,
+    execute: bool = False,
+    confirm_replay: bool = False,
+    processor_name: str = "staged_member_category_processor",
+    adapter: Optional[object] = None,
+) -> BatchProcessResult:
+    return _process_pending_csv_attachment_events(
+        conn_str,
+        event_type=NIGHTLY_CATEGORY_MESSAGE_TYPE,
+        action_name=MEMBER_CATEGORIES_IMPORT_ACTION,
+        import_bytes=_import_member_categories_bytes,
         top=top,
         execute=execute,
         confirm_replay=confirm_replay,
@@ -3197,6 +3319,13 @@ def _clubexpress_staged_chapter_consumption_enabled() -> bool:
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_CONSUMPTION_ENABLED", "false"))
+    )
+
+
+def _clubexpress_staged_member_categories_consumption_enabled() -> bool:
+    return (
+        _clubexpress_parsed_event_staging_enabled()
+        and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_CONSUMPTION_ENABLED", "false"))
     )
 
 

@@ -193,6 +193,22 @@ def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
                 print_batch_result(result, output)
             return 0
 
+        if args.command == "process-member-categories":
+            from function_app import _process_pending_member_category_events
+
+            result = _process_pending_member_category_events(
+                conn_str,
+                top=args.top,
+                execute=args.execute,
+                confirm_replay=args.confirm_replay,
+                processor_name="manual_member_category_processor",
+            )
+            if args.json:
+                print(json.dumps(result.as_dict(), indent=2, sort_keys=True), file=output)
+            else:
+                print_batch_result(result, output)
+            return 0
+
         event = load_event(adapter, event_key=args.event_key, parsed_event_id=args.id)
         if args.command == "preview":
             attempts = load_recent_attempts(adapter, event.event_key, top=args.attempts)
@@ -272,6 +288,12 @@ def build_parser() -> argparse.ArgumentParser:
     chapter_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
     chapter_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
     chapter_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+
+    category_process_parser = subparsers.add_parser("process-member-categories", help="Process pending staged member-category CSV events.")
+    category_process_parser.add_argument("--top", type=_positive_int, default=5, help="Maximum staged events to process.")
+    category_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
+    category_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
+    category_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     return parser
 
 
