@@ -161,6 +161,22 @@ def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
                 print_batch_result(result, output)
             return 0
 
+        if args.command == "process-chapter-renewal-notices":
+            from function_app import _process_pending_chapter_renewal_notice_events
+
+            result = _process_pending_chapter_renewal_notice_events(
+                conn_str,
+                top=args.top,
+                execute=args.execute,
+                confirm_replay=args.confirm_replay,
+                processor_name="manual_chapter_renewal_notice_processor",
+            )
+            if args.json:
+                print(json.dumps(result.as_dict(), indent=2, sort_keys=True), file=output)
+            else:
+                print_batch_result(result, output)
+            return 0
+
         if args.command == "process-nightly-memchap":
             from function_app import _process_pending_memchap_events
 
@@ -292,6 +308,12 @@ def build_parser() -> argparse.ArgumentParser:
     renewal_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
     renewal_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
     renewal_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+
+    notice_process_parser = subparsers.add_parser("process-chapter-renewal-notices", help="Process pending staged chapter-renewal notice events.")
+    notice_process_parser.add_argument("--top", type=_positive_int, default=10, help="Maximum staged events to process.")
+    notice_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
+    notice_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
+    notice_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
 
     memchap_process_parser = subparsers.add_parser("process-nightly-memchap", help="Process pending staged nightly MemChap CSV events.")
     memchap_process_parser.add_argument("--top", type=_positive_int, default=5, help="Maximum staged events to process.")

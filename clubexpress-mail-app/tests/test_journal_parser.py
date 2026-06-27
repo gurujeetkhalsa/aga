@@ -366,6 +366,82 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(processed_marks, [])
         self.assertEqual(gmail_marks, ["renewal-msg"])
 
+    def test_chapter_renewal_notice_staged_consumption_skips_direct_processing(self):
+        message = {
+            "id": "notice-msg",
+            "internalDate": "1777942800000",
+            "payload": {
+                "headers": [
+                    {"name": "From", "value": "ClubExpress <scheduler@example.test>"},
+                    {"name": "Subject", "value": "Membership Renewal Emails"},
+                ],
+            },
+        }
+        parsed_rows = [
+            {
+                "source_row_number": 2,
+                "chapter_id": 13529,
+                "member_raw": "13529",
+                "member_type": "Chapter",
+                "row_payload": {"member": "13529", "type": "Chapter"},
+            }
+        ]
+
+        original_env = {
+            "CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED": os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"),
+            "CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_CONSUMPTION_ENABLED": os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_CONSUMPTION_ENABLED"),
+        }
+        originals = {
+            "_get_sql_connection_string": mailapp._get_sql_connection_string,
+            "_archive_message_artifacts": mailapp._archive_message_artifacts,
+            "_parse_chapter_renewal_notice_email": mailapp._parse_chapter_renewal_notice_email,
+            "_record_clubexpress_parsed_event": mailapp._record_clubexpress_parsed_event,
+            "_execute_stored_procedure": mailapp._execute_stored_procedure,
+            "_execute_stored_procedure_rows": mailapp._execute_stored_procedure_rows,
+            "_send_chapter_renewal_notice_summary_if_configured": mailapp._send_chapter_renewal_notice_summary_if_configured,
+            "_mark_clubexpress_parsed_event_processed": mailapp._mark_clubexpress_parsed_event_processed,
+            "_mark_gmail_message_processed": mailapp._mark_gmail_message_processed,
+        }
+        staged_events = []
+        email_log_statuses = []
+        row_calls = []
+        summaries = []
+        processed_marks = []
+        gmail_marks = []
+        try:
+            os.environ["CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"] = "true"
+            os.environ["CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_CONSUMPTION_ENABLED"] = "true"
+            mailapp._get_sql_connection_string = lambda: "conn"
+            mailapp._archive_message_artifacts = lambda message_type, msg, attachments: "chapter_renewal_notice/2026/05/04/notice-msg"
+            mailapp._parse_chapter_renewal_notice_email = lambda msg: parsed_rows
+            mailapp._record_clubexpress_parsed_event = lambda conn_str, parsed_event: staged_events.append(parsed_event)
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_log_statuses.append(params.get("Status"))
+            mailapp._execute_stored_procedure_rows = lambda conn_str, proc_name, params: row_calls.append((proc_name, params)) or []
+            mailapp._send_chapter_renewal_notice_summary_if_configured = lambda token, rows, subject, received_at: summaries.append((rows, subject)) or True
+            mailapp._mark_clubexpress_parsed_event_processed = lambda conn_str, parsed_event, payload: processed_marks.append((parsed_event, payload))
+            mailapp._mark_gmail_message_processed = lambda access_token, msg: gmail_marks.append(msg["id"])
+
+            mailapp._process_mailbox_message("token", message)
+        finally:
+            for name, value in original_env.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertEqual(email_log_statuses, ["received", "staged"])
+        self.assertEqual(len(staged_events), 1)
+        self.assertEqual(staged_events[0].event_type, mailapp.CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE)
+        self.assertEqual(staged_events[0].parsed_item_count, 1)
+        downstream_payload = json.loads(staged_events[0].downstream_payload_json)
+        self.assertEqual(downstream_payload["procedures"][0]["name"], mailapp.REWARDS_CHAPTER_RENEWAL_NOTICES_PROC)
+        self.assertEqual(row_calls, [])
+        self.assertEqual(summaries, [])
+        self.assertEqual(processed_marks, [])
+        self.assertEqual(gmail_marks, ["notice-msg"])
+
     def test_journal_staged_consumption_skips_direct_downstream_writes(self):
         text = """
         News
@@ -1192,6 +1268,131 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertIsNone(email_logs[0][1]["ErrorMessage"])
         self.assertEqual(result.results[0]["status_after"], "processed")
 
+    def test_process_pending_chapter_renewal_notice_events_runs_proc_and_sends_summary(self):
+        prefix = "chapter_renewal_notice/2026/05/04/notice-msg"
+        result_rows = [
+            {
+                "Decision": "posted",
+                "ChapterID": 13529,
+                "Chapter_Code": "PVD",
+                "Chapter_Name": "Providence Go Club",
+                "Available_Points": 52000,
+                "Points_Required": 35000,
+                "TransactionID": 1122,
+            }
+        ]
+        row = {
+            "Parsed_Event_ID": 24,
+            "Message_ID": "notice-msg",
+            "Event_Key": "notice-msg:chapter_renewal_notice",
+            "Message_Type": mailapp.CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
+            "Event_Type": mailapp.CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
+            "Received_At": datetime(2026, 5, 4, 23, 0, tzinfo=timezone.utc),
+            "Event_Date": date(2026, 5, 4),
+            "AGAID": None,
+            "ChapterID": None,
+            "Parsed_Item_Count": 1,
+            "Sender": "ClubExpress <scheduler@example.test>",
+            "Subject": "Membership Renewal Emails",
+            "Blob_Path": prefix,
+            "Parsed_Payload_Json": json.dumps(
+                {
+                    "message_id": "notice-msg",
+                    "blob_path": prefix,
+                    "parsed": {
+                        "row_count": 1,
+                        "rows": [{"source_row_number": 2, "chapter_id": 13529}],
+                    },
+                }
+            ),
+            "Downstream_Payload_Json": json.dumps(
+                {
+                    "procedures": [
+                        {
+                            "name": mailapp.REWARDS_CHAPTER_RENEWAL_NOTICES_PROC,
+                            "params": {
+                                "MessageId": "notice-msg",
+                                "ReceivedAt": "2026-05-04T23:00:00+00:00",
+                                "NoticeDate": "2026-05-04",
+                                "NoticesJson": json.dumps(
+                                    [
+                                        {
+                                            "source_row_number": 2,
+                                            "chapter_id": 13529,
+                                            "member_raw": "13529",
+                                            "member_type": "Chapter",
+                                            "row_payload": {"member": "13529", "type": "Chapter"},
+                                        }
+                                    ]
+                                ),
+                                "PointsPerRenewal": 35000,
+                                "DryRun": 0,
+                                "RunType": "daily",
+                            },
+                        }
+                    ]
+                }
+            ),
+            "Status": "staged",
+            "Attempt_Count": 0,
+            "Last_Processed_At": None,
+            "Last_Error_Message": None,
+            "Created_At": datetime(2026, 5, 4, 23, 1, tzinfo=timezone.utc),
+            "Updated_At": datetime(2026, 5, 4, 23, 1, tzinfo=timezone.utc),
+        }
+        adapter = _FakeStagedAdapter(
+            [row],
+            query_rows_by_marker={"[rewards].[sp_process_chapter_renewal_notices]": result_rows},
+        )
+        original_env = {"CHAPTER_RENEWAL_NOTICE_EMAIL_TO": os.environ.get("CHAPTER_RENEWAL_NOTICE_EMAIL_TO")}
+        originals = {
+            "_send_chapter_renewal_notice_summary_if_configured": mailapp._send_chapter_renewal_notice_summary_if_configured,
+            "_execute_stored_procedure": mailapp._execute_stored_procedure,
+        }
+        summaries = []
+        email_logs = []
+        try:
+            os.environ["CHAPTER_RENEWAL_NOTICE_EMAIL_TO"] = "ops@example.test"
+            mailapp._send_chapter_renewal_notice_summary_if_configured = (
+                lambda token, rows, subject, received_at: summaries.append((token, rows, subject, received_at)) or True
+            )
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_logs.append((proc_name, params))
+
+            result = mailapp._process_pending_chapter_renewal_notice_events(
+                "conn",
+                top=5,
+                execute=True,
+                confirm_replay=True,
+                processor_name="test_notice_processor",
+                adapter=adapter,
+                access_token="token",
+            )
+        finally:
+            for name, value in original_env.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertTrue(result.executed)
+        self.assertEqual(result.selected_count, 1)
+        self.assertEqual(result.processed_count, 1)
+        self.assertEqual(result.error_count, 0)
+        self.assertEqual(adapter.executed[0][0][1][1], "processing")
+        self.assertIn("[rewards].[sp_process_chapter_renewal_notices]", adapter.queries[1][0])
+        self.assertEqual(adapter.executed[1][0][1][1], "processed")
+        self.assertEqual(summaries[0][0], "token")
+        self.assertEqual(summaries[0][1], result_rows)
+        self.assertEqual(summaries[0][2], "Membership Renewal Emails")
+        self.assertEqual(result.results[0]["decision_counts"], {"posted": 1})
+        self.assertTrue(result.results[0]["summary_email_sent"])
+        self.assertEqual(email_logs[0][0], "membership.sp_log_clubexpress_email")
+        self.assertEqual(email_logs[0][1]["MessageId"], "notice-msg")
+        self.assertEqual(email_logs[0][1]["Status"], "processed")
+        self.assertIsNone(email_logs[0][1]["ErrorMessage"])
+
     def test_process_pending_journal_events_replays_downstream_procedure(self):
         prefix = "american_go_e_journal/2026/06/26/journal-msg"
         row = {
@@ -1278,13 +1479,17 @@ class MemChapCsvImportTest(unittest.TestCase):
 
 
 class _FakeStagedAdapter:
-    def __init__(self, rows):
+    def __init__(self, rows, query_rows_by_marker=None):
         self.rows = rows
+        self.query_rows_by_marker = query_rows_by_marker or {}
         self.queries = []
         self.executed = []
 
     def query_rows(self, query, params=()):
         self.queries.append((query, tuple(params)))
+        for marker, rows in self.query_rows_by_marker.items():
+            if marker in query:
+                return rows
         return self.rows
 
     def execute_statements(self, statements):

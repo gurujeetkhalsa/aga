@@ -59,6 +59,7 @@ from clubexpress_staging import (
 )
 from clubexpress_staged_processor import (
     BatchProcessResult,
+    execute_downstream_calls,
     json_safe_value,
     list_pending_events,
     mark_event_status,
@@ -97,6 +98,7 @@ DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHED
 DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE = os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE", "0 50 5 * * *")
 DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_SCHEDULE", "0 */5 * * * *")
+DEFAULT_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_CHAPTER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE", "0 */5 * * * *")
@@ -531,6 +533,36 @@ def process_staged_renewal_events(timer: func.TimerRequest) -> None:
         )
     except Exception:
         logging.exception("ClubExpress staged renewal processing failed.")
+
+
+@app.timer_trigger(schedule=DEFAULT_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_staged_chapter_renewal_notice_events(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_ENABLED", "false")):
+        logging.info("ClubExpress staged chapter-renewal notice processor is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    batch_size = _env_positive_int("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_BATCH_SIZE", 10)
+    try:
+        result = _process_pending_chapter_renewal_notice_events(
+            conn_str,
+            top=batch_size,
+            execute=True,
+            confirm_replay=True,
+            processor_name="staged_chapter_renewal_notice_processor",
+        )
+        logging.info(
+            "ClubExpress staged chapter-renewal notice processing complete. selected=%s processed=%s errors=%s",
+            result.selected_count,
+            result.processed_count,
+            result.error_count,
+        )
+    except Exception:
+        logging.exception("ClubExpress staged chapter-renewal notice processing failed.")
 
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
@@ -1283,61 +1315,128 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE:
         message_id = _message_identifier(message)
-        parsed_rows = _parse_chapter_renewal_notice_email(message)
-        notice_params = _chapter_renewal_notice_params(
-            message,
-            received_at,
-            received_date,
-            parsed_rows,
-            sender=sender,
-            subject=subject,
-            blob_path=archive_path,
-        )
-        downstream_procedures = [
-            DownstreamProcedure(REWARDS_CHAPTER_RENEWAL_NOTICES_PROC, notice_params),
-        ]
-        parsed_event = build_chapter_renewal_notice_parsed_event(
-            message_id=message_id,
-            message_type=message_type,
-            event_type=CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
-            received_at=received_at,
-            notice_date=received_date,
-            parsed_rows=parsed_rows,
-            downstream_procedures=downstream_procedures,
-            sender=sender or None,
-            subject=subject or None,
-            blob_path=archive_path,
-        )
-        _record_clubexpress_parsed_event(conn_str, parsed_event)
         try:
-            result_rows = _execute_stored_procedure_rows(
+            _execute_stored_procedure(
                 conn_str,
-                REWARDS_CHAPTER_RENEWAL_NOTICES_PROC,
-                notice_params,
-            )
-            summary_email_sent = _send_chapter_renewal_notice_summary_if_configured(access_token, result_rows, subject, received_at)
-            decision_counts = _chapter_renewal_notice_decision_counts(result_rows)
-            result_payload = result_payload_for_procedures(
-                downstream_procedures,
-                extra={
-                    "decision_counts": decision_counts,
-                    "result_count": len(result_rows),
-                    "summary_email_sent": summary_email_sent,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "received",
+                    "ErrorMessage": None,
                 },
             )
-            _mark_clubexpress_parsed_event_processed(conn_str, parsed_event, result_payload)
+            parsed_rows = _parse_chapter_renewal_notice_email(message)
+            notice_params = _chapter_renewal_notice_params(
+                message,
+                received_at,
+                received_date,
+                parsed_rows,
+                sender=sender,
+                subject=subject,
+                blob_path=archive_path,
+            )
+            downstream_procedures = [
+                DownstreamProcedure(REWARDS_CHAPTER_RENEWAL_NOTICES_PROC, notice_params),
+            ]
+            parsed_event = build_chapter_renewal_notice_parsed_event(
+                message_id=message_id,
+                message_type=message_type,
+                event_type=CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
+                received_at=received_at,
+                notice_date=received_date,
+                parsed_rows=parsed_rows,
+                downstream_procedures=downstream_procedures,
+                sender=sender or None,
+                subject=subject or None,
+                blob_path=archive_path,
+            )
+            _record_clubexpress_parsed_event(conn_str, parsed_event)
+            if _clubexpress_staged_chapter_renewal_notice_consumption_enabled():
+                _execute_stored_procedure(
+                    conn_str,
+                    "membership.sp_log_clubexpress_email",
+                    {
+                        "MessageId": message_id,
+                        "MessageType": message_type,
+                        "ReceivedAt": received_at,
+                        "Sender": sender or None,
+                        "Subject": subject or None,
+                        "BlobPath": archive_path,
+                        "Status": "staged",
+                        "ErrorMessage": None,
+                    },
+                )
+                logging.info(
+                    "Chapter renewal notice staged for async processing. event_key=%s chapter_rows=%s archive_path=%s",
+                    parsed_event.event_key,
+                    len(parsed_rows),
+                    archive_path,
+                )
+            else:
+                try:
+                    result_rows = _execute_stored_procedure_rows(
+                        conn_str,
+                        REWARDS_CHAPTER_RENEWAL_NOTICES_PROC,
+                        notice_params,
+                    )
+                    summary_email_sent = _send_chapter_renewal_notice_summary_if_configured(access_token, result_rows, subject, received_at)
+                    decision_counts = _chapter_renewal_notice_decision_counts(result_rows)
+                    result_payload = result_payload_for_procedures(
+                        downstream_procedures,
+                        extra={
+                            "decision_counts": decision_counts,
+                            "result_count": len(result_rows),
+                            "summary_email_sent": summary_email_sent,
+                        },
+                    )
+                    _mark_clubexpress_parsed_event_processed(conn_str, parsed_event, result_payload)
+                    _execute_stored_procedure(
+                        conn_str,
+                        "membership.sp_log_clubexpress_email",
+                        {
+                            "MessageId": message_id,
+                            "MessageType": message_type,
+                            "ReceivedAt": received_at,
+                            "Sender": sender or None,
+                            "Subject": subject or None,
+                            "BlobPath": archive_path,
+                            "Status": "processed",
+                            "ErrorMessage": None,
+                        },
+                    )
+                except Exception as exc:
+                    _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+                    raise
+                posted_count = decision_counts.get("posted", 0) + decision_counts.get("already_posted", 0)
+                insufficient_count = decision_counts.get("insufficient_points", 0)
+                logging.info(
+                    "Chapter renewal notice processed. chapter_rows=%s posted_or_existing=%s insufficient=%s archive_path=%s",
+                    len(parsed_rows),
+                    posted_count,
+                    insufficient_count,
+                    archive_path,
+                )
         except Exception as exc:
-            _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+            _execute_stored_procedure(
+                conn_str,
+                "membership.sp_log_clubexpress_email",
+                {
+                    "MessageId": message_id,
+                    "MessageType": message_type,
+                    "ReceivedAt": received_at,
+                    "Sender": sender or None,
+                    "Subject": subject or None,
+                    "BlobPath": archive_path,
+                    "Status": "error",
+                    "ErrorMessage": str(exc),
+                },
+            )
             raise
-        posted_count = decision_counts.get("posted", 0) + decision_counts.get("already_posted", 0)
-        insufficient_count = decision_counts.get("insufficient_points", 0)
-        logging.info(
-            "Chapter renewal notice processed. chapter_rows=%s posted_or_existing=%s insufficient=%s archive_path=%s",
-            len(parsed_rows),
-            posted_count,
-            insufficient_count,
-            archive_path,
-        )
     elif message_type == JOURNAL_MESSAGE_TYPE:
         message_id = _message_identifier(message)
         try:
@@ -1860,6 +1959,111 @@ def _process_pending_member_category_events(
         processor_name=processor_name,
         adapter=adapter,
     )
+
+
+def _process_pending_chapter_renewal_notice_events(
+    conn_str: str,
+    *,
+    top: int = 10,
+    execute: bool = False,
+    confirm_replay: bool = False,
+    processor_name: str = "staged_chapter_renewal_notice_processor",
+    adapter: Optional[object] = None,
+    access_token: Optional[str] = None,
+) -> BatchProcessResult:
+    if execute and not confirm_replay:
+        raise ValueError("Executing staged chapter-renewal notice processing requires confirm_replay=True.")
+
+    staged_adapter = adapter or _ClubExpressStagedEventSqlAdapter(conn_str)
+    events = list_pending_events(staged_adapter, event_type=CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE, top=top)
+    results = []
+    processed_count = 0
+    error_count = 0
+    gmail_access_token = access_token
+
+    for event in events:
+        if not execute:
+            preview = replay_event(staged_adapter, event)
+            results.append(preview.as_dict())
+            continue
+
+        try:
+            mark_event_status(staged_adapter, event.event_key, "processing")
+            procedure_results = execute_downstream_calls(staged_adapter, event.downstream_calls)
+            result_rows = _chapter_renewal_notice_result_rows(procedure_results)
+            summary_email_sent = False
+            if _configured_email_recipients("CHAPTER_RENEWAL_NOTICE_EMAIL_TO"):
+                try:
+                    if not gmail_access_token:
+                        gmail_access_token = _get_gmail_access_token()
+                    summary_email_sent = _send_chapter_renewal_notice_summary_if_configured(
+                        gmail_access_token,
+                        result_rows,
+                        event.subject or CHAPTER_RENEWAL_NOTICE_SUBJECT,
+                        _coerce_summary_received_at(event.received_at),
+                    )
+                except Exception:
+                    logging.exception("Failed preparing Chapter Rewards renewal notice summary email.")
+                    summary_email_sent = False
+
+            decision_counts = _chapter_renewal_notice_decision_counts(result_rows)
+            result_payload = {
+                "processor": processor_name,
+                "replay": False,
+                "procedure_results": procedure_results,
+                "decision_counts": decision_counts,
+                "result_count": len(result_rows),
+                "summary_email_sent": summary_email_sent,
+            }
+            mark_event_status(staged_adapter, event.event_key, "processed", result_payload=json_safe_value(result_payload))
+            _update_clubexpress_email_log_for_staged_event(conn_str, event, "processed")
+            processed_count += 1
+            results.append(
+                {
+                    "event_key": event.event_key,
+                    "executed": True,
+                    "status_before": event.status,
+                    "status_after": "processed",
+                    "procedure_results": procedure_results,
+                    "decision_counts": decision_counts,
+                    "result_count": len(result_rows),
+                    "summary_email_sent": summary_email_sent,
+                }
+            )
+        except Exception as exc:
+            error_count += 1
+            try:
+                mark_event_status(staged_adapter, event.event_key, "error", error_message=str(exc))
+            except Exception:
+                logging.exception("Failed marking staged chapter-renewal notice event %s as error.", event.event_key)
+            _update_clubexpress_email_log_for_staged_event(conn_str, event, "error", error_message=str(exc))
+            results.append(
+                {
+                    "event_key": event.event_key,
+                    "executed": True,
+                    "status_before": event.status,
+                    "status_after": "error",
+                    "error": str(exc),
+                }
+            )
+
+    return BatchProcessResult(
+        event_type=CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
+        executed=execute,
+        selected_count=len(events),
+        processed_count=processed_count,
+        error_count=error_count,
+        results=results,
+    )
+
+
+def _chapter_renewal_notice_result_rows(procedure_results: list[dict]) -> list[dict]:
+    for result in procedure_results:
+        if result.get("name") != REWARDS_CHAPTER_RENEWAL_NOTICES_PROC:
+            continue
+        rows = result.get("rows")
+        return rows if isinstance(rows, list) else []
+    return []
 
 
 def _process_pending_journal_events(
@@ -3347,6 +3551,19 @@ def _send_chapter_renewal_notice_summary_if_configured(
         return False
 
 
+def _coerce_summary_received_at(value: object) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+    try:
+        text = str(value).replace("Z", "+00:00")
+        return datetime.fromisoformat(text)
+    except Exception:
+        logging.warning("Could not parse staged-event received_at %r for summary email; using current time.", value)
+        return datetime.now(timezone.utc)
+
+
 def _send_pending_chapter_renewals_email_if_configured(access_token: str, rows: list[dict], as_of_date: date) -> bool:
     recipients = _configured_email_recipients("CHAPTER_RENEWAL_PENDING_EMAIL_TO")
     if not recipients:
@@ -3509,6 +3726,13 @@ def _clubexpress_staged_renewal_consumption_enabled() -> bool:
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED", "false"))
+    )
+
+
+def _clubexpress_staged_chapter_renewal_notice_consumption_enabled() -> bool:
+    return (
+        _clubexpress_parsed_event_staging_enabled()
+        and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_CONSUMPTION_ENABLED", "false"))
     )
 
 

@@ -67,6 +67,8 @@ Parsed-event staging has been added for:
 - new-member signup emails
 - member-renewal emails
 - chapter-renewal notice emails
+- E-Journal emails, including NAOL review matches
+- MemChap, ChapterX, and member-category CSV emails
 
 The SQL migration is:
 
@@ -99,8 +101,16 @@ Staged new-member consumption has been added behind explicit flags:
 
 When both are enabled, the Gmail poller only archives, parses, and stages `new_member_signup` emails. The staged new-member timer consumes `new_membership` rows from `membership.clubexpress_parsed_events`, runs the downstream membership/rewards procedures from `Downstream_Payload_Json`, and writes processed/error attempts.
 
+Staged processors have been added for:
+
+- new-member signup emails
+- member-renewal emails, including chapter-renewal confirmations
+- chapter-renewal notice emails, including the summary email after reward debit decisions
+- MemChap CSV imports
+- ChapterX CSV imports
+- member-category CSV imports
+- E-Journal emails, including NAOL review matches
+
 ## Next Step
 
-Deploy the staged new-member processor, enable both new-member flags, and verify the next new-member signup creates a `staged` parsed-event row first and a later `processed` attempt from the staged processor.
-
-After that, convert renewals to staged consumption using the same pattern.
+Keep watching the next real message for each staged type after deployment, then split BayRate out of the mixed `ratings-explorer-app` into its own function app.
