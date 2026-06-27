@@ -55,6 +55,7 @@ from clubexpress_staging import (
     result_payload_for_procedures,
     status_params as parsed_event_status_params,
 )
+from clubexpress_staged_processor import process_pending_events
 
 try:
     import pyodbc
@@ -84,6 +85,7 @@ DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE = os.environ.get("REWARDS_RATED_GAME_
 DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE = os.environ.get("REWARDS_TOURNAMENT_AWARDS_SCHEDULE", "0 35 5 * * *")
 DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHEDULE", "0 40 5 * * *")
 DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE = os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE", "0 50 5 * * *")
+DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_REWARDS_LEDGER_START_DATE = "2026-05-02"
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
@@ -448,6 +450,37 @@ def _fetch_gmail_messages_for_processing(access_token: str, items: list[dict]) -
             _message_received_at(messages[-1]).isoformat(),
         )
     return messages
+
+
+@app.timer_trigger(schedule=DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_staged_new_member_events(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_ENABLED", "false")):
+        logging.info("ClubExpress staged new-member processor is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    batch_size = _env_positive_int("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_BATCH_SIZE", 25)
+    try:
+        result = process_pending_events(
+            _ClubExpressStagedEventSqlAdapter(conn_str),
+            event_type=REWARDS_NEW_MEMBERSHIP_EVENT_TYPE,
+            top=batch_size,
+            execute=True,
+            confirm_replay=True,
+            processor_name="staged_new_member_processor",
+        )
+        logging.info(
+            "ClubExpress staged new-member processing complete. selected=%s processed=%s errors=%s",
+            result.selected_count,
+            result.processed_count,
+            result.error_count,
+        )
+    except Exception:
+        logging.exception("ClubExpress staged new-member processing failed.")
 
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
@@ -876,17 +909,25 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             blob_path=archive_path,
         )
         _record_clubexpress_parsed_event(conn_str, parsed_event)
-        try:
-            _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures))
-            _mark_clubexpress_parsed_event_processed(
-                conn_str,
-                parsed_event,
-                result_payload_for_procedures(downstream_procedures),
+        if _clubexpress_staged_new_member_consumption_enabled():
+            logging.info(
+                "New member email staged for async processing. AGAID=%s event_key=%s archive_path=%s",
+                parsed["AGAID"],
+                parsed_event.event_key,
+                archive_path,
             )
-        except Exception as exc:
-            _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
-            raise
-        logging.info("New member email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
+        else:
+            try:
+                _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures))
+                _mark_clubexpress_parsed_event_processed(
+                    conn_str,
+                    parsed_event,
+                    result_payload_for_procedures(downstream_procedures),
+                )
+            except Exception as exc:
+                _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+                raise
+            logging.info("New member email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == RENEWAL_MESSAGE_TYPE:
         message_id = _message_identifier(message)
         parsed = _parse_renewal_email(_message_body_to_text(message))
@@ -2646,6 +2687,21 @@ def _configured_email_recipients(setting_name: str) -> list[str]:
     return [part.strip() for part in re.split(r"[;,]", raw_value) if part.strip()]
 
 
+def _env_positive_int(setting_name: str, default_value: int) -> int:
+    raw_value = os.environ.get(setting_name, "")
+    if not raw_value:
+        return default_value
+    try:
+        value = int(raw_value)
+    except ValueError:
+        logging.warning("Invalid positive integer setting %s=%r; using %s.", setting_name, raw_value, default_value)
+        return default_value
+    if value <= 0:
+        logging.warning("Invalid positive integer setting %s=%r; using %s.", setting_name, raw_value, default_value)
+        return default_value
+    return value
+
+
 def _chapter_renewal_notice_decision_counts(result_rows: list[dict]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for row in result_rows:
@@ -2662,6 +2718,13 @@ def _downstream_procedure_calls(procedures: list[DownstreamProcedure]) -> list[t
 
 def _clubexpress_parsed_event_staging_enabled() -> bool:
     return _is_truthy(os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED", "false"))
+
+
+def _clubexpress_staged_new_member_consumption_enabled() -> bool:
+    return (
+        _clubexpress_parsed_event_staging_enabled()
+        and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED", "false"))
+    )
 
 
 def _record_clubexpress_parsed_event(conn_str: str, parsed_event: ClubExpressParsedEvent) -> None:
@@ -2742,6 +2805,39 @@ def _execute_stored_procedure_rows(conn_str: str, proc_name: str, params: dict) 
         raise
     finally:
         conn.close()
+
+
+class _ClubExpressStagedEventSqlAdapter:
+    def __init__(self, conn_str: str) -> None:
+        self.conn_str = conn_str
+
+    def query_rows(self, query: str, params: Iterable[object] = ()) -> list[dict[str, object]]:
+        conn = pyodbc.connect(self.conn_str)
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query, *tuple(params))
+            rows = []
+            if cursor.description:
+                columns = [column[0] for column in cursor.description]
+                rows = [dict(zip(columns, record)) for record in cursor.fetchall()]
+            cursor.close()
+            return rows
+        finally:
+            conn.close()
+
+    def execute_statements(self, statements: Iterable[tuple[str, tuple[object, ...]]]) -> None:
+        conn = pyodbc.connect(self.conn_str)
+        try:
+            cursor = conn.cursor()
+            for query, params in statements:
+                cursor.execute(query, *tuple(params))
+            conn.commit()
+            cursor.close()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
 
 def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, dict]]) -> None:

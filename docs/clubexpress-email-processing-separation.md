@@ -92,8 +92,15 @@ It can:
 - replay one staged event with `--execute --confirm-replay`
 - require `--allow-processed` before replaying an event already marked `processed`
 
+Staged new-member consumption has been added behind explicit flags:
+
+- `CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED`
+- `CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_ENABLED`
+
+When both are enabled, the Gmail poller only archives, parses, and stages `new_member_signup` emails. The staged new-member timer consumes `new_membership` rows from `membership.clubexpress_parsed_events`, runs the downstream membership/rewards procedures from `Downstream_Payload_Json`, and writes processed/error attempts.
+
 ## Next Step
 
-Wait for the next real ClubExpress membership or renewal email, then confirm it creates a parsed-event row and a processed attempt row while the existing membership and rewards procedures continue to run idempotently.
+Deploy the staged new-member processor, enable both new-member flags, and verify the next new-member signup creates a `staged` parsed-event row first and a later `processed` attempt from the staged processor.
 
-After that, convert one email type at a time so downstream processors consume parsed-event records directly instead of being called from the Gmail poller.
+After that, convert renewals to staged consumption using the same pattern.

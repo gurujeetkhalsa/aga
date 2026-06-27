@@ -1,3 +1,4 @@
+import base64
 import importlib.util
 import json
 import os
@@ -206,6 +207,78 @@ class MembershipRewardEventTest(unittest.TestCase):
             "EXEC rewards.sp_record_membership_event @MessageId = ?, @AGAID = ?",
         )
         self.assertEqual(values, ["msg-123", 12345])
+
+    def test_new_member_staged_consumption_skips_direct_downstream_writes(self):
+        text = """
+        Thank you for purchasing a membership in American Go Association.
+
+        Riley Chen
+        Member Number: 34567
+        Email: riley@example.test
+        Login Name: rileychen
+        Type: Adult Full
+        New Member Expiration Date: 2027-06-26
+        Total: $50.00
+
+        Club Url
+        """
+        encoded_body = base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+        message = {
+            "id": "new-member-msg",
+            "internalDate": "1782518400000",
+            "payload": {
+                "mimeType": "text/plain",
+                "headers": [
+                    {"name": "From", "value": "ClubExpress <notifications@example.test>"},
+                    {"name": "Subject", "value": "American Go Association - New Member Signup - Payment"},
+                ],
+                "body": {"data": encoded_body},
+            },
+        }
+
+        original_env = {
+            "CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED": os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"),
+            "CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED": os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED"),
+        }
+        originals = {
+            "_get_sql_connection_string": mailapp._get_sql_connection_string,
+            "_archive_message_artifacts": mailapp._archive_message_artifacts,
+            "_record_clubexpress_parsed_event": mailapp._record_clubexpress_parsed_event,
+            "_execute_stored_procedures": mailapp._execute_stored_procedures,
+            "_mark_clubexpress_parsed_event_processed": mailapp._mark_clubexpress_parsed_event_processed,
+            "_mark_gmail_message_processed": mailapp._mark_gmail_message_processed,
+        }
+        staged_events = []
+        direct_calls = []
+        processed_marks = []
+        gmail_marks = []
+        try:
+            os.environ["CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"] = "true"
+            os.environ["CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED"] = "true"
+            mailapp._get_sql_connection_string = lambda: "conn"
+            mailapp._archive_message_artifacts = lambda message_type, message, attachments: "new_member_signup/2026/06/26/new-member-msg"
+            mailapp._record_clubexpress_parsed_event = lambda conn_str, parsed_event: staged_events.append(parsed_event)
+            mailapp._execute_stored_procedures = lambda conn_str, procedures: direct_calls.append((conn_str, procedures))
+            mailapp._mark_clubexpress_parsed_event_processed = lambda conn_str, parsed_event, payload: processed_marks.append((parsed_event, payload))
+            mailapp._mark_gmail_message_processed = lambda access_token, message: gmail_marks.append(message["id"])
+
+            mailapp._process_mailbox_message("token", message)
+        finally:
+            for name, value in original_env.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertEqual(len(staged_events), 1)
+        self.assertEqual(staged_events[0].event_type, mailapp.REWARDS_NEW_MEMBERSHIP_EVENT_TYPE)
+        self.assertEqual(staged_events[0].agaid, 34567)
+        self.assertEqual(staged_events[0].event_key, "new-member-msg:new_membership:34567")
+        self.assertEqual(direct_calls, [])
+        self.assertEqual(processed_marks, [])
+        self.assertEqual(gmail_marks, ["new-member-msg"])
 
 
 class RewardsSnapshotTest(unittest.TestCase):

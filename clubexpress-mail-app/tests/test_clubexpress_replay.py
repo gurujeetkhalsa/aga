@@ -18,6 +18,7 @@ from clubexpress_replay import (
     list_events,
     load_event,
     parse_downstream_calls,
+    process_pending_events,
     print_event_list,
     replay_event,
     stored_procedure_statement,
@@ -81,6 +82,28 @@ def sample_event_row(**overrides: Any) -> dict[str, Any]:
     }
     row.update(overrides)
     return row
+
+
+def sample_new_member_event_row(**overrides: Any) -> dict[str, Any]:
+    return sample_event_row(
+        Event_Type="new_membership",
+        Event_Key="msg-123:new_membership:19987",
+        Downstream_Payload_Json=json.dumps(
+            {
+                "procedures": [
+                    {
+                        "name": "membership.sp_process_new_member_email",
+                        "params": {"MessageId": "msg-123", "AGAID": 19987},
+                    },
+                    {
+                        "name": "rewards.sp_record_membership_event",
+                        "params": {"MessageId": "msg-123", "AGAID": 19987, "EventType": "new_membership"},
+                    },
+                ]
+            }
+        ),
+        **overrides,
+    )
 
 
 class ClubExpressReplayTest(unittest.TestCase):
@@ -171,6 +194,38 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertEqual(len(adapter.queries), 1)
         self.assertEqual(results[1]["name"], "rewards.sp_record_chapter_renewal_confirmation")
         self.assertEqual(results[1]["row_count"], 1)
+
+    def test_process_pending_events_previews_new_members_without_writes(self):
+        adapter = FakeAdapter({"clubexpress_parsed_events": [sample_new_member_event_row()]})
+
+        result = process_pending_events(adapter, event_type="new_membership", top=5)
+
+        self.assertFalse(result.executed)
+        self.assertEqual(result.selected_count, 1)
+        self.assertEqual(result.processed_count, 0)
+        self.assertEqual(result.results[0]["status_before"], "staged")
+        self.assertEqual(adapter.queries[0][1], (5, "new_membership"))
+        self.assertEqual(adapter.executed, [])
+
+    def test_process_pending_events_executes_new_members(self):
+        adapter = FakeAdapter({"clubexpress_parsed_events": [sample_new_member_event_row()]})
+
+        result = process_pending_events(
+            adapter,
+            event_type="new_membership",
+            top=5,
+            execute=True,
+            confirm_replay=True,
+            processor_name="test_new_member_processor",
+        )
+
+        self.assertTrue(result.executed)
+        self.assertEqual(result.processed_count, 1)
+        self.assertEqual(result.error_count, 0)
+        self.assertEqual(len(adapter.executed), 3)
+        self.assertIn("@Status = ?", adapter.executed[0][0][0])
+        self.assertIn("membership].[sp_process_new_member_email", adapter.executed[1][0][0])
+        self.assertIn("@ResultPayloadJson = ?", adapter.executed[2][0][0])
 
     def test_print_event_list_omits_sender_and_subject(self):
         output = StringIO()
