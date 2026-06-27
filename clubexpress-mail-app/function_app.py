@@ -86,6 +86,7 @@ DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE = os.environ.get("REWARDS_TOURNAMENT_
 DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE = os.environ.get("REWARDS_EXPIRATIONS_SCHEDULE", "0 40 5 * * *")
 DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE = os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE", "0 50 5 * * *")
 DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE", "0 */5 * * * *")
+DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE = os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_SCHEDULE", "0 */5 * * * *")
 DEFAULT_REWARDS_LEDGER_START_DATE = "2026-05-02"
 NIGHTLY_MESSAGE_TYPE = "nightly_memchap_csv"
 NIGHTLY_CATEGORY_MESSAGE_TYPE = "nightly_member_categories_csv"
@@ -481,6 +482,37 @@ def process_staged_new_member_events(timer: func.TimerRequest) -> None:
         )
     except Exception:
         logging.exception("ClubExpress staged new-member processing failed.")
+
+
+@app.timer_trigger(schedule=DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
+def process_staged_renewal_events(timer: func.TimerRequest) -> None:
+    if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_ENABLED", "false")):
+        logging.info("ClubExpress staged renewal processor is disabled.")
+        return
+
+    conn_str = _get_sql_connection_string()
+    if not conn_str:
+        logging.error("Missing SQL_CONNECTION_STRING application setting.")
+        return
+
+    batch_size = _env_positive_int("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_BATCH_SIZE", 25)
+    try:
+        result = process_pending_events(
+            _ClubExpressStagedEventSqlAdapter(conn_str),
+            event_type=REWARDS_RENEWAL_EVENT_TYPE,
+            top=batch_size,
+            execute=True,
+            confirm_replay=True,
+            processor_name="staged_renewal_processor",
+        )
+        logging.info(
+            "ClubExpress staged renewal processing complete. selected=%s processed=%s errors=%s",
+            result.selected_count,
+            result.processed_count,
+            result.error_count,
+        )
+    except Exception:
+        logging.exception("ClubExpress staged renewal processing failed.")
 
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
@@ -985,31 +1017,39 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
             blob_path=archive_path,
         )
         _record_clubexpress_parsed_event(conn_str, parsed_event)
-        try:
-            _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures[:2]))
-            confirmation = None
-            if confirmation_params:
-                confirmation_rows = _execute_stored_procedure_rows(
-                    conn_str,
-                    REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC,
-                    confirmation_params,
-                )
-                confirmation = confirmation_rows[0] if confirmation_rows else {}
-                logging.info(
-                    "Chapter renewal confirmation processed for ChapterID=%s recorded=%s reason=%s notice_id=%s",
-                    parsed["AGAID"],
-                    confirmation.get("Recorded"),
-                    confirmation.get("Reason"),
-                    confirmation.get("NoticeID"),
-                )
-            result_payload = result_payload_for_procedures(downstream_procedures)
-            if confirmation is not None:
-                result_payload["chapter_renewal_confirmation"] = confirmation
-            _mark_clubexpress_parsed_event_processed(conn_str, parsed_event, result_payload)
-        except Exception as exc:
-            _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
-            raise
-        logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
+        if _clubexpress_staged_renewal_consumption_enabled():
+            logging.info(
+                "Renewal email staged for async processing. AGAID=%s event_key=%s archive_path=%s",
+                parsed["AGAID"],
+                parsed_event.event_key,
+                archive_path,
+            )
+        else:
+            try:
+                _execute_stored_procedures(conn_str, _downstream_procedure_calls(downstream_procedures[:2]))
+                confirmation = None
+                if confirmation_params:
+                    confirmation_rows = _execute_stored_procedure_rows(
+                        conn_str,
+                        REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC,
+                        confirmation_params,
+                    )
+                    confirmation = confirmation_rows[0] if confirmation_rows else {}
+                    logging.info(
+                        "Chapter renewal confirmation processed for ChapterID=%s recorded=%s reason=%s notice_id=%s",
+                        parsed["AGAID"],
+                        confirmation.get("Recorded"),
+                        confirmation.get("Reason"),
+                        confirmation.get("NoticeID"),
+                    )
+                result_payload = result_payload_for_procedures(downstream_procedures)
+                if confirmation is not None:
+                    result_payload["chapter_renewal_confirmation"] = confirmation
+                _mark_clubexpress_parsed_event_processed(conn_str, parsed_event, result_payload)
+            except Exception as exc:
+                _mark_clubexpress_parsed_event_error(conn_str, parsed_event, exc)
+                raise
+            logging.info("Renewal email processed for AGAID=%s archive_path=%s", parsed["AGAID"], archive_path)
     elif message_type == CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE:
         message_id = _message_identifier(message)
         parsed_rows = _parse_chapter_renewal_notice_email(message)
@@ -2724,6 +2764,13 @@ def _clubexpress_staged_new_member_consumption_enabled() -> bool:
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED", "false"))
+    )
+
+
+def _clubexpress_staged_renewal_consumption_enabled() -> bool:
+    return (
+        _clubexpress_parsed_event_staging_enabled()
+        and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED", "false"))
     )
 
 

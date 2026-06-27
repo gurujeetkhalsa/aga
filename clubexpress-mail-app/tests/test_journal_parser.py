@@ -280,6 +280,92 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(processed_marks, [])
         self.assertEqual(gmail_marks, ["new-member-msg"])
 
+    def test_renewal_staged_consumption_skips_direct_downstream_writes(self):
+        text = """
+        A membership renewal has been processed for American Go Association.
+
+        Austin Go Club
+        Member Number: 13529
+        Phone:
+        Email: aust@example.test
+        Login Name: aust
+        Type: Chapter
+        Expiration Date: 6/13/2027
+        Total: $35.00
+
+        Club Url
+        """
+        encoded_body = base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+        message = {
+            "id": "renewal-msg",
+            "internalDate": "1782518400000",
+            "payload": {
+                "mimeType": "text/plain",
+                "headers": [
+                    {"name": "From", "value": "ClubExpress <notifications@example.test>"},
+                    {"name": "Subject", "value": "American Go Association - Member Renewal"},
+                ],
+                "body": {"data": encoded_body},
+            },
+        }
+
+        original_env = {
+            "CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED": os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"),
+            "CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED": os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED"),
+        }
+        originals = {
+            "_get_sql_connection_string": mailapp._get_sql_connection_string,
+            "_archive_message_artifacts": mailapp._archive_message_artifacts,
+            "_record_clubexpress_parsed_event": mailapp._record_clubexpress_parsed_event,
+            "_execute_stored_procedures": mailapp._execute_stored_procedures,
+            "_execute_stored_procedure_rows": mailapp._execute_stored_procedure_rows,
+            "_mark_clubexpress_parsed_event_processed": mailapp._mark_clubexpress_parsed_event_processed,
+            "_mark_gmail_message_processed": mailapp._mark_gmail_message_processed,
+        }
+        staged_events = []
+        direct_calls = []
+        row_calls = []
+        processed_marks = []
+        gmail_marks = []
+        try:
+            os.environ["CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED"] = "true"
+            os.environ["CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED"] = "true"
+            mailapp._get_sql_connection_string = lambda: "conn"
+            mailapp._archive_message_artifacts = lambda message_type, message, attachments: "member_renewal/2026/06/26/renewal-msg"
+            mailapp._record_clubexpress_parsed_event = lambda conn_str, parsed_event: staged_events.append(parsed_event)
+            mailapp._execute_stored_procedures = lambda conn_str, procedures: direct_calls.append((conn_str, procedures))
+            mailapp._execute_stored_procedure_rows = lambda conn_str, name, params: row_calls.append((name, params)) or []
+            mailapp._mark_clubexpress_parsed_event_processed = lambda conn_str, parsed_event, payload: processed_marks.append((parsed_event, payload))
+            mailapp._mark_gmail_message_processed = lambda access_token, message: gmail_marks.append(message["id"])
+
+            mailapp._process_mailbox_message("token", message)
+        finally:
+            for name, value in original_env.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            for name, value in originals.items():
+                setattr(mailapp, name, value)
+
+        self.assertEqual(len(staged_events), 1)
+        self.assertEqual(staged_events[0].event_type, mailapp.REWARDS_RENEWAL_EVENT_TYPE)
+        self.assertEqual(staged_events[0].agaid, 13529)
+        self.assertEqual(staged_events[0].event_key, "renewal-msg:renewal:13529")
+        downstream_payload = json.loads(staged_events[0].downstream_payload_json)
+        self.assertEqual(
+            [procedure["name"] for procedure in downstream_payload["procedures"]],
+            [
+                "membership.sp_process_membership_renewal",
+                mailapp.REWARDS_MEMBERSHIP_EVENT_PROC,
+                mailapp.REWARDS_CHAPTER_RENEWAL_CONFIRMATION_PROC,
+            ],
+        )
+        self.assertEqual(direct_calls, [])
+        self.assertEqual(row_calls, [])
+        self.assertEqual(processed_marks, [])
+        self.assertEqual(gmail_marks, ["renewal-msg"])
+
 
 class RewardsSnapshotTest(unittest.TestCase):
     def test_rewards_snapshot_params_do_not_replace_existing_snapshots(self):

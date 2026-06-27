@@ -43,6 +43,7 @@ Parsed-event preview and replay:
 - preview one event: `py -3 clubexpress-mail-app\clubexpress_replay.py preview --event-key <event-key>`
 - replay one event: `py -3 clubexpress-mail-app\clubexpress_replay.py replay --event-key <event-key> --execute --confirm-replay`
 - process pending staged new-member events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-new-members --execute --confirm-replay`
+- process pending staged renewal events manually: `py -3 clubexpress-mail-app\clubexpress_replay.py process-renewals --execute --confirm-replay`
 - replaying an event already marked `processed` also requires `--allow-processed`
 
 Staged new-member consumption:
@@ -51,7 +52,11 @@ Staged new-member consumption:
 - `CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_ENABLED=true` enables the timer that consumes staged `new_membership` events
 - `CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE` defaults to every 5 minutes
 - `CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_BATCH_SIZE` defaults to `25`
-- leave renewal and chapter-renewal notice emails on the direct path until the new-member staged path proves itself
+- `CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED=true` makes the Gmail poller stage `member_renewal` emails without directly running downstream membership/rewards procedures
+- `CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_ENABLED=true` enables the timer that consumes staged `renewal` events, including chapter-renewal confirmations
+- `CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_SCHEDULE` defaults to every 5 minutes
+- `CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_BATCH_SIZE` defaults to `25`
+- leave chapter-renewal notice emails on the direct path until renewal staged consumption proves itself
 
 Migration note:
 

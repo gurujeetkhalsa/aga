@@ -30,6 +30,7 @@ from clubexpress_staged_processor import (
 
 
 NEW_MEMBERSHIP_EVENT_TYPE = "new_membership"
+RENEWAL_EVENT_TYPE = "renewal"
 
 
 def print_event_list(events: list[StagedClubExpressEvent], output: TextIO) -> None:
@@ -102,7 +103,7 @@ def print_replay_result(result: ReplayResult, output: TextIO) -> None:
 
 
 def print_batch_result(result, output: TextIO) -> None:
-    label = "Staged new-member processing" if result.executed else "Staged new-member processing preview"
+    label = "Staged event processing" if result.executed else "Staged event processing preview"
     print(label, file=output)
     print(f"  Event type: {result.event_type}", file=output)
     print(f"  Selected: {result.selected_count}", file=output)
@@ -138,6 +139,21 @@ def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
                 execute=args.execute,
                 confirm_replay=args.confirm_replay,
                 processor_name="manual_new_member_processor",
+            )
+            if args.json:
+                print(json.dumps(result.as_dict(), indent=2, sort_keys=True), file=output)
+            else:
+                print_batch_result(result, output)
+            return 0
+
+        if args.command == "process-renewals":
+            result = process_pending_events(
+                adapter,
+                event_type=RENEWAL_EVENT_TYPE,
+                top=args.top,
+                execute=args.execute,
+                confirm_replay=args.confirm_replay,
+                processor_name="manual_renewal_processor",
             )
             if args.json:
                 print(json.dumps(result.as_dict(), indent=2, sort_keys=True), file=output)
@@ -206,6 +222,12 @@ def build_parser() -> argparse.ArgumentParser:
     process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
     process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
     process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+
+    renewal_process_parser = subparsers.add_parser("process-renewals", help="Process pending staged renewal events.")
+    renewal_process_parser.add_argument("--top", type=_positive_int, default=DEFAULT_TOP, help="Maximum staged events to process.")
+    renewal_process_parser.add_argument("--execute", action="store_true", help="Execute processing. Omit to preview selected rows.")
+    renewal_process_parser.add_argument("--confirm-replay", action="store_true", help="Required with --execute.")
+    renewal_process_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     return parser
 
 
