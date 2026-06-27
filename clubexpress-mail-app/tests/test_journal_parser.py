@@ -766,14 +766,17 @@ class MemChapCsvImportTest(unittest.TestCase):
         originals = {
             "_download_archived_attachment_bytes": mailapp._download_archived_attachment_bytes,
             "_import_memchap_bytes": mailapp._import_memchap_bytes,
+            "_execute_stored_procedure": mailapp._execute_stored_procedure,
         }
         downloads = []
         imports = []
+        email_logs = []
         try:
             mailapp._download_archived_attachment_bytes = (
                 lambda blob_path, attachment_blob_name: downloads.append((blob_path, attachment_blob_name)) or b"csv"
             )
             mailapp._import_memchap_bytes = lambda conn_str, csv_bytes: imports.append((conn_str, csv_bytes)) or 2
+            mailapp._execute_stored_procedure = lambda conn_str, proc_name, params: email_logs.append((proc_name, params))
 
             result = mailapp._process_pending_memchap_events(
                 "conn",
@@ -794,6 +797,10 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual(downloads, [(prefix, "Daily_MemChap.csv")])
         self.assertEqual(imports, [("conn", b"csv")])
         self.assertEqual([batch[0][1][1] for batch in adapter.executed], ["processing", "processed"])
+        self.assertEqual(email_logs[0][0], "membership.sp_log_clubexpress_email")
+        self.assertEqual(email_logs[0][1]["MessageId"], "memchap-msg")
+        self.assertEqual(email_logs[0][1]["Status"], "processed")
+        self.assertIsNone(email_logs[0][1]["ErrorMessage"])
         self.assertEqual(result.results[0]["status_after"], "processed")
 
 

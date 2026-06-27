@@ -1505,6 +1505,7 @@ def _process_pending_memchap_events(
                 "action_results": [action_result],
             }
             mark_event_status(staged_adapter, event.event_key, "processed", result_payload=json_safe_value(result_payload))
+            _update_clubexpress_email_log_for_staged_event(conn_str, event, "processed")
             processed_count += 1
             results.append(
                 {
@@ -1521,6 +1522,7 @@ def _process_pending_memchap_events(
                 mark_event_status(staged_adapter, event.event_key, "error", error_message=str(exc))
             except Exception:
                 logging.exception("Failed marking staged MemChap event %s as error.", event.event_key)
+            _update_clubexpress_email_log_for_staged_event(conn_str, event, "error", error_message=str(exc))
             results.append(
                 {
                     "event_key": event.event_key,
@@ -1539,6 +1541,36 @@ def _process_pending_memchap_events(
         error_count=error_count,
         results=results,
     )
+
+
+def _update_clubexpress_email_log_for_staged_event(
+    conn_str: str,
+    event: object,
+    status: str,
+    *,
+    error_message: Optional[str] = None,
+) -> None:
+    try:
+        _execute_stored_procedure(
+            conn_str,
+            "membership.sp_log_clubexpress_email",
+            {
+                "MessageId": event.message_id,
+                "MessageType": event.message_type,
+                "ReceivedAt": event.received_at,
+                "Sender": event.sender,
+                "Subject": event.subject,
+                "BlobPath": event.blob_path,
+                "Status": status,
+                "ErrorMessage": error_message,
+            },
+        )
+    except Exception:
+        logging.exception(
+            "Failed updating legacy ClubExpress email log for staged event %s to %s.",
+            event.event_key,
+            status,
+        )
 
 
 def _process_memchap_staged_event(conn_str: str, event: object) -> dict:
