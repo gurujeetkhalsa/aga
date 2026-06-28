@@ -25,6 +25,7 @@ ORDER BY r.[Tournament_Code], r.[id], r.[Pin_Player]
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Compare a read-only BayRate replay artifact to production ratings rows.")
     parser.add_argument("artifact", type=Path, help="Replay artifact JSON from bayrate.replay_staged_run.")
     parser.add_argument("--connection-string", help="SQL connection string. Defaults to SQL_CONNECTION_STRING/local.settings.json.")
@@ -36,6 +37,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     conn_str = args.connection_string or get_sql_connection_string()
     if not conn_str:
@@ -64,6 +66,7 @@ def compare_replay_artifact_to_production(
     output_path: Path | None = None,
     top: int = 8,
 ) -> dict[str, Any]:
+    """Compare replay artifact to production."""
     artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
     tournament_codes = [
         str(event["tournament_code"])
@@ -111,6 +114,7 @@ def compare_replay_artifact_to_production(
 
 
 def load_production_rating_rows(adapter: StageSqlAdapter, tournament_codes: list[str]) -> list[dict[str, Any]]:
+    """Load production rating rows."""
     placeholders = ", ".join("?" for _ in tournament_codes)
     query = PRODUCTION_RATINGS_FOR_TOURNAMENTS_SQL_TEMPLATE.format(placeholders=placeholders)
     return adapter.query_rows(query, tuple(tournament_codes))
@@ -123,6 +127,7 @@ def compare_tournament(
     *,
     top: int,
 ) -> dict[str, Any]:
+    """Compare tournament."""
     replay_keys = {key for key in replay_by_key if key[0] == tournament_code}
     production_keys = {key for key in production_by_key if key[0] == tournament_code}
     matched_keys = sorted(replay_keys & production_keys, key=lambda key: key[1] or 0)
@@ -145,6 +150,7 @@ def compare_tournament(
 
 
 def compare_player_row(replay_row: dict[str, Any], production_row: dict[str, Any]) -> dict[str, Any]:
+    """Compare player row."""
     replay_rating = _require_float(replay_row.get("rating_after"), "rating_after")
     production_rating = _require_float(production_row.get("Rating"), "Rating")
     replay_sigma = _require_float(replay_row.get("sigma_after"), "sigma_after")
@@ -169,6 +175,7 @@ def compare_player_row(replay_row: dict[str, Any], production_row: dict[str, Any
 
 
 def summarize_deltas(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize deltas."""
     if not rows:
         return {
             "average_abs_rating_delta": None,
@@ -191,6 +198,7 @@ def summarize_deltas(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def print_comparison_summary(comparison: dict[str, Any], output: TextIO) -> None:
+    """Execute the print comparison summary routine."""
     print("", file=output)
     print("Replay vs Production Ratings", file=output)
     print(f"  RunID: {comparison.get('run_id')}", file=output)
@@ -230,6 +238,7 @@ def print_comparison_summary(comparison: dict[str, Any], output: TextIO) -> None
 
 
 def print_comparison_rollup(comparison: dict[str, Any], output: TextIO, *, top_tournaments: int = 10) -> None:
+    """Execute the print comparison rollup routine."""
     overall = comparison.get("overall") or {}
     print("", file=output)
     print("Replay vs Production Ratings", file=output)
@@ -267,10 +276,12 @@ def print_comparison_rollup(comparison: dict[str, Any], output: TextIO, *, top_t
 
 
 def default_output_path(artifact_path: Path) -> Path:
+    """Execute the default output path routine."""
     return artifact_path.with_name(f"{artifact_path.stem}_production_compare.json")
 
 
 def _require_float(value: Any, column: str) -> float:
+    """Execute the require float routine."""
     parsed = _coerce_float(value)
     if parsed is None:
         raise ValueError(f"{column} is required for replay comparison.")
@@ -278,12 +289,14 @@ def _require_float(value: Any, column: str) -> float:
 
 
 def _fmt(value: Any) -> str:
+    """Execute the fmt routine."""
     if value is None:
         return "n/a"
     return f"{float(value):.6f}"
 
 
 def _json_default(value: Any) -> Any:
+    """Execute the json default routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     return str(value)

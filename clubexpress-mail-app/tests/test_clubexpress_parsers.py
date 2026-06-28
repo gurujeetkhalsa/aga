@@ -19,7 +19,9 @@ from clubexpress_parsers import (
 
 
 class ClubExpressParserTest(unittest.TestCase):
+    """Represent club express parser test."""
     def test_new_member_parser_extracts_member_context(self):
+        """Verify that new member parser extracts member context."""
         text = """
         Thank you for purchasing a membership in American Go Association.
 
@@ -44,6 +46,7 @@ class ClubExpressParserTest(unittest.TestCase):
         self.assertEqual(parsed["ExpirationDate"], date(2027, 6, 13))
 
     def test_new_member_parser_rejects_chapter_member_signup(self):
+        """Verify that new member parser rejects chapter member signup."""
         text = """
         Thank you for purchasing a membership in American Go Association.
 
@@ -62,6 +65,7 @@ class ClubExpressParserTest(unittest.TestCase):
             parse_new_member_email(text)
 
     def test_renewal_parser_extracts_expiration_date_between_type_and_total(self):
+        """Verify that renewal parser extracts expiration date between type and total."""
         text = """
         A membership renewal has been processed for American Go Association.
 
@@ -88,6 +92,7 @@ class ClubExpressParserTest(unittest.TestCase):
         self.assertFalse(parsed["IsChapterMember"])
 
     def test_renewal_parser_marks_chapter_member(self):
+        """Verify that renewal parser marks chapter member."""
         text = """
         A membership renewal has been processed for American Go Association.
 
@@ -110,6 +115,7 @@ class ClubExpressParserTest(unittest.TestCase):
         self.assertTrue(parsed["IsChapterMember"])
 
     def test_chapter_renewal_notice_html_parser_extracts_chapters_only(self):
+        """Verify that chapter renewal notice html parser extracts chapters only."""
         html_body = """
         <html><body>
           <table>
@@ -129,6 +135,7 @@ class ClubExpressParserTest(unittest.TestCase):
         self.assertEqual(rows[1]["member_raw"], "25495 - Ghost City Go")
 
     def test_chapter_renewal_notice_text_parser_accepts_pipe_table(self):
+        """Verify that chapter renewal notice text parser accepts pipe table."""
         text_body = """
         Member | Name | Type | Expiration
         13529 | Providence Go Club | Chapter | 5/31/2026
@@ -142,6 +149,7 @@ class ClubExpressParserTest(unittest.TestCase):
         self.assertEqual(rows[1]["row_payload"]["expiration"], "6/1/2026")
 
     def test_chapter_renewal_notice_parser_falls_back_to_text(self):
+        """Verify that chapter renewal notice parser falls back to text."""
         text_body = """
         Member\tName\tType\tExpiration
         13529\tProvidence Go Club\tChapter\t5/31/2026
@@ -153,6 +161,7 @@ class ClubExpressParserTest(unittest.TestCase):
         self.assertEqual(rows[0]["chapter_id"], 13529)
 
     def test_chapter_renewal_notice_parser_rejects_duplicate_chapter(self):
+        """Verify that chapter renewal notice parser rejects duplicate chapter."""
         html_body = """
         <table>
           <tr><th>Member</th><th>Type</th></tr>

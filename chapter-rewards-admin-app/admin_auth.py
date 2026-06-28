@@ -39,6 +39,7 @@ SGF_IMPORT_PERMISSION = "sgf_import"
 
 @dataclass(frozen=True)
 class BayRatePrincipal:
+    """Represent bay rate principal."""
     principal_name: str
     principal_id: str | None
     identity_provider: str | None
@@ -50,6 +51,7 @@ class BayRatePrincipal:
 
 @dataclass(frozen=True)
 class BayRateAuthorizationResult:
+    """Represent bay rate authorization result data."""
     ok: bool
     status_code: int
     error: str | None = None
@@ -63,6 +65,7 @@ def authorize_bayrate_admin(
     *,
     environ: Mapping[str, str] | None = None,
 ) -> BayRateAuthorizationResult:
+    """Execute the authorize bayrate admin routine."""
     return authorize_admin_permission(
         headers,
         adapter,
@@ -80,6 +83,7 @@ def authorize_admin_permission(
     feature_label: str,
     environ: Mapping[str, str] | None = None,
 ) -> BayRateAuthorizationResult:
+    """Execute the authorize admin permission routine."""
     env = os.environ if environ is None else environ
     if not bayrate_auth_runtime_configured(env):
         return BayRateAuthorizationResult(
@@ -129,6 +133,7 @@ def authorize_admin_permission(
 
 
 def bayrate_auth_runtime_configured(environ: Mapping[str, str] | None = None) -> bool:
+    """Execute the bayrate auth runtime configured routine."""
     env = os.environ if environ is None else environ
     if _truthy(env.get("BAYRATE_TRUST_EASY_AUTH")):
         return True
@@ -142,6 +147,7 @@ def extract_bayrate_principal(
     *,
     environ: Mapping[str, str] | None = None,
 ) -> BayRatePrincipal | None:
+    """Extract bayrate principal."""
     env = os.environ if environ is None else environ
     if headers is None:
         headers = {}
@@ -193,6 +199,7 @@ def extract_bayrate_principal(
 
 
 def find_bayrate_admin(adapter: Any, principal: BayRatePrincipal) -> dict[str, Any] | None:
+    """Find bayrate admin."""
     return find_admin_permission(adapter, principal, required_permission=BAYRATE_RUN_PERMISSION)
 
 
@@ -202,6 +209,7 @@ def find_admin_permission(
     *,
     required_permission: str,
 ) -> dict[str, Any] | None:
+    """Find admin permission."""
     where_parts: list[str] = []
     params: list[Any] = []
 
@@ -241,6 +249,7 @@ ORDER BY
 
 
 def _header(headers: Mapping[str, Any], name: str) -> str | None:
+    """Execute the header routine."""
     try:
         value = headers.get(name)  # type: ignore[attr-defined]
     except Exception:
@@ -260,6 +269,7 @@ def _header(headers: Mapping[str, Any], name: str) -> str | None:
 
 
 def _decode_client_principal(value: str | None) -> dict[str, Any] | None:
+    """Decode client principal."""
     if not value:
         return None
     try:
@@ -272,6 +282,7 @@ def _decode_client_principal(value: str | None) -> dict[str, Any] | None:
 
 
 def _claims_by_type(raw_claims: Any) -> dict[str, tuple[str, ...]]:
+    """Execute the claims by type routine."""
     claims: dict[str, list[str]] = {}
     if not isinstance(raw_claims, list):
         return {}
@@ -287,11 +298,13 @@ def _claims_by_type(raw_claims: Any) -> dict[str, tuple[str, ...]]:
 
 
 def _first_claim(claims: dict[str, tuple[str, ...]], claim_types: set[str]) -> str | None:
+    """Execute the first claim routine."""
     values = _claim_values(claims, claim_types)
     return values[0] if values else None
 
 
 def _claim_values(claims: dict[str, tuple[str, ...]], claim_types: set[str]) -> tuple[str, ...]:
+    """Execute the claim values routine."""
     values: list[str] = []
     lowered_types = {claim_type.lower() for claim_type in claim_types}
     for claim_type, claim_values in claims.items():
@@ -302,6 +315,7 @@ def _claim_values(claims: dict[str, tuple[str, ...]], claim_types: set[str]) -> 
 
 
 def _unique_clean_values(values: Any) -> tuple[str, ...]:
+    """Execute the unique clean values routine."""
     result: list[str] = []
     seen: set[str] = set()
     for value in values:
@@ -317,14 +331,17 @@ def _unique_clean_values(values: Any) -> tuple[str, ...]:
 
 
 def _dev_auth_email(environ: Mapping[str, str]) -> str | None:
+    """Execute the dev auth email routine."""
     return _clean_text(environ.get("BAYRATE_DEV_AUTH_EMAIL") or environ.get("BAYRATE_DEV_PRINCIPAL_NAME"))
 
 
 def _truthy(value: Any) -> bool:
+    """Execute the truthy routine."""
     return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _clean_text(value: Any) -> str | None:
+    """Clean text."""
     if value is None:
         return None
     text = str(value).strip()

@@ -13,15 +13,19 @@ SOURCE_TYPE = "membership_event"
 
 
 class MembershipAwardSqlAdapter(Protocol):
+    """Represent membership award sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class MembershipAwardResult:
+    """Represent membership award result data."""
     as_of_date: date
     dry_run: bool
     run_id: int | None
@@ -36,6 +40,7 @@ class MembershipAwardResult:
     ineligible_count: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "as_of_date": self.as_of_date.isoformat(),
             "dry_run": self.dry_run,
@@ -80,6 +85,7 @@ def process_membership_awards(
     run_type: str = "manual",
     dry_run: bool = False,
 ) -> MembershipAwardResult:
+    """Process membership awards."""
     params = (as_of_date, run_type, bool(dry_run))
     if dry_run:
         rows = adapter.query_rows(PROCESS_MEMBERSHIP_AWARDS_SQL, params)
@@ -109,6 +115,7 @@ def process_membership_awards(
 
 
 def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> MembershipAwardResult:
+    """Execute the result from row routine."""
     return MembershipAwardResult(
         as_of_date=_coerce_date(row.get("AsOfDate")) or date.today(),
         dry_run=dry_run,
@@ -126,18 +133,21 @@ def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> MembershipAwardRe
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def _coerce_date(value: Any) -> date | None:
+    """Coerce date."""
     if value is None:
         return None
     if isinstance(value, date):
@@ -146,6 +156,7 @@ def _coerce_date(value: Any) -> date | None:
 
 
 def print_award_result(result: MembershipAwardResult, output: TextIO) -> None:
+    """Execute the print award result routine."""
     label = "Membership Awards Preview" if result.dry_run else "Membership Awards"
     print(label, file=output)
     print(f"  As of: {result.as_of_date.isoformat()}", file=output)
@@ -163,6 +174,7 @@ def print_award_result(result: MembershipAwardResult, output: TextIO) -> None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Award AGA Chapter Rewards points for eligible membership events.")
     parser.add_argument("--date", dest="as_of_date", type=parse_snapshot_date, help="Processing date in YYYY-MM-DD format. Defaults to today.")
     parser.add_argument("--dry-run", action="store_true", help="Preview membership awards without writing transactions or point lots.")

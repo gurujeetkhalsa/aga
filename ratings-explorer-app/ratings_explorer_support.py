@@ -59,6 +59,7 @@ _MEMORY_CACHE: dict[tuple[str, str], tuple[float, Any]] = {}
 
 
 def _cache_get(namespace: str, key: str) -> Any:
+    """Execute the cache get routine."""
     entry = _MEMORY_CACHE.get((namespace, key))
     if not entry:
         return None, False
@@ -70,15 +71,18 @@ def _cache_get(namespace: str, key: str) -> Any:
 
 
 def _cache_set(namespace: str, key: str, value: Any, ttl_seconds: float) -> Any:
+    """Execute the cache set routine."""
     _MEMORY_CACHE[(namespace, key)] = (time.monotonic() + max(0.0, ttl_seconds), value)
     return value
 
 
 def _cache_delete(namespace: str, key: str) -> None:
+    """Execute the cache delete routine."""
     _MEMORY_CACHE.pop((namespace, key), None)
 
 
 def _cache_delete_prefix(namespace: str) -> None:
+    """Execute the cache delete prefix routine."""
     doomed = [cache_key for cache_key in _MEMORY_CACHE if cache_key[0] == namespace]
     for cache_key in doomed:
         _MEMORY_CACHE.pop(cache_key, None)
@@ -182,10 +186,12 @@ BLANK_CHAPTER_OPTION = {"value": BLANK_CHAPTER_VALUE, "label": "blank"}
 
 
 def _app_root() -> Path:
+    """Execute the app root routine."""
     return Path(__file__).resolve().parent
 
 
 def _candidate_app_roots() -> list[Path]:
+    """Execute the candidate app roots routine."""
     candidates: list[Path] = [_app_root()]
     cwd = Path.cwd()
     if cwd not in candidates:
@@ -205,6 +211,7 @@ def _candidate_app_roots() -> list[Path]:
 
 
 def _embedded_asset_text(relative_path: str) -> str | None:
+    """Execute the embedded asset text routine."""
     if wgo_embedded_assets is None:
         return None
     normalized = str(Path(relative_path)).replace("\\", "/").strip().lower()
@@ -218,6 +225,7 @@ def _embedded_asset_text(relative_path: str) -> str | None:
 
 
 def get_asset_bytes(relative_path: str) -> tuple[bytes | None, str | None]:
+    """Return asset bytes."""
     parts = [part for part in Path(relative_path).parts if part not in {"", "."}]
     if not parts or any(part == ".." for part in parts):
         return None, None
@@ -246,6 +254,7 @@ def get_asset_bytes(relative_path: str) -> tuple[bytes | None, str | None]:
 
 
 def get_asset_text(relative_path: str) -> str | None:
+    """Return asset text."""
     payload, _ = get_asset_bytes(relative_path)
     if payload is None:
         return None
@@ -256,6 +265,7 @@ def get_asset_text(relative_path: str) -> str | None:
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
+    """Parse sql connection string."""
     parts: dict[str, str] = {}
     for item in connection_string.split(";"):
         if "=" not in item:
@@ -274,6 +284,7 @@ def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
 
 
 def _tds_connect(conn_str: str):
+    """Execute the tds connect routine."""
     sql = _parse_sql_connection_string(conn_str)
     return pytds.connect(
         server=sql["server"],
@@ -291,6 +302,7 @@ def _tds_connect(conn_str: str):
 
 
 def get_sql_connection_string() -> str | None:
+    """Return sql connection string."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn:
         return conn
@@ -307,6 +319,7 @@ def get_sql_connection_string() -> str | None:
 
 
 def _get_setting(name: str) -> str | None:
+    """Return setting."""
     value = os.environ.get(name)
     if value:
         return value
@@ -323,6 +336,7 @@ def _get_setting(name: str) -> str | None:
 
 
 def response_headers(content_type: str) -> dict[str, str]:
+    """Execute the response headers routine."""
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -333,12 +347,14 @@ def response_headers(content_type: str) -> dict[str, str]:
 
 
 def json_safe_value(value: Any) -> Any:
+    """Execute the json safe value routine."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     return value
 
 
 def rounded_rating(value: Any) -> float | None:
+    """Execute the rounded rating routine."""
     try:
         return round(float(value), 2)
     except (TypeError, ValueError):
@@ -346,6 +362,7 @@ def rounded_rating(value: Any) -> float | None:
 
 
 def current_ratings_cte() -> str:
+    """Execute the current ratings cte routine."""
     return """
 WITH current_ratings AS
 (
@@ -372,6 +389,7 @@ WITH current_ratings AS
 
 
 def query_rows(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows."""
     if pyodbc is not None:
         try:
             return _query_rows_via_odbc(conn_str, query, params)
@@ -381,6 +399,7 @@ def query_rows(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -
 
 
 def _query_rows_via_odbc(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows via odbc."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -392,6 +411,7 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: list[Any] | tuple[An
 
 
 def _sql_literal(value: Any) -> str:
+    """Execute the sql literal routine."""
     if value is None:
         return "NULL"
     if isinstance(value, bool):
@@ -405,6 +425,7 @@ def _sql_literal(value: Any) -> str:
 
 
 def _query_rows_via_tds(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows via tds."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -418,11 +439,13 @@ def _query_rows_via_tds(conn_str: str, query: str, params: list[Any] | tuple[Any
 
 
 def query_one(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> dict[str, Any] | None:
+    """Query one."""
     rows = query_rows(conn_str, query, params)
     return rows[0] if rows else None
 
 
 def execute_non_query(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> None:
+    """Execute non query."""
     if pyodbc is not None:
         try:
             _execute_non_query_via_odbc(conn_str, query, params)
@@ -433,6 +456,7 @@ def execute_non_query(conn_str: str, query: str, params: list[Any] | tuple[Any, 
 
 
 def _execute_non_query_via_odbc(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> None:
+    """Execute non query via odbc."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -443,6 +467,7 @@ def _execute_non_query_via_odbc(conn_str: str, query: str, params: list[Any] | t
 
 
 def _execute_non_query_via_tds(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> None:
+    """Execute non query via tds."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -455,6 +480,7 @@ def _execute_non_query_via_tds(conn_str: str, query: str, params: list[Any] | tu
 
 
 def load_member_name(conn_str: str, agaid: int) -> str | None:
+    """Load member name."""
     row = query_one(
         conn_str,
         """
@@ -473,6 +499,7 @@ WHERE [AGAID] = ?
 
 
 def member_name_from_row(row: dict[str, Any]) -> str:
+    """Execute the member name from row routine."""
     first = (row.get("FirstName") or "").strip()
     last = (row.get("LastName") or "").strip()
     full_name = f"{first} {last}".strip()
@@ -480,6 +507,7 @@ def member_name_from_row(row: dict[str, Any]) -> str:
 
 
 def chapter_label(row: dict[str, Any]) -> str | None:
+    """Execute the chapter label routine."""
     code = (row.get("ChapterCode") or "").strip()
     name = (row.get("ChapterName") or "").strip()
     if code and name:
@@ -488,6 +516,7 @@ def chapter_label(row: dict[str, Any]) -> str | None:
 
 
 def member_type_label(value: Any) -> str | None:
+    """Execute the member type label routine."""
     mapping = {
         "Adult Full": "Adult",
         "Adult Full - Lifetime": "Life",
@@ -500,6 +529,7 @@ def member_type_label(value: Any) -> str | None:
 
 
 def normalized_member_type_filter(value: str | None) -> str | None:
+    """Execute the normalized member type filter routine."""
     if not value:
         return None
     text = value.strip().lower()
@@ -518,6 +548,7 @@ def normalized_member_type_filter(value: str | None) -> str | None:
 
 
 def state_option(code: str | None) -> dict[str, str] | None:
+    """Execute the state option routine."""
     text = (code or "").strip().upper()
     name = US_STATE_LABELS.get(text)
     if not name:
@@ -526,6 +557,7 @@ def state_option(code: str | None) -> dict[str, str] | None:
 
 
 def state_filter_clause(column_name: str, values: list[str]) -> tuple[str | None, list[str]]:
+    """Execute the state filter clause routine."""
     normalized = [value for value in values if value]
     if not normalized:
         return None, []
@@ -547,6 +579,7 @@ def state_filter_clause(column_name: str, values: list[str]) -> tuple[str | None
 
 
 def city_filter_clause(column_name: str, values: list[str]) -> tuple[str | None, list[str]]:
+    """Execute the city filter clause routine."""
     normalized = [value for value in values if value]
     if not normalized:
         return None, []
@@ -568,6 +601,7 @@ def city_filter_clause(column_name: str, values: list[str]) -> tuple[str | None,
 
 
 def chapter_filter_clause(values: list[str]) -> tuple[str | None, list[str]]:
+    """Execute the chapter filter clause routine."""
     normalized = [value for value in values if value]
     if not normalized:
         return None, []
@@ -589,6 +623,7 @@ def chapter_filter_clause(values: list[str]) -> tuple[str | None, list[str]]:
 
 
 def _sql_in_clause(column_name: str, values: list[str]) -> tuple[str | None, list[str]]:
+    """Execute the sql in clause routine."""
     normalized = [value for value in values if value]
     if not normalized:
         return None, []
@@ -597,6 +632,7 @@ def _sql_in_clause(column_name: str, values: list[str]) -> tuple[str | None, lis
 
 
 def _normalize_rating_number(rating: Any) -> float | None:
+    """Normalize rating number."""
     try:
         return float(rating)
     except (TypeError, ValueError):
@@ -604,6 +640,7 @@ def _normalize_rating_number(rating: Any) -> float | None:
 
 
 def _rating_filter_matches_value(value: float, rating_filter: dict[str, Any]) -> bool:
+    """Execute the rating filter matches value routine."""
     min_value = rating_filter.get("min")
     max_value = rating_filter.get("max")
     if min_value is not None and value < float(min_value):
@@ -614,6 +651,7 @@ def _rating_filter_matches_value(value: float, rating_filter: dict[str, Any]) ->
 
 
 def rating_matches_band(rating: Any, rating_bands: list[str] | None) -> bool:
+    """Execute the rating matches band routine."""
     if not rating_bands:
         return True
     value = _normalize_rating_number(rating)
@@ -627,6 +665,7 @@ def rating_matches_band(rating: Any, rating_bands: list[str] | None) -> bool:
 
 
 def rating_band_sql_clause(rating_bands: list[str] | None, column_name: str) -> tuple[str | None, list[float]]:
+    """Execute the rating band sql clause routine."""
     if not rating_bands:
         return None, []
     clauses: list[str] = []
@@ -652,6 +691,7 @@ def rating_band_sql_clause(rating_bands: list[str] | None, column_name: str) -> 
 
 
 def rating_to_rank_label(rating: Any) -> str | None:
+    """Execute the rating to rank label routine."""
     value = _normalize_rating_number(rating)
     if value is None:
         return None
@@ -664,6 +704,7 @@ def rating_to_rank_label(rating: Any) -> str | None:
 
 
 def player_summary_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the player summary payload routine."""
     rating = rounded_rating(row.get("Rating"))
     sigma = rounded_rating(row.get("Sigma"))
     return {
@@ -687,6 +728,7 @@ def player_summary_payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def normalize_player_summary(item: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Normalize player summary."""
     if not item:
         return item
     normalized = dict(item)
@@ -695,6 +737,7 @@ def normalize_player_summary(item: dict[str, Any] | None) -> dict[str, Any] | No
 
 
 def expiration_status_matches(expiration_date: Any, status_filter: str | None, today: date | None = None) -> bool:
+    """Execute the expiration status matches routine."""
     normalized_filter = (status_filter or "all").strip().lower()
     if normalized_filter in {"", "all"}:
         return True
@@ -714,6 +757,7 @@ def expiration_status_matches(expiration_date: Any, status_filter: str | None, t
 
 
 def tournament_summary_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the tournament summary payload routine."""
     return {
         "tournament_code": row.get("Tournament_Code"),
         "description": row.get("Tournament_Descr"),
@@ -731,6 +775,7 @@ def tournament_summary_payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def tournament_participant_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the tournament participant payload routine."""
     return {
         "agaid": row.get("AGAID"),
         "first_name": row.get("FirstName"),
@@ -744,17 +789,20 @@ def tournament_participant_payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def game_has_sgf(row: dict[str, Any]) -> bool:
+    """Execute the game has sgf routine."""
     sgf_code = row.get("Sgf_Code")
     return bool(str(sgf_code or "").strip())
 
 
 def game_sgf_viewer_url(game_id: Any, has_sgf: bool) -> str | None:
+    """Execute the game sgf viewer url routine."""
     if not has_sgf or game_id is None:
         return None
     return f"/api/ratings-explorer/game-sgf-viewer?game_id={game_id}&rev={SGF_VIEWER_REV}"
 
 
 def tournament_game_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the tournament game payload routine."""
     has_sgf = game_has_sgf(row)
     return {
         "game_id": row.get("Game_ID"),
@@ -810,6 +858,7 @@ def search_players(
     rating_bands: list[str] | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Execute the search players routine."""
     filters: list[str] = [f"m.[AGAID] < {MAX_MEMBER_AGAID}"]
     params: list[Any] = []
     if agaid is not None:
@@ -914,6 +963,7 @@ def search_tournaments(
     limit: int,
     page: int = 0,
 ) -> dict[str, Any]:
+    """Execute the search tournaments routine."""
     filters: list[str] = ["1 = 1"]
     params: list[Any] = []
     page = max(0, int(page or 0))
@@ -1008,6 +1058,7 @@ ORDER BY t.[Tournament_Date] DESC, t.[Tournament_Code]
 
 
 def build_filter_options(conn_str: str) -> dict[str, Any]:
+    """Build filter options."""
     chapter_rows = query_rows(
         conn_str,
         f"""
@@ -1173,6 +1224,7 @@ def get_player_detail(
     opponents_sort: str = "games",
     include_context: bool = False,
 ) -> dict[str, Any] | None:
+    """Return player detail."""
     recent_tournaments_page = max(0, int(recent_tournaments_page or 0))
     recent_games_page = max(0, int(recent_games_page or 0))
     opponents_page = max(0, int(opponents_page or 0))
@@ -1556,6 +1608,7 @@ FROM
 
 
 def load_player_articles(conn_str: str, agaid: int, limit: int = 7) -> list[dict[str, Any]]:
+    """Load player articles."""
     article_limit = max(1, min(int(limit), 7))
     cache_key = f"{agaid}:{article_limit}"
     cached, found = _cache_get("player_articles", cache_key)
@@ -1585,6 +1638,7 @@ ORDER BY [JournalDate] DESC, [JournalArticleMemberMatchID] DESC
 
 
 def load_player_review_videos(conn_str: str, agaid: int, limit: int = 7) -> list[dict[str, Any]]:
+    """Load player review videos."""
     review_limit = max(1, min(int(limit), 7))
     cache_key = f"{agaid}:{review_limit}"
     cached, found = _cache_get("player_review_videos", cache_key)
@@ -1753,6 +1807,7 @@ ORDER BY matched_reviews.[JournalDate] DESC, matched_reviews.[FirstMatchID] ASC
 
 
 def attach_player_articles(conn_str: str | None, payload: dict[str, Any] | None, agaid: int) -> dict[str, Any] | None:
+    """Execute the attach player articles routine."""
     if not payload:
         return payload
     payload["news_articles"] = load_player_articles(conn_str, agaid) if conn_str else []
@@ -1761,6 +1816,7 @@ def attach_player_articles(conn_str: str | None, payload: dict[str, Any] | None,
 
 
 def get_tournament_detail(conn_str: str, tournament_code: str) -> dict[str, Any] | None:
+    """Return tournament detail."""
     summary_query = """
 SELECT
     t.[Tournament_Code],
@@ -1884,6 +1940,7 @@ ORDER BY g.[Game_Date], g.[Round], g.[Game_ID]
 
 
 def load_sql_rating_history(agaid: int) -> list[tuple[datetime, float, float]]:
+    """Load sql rating history."""
     cache_key = str(agaid)
     cached, found = _cache_get("player_rating_history", cache_key)
     if found:
@@ -1921,6 +1978,7 @@ ORDER BY [Elab_Date], [id]
 
 
 def serialize_rating_history(history_points: list[tuple[datetime, float, float]]) -> list[dict[str, Any]]:
+    """Serialize rating history."""
     return [
         {
             "date": dt.date().isoformat(),
@@ -1936,12 +1994,14 @@ def render_single_history_svg(
     history_points: list[tuple[datetime, float, float]],
     member_name: str | None = None,
 ) -> str:
+    """Render single history svg."""
     if not history_points:
         raise ValueError(f"No official rating history found for AGAID {agaid}.")
 
     min_date = min(point[0] for point in history_points)
     max_date = max(point[0] for point in history_points)
     def chart_rating(value: float) -> float:
+        """Execute the chart rating routine."""
         if value <= -1.0:
             return value
         if value >= 1.0:
@@ -1949,6 +2009,7 @@ def render_single_history_svg(
         return -1.0
 
     def chart_tick_label(tick: int) -> str:
+        """Execute the chart tick label routine."""
         if tick == -1:
             return "1/-1"
         return f"{tick + 2:d}" if tick >= 0 else f"{tick:d}"
@@ -1973,19 +2034,24 @@ def render_single_history_svg(
     plot_h = height - top - bottom
 
     def x_pos(dt: datetime) -> float:
+        """Execute the x pos routine."""
         total_days = (max_date - min_date).days or 1
         return left + (((dt - min_date).days) / total_days) * plot_w
 
     def y_pos(rating: float) -> float:
+        """Execute the y pos routine."""
         return top + ((max_chart_rating - chart_rating(rating)) / (max_chart_rating - min_chart_rating)) * plot_h
 
     def y_pos_chart(chart_value: float) -> float:
+        """Execute the y pos chart routine."""
         return top + ((max_chart_rating - chart_value) / (max_chart_rating - min_chart_rating)) * plot_h
 
     def polyline(points: list[tuple[datetime, float, float]]) -> str:
+        """Execute the polyline routine."""
         return " ".join(f"{x_pos(dt):.2f},{y_pos(value):.2f}" for dt, value, _ in points)
 
     def sigma_band(points: list[tuple[datetime, float, float]]) -> str:
+        """Execute the sigma band routine."""
         upper = [f"{x_pos(dt):.2f},{y_pos_chart(chart_rating(value) + sigma):.2f}" for dt, value, sigma in points]
         lower = [f"{x_pos(dt):.2f},{y_pos_chart(chart_rating(value) - sigma):.2f}" for dt, value, sigma in reversed(points)]
         return " ".join(upper + lower)
@@ -2046,6 +2112,7 @@ def render_single_history_svg(
 
 
 def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False) -> str:
+    """Render game sgf viewer html."""
     wgo_css = get_asset_text("wgo/wgo.player.css") or ""
     wgo_core_js = get_asset_text("wgo/wgo.min.js") or ""
     wgo_player_js = get_asset_text("wgo/wgo.player.min.js") or ""
@@ -2538,44 +2605,54 @@ def render_game_sgf_viewer_html(game_id: int, sgf_url: str, mobile: bool = False
 
 
 def load_ratings_explorer_html(api_base: str = "", template_name: str = "ratings_explorer.html") -> str:
+    """Load ratings explorer html."""
     template_path = _app_root() / template_name
     markup = template_path.read_text(encoding="utf-8")
     return markup.replace('"__RATINGS_EXPLORER_API_BASE__"', json.dumps(api_base))
 
 
 def snapshot_path() -> Path:
+    """Execute the snapshot path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / SNAPSHOT_FILENAME
 
 
 def snapshot_status_path() -> Path:
+    """Execute the snapshot status path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / SNAPSHOT_STATUS_FILENAME
 
 
 def snapshot_request_path() -> Path:
+    """Execute the snapshot request path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / SNAPSHOT_REQUEST_FILENAME
 
 
 def startup_players_path() -> Path:
+    """Execute the startup players path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / STARTUP_PLAYERS_FILENAME
 
 
 def player_search_snapshot_path() -> Path:
+    """Execute the player search snapshot path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / PLAYER_SEARCH_SNAPSHOT_FILENAME
 
 
 def tournament_search_snapshot_path() -> Path:
+    """Execute the tournament search snapshot path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / TOURNAMENT_SEARCH_SNAPSHOT_FILENAME
 
 
 def filter_options_snapshot_path() -> Path:
+    """Execute the filter options snapshot path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / FILTER_OPTIONS_SNAPSHOT_FILENAME
 
 
 def tournament_detail_dir_path() -> Path:
+    """Execute the tournament detail dir path routine."""
     return _app_root() / SNAPSHOT_DIRNAME / SNAPSHOT_TOURNAMENT_DETAIL_DIRNAME
 
 
 def _safe_snapshot_component(value: str) -> str:
+    """Execute the safe snapshot component routine."""
     text = str(value or "").strip()
     if not text:
         return "_"
@@ -2583,14 +2660,17 @@ def _safe_snapshot_component(value: str) -> str:
 
 
 def tournament_detail_path(tournament_code: str) -> Path:
+    """Execute the tournament detail path routine."""
     return tournament_detail_dir_path() / f"{_safe_snapshot_component(tournament_code)}.json"
 
 
 def snapshot_storage_connection_string() -> str | None:
+    """Execute the snapshot storage connection string routine."""
     return _get_setting("AzureWebJobsStorage")
 
 
 def _snapshot_container_client():
+    """Execute the snapshot container client routine."""
     conn_str = snapshot_storage_connection_string()
     if not conn_str or BlobServiceClient is None:
         return None
@@ -2604,6 +2684,7 @@ def _snapshot_container_client():
 
 
 def _blob_client():
+    """Execute the blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2611,6 +2692,7 @@ def _blob_client():
 
 
 def _status_blob_client():
+    """Execute the status blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2618,6 +2700,7 @@ def _status_blob_client():
 
 
 def _startup_players_blob_client():
+    """Execute the startup players blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2625,6 +2708,7 @@ def _startup_players_blob_client():
 
 
 def _player_search_snapshot_blob_client():
+    """Execute the player search snapshot blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2632,6 +2716,7 @@ def _player_search_snapshot_blob_client():
 
 
 def _tournament_search_snapshot_blob_client():
+    """Execute the tournament search snapshot blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2639,6 +2724,7 @@ def _tournament_search_snapshot_blob_client():
 
 
 def _filter_options_snapshot_blob_client():
+    """Execute the filter options snapshot blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2646,6 +2732,7 @@ def _filter_options_snapshot_blob_client():
 
 
 def _request_blob_client():
+    """Execute the request blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2653,6 +2740,7 @@ def _request_blob_client():
 
 
 def _tournament_detail_blob_client(tournament_code: str):
+    """Execute the tournament detail blob client routine."""
     container = _snapshot_container_client()
     if container is None:
         return None
@@ -2661,6 +2749,7 @@ def _tournament_detail_blob_client(tournament_code: str):
 
 
 def _sgf_container_client():
+    """Execute the sgf container client routine."""
     conn_str = snapshot_storage_connection_string()
     if not conn_str or BlobServiceClient is None:
         return None
@@ -2674,6 +2763,7 @@ def _sgf_container_client():
 
 
 def sgf_blob_client(sgf_code: str):
+    """Execute the sgf blob client routine."""
     container = _sgf_container_client()
     if container is None:
         return None
@@ -2684,11 +2774,13 @@ def sgf_blob_client(sgf_code: str):
 
 
 def _slug_text(value: Any) -> str:
+    """Execute the slug text routine."""
     text = str(value or "").strip().lower()
     return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
 
 
 def build_uploaded_sgf_code(game_id: int, row: dict[str, Any] | None = None, now: datetime | None = None) -> str:
+    """Build uploaded sgf code."""
     stamp = (now or datetime.now(timezone.utc)).strftime("%Y%m%d-%H%M%S")
     if not row:
         return f"upload-{game_id}-{stamp}"
@@ -2712,6 +2804,7 @@ def build_uploaded_sgf_code(game_id: int, row: dict[str, Any] | None = None, now
 
 
 def upload_sgf_blob(sgf_code: str, sgf_text: str) -> str:
+    """Execute the upload sgf blob routine."""
     blob = sgf_blob_client(sgf_code)
     if blob is None:
         raise RuntimeError("SGF blob container is unavailable.")
@@ -2720,6 +2813,7 @@ def upload_sgf_blob(sgf_code: str, sgf_text: str) -> str:
 
 
 def load_game_sgf_text(conn_str: str, game_id: int) -> tuple[str | None, str | None]:
+    """Load game sgf text."""
     cache_key = str(game_id)
     cached, found = _cache_get("game_sgf", cache_key)
     if found:
@@ -2753,6 +2847,7 @@ WHERE [Game_ID] = ?
 
 
 def load_game_for_sgf_upload(conn_str: str, game_id: int) -> dict[str, Any] | None:
+    """Load game for sgf upload."""
     return query_one(
         conn_str,
         """
@@ -2783,6 +2878,7 @@ WHERE g.[Game_ID] = ?
 
 
 def update_game_sgf_code(conn_str: str, game_id: int, sgf_code: str) -> None:
+    """Update game sgf code."""
     execute_non_query(
         conn_str,
         """
@@ -2796,6 +2892,7 @@ WHERE [Game_ID] = ?
 
 
 def sgf_upload_game_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the sgf upload game payload routine."""
     has_sgf = game_has_sgf(row)
     return {
         "game_id": row.get("Game_ID"),
@@ -2832,6 +2929,7 @@ def sgf_upload_game_payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_snapshot() -> dict[str, Any] | None:
+    """Load snapshot."""
     cached, found = _cache_get("snapshot", "main")
     if found:
         return cached
@@ -2852,6 +2950,7 @@ def load_snapshot() -> dict[str, Any] | None:
 
 
 def load_snapshot_status() -> dict[str, Any] | None:
+    """Load snapshot status."""
     cached, found = _cache_get("snapshot_status", "main")
     if found:
         return cached
@@ -2872,6 +2971,7 @@ def load_snapshot_status() -> dict[str, Any] | None:
 
 
 def load_snapshot_request() -> dict[str, Any] | None:
+    """Load snapshot request."""
     cached, found = _cache_get("snapshot_request", "main")
     if found:
         return cached
@@ -2892,6 +2992,7 @@ def load_snapshot_request() -> dict[str, Any] | None:
 
 
 def load_tournament_detail_snapshot(tournament_code: str) -> dict[str, Any] | None:
+    """Load tournament detail snapshot."""
     cache_key = str(tournament_code or "").strip()
     cached, found = _cache_get("tournament_detail", cache_key)
     if found:
@@ -2913,6 +3014,7 @@ def load_tournament_detail_snapshot(tournament_code: str) -> dict[str, Any] | No
 
 
 def load_startup_players() -> dict[str, Any] | None:
+    """Load startup players."""
     cached, found = _cache_get("startup_players", "main")
     if found:
         return cached
@@ -2933,6 +3035,7 @@ def load_startup_players() -> dict[str, Any] | None:
 
 
 def load_player_search_snapshot() -> dict[str, Any] | None:
+    """Load player search snapshot."""
     cached, found = _cache_get("player_search_snapshot", "main")
     if found:
         return cached
@@ -2953,6 +3056,7 @@ def load_player_search_snapshot() -> dict[str, Any] | None:
 
 
 def load_tournament_search_snapshot() -> dict[str, Any] | None:
+    """Load tournament search snapshot."""
     cached, found = _cache_get("tournament_search_snapshot", "main")
     if found:
         return cached
@@ -2973,6 +3077,7 @@ def load_tournament_search_snapshot() -> dict[str, Any] | None:
 
 
 def load_filter_options_snapshot() -> dict[str, Any] | None:
+    """Load filter options snapshot."""
     cached, found = _cache_get("filter_options_snapshot", "main")
     if found:
         return cached
@@ -2993,6 +3098,7 @@ def load_filter_options_snapshot() -> dict[str, Any] | None:
 
 
 def save_snapshot(snapshot: dict[str, Any]) -> None:
+    """Save snapshot."""
     payload = json.dumps(snapshot, ensure_ascii=True)
     _cache_set("snapshot", "main", snapshot, SNAPSHOT_CACHE_TTL_SECONDS)
     blob = _blob_client()
@@ -3010,6 +3116,7 @@ def save_snapshot(snapshot: dict[str, Any]) -> None:
 
 
 def save_startup_players(payload_dict: dict[str, Any]) -> None:
+    """Save startup players."""
     payload = json.dumps(payload_dict, ensure_ascii=True)
     _cache_set("startup_players", "main", payload_dict, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
     blob = _startup_players_blob_client()
@@ -3027,6 +3134,7 @@ def save_startup_players(payload_dict: dict[str, Any]) -> None:
 
 
 def save_player_search_snapshot(payload_dict: dict[str, Any]) -> None:
+    """Save player search snapshot."""
     payload = json.dumps(payload_dict, ensure_ascii=True)
     _cache_set("player_search_snapshot", "main", payload_dict, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
     blob = _player_search_snapshot_blob_client()
@@ -3044,6 +3152,7 @@ def save_player_search_snapshot(payload_dict: dict[str, Any]) -> None:
 
 
 def save_tournament_search_snapshot(payload_dict: dict[str, Any]) -> None:
+    """Save tournament search snapshot."""
     payload = json.dumps(payload_dict, ensure_ascii=True)
     _cache_set("tournament_search_snapshot", "main", payload_dict, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
     blob = _tournament_search_snapshot_blob_client()
@@ -3061,6 +3170,7 @@ def save_tournament_search_snapshot(payload_dict: dict[str, Any]) -> None:
 
 
 def save_filter_options_snapshot(payload_dict: dict[str, Any]) -> None:
+    """Save filter options snapshot."""
     payload = json.dumps(payload_dict, ensure_ascii=True)
     _cache_set("filter_options_snapshot", "main", payload_dict, STARTUP_PLAYERS_CACHE_TTL_SECONDS)
     blob = _filter_options_snapshot_blob_client()
@@ -3078,6 +3188,7 @@ def save_filter_options_snapshot(payload_dict: dict[str, Any]) -> None:
 
 
 def save_tournament_detail_snapshots(tournament_details: dict[str, dict[str, Any]]) -> None:
+    """Save tournament detail snapshots."""
     container = _snapshot_container_client()
     write_local_files = container is None
     if write_local_files:
@@ -3104,6 +3215,7 @@ def save_tournament_detail_snapshots(tournament_details: dict[str, dict[str, Any
 
 
 def save_snapshot_status(status: dict[str, Any]) -> None:
+    """Save snapshot status."""
     payload = json.dumps(status, ensure_ascii=True)
     _cache_set("snapshot_status", "main", status, SNAPSHOT_STATUS_CACHE_TTL_SECONDS)
     blob = _status_blob_client()
@@ -3121,6 +3233,7 @@ def save_snapshot_status(status: dict[str, Any]) -> None:
 
 
 def save_snapshot_request(request: dict[str, Any]) -> None:
+    """Save snapshot request."""
     payload = json.dumps(request, ensure_ascii=True)
     _cache_set("snapshot_request", "main", request, SNAPSHOT_REQUEST_CACHE_TTL_SECONDS)
     blob = _request_blob_client()
@@ -3138,6 +3251,7 @@ def save_snapshot_request(request: dict[str, Any]) -> None:
 
 
 def clear_snapshot_request() -> None:
+    """Execute the clear snapshot request routine."""
     _cache_delete("snapshot_request", "main")
     blob = _request_blob_client()
     if blob is not None:
@@ -3160,6 +3274,7 @@ def update_snapshot_status(
     error: str | None = None,
     snapshot_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Update snapshot status."""
     existing = load_snapshot_status() or {}
     now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
     status = {
@@ -3181,6 +3296,7 @@ def update_snapshot_status(
 
 
 def request_snapshot_refresh(source: str, requested_at: str) -> dict[str, Any]:
+    """Execute the request snapshot refresh routine."""
     request = {
         "requested_at": requested_at,
         "source": source,
@@ -3191,6 +3307,7 @@ def request_snapshot_refresh(source: str, requested_at: str) -> dict[str, Any]:
 
 
 def _snapshot_sort_key_player(item: dict[str, Any]) -> tuple[Any, ...]:
+    """Execute the snapshot sort key player routine."""
     return (
         1 if item.get("rating") is None else 0,
         -(item.get("rating") or float("-inf")),
@@ -3201,6 +3318,7 @@ def _snapshot_sort_key_player(item: dict[str, Any]) -> tuple[Any, ...]:
 
 
 def _snapshot_sort_key_tournament(item: dict[str, Any]) -> tuple[Any, ...]:
+    """Execute the snapshot sort key tournament routine."""
     return (
         item.get("tournament_date") or "",
         item.get("tournament_code") or "",
@@ -3219,6 +3337,7 @@ def _player_matches_snapshot_filters(
     recent_activity_cutoff: str | None,
     rating_bands: list[str] | None,
 ) -> bool:
+    """Execute the player matches snapshot filters routine."""
     chapter_values = set(chapters or [])
     include_blank_chapter = BLANK_CHAPTER_VALUE in chapter_values
     concrete_chapter_values = {value for value in chapter_values if value != BLANK_CHAPTER_VALUE}
@@ -3275,6 +3394,7 @@ def search_players_from_snapshot(
     rating_bands: list[str] | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Execute the search players from snapshot routine."""
     players = snapshot.get("players", [])
     matches = [
         normalize_player_summary(item)
@@ -3297,6 +3417,7 @@ def search_players_from_snapshot(
 
 
 def snapshot_supports_player_member_type(snapshot: dict[str, Any]) -> bool:
+    """Execute the snapshot supports player member type routine."""
     players = snapshot.get("players") or []
     if not players:
         return False
@@ -3314,6 +3435,7 @@ def search_tournaments_from_snapshot(
     limit: int,
     page: int = 0,
 ) -> dict[str, Any]:
+    """Execute the search tournaments from snapshot routine."""
     page = max(0, int(page or 0))
     page_size = max(1, int(limit))
     offset = page * page_size
@@ -3376,6 +3498,7 @@ def search_tournaments_from_snapshot(
 
 
 def build_filter_options_from_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Build filter options from snapshot."""
     chapters_by_code: dict[str, dict[str, str]] = {BLANK_CHAPTER_VALUE: dict(BLANK_CHAPTER_OPTION)}
     states: dict[str, dict[str, str]] = {BLANK_STATE_VALUE: dict(BLANK_STATE_OPTION)}
     cities: dict[str, dict[str, str]] = {BLANK_CITY_VALUE: dict(BLANK_CITY_OPTION)}
@@ -3448,6 +3571,7 @@ def build_filter_options_from_snapshot(snapshot: dict[str, Any]) -> dict[str, An
 
 
 def get_player_detail_from_snapshot(snapshot: dict[str, Any], agaid: int) -> dict[str, Any] | None:
+    """Return player detail from snapshot."""
     detail = (snapshot.get("player_details") or {}).get(str(agaid))
     if not detail:
         return None
@@ -3457,10 +3581,12 @@ def get_player_detail_from_snapshot(snapshot: dict[str, Any], agaid: int) -> dic
 
 
 def get_tournament_detail_from_snapshot(snapshot: dict[str, Any], tournament_code: str) -> dict[str, Any] | None:
+    """Return tournament detail from snapshot."""
     return (snapshot.get("tournament_details") or {}).get(tournament_code)
 
 
 def load_member_name_from_snapshot(snapshot: dict[str, Any], agaid: int) -> str | None:
+    """Load member name from snapshot."""
     detail = get_player_detail_from_snapshot(snapshot, agaid)
     if detail and detail.get("player"):
         return detail["player"].get("display_name")
@@ -3471,6 +3597,7 @@ def load_member_name_from_snapshot(snapshot: dict[str, Any], agaid: int) -> str 
 
 
 def load_rating_history_from_snapshot(snapshot: dict[str, Any], agaid: int) -> list[tuple[datetime, float, float]]:
+    """Load rating history from snapshot."""
     points = ((snapshot.get("rating_histories") or {}).get(str(agaid))) or []
     history: list[tuple[datetime, float, float]] = []
     for point in points:
@@ -3488,6 +3615,7 @@ def load_rating_history_from_snapshot(snapshot: dict[str, Any], agaid: int) -> l
 
 
 def _build_snapshot_artifacts(conn_str: str) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    """Build snapshot artifacts."""
     player_summary_rows = query_rows(
         conn_str,
         current_ratings_cte()
@@ -4123,11 +4251,13 @@ ORDER BY [Pin_Player], [Elab_Date], [id]
 
 
 def build_snapshot(conn_str: str) -> dict[str, Any]:
+    """Build snapshot."""
     snapshot, _ = _build_snapshot_artifacts(conn_str)
     return snapshot
 
 
 def build_startup_players_payload(snapshot: dict[str, Any], limit: int = 25) -> dict[str, Any]:
+    """Build startup players payload."""
     players = [normalize_player_summary(item) for item in (snapshot.get("players") or [])[: max(1, int(limit))]]
     return {
         "meta": dict(snapshot.get("meta") or {}),
@@ -4136,6 +4266,7 @@ def build_startup_players_payload(snapshot: dict[str, Any], limit: int = 25) -> 
 
 
 def build_player_search_snapshot_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Build player search snapshot payload."""
     return {
         "meta": dict(snapshot.get("meta") or {}),
         "players": [normalize_player_summary(item) for item in (snapshot.get("players") or [])],
@@ -4143,6 +4274,7 @@ def build_player_search_snapshot_payload(snapshot: dict[str, Any]) -> dict[str, 
 
 
 def build_tournament_search_snapshot_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Build tournament search snapshot payload."""
     return {
         "meta": dict(snapshot.get("meta") or {}),
         "tournaments": list(snapshot.get("tournaments") or []),
@@ -4150,6 +4282,7 @@ def build_tournament_search_snapshot_payload(snapshot: dict[str, Any]) -> dict[s
 
 
 def _build_small_snapshot_artifacts(conn_str: str) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    """Build small snapshot artifacts."""
     player_summary_rows = query_rows(
         conn_str,
         current_ratings_cte()
@@ -4364,6 +4497,7 @@ ORDER BY g.[Tournament_Code], g.[Game_Date], g.[Round], g.[Game_ID]
 
 
 def refresh_snapshot(conn_str: str) -> dict[str, Any]:
+    """Refresh snapshot."""
     snapshot, tournament_detail_snapshots = _build_small_snapshot_artifacts(conn_str)
     save_startup_players(build_startup_players_payload(snapshot))
     save_player_search_snapshot(build_player_search_snapshot_payload(snapshot))

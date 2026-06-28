@@ -18,7 +18,9 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
 class FakeAdapter:
+    """Represent fake adapter."""
     def __init__(self, candidate_rows=None, membership_rows=None, rating_rows=None) -> None:
+        """Initialize the fake adapter instance."""
         self.candidate_rows = list(candidate_rows or [])
         self.membership_rows = None if membership_rows is None else list(membership_rows)
         self.rating_rows = list(rating_rows or [])
@@ -26,6 +28,7 @@ class FakeAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if "NEXT VALUE FOR [ratings].[bayrate_run_id_seq]" in query:
             return [{"RunID": 42}]
@@ -40,11 +43,14 @@ class FakeAdapter:
         return list(self.candidate_rows)
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class StageReportsTest(unittest.TestCase):
+    """Represent stage reports test."""
     def test_stage_multiple_reports_writes_run_tournaments_and_games(self) -> None:
+        """Verify that stage multiple reports writes run tournaments and games."""
         adapter = FakeAdapter()
         run_id = 111
 
@@ -69,6 +75,7 @@ class StageReportsTest(unittest.TestCase):
         )
 
     def test_stage_write_reserves_incremental_run_id(self) -> None:
+        """Verify that stage write reserves incremental run id."""
         adapter = FakeAdapter()
 
         payload = stage_report_files(
@@ -84,6 +91,7 @@ class StageReportsTest(unittest.TestCase):
         self.assertEqual({entry["run_id"] for entry in payload["staged_games"]}, {42})
 
     def test_host_chapter_is_required_before_marking_ready(self) -> None:
+        """Verify that host chapter is required before marking ready."""
         payload = stage_report_files(
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),
@@ -118,6 +126,7 @@ class StageReportsTest(unittest.TestCase):
         self.assertFalse(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
 
     def test_report_metadata_is_applied_before_payload_review(self) -> None:
+        """Verify that report metadata is applied before payload review."""
         payload = build_staging_payload(
             [(str(FIXTURE_DIR / "report_compact_one.txt"), (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"))],
             adapter=FakeAdapter(),
@@ -152,6 +161,7 @@ class StageReportsTest(unittest.TestCase):
         self.assertFalse(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
 
     def test_duplicate_candidate_with_different_code_needs_review(self) -> None:
+        """Verify that duplicate candidate with different code needs review."""
         adapter = FakeAdapter(
             [
                 {
@@ -198,6 +208,7 @@ class StageReportsTest(unittest.TestCase):
         self.assertFalse(adapter.statements)
 
     def test_exact_existing_code_is_reused(self) -> None:
+        """Verify that exact existing code is reused."""
         adapter = FakeAdapter(
             [
                 {
@@ -229,6 +240,7 @@ class StageReportsTest(unittest.TestCase):
         self.assertEqual({entry["game_row"]["Tournament_Code"] for entry in payload["staged_games"]}, {"REUSED-1"})
 
     def test_generated_code_collision_with_different_production_tournament_gets_unique_code(self) -> None:
+        """Verify that generated code collision with different production tournament gets unique code."""
         adapter = FakeAdapter(
             [
                 {
@@ -277,6 +289,7 @@ END
         )
 
     def test_validation_failure_for_non_bayrate_rank(self) -> None:
+        """Verify that validation failure for non bayrate rank."""
         report = """TOURNEY Decimal Rank Suffix Sample
 start=2026-03-01
 finish=2026-03-01
@@ -300,6 +313,7 @@ END
         self.assertIn("Rank_1 must be a BayRate rank", payload["staged_tournaments"][0]["validation_errors"][0])
 
     def test_preview_collects_later_report_warnings_after_parse_failure(self) -> None:
+        """Verify that preview collects later report warnings after parse failure."""
         broken_report = """TOURNEY Broken Upload
 start=2026-04-01
 finish=2026-04-01
@@ -336,6 +350,7 @@ END
         self.assertEqual(payload["staged_tournaments"][1]["status"], "needs_review")
 
     def test_unreported_game_result_is_warned_and_not_staged(self) -> None:
+        """Verify that unreported game result is warned and not staged."""
         report = """TOURNEY Unreported Result Sample
 start=2026-05-01
 finish=2026-05-01
@@ -367,6 +382,7 @@ END
         self.assertEqual(payload["staged_games"][0]["game_row"]["Pin_Player_2"], 5002)
 
     def test_expired_membership_is_valid_when_covered_on_event_date(self) -> None:
+        """Verify that expired membership is valid when covered on event date."""
         adapter = FakeAdapter(
             membership_rows=[
                 {"AGAID": 1001, "ExpirationDate": date(2026, 1, 1)},
@@ -386,6 +402,7 @@ END
         self.assertEqual(payload["validation_error_count"], 0)
 
     def test_expired_membership_before_event_date_requires_review(self) -> None:
+        """Verify that expired membership before event date requires review."""
         adapter = FakeAdapter(
             membership_rows=[
                 {"AGAID": 1001, "ExpirationDate": date(2025, 12, 31)},
@@ -410,6 +427,7 @@ END
         self.assertIn("AGAID 1001 membership expired on 2025-12-31 before event date 2026-01-01", membership_warnings[0]["message"])
 
     def test_missing_membership_record_requires_review(self) -> None:
+        """Verify that missing membership record requires review."""
         adapter = FakeAdapter(
             membership_rows=[
                 {"AGAID": 1001, "ExpirationDate": date(2099, 1, 1)},
@@ -433,6 +451,7 @@ END
         self.assertIn("AGAID 1003 is missing a membership record", membership_warnings[0]["message"])
 
     def test_membership_name_mismatch_adds_operator_warning(self) -> None:
+        """Verify that membership name mismatch adds operator warning."""
         adapter = FakeAdapter(
             membership_rows=[
                 {"AGAID": 1001, "FirstName": "Alice", "LastName": "Example", "ExpirationDate": date(2099, 1, 1)},
@@ -456,6 +475,7 @@ END
         self.assertIn("Robert Example", mismatch[0]["message"])
 
     def test_entry_rank_mismatch_adds_operator_warning_with_highlight(self) -> None:
+        """Verify that entry rank mismatch adds operator warning with highlight."""
         adapter = FakeAdapter(
             rating_rows=[
                 {
@@ -497,6 +517,7 @@ END
         self.assertIn("Entry rank is below", highlighted[0]["message"])
 
     def test_staged_games_can_be_rendered_as_bayrate_game_csv_rows(self) -> None:
+        """Verify that staged games can be rendered as bayrate game csv rows."""
         payload = stage_report_files(
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),
@@ -523,6 +544,7 @@ END
         self.assertEqual(len(loaded_games), 2)
 
     def test_review_explanation_reports_game_diff_and_same_date_order(self) -> None:
+        """Verify that review explanation reports game diff and same date order."""
         adapter = FakeAdapter()
         payload = build_staging_payload(
             [("report_compact_one.txt", (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"))],
@@ -581,6 +603,7 @@ END
         self.assertEqual(explanation["same_date_order"][0]["tournament_code"], "OLD-SAMPLE-1")
 
     def test_compare_games_handles_exact_match(self) -> None:
+        """Verify that compare games handles exact match."""
         payload = stage_report_files(
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),

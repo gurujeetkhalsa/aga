@@ -42,6 +42,7 @@ DEFAULT_OUTPUT_DIR = REPO_ROOT / "bayrate" / "output" / "simulations"
 
 @dataclass(frozen=True)
 class RatingSnapshot:
+    """Represent rating snapshot."""
     player_id: int
     rating: float
     sigma: float
@@ -51,6 +52,7 @@ class RatingSnapshot:
 
 @dataclass(frozen=True)
 class EncounterTemplate:
+    """Represent encounter template."""
     rating_band: str
     anchor_seed: float
     opponent_seed: float
@@ -61,6 +63,7 @@ class EncounterTemplate:
 
 @dataclass(frozen=True)
 class SimulatedPlayer:
+    """Represent simulated player."""
     simulation_player_id: int
     original_agaid: int
     replication: int
@@ -77,6 +80,7 @@ class SimulatedPlayer:
 
 @dataclass(frozen=True)
 class SimulatedGameInfo:
+    """Represent simulated game info."""
     source_game_id: int
     simulation_player_id: int
     original_agaid: int
@@ -94,6 +98,7 @@ class SimulatedGameInfo:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--games", type=Path, default=DEFAULT_DATASET / "games.csv")
     parser.add_argument("--ratings", type=Path, default=DEFAULT_DATASET / "ratings.csv")
@@ -130,6 +135,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def rating_band(rating: float) -> str:
+    """Execute the rating band routine."""
     if rating < -20:
         return "<20k"
     if rating < -10:
@@ -152,6 +158,7 @@ def rating_band(rating: float) -> str:
 
 
 def sigma_band(sigma: float) -> str:
+    """Execute the sigma band routine."""
     if sigma < 0.25:
         return "narrow_<0.25"
     if sigma < 0.50:
@@ -162,14 +169,17 @@ def sigma_band(sigma: float) -> str:
 
 
 def one_rank_stronger(rating: float) -> float:
+    """Execute the one rank stronger routine."""
     return open_boundary(close_boundary(rating) + 1.0)
 
 
 def shift_by_closed_delta(rating: float, delta: float) -> float:
+    """Execute the shift by closed delta routine."""
     return open_boundary(close_boundary(rating) + delta)
 
 
 def parse_activity_levels(text: str) -> list[tuple[str, int]]:
+    """Parse activity levels."""
     levels: list[tuple[str, int]] = []
     for part in text.split(","):
         if not part.strip():
@@ -187,6 +197,7 @@ def parse_activity_levels(text: str) -> list[tuple[str, int]]:
 
 
 def load_latest_ratings(path: Path) -> dict[int, RatingSnapshot]:
+    """Load latest ratings."""
     latest: dict[int, RatingSnapshot] = {}
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.reader(handle)
@@ -209,6 +220,7 @@ def load_latest_ratings(path: Path) -> dict[int, RatingSnapshot]:
 
 
 def build_encounter_templates(games: list[GameRecord]) -> dict[str, list[EncounterTemplate]]:
+    """Build encounter templates."""
     templates: dict[str, list[EncounterTemplate]] = {}
     for game in games:
         white_template = EncounterTemplate(
@@ -239,6 +251,7 @@ def sample_base_players(
     rng: random.Random,
     max_players: int | None,
 ) -> list[RatingSnapshot]:
+    """Execute the sample base players routine."""
     cells: dict[tuple[str, str], list[RatingSnapshot]] = {}
     for snapshot in latest_ratings.values():
         cells.setdefault((rating_band(snapshot.rating), sigma_band(snapshot.sigma)), []).append(snapshot)
@@ -266,6 +279,7 @@ def expand_simulated_players(
     self_promote_closed_delta: float,
     rng: random.Random,
 ) -> list[SimulatedPlayer]:
+    """Execute the expand simulated players routine."""
     players: list[SimulatedPlayer] = []
     next_id = 10_000_000
     for snapshot in base_players:
@@ -295,6 +309,7 @@ def expand_simulated_players(
 
 
 def scheduled_dates(start_date: date, games_per_year: int, years: float, rng: random.Random) -> list[date]:
+    """Execute the scheduled dates routine."""
     game_count = max(1, round(games_per_year * years))
     mean_gap = 365.0 / games_per_year
     current_day = 0.0
@@ -311,6 +326,7 @@ def scheduled_dates(start_date: date, games_per_year: int, years: float, rng: ra
 
 
 def opponent_sigma_for_rating(latest_ratings: dict[int, RatingSnapshot], rating: float, rng: random.Random) -> float:
+    """Execute the opponent sigma for rating routine."""
     band = rating_band(rating)
     sigmas = [snapshot.sigma for snapshot in latest_ratings.values() if rating_band(snapshot.rating) == band]
     if not sigmas:
@@ -328,6 +344,7 @@ def simulate_games(
     rng: random.Random,
     target_initial_dates: dict[int, date] | None = None,
 ) -> tuple[list[GameRecord], list[SimulatedGameInfo], dict[int, TdListEntry]]:
+    """Execute the simulate games routine."""
     games: list[GameRecord] = []
     infos: list[SimulatedGameInfo] = []
     initial_td_list: dict[int, TdListEntry] = {}
@@ -424,6 +441,7 @@ def simulate_games(
 
 
 def clone_td_list(td_list: dict[int, TdListEntry]) -> dict[int, TdListEntry]:
+    """Execute the clone td list routine."""
     return {
         player_id: TdListEntry(
             player_id=entry.player_id,
@@ -438,10 +456,12 @@ def clone_td_list(td_list: dict[int, TdListEntry]) -> dict[int, TdListEntry]:
 
 
 def baseline_config() -> BayrateConfig:
+    """Execute the baseline config routine."""
     return BayrateConfig(optimizer_random_jitter=0.0)
 
 
 def guarded_surprise_config() -> BayrateConfig:
+    """Execute the guarded surprise config routine."""
     return BayrateConfig(
         optimizer_random_jitter=0.0,
         surprise_sigma_base=0.24,
@@ -455,12 +475,14 @@ def guarded_surprise_config() -> BayrateConfig:
 
 
 def guarded_surprise_min_pre_post_config() -> BayrateConfig:
+    """Execute the guarded surprise min pre post config routine."""
     config = guarded_surprise_config()
     config.surprise_sigma_score_mode = "min_pre_post"
     return config
 
 
 def guarded_surprise_min_pre_post_gated_base_config() -> BayrateConfig:
+    """Execute the guarded surprise min pre post gated base config routine."""
     config = guarded_surprise_min_pre_post_config()
     config.surprise_sigma_gate_base_by_deadband = True
     return config
@@ -470,6 +492,7 @@ def run_algorithms(
     games: list[GameRecord],
     initial_td_list: dict[int, TdListEntry],
 ) -> dict[str, object]:
+    """Run algorithms."""
     algorithms = {
         "baseline": baseline_config(),
         "surprise_taper_floor_050": guarded_surprise_config(),
@@ -488,6 +511,7 @@ def run_algorithms(
 
 
 def target_result_rows(result: object, players: list[SimulatedPlayer]) -> dict[int, list[object]]:
+    """Execute the target result rows routine."""
     target_ids = {player.simulation_player_id for player in players}
     rows: dict[int, list[object]] = {player_id: [] for player_id in target_ids}
     for row in result.player_results:  # type: ignore[attr-defined]
@@ -499,6 +523,7 @@ def target_result_rows(result: object, players: list[SimulatedPlayer]) -> dict[i
 
 
 def reached_true_strength(rating: float, true_strength: float) -> bool:
+    """Execute the reached true strength routine."""
     return close_boundary(rating) >= close_boundary(true_strength)
 
 
@@ -507,6 +532,7 @@ def summarize_player_outcomes(
     result: object,
     players: list[SimulatedPlayer],
 ) -> list[dict[str, object]]:
+    """Summarize player outcomes."""
     rows_by_player = target_result_rows(result, players)
     output: list[dict[str, object]] = []
     player_by_id = {player.simulation_player_id: player for player in players}
@@ -545,6 +571,7 @@ def summarize_player_outcomes(
 
 
 def trajectory_rows(algorithm: str, result: object, players: list[SimulatedPlayer]) -> list[dict[str, object]]:
+    """Execute the trajectory rows routine."""
     rows_by_player = target_result_rows(result, players)
     player_by_id = {player.simulation_player_id: player for player in players}
     output: list[dict[str, object]] = []
@@ -570,6 +597,7 @@ def trajectory_rows(algorithm: str, result: object, players: list[SimulatedPlaye
 
 
 def summarize_slice(rows: list[dict[str, object]], slice_type: str, slice_value: str) -> dict[str, object]:
+    """Summarize slice."""
     reached = [row for row in rows if row["reached"]]
     games_to_reach = [int(row["games_to_reach"]) for row in reached if row["games_to_reach"] is not None]
     days_to_reach = [int(row["days_to_reach"]) for row in reached if row["days_to_reach"] is not None]
@@ -590,6 +618,7 @@ def summarize_slice(rows: list[dict[str, object]], slice_type: str, slice_value:
 
 
 def category_summaries(player_outcomes: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Execute the category summaries routine."""
     summaries: list[dict[str, object]] = []
     algorithms = sorted({str(row["algorithm"]) for row in player_outcomes})
     slice_fields = ["rating_band", "sigma_band", "activity_label", "self_promote"]
@@ -613,6 +642,7 @@ def category_summaries(player_outcomes: list[dict[str, object]]) -> list[dict[st
 
 
 def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str] | None = None) -> None:
+    """Write csv."""
     path.parent.mkdir(parents=True, exist_ok=True)
     if fieldnames is None:
         fieldnames = list(rows[0].keys()) if rows else []
@@ -623,10 +653,12 @@ def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str] |
 
 
 def simulation_player_rows(players: list[SimulatedPlayer]) -> list[dict[str, object]]:
+    """Execute the simulation player rows routine."""
     return [asdict(player) for player in players]
 
 
 def simulated_game_rows(infos: list[SimulatedGameInfo]) -> list[dict[str, object]]:
+    """Execute the simulated game rows routine."""
     rows = []
     for info in infos:
         row = asdict(info)
@@ -636,6 +668,7 @@ def simulated_game_rows(infos: list[SimulatedGameInfo]) -> list[dict[str, object
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     started = time.perf_counter()
     rng = random.Random(args.seed)
@@ -729,6 +762,7 @@ def main() -> None:
 
 
 def datetime_now_iso() -> str:
+    """Execute the datetime now iso routine."""
     from datetime import datetime
 
     return datetime.now().replace(microsecond=0).isoformat()

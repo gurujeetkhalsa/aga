@@ -10,7 +10,9 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
 class RatingsReportParserTest(unittest.TestCase):
+    """Represent ratings report parser test."""
     def test_parse_single_report_to_rating_rows(self) -> None:
+        """Verify that parse single report to rating rows."""
         payload = parse_report_to_rows((FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"))
 
         self.assertEqual(payload["tournament_row"]["Tournament_Descr"], "Migration Sample One")
@@ -23,6 +25,7 @@ class RatingsReportParserTest(unittest.TestCase):
         self.assertEqual(payload["game_rows"][1]["Round"], "2")
 
     def test_parse_multiple_reports_and_export_combined_csvs(self) -> None:
+        """Verify that parse multiple reports and export combined csvs."""
         reports = [
             ("report_compact_one.txt", (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8")),
             ("report_compact_two.txt", (FIXTURE_DIR / "report_compact_two.txt").read_text(encoding="utf-8")),
@@ -58,6 +61,7 @@ class RatingsReportParserTest(unittest.TestCase):
         self.assertEqual(tournaments[1]["Tournament_Descr"], "Migration Sample Two")
 
     def test_parse_multiple_reports_can_continue_after_one_failure(self) -> None:
+        """Verify that parse multiple reports can continue after one failure."""
         reports = [
             ("broken.txt", "TOURNEY Broken\n"),
             ("report_compact_one.txt", (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8")),
@@ -74,6 +78,7 @@ class RatingsReportParserTest(unittest.TestCase):
         self.assertEqual(payload["warnings"][0]["type"], "report_parse_failed")
 
     def test_decimal_rating_strengths_are_converted_to_bayrate_ranks(self) -> None:
+        """Verify that decimal rating strengths are converted to bayrate ranks."""
         report = """TOURNEY Decimal Strength Sample
 start=2026-05-01
 finish=2026-05-01
@@ -102,6 +107,7 @@ END
         self.assertEqual(normalized_by_id[5003], "8k")
 
     def test_question_mark_game_result_is_warned_and_ignored(self) -> None:
+        """Verify that question mark game result is warned and ignored."""
         report = """TOURNEY Unreported Result Sample
 start=2026-05-01
 finish=2026-05-01

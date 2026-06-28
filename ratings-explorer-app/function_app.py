@@ -63,6 +63,7 @@ if not SQL_CONNECTION_STRING:
 
 
 def _json_response(payload: dict) -> func.HttpResponse:
+    """Execute the json response routine."""
     return func.HttpResponse(
         json.dumps(payload),
         status_code=200,
@@ -71,12 +72,14 @@ def _json_response(payload: dict) -> func.HttpResponse:
 
 
 def _with_debug(payload: dict, **debug_fields) -> dict:
+    """Execute the with debug routine."""
     enriched = dict(payload)
     enriched["_debug"] = {key: value for key, value in debug_fields.items() if value is not None}
     return enriched
 
 
 def _public_json_default(value):
+    """Execute the public json default routine."""
     if isinstance(value, Decimal):
         if value == value.to_integral_value():
             return int(value)
@@ -85,6 +88,7 @@ def _public_json_default(value):
 
 
 def _public_json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the public json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=_public_json_default),
         status_code=status_code,
@@ -93,10 +97,12 @@ def _public_json_response(payload: dict, status_code: int = 200) -> func.HttpRes
 
 
 def _utc_now_text() -> str:
+    """Execute the utc now text routine."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _bayrate_json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the bayrate json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=explorer.json_safe_value),
         status_code=status_code,
@@ -105,10 +111,12 @@ def _bayrate_json_response(payload: dict, status_code: int = 200) -> func.HttpRe
 
 
 def _bayrate_preview_error(message: str, status_code: int = 400) -> func.HttpResponse:
+    """Execute the bayrate preview error routine."""
     return _bayrate_json_response({"ok": False, "error": message}, status_code=status_code)
 
 
 def _bayrate_modules_available(*names: str) -> bool:
+    """Execute the bayrate modules available routine."""
     modules = {
         "stage": build_staging_payload is not None and printable_payload is not None,
         "load": load_staged_run is not None and printable_payload is not None,
@@ -125,12 +133,14 @@ def _bayrate_modules_available(*names: str) -> bool:
 
 
 def _bayrate_adapter_or_error() -> tuple[object | None, func.HttpResponse | None]:
+    """Execute the bayrate adapter or error routine."""
     if SqlAdapter is None:
         return None, _bayrate_preview_error("BayRate SQL adapter is not available in this deployment.", status_code=500)
     return SqlAdapter(SQL_CONNECTION_STRING), None
 
 
 def _bayrate_login_redirect(req: func.HttpRequest) -> str:
+    """Execute the bayrate login redirect routine."""
     raw_url = getattr(req, "url", "") or "/api/ratings-explorer/bayrate"
     parsed = urlsplit(raw_url)
     redirect_path = parsed.path or "/api/ratings-explorer/bayrate"
@@ -145,6 +155,7 @@ def _bayrate_authorization_response(
     *,
     html: bool = False,
 ) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the bayrate authorization response routine."""
     if authorize_bayrate_admin is None:
         message = "BayRate authorization modules are not available in this deployment."
         if html:
@@ -181,6 +192,7 @@ def _bayrate_authorization_response(
 
 
 def _bayrate_request_json(req: func.HttpRequest) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the bayrate request json routine."""
     try:
         body = req.get_json()
     except ValueError:
@@ -194,6 +206,7 @@ def _bayrate_report_inputs_from_body(
     body: dict,
     adapter: object | None = None,
 ) -> tuple[list[tuple[str, str]] | None, list[dict] | None, func.HttpResponse | None]:
+    """Execute the bayrate report inputs from body routine."""
     reports = body.get("reports")
     if not isinstance(reports, list) or not reports:
         return None, None, _bayrate_preview_error("At least one report is required.")
@@ -230,6 +243,7 @@ def _bayrate_report_metadata_from_item(
     adapter: object | None,
     host_options_by_id: dict | None,
 ) -> tuple[dict, str | None, dict | None]:
+    """Execute the bayrate report metadata from item routine."""
     raw_metadata = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
     metadata = {}
     text_fields = {
@@ -281,6 +295,7 @@ def _bayrate_report_metadata_from_item(
 
 
 def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, written: bool = False) -> dict:
+    """Execute the bayrate payload response routine."""
     explanations = explain_staged_run_review(adapter, payload) if (adapter and explain_staged_run_review is not None) else None
     summary = printable_payload(payload, include_games=False)
     summary["written"] = written
@@ -299,6 +314,7 @@ def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, w
 
 
 def _bayrate_host_chapter_from_body(adapter: object, body: dict) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the bayrate host chapter from body routine."""
     if "host_chapter_id" not in body and "hostChapterId" not in body:
         return None, None
     raw_id = body.get("host_chapter_id", body.get("hostChapterId"))
@@ -317,6 +333,7 @@ def _bayrate_host_chapter_from_body(adapter: object, body: dict) -> tuple[dict |
 
 
 def _bayrate_optional_bool_from_body(body: dict, *names: str) -> bool | None:
+    """Execute the bayrate optional bool from body routine."""
     for name in names:
         if name not in body:
             continue
@@ -333,6 +350,7 @@ def _bayrate_optional_bool_from_body(body: dict, *names: str) -> bool | None:
 
 
 def _bayrate_commit_state(adapter: object, run_id: int | str) -> dict:
+    """Execute the bayrate commit state routine."""
     rows = adapter.query_rows(
         """
 SELECT
@@ -380,6 +398,7 @@ SELECT
 
 
 def _bayrate_replay_response(artifact: dict) -> dict:
+    """Execute the bayrate replay response routine."""
     plan = artifact.get("plan") or {}
     result = artifact.get("bayrate_result") or {}
     staged_rating_summary = artifact.get("staged_rating_summary") or {}
@@ -402,6 +421,7 @@ def _bayrate_replay_response(artifact: dict) -> dict:
 
 
 def _bayrate_same_date_groups(payload: dict) -> list[dict]:
+    """Execute the bayrate same date groups routine."""
     groups: dict[str, list[dict]] = {}
     for entry in payload.get("staged_tournaments") or []:
         row = entry.get("tournament_row") or {}
@@ -803,18 +823,21 @@ ORDER BY [Request_Date] DESC, [Posted_At] DESC
 
 
 def _rewards_int(value) -> int:
+    """Execute the rewards int routine."""
     if value is None:
         return 0
     return int(value)
 
 
 def _rewards_optional_int(value) -> int | None:
+    """Execute the rewards optional int routine."""
     if value is None:
         return None
     return int(value)
 
 
 def _rewards_text(value) -> str | None:
+    """Execute the rewards text routine."""
     if value is None:
         return None
     text = str(value).strip()
@@ -822,6 +845,7 @@ def _rewards_text(value) -> str | None:
 
 
 def _rewards_balance_payload(row: dict) -> dict:
+    """Execute the rewards balance payload routine."""
     available_points = _rewards_int(row.get("Available_Points"))
     return {
         "chapter_code": _rewards_text(row.get("Chapter_Code")),
@@ -852,6 +876,7 @@ def _rewards_balance_payload(row: dict) -> dict:
 
 
 def _rewards_transaction_payload(row: dict) -> dict:
+    """Execute the rewards transaction payload routine."""
     points = _rewards_int(row.get("Points_Delta"))
     return {
         "entry_count": _rewards_int(row.get("Public_Entry_Count")) or 1,
@@ -879,6 +904,7 @@ def _rewards_transaction_payload(row: dict) -> dict:
 
 
 def _rewards_lot_payload(row: dict) -> dict:
+    """Execute the rewards lot payload routine."""
     return {
         "lot_count": _rewards_int(row.get("Lot_Count")) or 1,
         "original_points": _rewards_int(row.get("Original_Points")),
@@ -896,6 +922,7 @@ def _rewards_lot_payload(row: dict) -> dict:
 
 
 def _rewards_breakdown_payload(row: dict) -> dict:
+    """Execute the rewards breakdown payload routine."""
     return {
         "source_category": _rewards_text(row.get("Source_Category")) or "other",
         "source_label": _rewards_text(row.get("Source_Label")) or "Other",
@@ -907,6 +934,7 @@ def _rewards_breakdown_payload(row: dict) -> dict:
 
 
 def _rewards_redemption_payload(row: dict) -> dict:
+    """Execute the rewards redemption payload routine."""
     points = _rewards_int(row.get("Points"))
     amount = row.get("Amount_USD")
     return {
@@ -921,6 +949,7 @@ def _rewards_redemption_payload(row: dict) -> dict:
 
 
 def _rewards_summary_payload(chapters: list[dict]) -> dict:
+    """Execute the rewards summary payload routine."""
     available_points = sum(chapter["available_points"] for chapter in chapters)
     ledger_balance = sum(chapter["ledger_balance"] for chapter in chapters)
     total_credits = sum(chapter["total_credits"] for chapter in chapters)
@@ -940,6 +969,7 @@ def _rewards_summary_payload(chapters: list[dict]) -> dict:
 
 
 def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int = 500) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse rewards limit."""
     raw_limit = (req.params.get("limit") or "").strip()
     if not raw_limit:
         return default, None
@@ -952,6 +982,7 @@ def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int
 
 
 def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func.HttpResponse | None]:
+    """Parse rewards chapter code."""
     chapter_code = (req.params.get("chapter_code") or req.params.get("chapter") or "").strip()
     if not chapter_code:
         return None, func.HttpResponse("Query parameter 'chapter_code' is required.", status_code=400)
@@ -961,6 +992,7 @@ def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func
 
 
 def _load_snapshot_or_error() -> tuple[dict | None, func.HttpResponse | None]:
+    """Load snapshot or error."""
     if (os.environ.get("RATINGS_EXPLORER_DISABLE_SNAPSHOT") or "").strip().lower() in {"1", "true", "yes", "on"}:
         return None, None
     snapshot = explorer.load_snapshot()
@@ -970,10 +1002,12 @@ def _load_snapshot_or_error() -> tuple[dict | None, func.HttpResponse | None]:
 
 
 def _get_conn_str_or_error() -> tuple[str | None, func.HttpResponse | None]:
+    """Return conn str or error."""
     return SQL_CONNECTION_STRING, None
 
 
 def _player_detail_has_recent_game_handicap(payload: dict | None) -> bool:
+    """Execute the player detail has recent game handicap routine."""
     if not payload:
         return False
     recent_games = payload.get("recent_games") or []
@@ -983,6 +1017,7 @@ def _player_detail_has_recent_game_handicap(payload: dict | None) -> bool:
 
 
 def _player_detail_has_recent_game_sgf_metadata(payload: dict | None) -> bool:
+    """Execute the player detail has recent game sgf metadata routine."""
     if not payload:
         return False
     recent_games = payload.get("recent_games") or []
@@ -992,6 +1027,7 @@ def _player_detail_has_recent_game_sgf_metadata(payload: dict | None) -> bool:
 
 
 def _player_detail_has_recent_game_rank_metadata(payload: dict | None) -> bool:
+    """Execute the player detail has recent game rank metadata routine."""
     if not payload:
         return False
     recent_games = payload.get("recent_games") or []
@@ -1004,6 +1040,7 @@ def _player_detail_has_recent_game_rank_metadata(payload: dict | None) -> bool:
 
 
 def _tournament_detail_has_game_sgf_metadata(payload: dict | None) -> bool:
+    """Execute the tournament detail has game sgf metadata routine."""
     if not payload:
         return False
     games = payload.get("games") or []
@@ -1013,10 +1050,12 @@ def _tournament_detail_has_game_sgf_metadata(payload: dict | None) -> bool:
 
 
 def _history_payload_from_points(history: list[tuple[datetime, float, float]]) -> list[dict]:
+    """Execute the history payload from points routine."""
     return explorer.serialize_rating_history(history)
 
 
 def _parse_search_limit(req: func.HttpRequest) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse search limit."""
     limit_text = (req.params.get("limit") or "").strip()
     if not limit_text:
         return DEFAULT_SEARCH_LIMIT, None
@@ -1029,6 +1068,7 @@ def _parse_search_limit(req: func.HttpRequest) -> tuple[int | None, func.HttpRes
 
 
 def _parse_nonnegative_int_param(req: func.HttpRequest, name: str, default: int = 0) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse nonnegative int param."""
     raw_text = (req.params.get(name) or "").strip()
     if not raw_text:
         return default, None
@@ -1038,6 +1078,7 @@ def _parse_nonnegative_int_param(req: func.HttpRequest, name: str, default: int 
 
 
 def _years_ago_iso(years: int, today: date) -> str:
+    """Execute the years ago iso routine."""
     try:
         return today.replace(year=today.year - years).isoformat()
     except ValueError:
@@ -1045,6 +1086,7 @@ def _years_ago_iso(years: int, today: date) -> str:
 
 
 def _parse_recent_activity_cutoff(req: func.HttpRequest) -> tuple[str | None, func.HttpResponse | None]:
+    """Parse recent activity cutoff."""
     raw_years_text = req.params.get("recent_activity_years")
     years_text = (raw_years_text or "").strip()
     if years_text.lower() in {"none", "all", "no_limit", "nolimit"}:
@@ -1066,6 +1108,7 @@ def _parse_recent_activity_cutoff(req: func.HttpRequest) -> tuple[str | None, fu
 
 
 def _parse_rating_bands(req: func.HttpRequest) -> tuple[list[str] | None, func.HttpResponse | None]:
+    """Parse rating bands."""
     rating_bands_text = (req.params.get("rating_bands") or req.params.get("rating_band") or "").strip()
     if not rating_bands_text:
         return None, None
@@ -1080,6 +1123,7 @@ def _parse_rating_bands(req: func.HttpRequest) -> tuple[list[str] | None, func.H
 
 
 def _parse_player_status(req: func.HttpRequest) -> tuple[str, func.HttpResponse | None]:
+    """Parse player status."""
     status_filter = (req.params.get("status") or "").strip().lower() or "all"
     if status_filter not in ALLOWED_PLAYER_STATUS_FILTERS:
         return "all", func.HttpResponse(
@@ -1090,6 +1134,7 @@ def _parse_player_status(req: func.HttpRequest) -> tuple[str, func.HttpResponse 
 
 
 def _parse_csv_values(req: func.HttpRequest, key: str, legacy_key: str | None = None) -> list[str] | None:
+    """Parse csv values."""
     raw = (req.params.get(key) or req.params.get(legacy_key or "") or "").strip()
     if not raw:
         return None
@@ -1108,6 +1153,7 @@ def _is_default_player_startup_search(
     recent_activity_cutoff: str | None,
     rating_bands: list[str] | None,
 ) -> bool:
+    """Return whether default player startup search."""
     return (
         agaid is None
         and not (first_name or "").strip()
@@ -1124,6 +1170,7 @@ def _is_default_player_startup_search(
 @app.function_name(name="RewardsPublicReportPage")
 @app.route(route="ratings-explorer/rewards", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def rewards_public_report_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RewardsPublicReportPage Azure Function endpoint."""
     return func.HttpResponse(
         explorer.load_ratings_explorer_html("", "rewards_report.html"),
         status_code=200,
@@ -1134,6 +1181,7 @@ def rewards_public_report_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RewardsPublicBalances")
 @app.route(route="ratings-explorer/rewards/balances", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def rewards_public_balances(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RewardsPublicBalances Azure Function endpoint."""
     started = perf_counter()
     try:
         rows = explorer.query_rows(SQL_CONNECTION_STRING, REWARDS_PUBLIC_BALANCES_SQL, [])
@@ -1157,6 +1205,7 @@ def rewards_public_balances(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RewardsPublicChapter")
 @app.route(route="ratings-explorer/rewards/chapter", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def rewards_public_chapter(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RewardsPublicChapter Azure Function endpoint."""
     started = perf_counter()
     chapter_code, error = _parse_rewards_chapter_code(req)
     if error:
@@ -1206,6 +1255,7 @@ def rewards_public_chapter(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPage")
 @app.route(route="ratings-explorer", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPage Azure Function endpoint."""
     return func.HttpResponse(
         explorer.load_ratings_explorer_html(""),
         status_code=200,
@@ -1216,6 +1266,7 @@ def ratings_explorer_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerMobilePage")
 @app.route(route="ratings-explorer/mobile", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerMobilePage Azure Function endpoint."""
     return func.HttpResponse(
         explorer.load_ratings_explorer_html("", "ratings_explorer_mobile.html"),
         status_code=200,
@@ -1226,6 +1277,7 @@ def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingPage")
 @app.route(route="ratings-explorer/bayrate", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingPage Azure Function endpoint."""
     adapter, error = _bayrate_adapter_or_error()
     if error:
         return error
@@ -1242,6 +1294,7 @@ def bayrate_staging_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingPreview")
 @app.route(route="ratings-explorer/bayrate/preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingPreview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("stage"):
@@ -1282,6 +1335,7 @@ def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateMetadataOptions")
 @app.route(route="ratings-explorer/bayrate/metadata-options", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_metadata_options(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateMetadataOptions Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if load_host_chapter_options is None:
@@ -1302,6 +1356,7 @@ def bayrate_metadata_options(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingWrite")
 @app.route(route="ratings-explorer/bayrate/stage", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_write(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingWrite Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("stage", "write"):
@@ -1339,6 +1394,7 @@ def bayrate_staging_write(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingReview")
 @app.route(route="ratings-explorer/bayrate/review", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingReview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("stage", "review"):
@@ -1395,6 +1451,7 @@ def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingRun")
 @app.route(route="ratings-explorer/bayrate/run", methods=["GET", "POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_run(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingRun Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("load", "review"):
@@ -1427,6 +1484,7 @@ def bayrate_staging_run(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingReplay")
 @app.route(route="ratings-explorer/bayrate/replay", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingReplay Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("replay"):
@@ -1461,6 +1519,7 @@ def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingCommitPreview")
 @app.route(route="ratings-explorer/bayrate/commit-preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_commit_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingCommitPreview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("commit"):
@@ -1493,6 +1552,7 @@ def bayrate_staging_commit_preview(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingCommit")
 @app.route(route="ratings-explorer/bayrate/commit", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_commit(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingCommit Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=explorer.response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("commit"):
@@ -1546,6 +1606,7 @@ def bayrate_staging_commit(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayers")
 @app.route(route="ratings-explorer/players", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_players(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayers Azure Function endpoint."""
     started = perf_counter()
     snapshot = explorer.load_player_search_snapshot()
     limit, error = _parse_search_limit(req)
@@ -1641,6 +1702,7 @@ def ratings_explorer_players(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayersStartup")
 @app.route(route="ratings-explorer/players-startup", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_players_startup(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayersStartup Azure Function endpoint."""
     started = perf_counter()
     limit, error = _parse_search_limit(req)
     if error:
@@ -1690,6 +1752,7 @@ def ratings_explorer_players_startup(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="RatingsExplorerTournaments")
 @app.route(route="ratings-explorer/tournaments", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerTournaments Azure Function endpoint."""
     started = perf_counter()
     snapshot = explorer.load_tournament_search_snapshot()
     limit, error = _parse_search_limit(req)
@@ -1771,6 +1834,7 @@ def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerFilterOptions")
 @app.route(route="ratings-explorer/filter-options", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_filter_options(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerFilterOptions Azure Function endpoint."""
     started = perf_counter()
     try:
         filter_options = explorer.load_filter_options_snapshot()
@@ -1792,6 +1856,7 @@ def ratings_explorer_filter_options(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayer")
 @app.route(route="ratings-explorer/player", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayer Azure Function endpoint."""
     started = perf_counter()
     agaid_text = (req.params.get("agaid") or "").strip()
     recent_games_sgf_only = (req.params.get("recent_games_sgf_only") or "").strip().lower() in {"1", "true", "yes", "on"}
@@ -1841,6 +1906,7 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayerContext")
 @app.route(route="ratings-explorer/player-context", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player_context(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayerContext Azure Function endpoint."""
     started = perf_counter()
     agaid_text = (req.params.get("agaid") or "").strip()
     if not agaid_text.isdigit():
@@ -1867,6 +1933,7 @@ def ratings_explorer_player_context(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerTournament")
 @app.route(route="ratings-explorer/tournament", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_tournament(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerTournament Azure Function endpoint."""
     started = perf_counter()
     tournament_code = (req.params.get("tournament_code") or "").strip()
     if not tournament_code:
@@ -1897,6 +1964,7 @@ def ratings_explorer_tournament(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerGameSgf")
 @app.route(route="ratings-explorer/game-sgf", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_game_sgf(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerGameSgf Azure Function endpoint."""
     game_id_text = (req.params.get("game_id") or "").strip()
     if not game_id_text.isdigit():
         return func.HttpResponse("Query parameter 'game_id' must be numeric.", status_code=400)
@@ -1921,6 +1989,7 @@ def ratings_explorer_game_sgf(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerGameSgfViewer")
 @app.route(route="ratings-explorer/game-sgf-viewer", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_game_sgf_viewer(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerGameSgfViewer Azure Function endpoint."""
     game_id_text = (req.params.get("game_id") or "").strip()
     if not game_id_text.isdigit():
         return func.HttpResponse("Query parameter 'game_id' must be numeric.", status_code=400)
@@ -1938,6 +2007,7 @@ def ratings_explorer_game_sgf_viewer(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="RatingsExplorerAsset")
 @app.route(route="ratings-explorer/assets/{*asset_path}", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_asset(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerAsset Azure Function endpoint."""
     asset_path = (req.route_params.get("asset_path") or "").strip()
     if not asset_path:
         return func.HttpResponse("Asset path is required.", status_code=400)
@@ -1954,6 +2024,7 @@ def ratings_explorer_asset(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayerHistorySvg")
 @app.route(route="ratings-explorer/player-history.svg", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player_history_svg(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayerHistorySvg Azure Function endpoint."""
     agaid_text = (req.params.get("agaid") or "").strip()
     if not agaid_text.isdigit():
         return func.HttpResponse("Query parameter 'agaid' must be numeric.", status_code=400)
@@ -1982,6 +2053,7 @@ def ratings_explorer_player_history_svg(req: func.HttpRequest) -> func.HttpRespo
 @app.function_name(name="RatingsExplorerSnapshotStatus")
 @app.route(route="ratings-explorer/snapshot-status", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_snapshot_status(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerSnapshotStatus Azure Function endpoint."""
     started = perf_counter()
     status = explorer.load_snapshot_status()
     snapshot_meta = (status or {}).get("snapshot_meta")
@@ -2003,6 +2075,7 @@ def ratings_explorer_snapshot_status(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="RatingsExplorerSnapshotWarm")
 @app.route(route="ratings-explorer/snapshot-warm", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_snapshot_warm(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerSnapshotWarm Azure Function endpoint."""
     started = perf_counter()
     startup = explorer.load_startup_players()
     player_search = explorer.load_player_search_snapshot()
@@ -2024,6 +2097,7 @@ def ratings_explorer_snapshot_warm(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerSnapshotRefresh")
 @app.route(route="ratings-explorer/snapshot-refresh", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
 def ratings_explorer_snapshot_refresh(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerSnapshotRefresh Azure Function endpoint."""
     requested_at = datetime.now(timezone.utc).isoformat()
     explorer.request_snapshot_refresh("http", requested_at)
     explorer.update_snapshot_status(
@@ -2038,6 +2112,7 @@ def ratings_explorer_snapshot_refresh(req: func.HttpRequest) -> func.HttpRespons
 @app.function_name(name="RatingsExplorerNightlySnapshot")
 @app.schedule(schedule="0 15 6 * * *", arg_name="timer", run_on_startup=False, use_monitor=True)
 def ratings_explorer_nightly_snapshot(timer: func.TimerRequest) -> None:
+    """Handle the RatingsExplorerNightlySnapshot Azure Function endpoint."""
     conn_str = SQL_CONNECTION_STRING
     explorer.update_snapshot_status("running", source="timer", detail="Nightly snapshot refresh started.", error=None)
     try:
@@ -2062,6 +2137,7 @@ def ratings_explorer_nightly_snapshot(timer: func.TimerRequest) -> None:
 @app.function_name(name="RatingsExplorerPendingSnapshotRefresh")
 @app.schedule(schedule="0 */5 * * * *", arg_name="timer", run_on_startup=False, use_monitor=True)
 def ratings_explorer_pending_snapshot_refresh(timer: func.TimerRequest) -> None:
+    """Handle the RatingsExplorerPendingSnapshotRefresh Azure Function endpoint."""
     request = explorer.load_snapshot_request()
     if not request:
         return

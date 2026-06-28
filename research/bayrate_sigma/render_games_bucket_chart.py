@@ -11,6 +11,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class AlgorithmStyle:
+    """Represent algorithm style."""
     key: str
     label: str
     color: str
@@ -23,6 +24,7 @@ ALGORITHMS = [
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("simulation_dir", type=Path, help="Directory containing metadata.json and player_outcomes.csv.")
     parser.add_argument("--name", default="games_bucket_reached", help="Output filename stem.")
@@ -35,6 +37,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     if args.bucket_size is not None and args.bucket_size <= 0:
         raise SystemExit("--bucket-size must be positive")
@@ -66,11 +69,13 @@ def main() -> None:
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read csv."""
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle))
 
 
 def build_bucket_rows(rows: list[dict[str, str]], *, bucket_size: int | None) -> list[dict[str, object]]:
+    """Build bucket rows."""
     games_by_player: dict[str, int] = {}
     for row in rows:
         games_by_player.setdefault(row["simulation_player_id"], int(row["simulated_games"]))
@@ -119,6 +124,7 @@ def build_bucket_rows(rows: list[dict[str, str]], *, bucket_size: int | None) ->
 
 
 def game_bucket(games: int, *, bucket_size: int | None) -> tuple[int, int, str]:
+    """Execute the game bucket routine."""
     if bucket_size is None:
         return games, games, f"{games} games"
     bucket_min = (games // bucket_size) * bucket_size
@@ -127,6 +133,7 @@ def game_bucket(games: int, *, bucket_size: int | None) -> tuple[int, int, str]:
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write csv."""
     fieldnames = [
         "bucket_index",
         "bucket_label",
@@ -145,6 +152,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, object]) -> None:
+    """Write svg."""
     width = 980
     height = 680
     margin_left = 82
@@ -160,9 +168,11 @@ def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, 
     bar_width = max(24, min(95, (bucket_width - group_gap - bar_gap) / 2))
 
     def x_bucket(ordinal: int) -> float:
+        """Execute the x bucket routine."""
         return margin_left + ordinal * bucket_width
 
     def y(percent: float) -> float:
+        """Execute the y routine."""
         return margin_top + (100 - percent) / 100 * inner_height
 
     lines = [
@@ -243,6 +253,7 @@ def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, 
 
 
 def escape_xml(value: object) -> str:
+    """Execute the escape xml routine."""
     return (
         str(value)
         .replace("&", "&amp;")

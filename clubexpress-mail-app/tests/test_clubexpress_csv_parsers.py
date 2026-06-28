@@ -19,7 +19,9 @@ from clubexpress_csv_parsers import (
 
 
 class ClubExpressCsvParserTest(unittest.TestCase):
+    """Represent club express csv parser test."""
     def test_chapterx_filename_is_detected_as_chapter_csv(self):
+        """Verify that chapterx filename is detected as chapter csv."""
         report_type = detect_attachment_report_type(
             "Immediate_Chapterx.csv",
             b"ID,Name,Short Name,City,State,Status\r\n32477,Test Club,TST,Seattle,WA,Active\r\n",
@@ -28,6 +30,7 @@ class ClubExpressCsvParserTest(unittest.TestCase):
         self.assertEqual(report_type, CHAPTER_MESSAGE_TYPE)
 
     def test_chapter_rows_accept_extra_clubexpress_columns_and_aliases(self):
+        """Verify that chapter rows accept extra clubexpress columns and aliases."""
         rows = parse_chapter_rows(
             b"Report generated,ignored\r\n"
             b"ID,Name,Short Name,City,State,Primary Contact Member ID,Date Created,Status,Extra\r\n"
@@ -42,6 +45,7 @@ class ClubExpressCsvParserTest(unittest.TestCase):
         self.assertEqual(rows[0][7], "Active")
 
     def test_chapter_rows_reject_duplicate_chapter_ids(self):
+        """Verify that chapter rows reject duplicate chapter ids."""
         with self.assertRaisesRegex(CsvValidationError, "Duplicate ChapterID"):
             parse_chapter_rows(
                 b"ChapterID,ChapterName,ChapterCode\r\n"
@@ -50,6 +54,7 @@ class ClubExpressCsvParserTest(unittest.TestCase):
             )
 
     def test_member_category_rows_reject_duplicate_pairs(self):
+        """Verify that member category rows reject duplicate pairs."""
         with self.assertRaisesRegex(CsvValidationError, "Duplicate AGAID/category pair"):
             parse_member_category_rows(
                 b"AGAID,Category\r\n"
@@ -58,6 +63,7 @@ class ClubExpressCsvParserTest(unittest.TestCase):
             )
 
     def test_memchap_rows_accept_active_header_as_mislabeled_agaid(self):
+        """Verify that memchap rows accept active header as mislabeled agaid."""
         header = ["Active", *STAGING_COLUMNS[1:], "Member.DateCreated"]
         values = {column: "" for column in STAGING_COLUMNS}
         values.update(

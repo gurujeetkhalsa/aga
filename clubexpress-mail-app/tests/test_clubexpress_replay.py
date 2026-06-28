@@ -26,12 +26,15 @@ from clubexpress_replay import (
 
 
 class FakeAdapter:
+    """Represent fake adapter."""
     def __init__(self, rows_by_query: dict[str, list[dict[str, Any]]] | None = None) -> None:
+        """Initialize the fake adapter instance."""
         self.rows_by_query = rows_by_query or {}
         self.queries: list[tuple[str, tuple[Any, ...]]] = []
         self.executed: list[list[tuple[str, tuple[Any, ...]]]] = []
 
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         params_tuple = tuple(params)
         self.queries.append((query, params_tuple))
         for key, rows in self.rows_by_query.items():
@@ -40,10 +43,12 @@ class FakeAdapter:
         return []
 
     def execute_statements(self, statements: Iterable[tuple[str, tuple[Any, ...]]]) -> None:
+        """Execute statements."""
         self.executed.append(list(statements))
 
 
 def sample_event_row(**overrides: Any) -> dict[str, Any]:
+    """Execute the sample event row routine."""
     row = {
         "Parsed_Event_ID": 7,
         "Message_ID": "msg-123",
@@ -85,6 +90,7 @@ def sample_event_row(**overrides: Any) -> dict[str, Any]:
 
 
 def sample_new_member_event_row(**overrides: Any) -> dict[str, Any]:
+    """Execute the sample new member event row routine."""
     return sample_event_row(
         Event_Type="new_membership",
         Event_Key="msg-123:new_membership:19987",
@@ -107,7 +113,9 @@ def sample_new_member_event_row(**overrides: Any) -> dict[str, Any]:
 
 
 class ClubExpressReplayTest(unittest.TestCase):
+    """Represent club express replay test."""
     def test_event_from_row_parses_payload_and_downstream_calls(self):
+        """Verify that event from row parses payload and downstream calls."""
         event = event_from_row(sample_event_row())
 
         self.assertEqual(event.parsed_event_id, 7)
@@ -119,10 +127,12 @@ class ClubExpressReplayTest(unittest.TestCase):
         )
 
     def test_parse_downstream_calls_rejects_unexpected_procedure(self):
+        """Verify that parse downstream calls rejects unexpected procedure."""
         with self.assertRaisesRegex(ValueError, "Unsupported downstream procedure"):
             parse_downstream_calls({"procedures": [{"name": "dbo.sp_surprise", "params": {}}]})
 
     def test_stored_procedure_statement_uses_named_parameters(self):
+        """Verify that stored procedure statement uses named parameters."""
         statement = stored_procedure_statement(
             DownstreamCall("rewards.sp_record_membership_event", {"MessageId": "msg-123", "AGAID": 19987})
         )
@@ -133,6 +143,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         )
 
     def test_list_events_applies_filters(self):
+        """Verify that list events applies filters."""
         adapter = FakeAdapter({"clubexpress_parsed_events": [sample_event_row()]})
 
         rows = list_events(adapter, top=10, status="error", event_type="renewal")
@@ -141,6 +152,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertEqual(adapter.queries[0][1], (10, "error", "error", "renewal", "renewal"))
 
     def test_load_event_requires_exactly_one_selector(self):
+        """Verify that load event requires exactly one selector."""
         adapter = FakeAdapter()
 
         with self.assertRaisesRegex(ValueError, "exactly one"):
@@ -149,6 +161,7 @@ class ClubExpressReplayTest(unittest.TestCase):
             load_event(adapter, event_key="key", parsed_event_id=1)
 
     def test_replay_preview_does_not_execute(self):
+        """Verify that replay preview does not execute."""
         adapter = FakeAdapter()
         event = event_from_row(sample_event_row())
 
@@ -160,6 +173,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertEqual(adapter.executed, [])
 
     def test_replay_execute_updates_status_and_runs_calls(self):
+        """Verify that replay execute updates status and runs calls."""
         adapter = FakeAdapter()
         event = event_from_row(sample_event_row())
 
@@ -174,6 +188,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertIn("@ResultPayloadJson = ?", adapter.executed[2][0][0])
 
     def test_replay_execute_refuses_processed_without_acknowledgement(self):
+        """Verify that replay execute refuses processed without acknowledgement."""
         adapter = FakeAdapter()
         event = event_from_row(sample_event_row(Status="processed"))
 
@@ -181,6 +196,7 @@ class ClubExpressReplayTest(unittest.TestCase):
             replay_event(adapter, event, execute=True, confirm_replay=True)
 
     def test_execute_downstream_calls_flushes_before_row_returning_proc(self):
+        """Verify that execute downstream calls flushes before row returning proc."""
         adapter = FakeAdapter({"sp_record_chapter_renewal_confirmation": [{"Recorded": 1}]})
         calls = [
             DownstreamCall("membership.sp_process_membership_renewal", {"MessageId": "msg-123"}),
@@ -196,6 +212,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertEqual(results[1]["row_count"], 1)
 
     def test_process_pending_events_previews_new_members_without_writes(self):
+        """Verify that process pending events previews new members without writes."""
         adapter = FakeAdapter({"clubexpress_parsed_events": [sample_new_member_event_row()]})
 
         result = process_pending_events(adapter, event_type="new_membership", top=5)
@@ -208,6 +225,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertEqual(adapter.executed, [])
 
     def test_process_pending_events_executes_new_members(self):
+        """Verify that process pending events executes new members."""
         adapter = FakeAdapter({"clubexpress_parsed_events": [sample_new_member_event_row()]})
 
         result = process_pending_events(
@@ -228,6 +246,7 @@ class ClubExpressReplayTest(unittest.TestCase):
         self.assertIn("@ResultPayloadJson = ?", adapter.executed[2][0][0])
 
     def test_print_event_list_omits_sender_and_subject(self):
+        """Verify that print event list omits sender and subject."""
         output = StringIO()
 
         print_event_list([event_from_row(sample_event_row())], output)

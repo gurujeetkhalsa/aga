@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover - supports direct script execution
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build parser."""
     parser = argparse.ArgumentParser(description="Run the clean Python BayRate calculation.")
     parser.add_argument("--games", required=True, type=Path, help="CSV export of rated game rows.")
     parser.add_argument("--ratings", required=True, type=Path, help="CSV export of prior rating rows.")
@@ -32,6 +33,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     parser = _build_parser()
     args = parser.parse_args()
     config = replace(

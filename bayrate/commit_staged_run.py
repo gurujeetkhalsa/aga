@@ -244,6 +244,7 @@ WHERE [RunID] IN ({run_placeholders})
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Preview or execute a BayRate staged-run production commit.")
     parser.add_argument("--run-id", required=True, type=int, help="Integer BayRate staging RunID.")
     parser.add_argument("--connection-string", help="SQL connection string. Defaults to SQL_CONNECTION_STRING/local.settings.json.")
@@ -257,6 +258,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     if args.execute and not args.confirm_production_commit:
         print("--execute requires --confirm-production-commit.", file=sys.stderr)
@@ -287,6 +289,7 @@ def commit_staged_run(
     operator_principal_name: str | None = None,
     operator_principal_id: str | None = None,
 ) -> dict[str, Any]:
+    """Commit staged run."""
     if not confirm_production_commit:
         raise ValueError("confirm_production_commit=True is required to write production rating tables.")
     plan = build_commit_plan(adapter, run_id)
@@ -307,6 +310,7 @@ def commit_staged_run(
 
 
 def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, Any]:
+    """Build commit plan."""
     run_id_int = _require_int(run_id, "run_id")
     payload = load_staged_run(adapter, run_id_int)
     if payload.get("status") != "ready_for_rating":
@@ -405,11 +409,13 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
 
 
 def load_staged_rating_rows(adapter: StageSqlAdapter, run_id: int) -> list[dict[str, Any]]:
+    """Load staged rating rows."""
     rows = adapter.query_rows(STAGED_RATINGS_SQL, (run_id,))
     return [_normalize_staged_rating_row(row) for row in rows]
 
 
 def load_production_max_ids(adapter: StageSqlAdapter) -> dict[str, Any]:
+    """Load production max ids."""
     rows = adapter.query_rows(PRODUCTION_MAX_IDS_SQL)
     return rows[0] if rows else {"MaxGameID": 0, "MaxRatingID": 0}
 
@@ -421,6 +427,7 @@ def load_previous_committed_run_ids(
     rating_codes: list[str],
     game_codes: list[str],
 ) -> list[int]:
+    """Load previous committed run ids."""
     code_set = _ordered_unique([*rating_codes, *game_codes])
     if not code_set:
         return []
@@ -433,6 +440,7 @@ def load_previous_committed_run_ids(
 
 
 def load_production_tournaments_for_codes(adapter: StageSqlAdapter, codes: list[str]) -> list[dict[str, Any]]:
+    """Load production tournaments for codes."""
     if not codes:
         return []
     query = f"""
@@ -462,6 +470,7 @@ ORDER BY [Tournament_Code]
 
 
 def load_production_games_for_codes(adapter: StageSqlAdapter, codes: list[str]) -> list[dict[str, Any]]:
+    """Load production games for codes."""
     if not codes:
         return []
     query = f"""
@@ -481,6 +490,7 @@ ORDER BY [Tournament_Code], [Game_Date], [Round], [Game_ID]
 
 
 def load_production_rating_summaries(adapter: StageSqlAdapter, codes: list[str]) -> list[dict[str, Any]]:
+    """Load production rating summaries."""
     if not codes:
         return []
     query = f"""
@@ -498,6 +508,7 @@ ORDER BY MIN([id]), [Tournament_Code]
 
 
 def plan_game_ids(staged_games: list[dict[str, Any]], production_games: list[dict[str, Any]], max_game_id: int) -> list[dict[str, Any]]:
+    """Execute the plan game ids routine."""
     production_by_code: dict[str, list[dict[str, Any]]] = {}
     for row in production_games:
         production_by_code.setdefault(str(row.get("Tournament_Code")), []).append(row)
@@ -535,6 +546,7 @@ def plan_rating_ids(
     # Production rating IDs are not guaranteed to be contiguous by tournament.
     # Older unaffected events can be interleaved inside the cascade's old ID range,
     # so allocate a fresh append-only block rather than reusing deleted IDs.
+    """Execute the plan rating ids routine."""
     next_rating_id = max_rating_id + 1
     planned = []
     for index, row in enumerate(staged_ratings, start=0):
@@ -549,6 +561,7 @@ def build_commit_warnings(
     production_tournament_rows: list[dict[str, Any]],
     production_game_rows: list[dict[str, Any]],
 ) -> list[str]:
+    """Build commit warnings."""
     warnings = []
     existing_codes = {str(row.get("Tournament_Code")) for row in production_tournament_rows}
     replacing_codes = [code for code in staged_tournament_codes if code in existing_codes]
@@ -568,6 +581,7 @@ def validate_commit_plan_for_execution(
     expected_plan_hash: str | None = None,
     confirm_sgf_replacement: bool = False,
 ) -> None:
+    """Validate commit plan for execution."""
     if expected_plan_hash:
         actual_plan_hash = printable_commit_plan(plan).get("plan_hash")
         if expected_plan_hash != actual_plan_hash:
@@ -582,6 +596,7 @@ def build_commit_statements(
     operator_principal_name: str | None = None,
     operator_principal_id: str | None = None,
 ) -> list[SqlStatement]:
+    """Build commit statements."""
     statements: list[SqlStatement] = [(COMMIT_RUN_GUARD_SQL, (plan["run_id"],))]
     delete_rating_codes = list(plan.get("delete_rating_tournament_codes") or [])
     replace_game_codes = list(plan.get("replace_game_tournament_codes") or [])
@@ -643,6 +658,7 @@ def build_commit_statements(
 
 
 def build_superseded_runs_statement(plan: dict[str, Any], superseded_run_ids: list[int]) -> SqlStatement:
+    """Build superseded runs statement."""
     affected_codes = _ordered_unique(plan.get("affected_tournament_codes") or [])
     reason = (
         f"Superseded by BayRate RunID {plan['run_id']}"
@@ -653,6 +669,7 @@ def build_superseded_runs_statement(plan: dict[str, Any], superseded_run_ids: li
 
 
 def build_tournament_upsert_statement(tournament: dict[str, Any]) -> SqlStatement:
+    """Build tournament upsert statement."""
     row = tournament["tournament_row"]
     values = (
         row.get("Tournament_Descr"),
@@ -692,6 +709,7 @@ def build_tournament_upsert_statement(tournament: dict[str, Any]) -> SqlStatemen
 
 
 def build_game_insert_statement(game: dict[str, Any]) -> SqlStatement:
+    """Build game insert statement."""
     row = game["game_row"]
     return (
         INSERT_GAME_SQL,
@@ -720,6 +738,7 @@ def build_game_insert_statement(game: dict[str, Any]) -> SqlStatement:
 
 
 def build_rating_insert_statement(rating: dict[str, Any]) -> SqlStatement:
+    """Build rating insert statement."""
     return (
         INSERT_RATING_SQL,
         (
@@ -734,6 +753,7 @@ def build_rating_insert_statement(rating: dict[str, Any]) -> SqlStatement:
 
 
 def print_commit_plan(plan: dict[str, Any], output: TextIO) -> None:
+    """Execute the print commit plan routine."""
     print(f"BayRate Commit Plan for RunID {plan['run_id']}", file=output)
     print(f"  Status: {plan['status']}", file=output)
     print(f"  Staged tournament(s): {', '.join(plan['staged_tournament_codes'])}", file=output)
@@ -749,6 +769,7 @@ def print_commit_plan(plan: dict[str, Any], output: TextIO) -> None:
 
 
 def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
+    """Execute the printable commit plan routine."""
     result = {
         "run_id": plan.get("run_id"),
         "executed": plan.get("executed", False),
@@ -776,6 +797,7 @@ def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
 
 
 def _commit_plan_hash(payload: dict[str, Any]) -> str:
+    """Commit plan hash."""
     stable_payload = json.dumps(payload, default=_json_default, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(stable_payload.encode("utf-8")).hexdigest()
 
@@ -785,6 +807,7 @@ def _commit_audit_summary(
     operator_principal_name: str | None,
     operator_principal_id: str | None,
 ) -> dict[str, Any]:
+    """Commit audit summary."""
     printable = printable_commit_plan(plan)
     return {
         "run_id": plan.get("run_id"),
@@ -806,6 +829,7 @@ def _commit_audit_summary(
 
 
 def _normalize_staged_rating_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Normalize staged rating row."""
     metadata = row.get("MetadataJson")
     return {
         "run_id": _require_int(row.get("RunID"), "RunID"),
@@ -834,10 +858,12 @@ def _normalize_staged_rating_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _placeholders(values: list[Any]) -> str:
+    """Execute the placeholders routine."""
     return ", ".join("?" for _ in values)
 
 
 def _ordered_unique(values: Iterable[Any]) -> list[str]:
+    """Execute the ordered unique routine."""
     seen = set()
     result = []
     for value in values:
@@ -850,10 +876,12 @@ def _ordered_unique(values: Iterable[Any]) -> list[str]:
 
 
 def _has_host_chapter(row: dict[str, Any]) -> bool:
+    """Return whether host chapter."""
     return _optional_int(row.get("Host_ChapterID")) is not None and bool(str(row.get("Host_ChapterCode") or "").strip())
 
 
 def _ensure_reward_event_defaults(row: dict[str, Any]) -> None:
+    """Ensure reward event defaults."""
     if not str(row.get("Reward_Event_Key") or "").strip():
         row["Reward_Event_Key"] = str(row.get("Tournament_Code") or "").strip() or None
     if not str(row.get("Reward_Event_Name") or "").strip():
@@ -862,6 +890,7 @@ def _ensure_reward_event_defaults(row: dict[str, Any]) -> None:
 
 
 def _coerce_bool(value: Any) -> bool:
+    """Coerce bool."""
     if isinstance(value, bool):
         return value
     if value is None:
@@ -878,6 +907,7 @@ def _coerce_bool(value: Any) -> bool:
 
 
 def _id_range(values: Iterable[int]) -> dict[str, int | None]:
+    """Execute the id range routine."""
     ids = list(values)
     if not ids:
         return {"first": None, "last": None}
@@ -885,6 +915,7 @@ def _id_range(values: Iterable[int]) -> dict[str, int | None]:
 
 
 def _require_int(value: Any, name: str) -> int:
+    """Execute the require int routine."""
     result = _optional_int(value)
     if result is None:
         raise ValueError(f"{name} is required.")
@@ -892,6 +923,7 @@ def _require_int(value: Any, name: str) -> int:
 
 
 def _optional_int(value: Any) -> int | None:
+    """Execute the optional int routine."""
     if value is None:
         return None
     text = str(value).strip()
@@ -901,6 +933,7 @@ def _optional_int(value: Any) -> int | None:
 
 
 def _optional_float(value: Any) -> float | None:
+    """Execute the optional float routine."""
     if value is None:
         return None
     text = str(value).strip()
@@ -910,6 +943,7 @@ def _optional_float(value: Any) -> float | None:
 
 
 def _json_loads(value: Any, default: Any) -> Any:
+    """Execute the json loads routine."""
     if value is None:
         return default
     if isinstance(value, (dict, list)):
@@ -921,6 +955,7 @@ def _json_loads(value: Any, default: Any) -> Any:
 
 
 def _json_dumps(value: Any) -> str:
+    """Execute the json dumps routine."""
     return json.dumps(value, default=_json_default, sort_keys=True)
 
 

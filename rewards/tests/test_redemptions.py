@@ -5,7 +5,9 @@ from rewards import redemptions
 
 
 class FakeRedemptionAdapter:
+    """Represent fake redemption adapter."""
     def __init__(self, *, preview=None, result=None):
+        """Initialize the fake redemption adapter instance."""
         self.preview = preview or {
             "RunID": None,
             "DryRun": True,
@@ -44,6 +46,7 @@ class FakeRedemptionAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if query in {
             redemptions.IMPORT_LEGACY_REDEMPTIONS_SQL,
@@ -55,10 +58,12 @@ class FakeRedemptionAdapter:
         raise AssertionError("Unexpected query")
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 def sample_rows():
+    """Execute the sample rows routine."""
     return [
         redemptions.LegacyRedemptionRow(
             source_row_number=1,
@@ -90,7 +95,9 @@ def sample_rows():
 
 
 class RedemptionsTest(unittest.TestCase):
+    """Represent redemptions test."""
     def test_legacy_redemption_from_record_maps_chapter_renewal(self):
+        """Verify that legacy redemption from record maps chapter renewal."""
         row = redemptions.legacy_redemption_from_record(
             {
                 "request_id": 546,
@@ -109,6 +116,7 @@ class RedemptionsTest(unittest.TestCase):
         self.assertEqual(row.payment_mode, "dues_credit")
 
     def test_legacy_redemption_from_record_maps_go_promotion(self):
+        """Verify that legacy redemption from record maps go promotion."""
         row = redemptions.legacy_redemption_from_record(
             {
                 "request_id": 547,
@@ -125,6 +133,7 @@ class RedemptionsTest(unittest.TestCase):
         self.assertEqual(row.payment_mode, "reimbursement")
 
     def test_dry_run_returns_preview_without_writes(self):
+        """Verify that dry run returns preview without writes."""
         adapter = FakeRedemptionAdapter()
 
         result = redemptions.import_legacy_redemptions(
@@ -139,6 +148,7 @@ class RedemptionsTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_write_executes_proc_and_reads_summary(self):
+        """Verify that write executes proc and reads summary."""
         adapter = FakeRedemptionAdapter()
 
         result = redemptions.import_legacy_redemptions(
@@ -159,6 +169,7 @@ class RedemptionsTest(unittest.TestCase):
         self.assertEqual(adapter.queries[-1][1], ("import", date(2026, 5, 2), redemptions.SOURCE_TYPE))
 
     def test_allow_shortfall_adjustments_uses_adjustment_proc(self):
+        """Verify that allow shortfall adjustments uses adjustment proc."""
         adapter = FakeRedemptionAdapter()
 
         redemptions.import_legacy_redemptions(

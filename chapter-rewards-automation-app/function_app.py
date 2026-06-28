@@ -15,10 +15,12 @@ try:
     import pyodbc
 except Exception:
     class _MissingPyodbc:
+        """Represent missing pyodbc."""
         Error = Exception
 
         @staticmethod
         def connect(*args, **kwargs):
+            """Execute the connect routine."""
             raise RuntimeError("pyodbc is unavailable in this environment")
 
     pyodbc = _MissingPyodbc()
@@ -46,11 +48,13 @@ REWARDS_PENDING_CHAPTER_RENEWALS_PROC = "rewards.sp_get_pending_chapter_renewals
 
 
 class GmailApiError(RuntimeError):
+    """Represent gmail api error failures."""
     pass
 
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
+    """Create rewards daily snapshot."""
     if not _is_truthy(os.environ.get("REWARDS_SNAPSHOT_ENABLED", "true")):
         logging.info("Chapter Rewards daily snapshot is disabled.")
         return
@@ -86,6 +90,7 @@ def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_MEMBERSHIP_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_membership_awards(timer: func.TimerRequest) -> None:
+    """Process rewards membership awards."""
     if not _is_truthy(os.environ.get("REWARDS_MEMBERSHIP_AWARDS_ENABLED", "true")):
         logging.info("Chapter Rewards membership awards are disabled.")
         return
@@ -123,6 +128,7 @@ def process_rewards_membership_awards(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_rated_game_awards(timer: func.TimerRequest) -> None:
+    """Process rewards rated game awards."""
     if not _is_truthy(os.environ.get("REWARDS_RATED_GAME_AWARDS_ENABLED", "true")):
         logging.info("Chapter Rewards rated-game awards are disabled.")
         return
@@ -163,6 +169,7 @@ def process_rewards_rated_game_awards(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_tournament_awards(timer: func.TimerRequest) -> None:
+    """Process rewards tournament awards."""
     if not _is_truthy(os.environ.get("REWARDS_TOURNAMENT_AWARDS_ENABLED", "true")):
         logging.info("Chapter Rewards tournament awards are disabled.")
         return
@@ -202,6 +209,7 @@ def process_rewards_tournament_awards(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_point_expirations(timer: func.TimerRequest) -> None:
+    """Process rewards point expirations."""
     if not _is_truthy(os.environ.get("REWARDS_EXPIRATIONS_ENABLED", "true")):
         logging.info("Chapter Rewards point expirations are disabled.")
         return
@@ -235,6 +243,7 @@ def process_rewards_point_expirations(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def send_pending_chapter_renewals_email(timer: func.TimerRequest) -> None:
+    """Send pending chapter renewals email."""
     if not _is_truthy(os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED", "true")):
         logging.info("Pending chapter renewal email is disabled.")
         return
@@ -264,10 +273,12 @@ def send_pending_chapter_renewals_email(timer: func.TimerRequest) -> None:
 
 
 def _rewards_snapshot_date(today: Optional[date] = None) -> date:
+    """Execute the rewards snapshot date routine."""
     return today or date.today()
 
 
 def _rewards_snapshot_params(snapshot_date: date) -> dict:
+    """Execute the rewards snapshot params routine."""
     return {
         "SnapshotDate": snapshot_date,
         "RunType": "daily",
@@ -276,6 +287,7 @@ def _rewards_snapshot_params(snapshot_date: date) -> dict:
 
 
 def _rewards_membership_awards_params(as_of_date: date) -> dict:
+    """Execute the rewards membership awards params routine."""
     return {
         "AsOfDate": as_of_date,
         "RunType": "daily",
@@ -284,6 +296,7 @@ def _rewards_membership_awards_params(as_of_date: date) -> dict:
 
 
 def _rewards_rated_game_awards_params(game_date: date) -> dict:
+    """Execute the rewards rated game awards params routine."""
     return {
         "GameDateFrom": _rewards_rated_game_awards_start_date(game_date),
         "GameDateTo": game_date,
@@ -293,6 +306,7 @@ def _rewards_rated_game_awards_params(game_date: date) -> dict:
 
 
 def _rewards_rated_game_awards_start_date(game_date: date) -> date:
+    """Execute the rewards rated game awards start date routine."""
     configured = (
         os.environ.get("REWARDS_RATED_GAME_AWARDS_DATE_FROM")
         or os.environ.get("REWARDS_LEDGER_START_DATE")
@@ -311,6 +325,7 @@ def _rewards_rated_game_awards_start_date(game_date: date) -> date:
 
 
 def _rewards_tournament_awards_params(tournament_date_to: date) -> dict:
+    """Execute the rewards tournament awards params routine."""
     return {
         "TournamentDateFrom": None,
         "TournamentDateTo": tournament_date_to,
@@ -320,6 +335,7 @@ def _rewards_tournament_awards_params(tournament_date_to: date) -> dict:
 
 
 def _rewards_point_expirations_params(as_of_date: date) -> dict:
+    """Execute the rewards point expirations params routine."""
     return {
         "AsOfDate": as_of_date,
         "RunType": "daily",
@@ -328,6 +344,7 @@ def _rewards_point_expirations_params(as_of_date: date) -> dict:
 
 
 def _send_pending_chapter_renewals_email_if_configured(access_token: str, rows: list[dict], as_of_date: date) -> bool:
+    """Send pending chapter renewals email if configured."""
     recipients = _configured_email_recipients("CHAPTER_RENEWAL_PENDING_EMAIL_TO")
     if not recipients:
         recipients = _configured_email_recipients("CHAPTER_RENEWAL_NOTICE_EMAIL_TO")
@@ -345,6 +362,7 @@ def _send_pending_chapter_renewals_email_if_configured(access_token: str, rows: 
 
 
 def _pending_chapter_renewals_email_body(rows: list[dict], as_of_date: date) -> str:
+    """Execute the pending chapter renewals email body routine."""
     lines = [
         "Chapter Rewards pending ClubExpress renewal follow-up.",
         "",
@@ -386,6 +404,7 @@ def _pending_chapter_renewals_email_body(rows: list[dict], as_of_date: date) -> 
 
 
 def _format_email_value(value: object) -> str:
+    """Format email value."""
     if value is None:
         return ""
     if isinstance(value, datetime):
@@ -396,17 +415,20 @@ def _format_email_value(value: object) -> str:
 
 
 def _configured_email_recipients(setting_name: str) -> list[str]:
+    """Execute the configured email recipients routine."""
     raw_value = os.environ.get(setting_name, "")
     return [part.strip() for part in re.split(r"[;,]", raw_value) if part.strip()]
 
 
 def _stored_procedure_call(proc_name: str, params: dict) -> tuple[str, list]:
+    """Execute the stored procedure call routine."""
     ordered_items = [(key, value) for key, value in params.items()]
     sql = f"EXEC {proc_name} " + ", ".join(f"@{name} = ?" for name, _ in ordered_items)
     return sql, [value for _, value in ordered_items]
 
 
 def _execute_stored_procedure_rows(conn_str: str, proc_name: str, params: dict) -> list[dict]:
+    """Execute stored procedure rows."""
     sql, values = _stored_procedure_call(proc_name, params)
 
     conn = pyodbc.connect(conn_str)
@@ -428,6 +450,7 @@ def _execute_stored_procedure_rows(conn_str: str, proc_name: str, params: dict) 
 
 
 def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, dict]]) -> None:
+    """Execute stored procedures."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -444,10 +467,12 @@ def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, di
 
 
 def _repo_root() -> Path:
+    """Execute the repo root routine."""
     return Path(__file__).resolve().parent
 
 
 def _get_sql_connection_string() -> Optional[str]:
+    """Return sql connection string."""
     conn = os.environ.get("SQL_CONNECTION_STRING")
     if conn:
         return conn
@@ -464,6 +489,7 @@ def _get_sql_connection_string() -> Optional[str]:
 
 
 def _get_gmail_access_token() -> str:
+    """Return gmail access token."""
     client_id = _require_env("GOOGLE_WORKSPACE_CLIENT_ID")
     client_secret = _require_env("GOOGLE_WORKSPACE_CLIENT_SECRET")
     refresh_token = _require_env("GOOGLE_WORKSPACE_REFRESH_TOKEN")
@@ -490,6 +516,7 @@ def _get_gmail_access_token() -> str:
 
 
 def _send_gmail_plain_text(access_token: str, recipients: list[str], subject: str, body: str) -> None:
+    """Send gmail plain text."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     sender = os.environ.get("CHAPTER_RENEWAL_NOTICE_EMAIL_FROM", mailbox_user)
 
@@ -516,6 +543,7 @@ def _gmail_json_request(
     query: Optional[dict[str, str]] = None,
     body: Optional[dict] = None,
 ) -> dict:
+    """Execute the gmail json request routine."""
     url = GMAIL_API_BASE_URL + path
     if query:
         url += "?" + parse.urlencode(query)
@@ -542,6 +570,7 @@ def _gmail_json_request(
 
 
 def _require_env(name: str) -> str:
+    """Execute the require env routine."""
     value = os.environ.get(name)
     if not value:
         raise RuntimeError(f"Missing required application setting {name}.")
@@ -549,4 +578,5 @@ def _require_env(name: str) -> str:
 
 
 def _is_truthy(value: str) -> bool:
+    """Return whether truthy."""
     return value.strip().lower() in {"1", "true", "yes", "on"}

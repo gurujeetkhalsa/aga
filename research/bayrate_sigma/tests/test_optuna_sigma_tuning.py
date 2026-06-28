@@ -25,7 +25,9 @@ from research.bayrate_sigma.optuna_sigma_tuning import (
 
 
 class OptunaSigmaTuningTest(unittest.TestCase):
+    """Represent optuna sigma tuning test."""
     def test_parse_lists(self) -> None:
+        """Verify that parse lists."""
         self.assertEqual(parse_float_list("0, 1.0", field_name="x"), [0.0, 1.0])
         self.assertEqual(parse_int_list("1,3", field_name="year"), [1, 3])
         self.assertEqual(parse_string_list("a, b", field_name="label"), ["a", "b"])
@@ -40,6 +42,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
             parse_score_modes("not_a_mode")
 
     def test_fixed_trial_builds_bayrate_config(self) -> None:
+        """Verify that fixed trial builds bayrate config."""
         config = suggest_config(
             FixedTrial(
                 {
@@ -63,6 +66,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertAlmostEqual(config.surprise_taper_end_rating, 7.5)
 
     def test_fixed_trial_honors_custom_taper_ranges(self) -> None:
+        """Verify that fixed trial honors custom taper ranges."""
         config = suggest_config(
             FixedTrial(
                 {
@@ -88,6 +92,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertAlmostEqual(config.surprise_taper_floor, 0.55)
 
     def test_fixed_trial_honors_score_mode_filter(self) -> None:
+        """Verify that fixed trial honors score mode filter."""
         config = suggest_config(
             FixedTrial(
                 {
@@ -109,7 +114,9 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertEqual(config.surprise_sigma_score_mode, "volatility_min_pre_post")
 
     def test_validate_search_ranges_rejects_inverted_bounds(self) -> None:
+        """Verify that validate search ranges rejects inverted bounds."""
         class Args:
+            """Represent args."""
             score_modes = "pre"
             taper_start_min = 4.0
             taper_start_max = 1.0
@@ -136,6 +143,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
             validate_search_ranges(Args())
 
     def test_trial_params_from_config_round_trips_seed_config(self) -> None:
+        """Verify that trial params from config round trips seed config."""
         params = trial_params_from_config(
             BayrateConfig(
                 posterior_process_noise=0.02,
@@ -162,6 +170,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertTrue(params["surprise_persistence_same_direction_only"])
 
     def test_trial_params_from_config_uses_active_seed_ranges(self) -> None:
+        """Verify that trial params from config uses active seed ranges."""
         config = BayrateConfig(
             posterior_process_noise=0.02,
             surprise_sigma_base=0.24,
@@ -185,6 +194,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
             trial_params_from_config(config, score_modes=("volatility_pre",))
 
     def test_summary_converts_milestones_to_percent_progress(self) -> None:
+        """Verify that summary converts milestones to percent progress."""
         scenario = PreparedScenario(
             name="self_0_25gpy",
             games_per_year=25,
@@ -210,6 +220,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertAlmostEqual(year3["rms_gap_to_true"], math.sqrt(0.125))
 
     def test_summary_adds_rating_band_slices(self) -> None:
+        """Verify that summary adds rating band slices."""
         scenario = PreparedScenario(
             name="self_0_25gpy",
             games_per_year=25,
@@ -233,6 +244,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertAlmostEqual(dan_row["pct_ge_125"], 100.0)
 
     def test_score_rewards_balanced_progress_with_less_overshoot(self) -> None:
+        """Verify that score rewards balanced progress with less overshoot."""
         weights = ScoreWeights()
         current_like = {
             "mean_rank_change_pct": 103.0,
@@ -252,6 +264,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertLess(score_summary(balanced_like, weights), score_summary(current_like, weights))
 
     def test_score_can_penalize_mean_absolute_gap(self) -> None:
+        """Verify that score can penalize mean absolute gap."""
         close_but_slow = {
             "mean_rank_change_pct": 80.0,
             "reached_rate": 20.0,
@@ -275,9 +288,11 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         )
 
     def test_gaussian_gap_nll_rewards_smaller_fitted_sd(self) -> None:
+        """Verify that gaussian gap nll rewards smaller fitted sd."""
         self.assertLess(gaussian_gap_nll_for_rms(0.25), gaussian_gap_nll_for_rms(0.50))
 
     def test_score_penalizes_rank_band_overshoot_guardrail(self) -> None:
+        """Verify that score penalizes rank band overshoot guardrail."""
         summaries = [
             {
                 "slice_type": "all",
@@ -313,6 +328,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertGreater(with_guardrail, without_guardrail)
 
     def test_score_penalizes_hot_rank_band_slice(self) -> None:
+        """Verify that score penalizes hot rank band slice."""
         summaries = [
             {
                 "slice_type": "all",
@@ -364,6 +380,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         self.assertGreater(with_hot, without_hot)
 
     def test_historical_score_rewards_predictive_improvement(self) -> None:
+        """Verify that historical score rewards predictive improvement."""
         weights = ScoreWeights(historical_log_loss=1000.0, historical_brier=500.0, historical_accuracy=10.0)
 
         self.assertLess(
@@ -379,6 +396,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
         )
 
     def test_activity_grid_loads_config_json_wrapped_or_plain(self) -> None:
+        """Verify that activity grid loads config json wrapped or plain."""
         with TemporaryDirectory() as tmp:
             wrapped = Path(tmp) / "wrapped.json"
             wrapped.write_text(
@@ -394,6 +412,7 @@ class OptunaSigmaTuningTest(unittest.TestCase):
 
 
 def milestone_row(*, year: int, delta: float, gap: float, sigma: float, reached: bool) -> dict[str, object]:
+    """Execute the milestone row routine."""
     return {
         "year": year,
         "start_rating": 1.0,

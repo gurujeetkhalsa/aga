@@ -10,12 +10,15 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
 class FakeAdapter:
+    """Represent fake adapter."""
     def __init__(self, candidate_rows=None, membership_rows=None) -> None:
+        """Initialize the fake adapter instance."""
         self.candidate_rows = list(candidate_rows or [])
         self.membership_rows = None if membership_rows is None else list(membership_rows)
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         if "FROM [membership].[chapters]" in query:
             return [
                 {
@@ -36,24 +39,31 @@ class FakeAdapter:
         return list(self.candidate_rows)
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class ScriptedInput:
+    """Represent scripted input."""
     def __init__(self, answers):
+        """Initialize the scripted input instance."""
         self.answers = list(answers)
 
     def __call__(self):
+        """Implement the __call__ special method."""
         if not self.answers:
             raise AssertionError("No scripted answer remains.")
         return self.answers.pop(0)
 
 
 class ExistingRunAdapter:
+    """Represent existing run adapter."""
     def __init__(self) -> None:
+        """Initialize the existing run adapter instance."""
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         if "FROM [membership].[chapters]" in query:
             return [
                 {
@@ -172,10 +182,12 @@ class ExistingRunAdapter:
         return []
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 def duplicate_candidate_rows():
+    """Execute the duplicate candidate rows routine."""
     return [
         {
             "Tournament_Code": "OLD-SAMPLE-1",
@@ -213,7 +225,9 @@ def duplicate_candidate_rows():
 
 
 class OperatorWorkflowTest(unittest.TestCase):
+    """Represent operator workflow test."""
     def test_operator_confirms_duplicate_code_marks_ready_and_writes(self) -> None:
+        """Verify that operator confirms duplicate code marks ready and writes."""
         adapter = FakeAdapter(duplicate_candidate_rows())
 
         payload = run_operator(
@@ -235,6 +249,7 @@ class OperatorWorkflowTest(unittest.TestCase):
         self.assertEqual(len(adapter.statements), 4)
 
     def test_operator_can_decline_sql_write(self) -> None:
+        """Verify that operator can decline sql write."""
         adapter = FakeAdapter()
 
         payload = run_operator(
@@ -250,6 +265,7 @@ class OperatorWorkflowTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_operator_can_keep_duplicate_run_in_review(self) -> None:
+        """Verify that operator can keep duplicate run in review."""
         adapter = FakeAdapter(duplicate_candidate_rows())
 
         payload = run_operator(
@@ -268,6 +284,7 @@ class OperatorWorkflowTest(unittest.TestCase):
         self.assertEqual(len(adapter.statements), 4)
 
     def test_operator_can_review_existing_run_and_save_updates(self) -> None:
+        """Verify that operator can review existing run and save updates."""
         adapter = ExistingRunAdapter()
 
         payload = run_existing_run_review(

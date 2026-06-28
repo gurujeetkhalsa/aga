@@ -6,12 +6,15 @@ from bayrate.auth import authorize_bayrate_admin, extract_bayrate_principal
 
 
 class FakeAuthAdapter:
+    """Represent fake auth adapter."""
     def __init__(self, rows=None, error=None) -> None:
+        """Initialize the fake auth adapter instance."""
         self.rows = list(rows or [])
         self.error = error
         self.queries = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if self.error is not None:
             raise self.error
@@ -19,6 +22,7 @@ class FakeAuthAdapter:
 
 
 def encoded_principal(**claims):
+    """Execute the encoded principal routine."""
     payload = {
         "auth_typ": "aad",
         "identityProvider": "aad",
@@ -33,7 +37,9 @@ def encoded_principal(**claims):
 
 
 class BayRateAuthTest(unittest.TestCase):
+    """Represent bay rate auth test."""
     def test_extracts_easy_auth_principal_claims(self) -> None:
+        """Verify that extracts easy auth principal claims."""
         principal = extract_bayrate_principal(
             {
                 "X-MS-CLIENT-PRINCIPAL": encoded_principal(
@@ -55,6 +61,7 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertIn("admin@example.org", principal.lookup_names)
 
     def test_azure_runtime_requires_explicit_easy_auth_trust_setting(self) -> None:
+        """Verify that azure runtime requires explicit easy auth trust setting."""
         result = authorize_bayrate_admin(
             {
                 "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
@@ -68,6 +75,7 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertFalse(result.principal)
 
     def test_missing_principal_requires_sign_in(self) -> None:
+        """Verify that missing principal requires sign in."""
         result = authorize_bayrate_admin(
             {},
             FakeAuthAdapter(rows=[{"AdminID": 1}]),
@@ -78,6 +86,7 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertEqual(result.status_code, 401)
 
     def test_active_sql_admin_is_authorized(self) -> None:
+        """Verify that active sql admin is authorized."""
         adapter = FakeAuthAdapter(rows=[{"AdminID": 7, "Principal_Name": "admin@example.org"}])
 
         result = authorize_bayrate_admin(
@@ -93,6 +102,7 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertEqual(adapter.queries[0][1], ("admin@example.org",))
 
     def test_non_admin_is_forbidden(self) -> None:
+        """Verify that non admin is forbidden."""
         result = authorize_bayrate_admin(
             {
                 "X-MS-CLIENT-PRINCIPAL-NAME": "viewer@example.org",
@@ -105,6 +115,7 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertEqual(result.status_code, 403)
 
     def test_missing_admin_table_is_configuration_error(self) -> None:
+        """Verify that missing admin table is configuration error."""
         result = authorize_bayrate_admin(
             {
                 "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
@@ -118,6 +129,7 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertIn("bayrate_authorization_schema.sql", result.error)
 
     def test_local_dev_email_can_supply_principal(self) -> None:
+        """Verify that local dev email can supply principal."""
         result = authorize_bayrate_admin(
             {},
             FakeAuthAdapter(rows=[{"AdminID": 9}]),

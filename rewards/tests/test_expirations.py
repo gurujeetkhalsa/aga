@@ -5,7 +5,9 @@ from rewards import expirations
 
 
 class FakeExpirationAdapter:
+    """Represent fake expiration adapter."""
     def __init__(self, *, preview=None, result=None):
+        """Initialize the fake expiration adapter instance."""
         self.preview = preview or {
             "RunID": None,
             "AsOfDate": date(2028, 5, 3),
@@ -29,6 +31,7 @@ class FakeExpirationAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if query == expirations.PROCESS_POINT_EXPIRATIONS_SQL:
             return [self.preview]
@@ -37,11 +40,14 @@ class FakeExpirationAdapter:
         raise AssertionError("Unexpected query")
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class PointExpirationsTest(unittest.TestCase):
+    """Represent point expirations test."""
     def test_dry_run_returns_preview_without_writes(self):
+        """Verify that dry run returns preview without writes."""
         adapter = FakeExpirationAdapter()
 
         result = expirations.process_point_expirations(
@@ -58,6 +64,7 @@ class PointExpirationsTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_write_executes_proc_and_reads_summary(self):
+        """Verify that write executes proc and reads summary."""
         adapter = FakeExpirationAdapter()
 
         result = expirations.process_point_expirations(

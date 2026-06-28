@@ -37,12 +37,14 @@ DEFAULT_CANDIDATE_RESULTS = (
 
 @dataclass(frozen=True)
 class ViewerConfig:
+    """Store viewer configuration."""
     baseline_results: Path
     candidate_results: Path
     candidate_label: str
 
 
 def _parse_date(value: str) -> datetime | None:
+    """Parse date."""
     text = (value or "").strip()
     if not text:
         return None
@@ -53,6 +55,7 @@ def _parse_date(value: str) -> datetime | None:
 
 
 def _parse_float(value: str) -> float | None:
+    """Parse float."""
     text = (value or "").strip()
     if not text:
         return None
@@ -70,10 +73,12 @@ def _append_point(
     sigma: float,
     source_order: int,
 ) -> None:
+    """Execute the append point routine."""
     index.setdefault(player_id, []).append(HistoryPoint(event_date, rating, sigma, source_order))
 
 
 def load_player_results_index(path: Path) -> dict[int, list[HistoryPoint]]:
+    """Load player results index."""
     index: dict[int, list[HistoryPoint]] = {}
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -93,24 +98,29 @@ def load_player_results_index(path: Path) -> dict[int, list[HistoryPoint]]:
 
 
 class HistoryOverlayStore:
+    """Represent history overlay store."""
     def __init__(self, config: ViewerConfig):
+        """Initialize the history overlay store instance."""
         self.config = config
         self._baseline: dict[int, list[HistoryPoint]] | None = None
         self._candidate: dict[int, list[HistoryPoint]] | None = None
 
     @property
     def baseline(self) -> dict[int, list[HistoryPoint]]:
+        """Execute the baseline routine."""
         if self._baseline is None:
             self._baseline = load_player_results_index(self.config.baseline_results)
         return self._baseline
 
     @property
     def candidate(self) -> dict[int, list[HistoryPoint]]:
+        """Execute the candidate routine."""
         if self._candidate is None:
             self._candidate = load_player_results_index(self.config.candidate_results)
         return self._candidate
 
     def series_for(self, agaid: int) -> list[HistorySeries]:
+        """Execute the series for routine."""
         return [
             HistorySeries(
                 "Baseline replay",
@@ -130,6 +140,7 @@ class HistoryOverlayStore:
         ]
 
     def summary_for(self, agaid: int) -> dict[str, object]:
+        """Execute the summary for routine."""
         return {
             "agaid": agaid,
             "series": [
@@ -140,6 +151,7 @@ class HistoryOverlayStore:
 
 
 def _series_summary(key: str, label: str, points: list[HistoryPoint]) -> dict[str, object]:
+    """Execute the series summary routine."""
     latest = points[-1] if points else None
     return {
         "key": key,
@@ -156,6 +168,7 @@ def _series_summary(key: str, label: str, points: list[HistoryPoint]) -> dict[st
 
 
 def _html_page(candidate_label: str) -> str:
+    """Execute the html page routine."""
     quoted_candidate = quote(candidate_label)
     return f"""<!doctype html>
 <html lang="en">
@@ -391,12 +404,15 @@ def _html_page(candidate_label: str) -> str:
 
 
 class HistoryOverlayHandler(BaseHTTPRequestHandler):
+    """Represent history overlay handler."""
     store: HistoryOverlayStore
 
     def log_message(self, format: str, *args: object) -> None:
+        """Execute the log message routine."""
         return
 
     def _send_bytes(self, status: HTTPStatus, content_type: str, payload: bytes) -> None:
+        """Send bytes."""
         self.send_response(status.value)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(payload)))
@@ -405,15 +421,18 @@ class HistoryOverlayHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def _send_text(self, status: HTTPStatus, content_type: str, text: str) -> None:
+        """Send text."""
         self._send_bytes(status, f"{content_type}; charset=utf-8", text.encode("utf-8"))
 
     def _agaid_from_query(self, query: dict[str, list[str]]) -> int:
+        """Execute the agaid from query routine."""
         value = (query.get("agaid") or [""])[0].strip()
         if not value.isdigit():
             raise ValueError("Query parameter 'agaid' must be numeric.")
         return int(value)
 
     def do_GET(self) -> None:
+        """Execute the do GET routine."""
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
         try:
@@ -444,6 +463,7 @@ class HistoryOverlayHandler(BaseHTTPRequestHandler):
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """Build arg parser."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind.")
     parser.add_argument("--port", type=int, default=8765, help="Port to bind.")
@@ -454,6 +474,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """Run the command-line entry point for this module."""
     args = build_arg_parser().parse_args()
     config = ViewerConfig(
         baseline_results=args.baseline_results.resolve(),

@@ -14,10 +14,12 @@ SQL_CONNECTION_STRING = rewards.get_sql_connection_string()
 
 
 def _utc_now_text() -> str:
+    """Execute the utc now text routine."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _json_default(value):
+    """Execute the json default routine."""
     if isinstance(value, Decimal):
         if value == value.to_integral_value():
             return int(value)
@@ -26,6 +28,7 @@ def _json_default(value):
 
 
 def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=_json_default),
         status_code=status_code,
@@ -34,12 +37,14 @@ def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
 
 
 def _with_debug(payload: dict, **debug_fields) -> dict:
+    """Execute the with debug routine."""
     enriched = dict(payload)
     enriched["_debug"] = {key: value for key, value in debug_fields.items() if value is not None}
     return enriched
 
 
 def _get_conn_str_or_error() -> tuple[str | None, func.HttpResponse | None]:
+    """Return conn str or error."""
     if SQL_CONNECTION_STRING:
         return SQL_CONNECTION_STRING, None
     return None, func.HttpResponse(
@@ -50,6 +55,7 @@ def _get_conn_str_or_error() -> tuple[str | None, func.HttpResponse | None]:
 
 
 def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int = 500) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse rewards limit."""
     raw_limit = (req.params.get("limit") or "").strip()
     if not raw_limit:
         return default, None
@@ -62,6 +68,7 @@ def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int
 
 
 def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func.HttpResponse | None]:
+    """Parse rewards chapter code."""
     chapter_code = (req.params.get("chapter_code") or req.params.get("chapter") or "").strip()
     if not chapter_code:
         return None, func.HttpResponse("Query parameter 'chapter_code' is required.", status_code=400)
@@ -73,6 +80,7 @@ def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func
 @app.function_name(name="ChapterRewardsDisplayPage")
 @app.route(route="chapter-rewards", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_display_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsDisplayPage Azure Function endpoint."""
     markup = (Path(__file__).resolve().parent / "chapter_rewards.html").read_text(encoding="utf-8")
     return func.HttpResponse(
         markup,
@@ -84,6 +92,7 @@ def chapter_rewards_display_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsBalances")
 @app.route(route="chapter-rewards/balances", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_balances(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsBalances Azure Function endpoint."""
     started = perf_counter()
     conn_str, error = _get_conn_str_or_error()
     if error:
@@ -110,6 +119,7 @@ def chapter_rewards_balances(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsChapter")
 @app.route(route="chapter-rewards/chapter", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_chapter(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsChapter Azure Function endpoint."""
     started = perf_counter()
     conn_str, error = _get_conn_str_or_error()
     if error:

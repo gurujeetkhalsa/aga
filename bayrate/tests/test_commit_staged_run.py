@@ -5,6 +5,7 @@ from bayrate.commit_staged_run import build_commit_plan, build_commit_statements
 
 
 class CommitAdapter:
+    """Represent commit adapter."""
     def __init__(
         self,
         *,
@@ -15,6 +16,7 @@ class CommitAdapter:
         production_tournaments=None,
         previous_committed_runs=None,
     ):
+        """Initialize the commit adapter instance."""
         self.status = status
         self.staged_ratings = list(self.default_staged_ratings() if staged_ratings is None else staged_ratings)
         self.production_games = list(production_games or [])
@@ -24,6 +26,7 @@ class CommitAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         if "FROM [ratings].[bayrate_runs] AS r" in query:
             return [{"RunID": run_id} for run_id in self.previous_committed_runs]
         if "FROM [ratings].[bayrate_runs]" in query:
@@ -118,10 +121,12 @@ class CommitAdapter:
         return []
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
     @staticmethod
     def default_staged_ratings():
+        """Execute the default staged ratings routine."""
         return [
             {
                 "RunID": 1,
@@ -175,7 +180,9 @@ class CommitAdapter:
 
 
 class CommitStagedRunTest(unittest.TestCase):
+    """Represent commit staged run test."""
     def test_build_commit_plan_allocates_new_game_and_rating_ids(self) -> None:
+        """Verify that build commit plan allocates new game and rating ids."""
         plan = build_commit_plan(CommitAdapter(), 1)
 
         self.assertEqual(plan["run_id"], 1)
@@ -187,6 +194,7 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual([row["planned_rating_row_id"] for row in plan["planned_ratings"]], [201, 202])
 
     def test_build_commit_plan_appends_rating_ids_when_replacing_existing_ratings(self) -> None:
+        """Verify that build commit plan appends rating ids when replacing existing ratings."""
         plan = build_commit_plan(
             CommitAdapter(
                 production_ratings=[
@@ -204,6 +212,7 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual([row["planned_rating_row_id"] for row in plan["planned_ratings"]], [201, 202])
 
     def test_build_commit_plan_marks_previous_committed_run_superseded(self) -> None:
+        """Verify that build commit plan marks previous committed run superseded."""
         plan = build_commit_plan(CommitAdapter(previous_committed_runs=[35]), 1)
 
         self.assertEqual(plan["superseded_run_ids"], [35])
@@ -221,10 +230,12 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertIn("N'$.superseded_by_run_id'", sql_text)
 
     def test_build_commit_plan_rejects_runs_without_replay_rows(self) -> None:
+        """Verify that build commit plan rejects runs without replay rows."""
         with self.assertRaisesRegex(ValueError, "Run Replay before commit"):
             build_commit_plan(CommitAdapter(staged_ratings=[]), 1)
 
     def test_build_commit_plan_rejects_already_committed_rows(self) -> None:
+        """Verify that build commit plan rejects already committed rows."""
         staged_ratings = CommitAdapter.default_staged_ratings()
         staged_ratings[0]["Planned_Rating_Row_ID"] = 201
 
@@ -232,14 +243,17 @@ class CommitStagedRunTest(unittest.TestCase):
             build_commit_plan(CommitAdapter(staged_ratings=staged_ratings), 1)
 
     def test_build_commit_plan_rejects_non_ready_runs(self) -> None:
+        """Verify that build commit plan rejects non ready runs."""
         with self.assertRaisesRegex(ValueError, "only ready_for_rating"):
             build_commit_plan(CommitAdapter(status="needs_review"), 1)
 
     def test_build_commit_plan_rejects_ready_run_without_host_chapter(self) -> None:
+        """Verify that build commit plan rejects ready run without host chapter."""
         adapter = CommitAdapter()
         original_query_rows = adapter.query_rows
 
         def query_rows(query, params=()):
+            """Query rows."""
             rows = original_query_rows(query, params)
             if "FROM [ratings].[bayrate_staged_tournaments]" in query:
                 rows[0]["Host_ChapterID"] = None
@@ -253,6 +267,7 @@ class CommitStagedRunTest(unittest.TestCase):
             build_commit_plan(adapter, 1)
 
     def test_build_commit_statements_include_production_and_staging_updates(self) -> None:
+        """Verify that build commit statements include production and staging updates."""
         plan = build_commit_plan(CommitAdapter(), 1)
         statements = build_commit_statements(plan)
         sql_text = "\n".join(statement[0] for statement in statements)
@@ -268,6 +283,7 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertIn("UPDATE [ratings].[bayrate_runs]", sql_text)
 
     def test_printable_commit_plan_includes_stable_plan_hash(self) -> None:
+        """Verify that printable commit plan includes stable plan hash."""
         plan = build_commit_plan(CommitAdapter(), 1)
         preview = printable_commit_plan(plan)
 
@@ -278,6 +294,7 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual(preview["plan_hash"], executed["plan_hash"])
 
     def test_game_insert_uses_production_integer_komi_convention(self) -> None:
+        """Verify that game insert uses production integer komi convention."""
         plan = build_commit_plan(CommitAdapter(), 1)
         statements = build_commit_statements(plan)
         game_insert = next(statement for statement in statements if "INSERT INTO [ratings].[games]" in statement[0])
@@ -285,6 +302,7 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual(game_insert[1][11], 6)
 
     def test_tournament_upsert_carries_host_chapter(self) -> None:
+        """Verify that tournament upsert carries host chapter."""
         plan = build_commit_plan(CommitAdapter(), 1)
         statements = build_commit_statements(plan)
         tournament_upsert = next(statement for statement in statements if "INSERT INTO [ratings].[tournaments]" in statement[0])
@@ -295,10 +313,12 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual(tournament_upsert[1][10], 1)
 
     def test_commit_staged_run_requires_confirmation(self) -> None:
+        """Verify that commit staged run requires confirmation."""
         with self.assertRaisesRegex(ValueError, "confirm_production_commit"):
             commit_staged_run(CommitAdapter(), 1)
 
     def test_commit_staged_run_rejects_stale_preview_hash(self) -> None:
+        """Verify that commit staged run rejects stale preview hash."""
         with self.assertRaisesRegex(ValueError, "changed since preview"):
             commit_staged_run(
                 CommitAdapter(),
@@ -308,6 +328,7 @@ class CommitStagedRunTest(unittest.TestCase):
             )
 
     def test_commit_staged_run_requires_sgf_acknowledgement_for_sgf_replacement(self) -> None:
+        """Verify that commit staged run requires sgf acknowledgement for sgf replacement."""
         production_games = [
             {
                 "Game_ID": 700,
@@ -328,6 +349,7 @@ class CommitStagedRunTest(unittest.TestCase):
             )
 
     def test_commit_staged_run_executes_generated_statements(self) -> None:
+        """Verify that commit staged run executes generated statements."""
         adapter = CommitAdapter()
 
         plan = commit_staged_run(adapter, 1, confirm_production_commit=True)

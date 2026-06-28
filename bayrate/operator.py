@@ -23,6 +23,7 @@ InputFunc = Callable[[], str]
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Interactive BayRate report staging operator.")
     parser.add_argument("inputs", nargs="*", type=Path, help="Report text files to stage.")
     parser.add_argument("--run-id", help="Review and update an existing staged BayRate RunID.")
@@ -35,6 +36,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     conn_str = args.connection_string or get_sql_connection_string()
     if not conn_str:
@@ -92,6 +94,7 @@ def run_operator(
     output: TextIO | None = None,
     run_id: int | str | None = None,
 ) -> dict[str, Any]:
+    """Run operator."""
     out = output or sys.stdout
     read_answer = input_func or _read_stdin_line
     reports = [(str(path), path.read_text(encoding="utf-8")) for path in input_paths]
@@ -140,6 +143,7 @@ def run_existing_run_review(
     input_func: InputFunc | None = None,
     output: TextIO | None = None,
 ) -> dict[str, Any]:
+    """Run existing run review."""
     out = output or sys.stdout
     read_answer = input_func or _read_stdin_line
     payload = load_staged_run(adapter, run_id)
@@ -175,6 +179,7 @@ def run_existing_run_replay(
     output_path: Path | None = None,
     output: TextIO | None = None,
 ) -> dict[str, Any]:
+    """Run existing run replay."""
     out = output or sys.stdout
     artifact = run_staged_replay(
         adapter,
@@ -195,6 +200,7 @@ def run_input_replay(
     output: TextIO | None = None,
     run_id: int | str | None = None,
 ) -> dict[str, Any]:
+    """Run input replay."""
     out = output or sys.stdout
     reports = [(str(path), path.read_text(encoding="utf-8")) for path in input_paths]
     payload = build_staging_payload(
@@ -227,6 +233,7 @@ def review_tournaments(
     adapter: StageSqlAdapter | None = None,
     explanations: dict[str, Any] | None = None,
 ) -> None:
+    """Execute the review tournaments routine."""
     chapter_options = load_host_chapter_options(adapter) if adapter is not None else []
     explanation_by_ordinal = {
         explanation.get("source_report_ordinal"): explanation
@@ -317,6 +324,7 @@ def review_duplicate_tournament(
     chapter_options: list[dict[str, Any]] | None = None,
     explanation: dict[str, Any] | None = None,
 ) -> None:
+    """Execute the review duplicate tournament routine."""
     ordinal = int(tournament["source_report_ordinal"])
     row = tournament["tournament_row"]
     duplicate = tournament["duplicate_candidate"]
@@ -421,6 +429,7 @@ def review_duplicate_tournament(
 
 
 def print_report_summary(payload: dict[str, Any], output: TextIO, *, title: str = "Dry Run Summary") -> None:
+    """Execute the print report summary routine."""
     print("", file=output)
     print(title, file=output)
     print(f"  RunID: {payload['run_id']}", file=output)
@@ -451,6 +460,7 @@ def print_report_summary(payload: dict[str, Any], output: TextIO, *, title: str 
 
 
 def print_review_explanations(explanations: dict[str, Any], output: TextIO) -> None:
+    """Execute the print review explanations routine."""
     tournaments = explanations.get("tournaments") or []
     if not tournaments:
         return
@@ -461,6 +471,7 @@ def print_review_explanations(explanations: dict[str, Any], output: TextIO) -> N
 
 
 def print_review_explanation(explanation: dict[str, Any], output: TextIO, *, indent: str = "") -> None:
+    """Execute the print review explanation routine."""
     duplicate = explanation.get("duplicate_candidate") or {}
     game_diff = explanation.get("game_diff") or {}
     same_date_order = explanation.get("same_date_order") or []
@@ -508,6 +519,7 @@ def print_review_explanation(explanation: dict[str, Any], output: TextIO, *, ind
 
 
 def format_review_game(row: dict[str, Any]) -> str:
+    """Format review game."""
     source = f"#{row['source_game_ordinal']}" if row.get("source_game_ordinal") else f"Game_ID {row.get('game_id')}"
     return (
         f"{source}: r{row.get('round')} {row.get('pin_player_1')}-{row.get('pin_player_2')} "
@@ -516,6 +528,7 @@ def format_review_game(row: dict[str, Any]) -> str:
 
 
 def print_validation_errors(tournament: dict[str, Any], output: TextIO) -> None:
+    """Execute the print validation errors routine."""
     row = tournament["tournament_row"]
     print("", file=output)
     print(f"Report {tournament['source_report_ordinal']} has validation errors for {row.get('Tournament_Code')}:", file=output)
@@ -524,6 +537,7 @@ def print_validation_errors(tournament: dict[str, Any], output: TextIO) -> None:
 
 
 def tournament_has_host_chapter(tournament: dict[str, Any]) -> bool:
+    """Execute the tournament has host chapter routine."""
     row = tournament.get("tournament_row") or {}
     return bool(row.get("Host_ChapterID") and str(row.get("Host_ChapterCode") or "").strip())
 
@@ -534,6 +548,7 @@ def ask_host_chapter(
     input_func: InputFunc,
     output: TextIO,
 ) -> dict[str, Any] | None:
+    """Execute the ask host chapter routine."""
     if not chapter_options:
         print("No host chapter options were available from membership.chapters.", file=output)
         return None
@@ -561,6 +576,7 @@ def ask_reward_event(
     output: TextIO,
     default_key: str | None = None,
 ) -> dict[str, str | None]:
+    """Execute the ask reward event routine."""
     row = tournament.get("tournament_row") or {}
     key_default = (
         str(default_key or row.get("Reward_Event_Key") or row.get("Tournament_Code") or "").strip()
@@ -593,6 +609,7 @@ def ask_yes_no(
     input_func: InputFunc,
     output: TextIO,
 ) -> bool:
+    """Execute the ask yes no routine."""
     suffix = "[Y/n]" if default else "[y/N]"
     while True:
         print(f"{question} {suffix} ", end="", file=output)
@@ -608,6 +625,7 @@ def ask_yes_no(
 
 
 def ask_optional_text(question: str, *, input_func: InputFunc, output: TextIO) -> str | None:
+    """Execute the ask optional text routine."""
     print(f"{question} (press Enter to skip): ", end="", file=output)
     output.flush()
     answer = input_func().strip()
@@ -615,6 +633,7 @@ def ask_optional_text(question: str, *, input_func: InputFunc, output: TextIO) -
 
 
 def _read_stdin_line() -> str:
+    """Read stdin line."""
     return sys.stdin.readline()
 
 

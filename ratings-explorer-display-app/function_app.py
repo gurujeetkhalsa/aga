@@ -20,6 +20,7 @@ SQL_CONNECTION_STRING = explorer.get_sql_connection_string()
 
 
 def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=explorer.json_safe_value),
         status_code=status_code,
@@ -28,18 +29,21 @@ def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
 
 
 def _with_debug(payload: dict, **debug_fields) -> dict:
+    """Execute the with debug routine."""
     enriched = dict(payload)
     enriched["_debug"] = {key: value for key, value in debug_fields.items() if value is not None}
     return enriched
 
 
 def _load_snapshot_or_error() -> tuple[dict | None, func.HttpResponse | None]:
+    """Load snapshot or error."""
     if (os.environ.get("RATINGS_EXPLORER_DISABLE_SNAPSHOT") or "").strip().lower() in {"1", "true", "yes", "on"}:
         return None, None
     return explorer.load_snapshot(), None
 
 
 def _get_conn_str_or_error() -> tuple[str | None, func.HttpResponse | None]:
+    """Return conn str or error."""
     if SQL_CONNECTION_STRING:
         return SQL_CONNECTION_STRING, None
     return None, func.HttpResponse(
@@ -50,6 +54,7 @@ def _get_conn_str_or_error() -> tuple[str | None, func.HttpResponse | None]:
 
 
 def _tournament_detail_has_game_sgf_metadata(payload: dict | None) -> bool:
+    """Execute the tournament detail has game sgf metadata routine."""
     if not payload:
         return False
     games = payload.get("games") or []
@@ -59,10 +64,12 @@ def _tournament_detail_has_game_sgf_metadata(payload: dict | None) -> bool:
 
 
 def _history_payload_from_points(history: list[tuple[datetime, float, float]]) -> list[dict]:
+    """Execute the history payload from points routine."""
     return explorer.serialize_rating_history(history)
 
 
 def _parse_search_limit(req: func.HttpRequest) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse search limit."""
     limit_text = (req.params.get("limit") or "").strip()
     if not limit_text:
         return DEFAULT_SEARCH_LIMIT, None
@@ -75,6 +82,7 @@ def _parse_search_limit(req: func.HttpRequest) -> tuple[int | None, func.HttpRes
 
 
 def _parse_nonnegative_int_param(req: func.HttpRequest, name: str, default: int = 0) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse nonnegative int param."""
     raw_text = (req.params.get(name) or "").strip()
     if not raw_text:
         return default, None
@@ -84,6 +92,7 @@ def _parse_nonnegative_int_param(req: func.HttpRequest, name: str, default: int 
 
 
 def _years_ago_iso(years: int, today: date) -> str:
+    """Execute the years ago iso routine."""
     try:
         return today.replace(year=today.year - years).isoformat()
     except ValueError:
@@ -91,6 +100,7 @@ def _years_ago_iso(years: int, today: date) -> str:
 
 
 def _parse_recent_activity_cutoff(req: func.HttpRequest) -> tuple[str | None, func.HttpResponse | None]:
+    """Parse recent activity cutoff."""
     raw_years_text = req.params.get("recent_activity_years")
     years_text = (raw_years_text or "").strip()
     if years_text.lower() in {"none", "all", "no_limit", "nolimit"}:
@@ -112,6 +122,7 @@ def _parse_recent_activity_cutoff(req: func.HttpRequest) -> tuple[str | None, fu
 
 
 def _parse_rating_bands(req: func.HttpRequest) -> tuple[list[str] | None, func.HttpResponse | None]:
+    """Parse rating bands."""
     rating_bands_text = (req.params.get("rating_bands") or req.params.get("rating_band") or "").strip()
     if not rating_bands_text:
         return None, None
@@ -123,6 +134,7 @@ def _parse_rating_bands(req: func.HttpRequest) -> tuple[list[str] | None, func.H
 
 
 def _parse_player_status(req: func.HttpRequest) -> tuple[str, func.HttpResponse | None]:
+    """Parse player status."""
     status_filter = (req.params.get("status") or "").strip().lower() or "all"
     if status_filter not in ALLOWED_PLAYER_STATUS_FILTERS:
         return "all", func.HttpResponse("Query parameter 'status' must be one of All, Active, or Expired.", status_code=400)
@@ -130,6 +142,7 @@ def _parse_player_status(req: func.HttpRequest) -> tuple[str, func.HttpResponse 
 
 
 def _parse_csv_values(req: func.HttpRequest, key: str, legacy_key: str | None = None) -> list[str] | None:
+    """Parse csv values."""
     raw = (req.params.get(key) or req.params.get(legacy_key or "") or "").strip()
     if not raw:
         return None
@@ -148,6 +161,7 @@ def _is_default_player_startup_search(
     recent_activity_cutoff: str | None,
     rating_bands: list[str] | None,
 ) -> bool:
+    """Return whether default player startup search."""
     return (
         agaid is None
         and not (first_name or "").strip()
@@ -164,6 +178,7 @@ def _is_default_player_startup_search(
 @app.function_name(name="RatingsExplorerPage")
 @app.route(route="ratings-explorer", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPage Azure Function endpoint."""
     return func.HttpResponse(
         explorer.load_ratings_explorer_html(""),
         status_code=200,
@@ -174,6 +189,7 @@ def ratings_explorer_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerMobilePage")
 @app.route(route="ratings-explorer/mobile", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerMobilePage Azure Function endpoint."""
     return func.HttpResponse(
         explorer.load_ratings_explorer_html("", "ratings_explorer_mobile.html"),
         status_code=200,
@@ -184,6 +200,7 @@ def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayers")
 @app.route(route="ratings-explorer/players", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_players(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayers Azure Function endpoint."""
     started = perf_counter()
     snapshot = explorer.load_player_search_snapshot()
     limit, error = _parse_search_limit(req)
@@ -280,6 +297,7 @@ def ratings_explorer_players(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayersStartup")
 @app.route(route="ratings-explorer/players-startup", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_players_startup(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayersStartup Azure Function endpoint."""
     started = perf_counter()
     limit, error = _parse_search_limit(req)
     if error:
@@ -312,6 +330,7 @@ def ratings_explorer_players_startup(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="RatingsExplorerTournaments")
 @app.route(route="ratings-explorer/tournaments", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerTournaments Azure Function endpoint."""
     started = perf_counter()
     snapshot = explorer.load_tournament_search_snapshot()
     limit, error = _parse_search_limit(req)
@@ -392,6 +411,7 @@ def ratings_explorer_tournaments(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerFilterOptions")
 @app.route(route="ratings-explorer/filter-options", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_filter_options(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerFilterOptions Azure Function endpoint."""
     started = perf_counter()
     try:
         filter_options = explorer.load_filter_options_snapshot()
@@ -423,6 +443,7 @@ def ratings_explorer_filter_options(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayer")
 @app.route(route="ratings-explorer/player", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayer Azure Function endpoint."""
     started = perf_counter()
     agaid_text = (req.params.get("agaid") or "").strip()
     recent_games_sgf_only = (req.params.get("recent_games_sgf_only") or "").strip().lower() in {"1", "true", "yes", "on"}
@@ -467,6 +488,7 @@ def ratings_explorer_player(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayerContext")
 @app.route(route="ratings-explorer/player-context", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player_context(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayerContext Azure Function endpoint."""
     started = perf_counter()
     agaid_text = (req.params.get("agaid") or "").strip()
     if not agaid_text.isdigit():
@@ -493,6 +515,7 @@ def ratings_explorer_player_context(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerTournament")
 @app.route(route="ratings-explorer/tournament", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_tournament(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerTournament Azure Function endpoint."""
     started = perf_counter()
     tournament_code = (req.params.get("tournament_code") or "").strip()
     if not tournament_code:
@@ -523,6 +546,7 @@ def ratings_explorer_tournament(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerGameSgf")
 @app.route(route="ratings-explorer/game-sgf", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_game_sgf(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerGameSgf Azure Function endpoint."""
     game_id_text = (req.params.get("game_id") or "").strip()
     if not game_id_text.isdigit():
         return func.HttpResponse("Query parameter 'game_id' must be numeric.", status_code=400)
@@ -547,6 +571,7 @@ def ratings_explorer_game_sgf(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerGameSgfViewer")
 @app.route(route="ratings-explorer/game-sgf-viewer", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_game_sgf_viewer(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerGameSgfViewer Azure Function endpoint."""
     game_id_text = (req.params.get("game_id") or "").strip()
     if not game_id_text.isdigit():
         return func.HttpResponse("Query parameter 'game_id' must be numeric.", status_code=400)
@@ -560,6 +585,7 @@ def ratings_explorer_game_sgf_viewer(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="RatingsExplorerAsset")
 @app.route(route="ratings-explorer/assets/{*asset_path}", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_asset(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerAsset Azure Function endpoint."""
     asset_path = (req.route_params.get("asset_path") or "").strip()
     if not asset_path:
         return func.HttpResponse("Asset path is required.", status_code=400)
@@ -572,6 +598,7 @@ def ratings_explorer_asset(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerPlayerHistorySvg")
 @app.route(route="ratings-explorer/player-history.svg", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_player_history_svg(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerPlayerHistorySvg Azure Function endpoint."""
     agaid_text = (req.params.get("agaid") or "").strip()
     if not agaid_text.isdigit():
         return func.HttpResponse("Query parameter 'agaid' must be numeric.", status_code=400)
@@ -595,6 +622,7 @@ def ratings_explorer_player_history_svg(req: func.HttpRequest) -> func.HttpRespo
 @app.function_name(name="RatingsExplorerSnapshotStatus")
 @app.route(route="ratings-explorer/snapshot-status", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_snapshot_status(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerSnapshotStatus Azure Function endpoint."""
     started = perf_counter()
     status = explorer.load_snapshot_status()
     snapshot_meta = (status or {}).get("snapshot_meta")
@@ -618,6 +646,7 @@ def ratings_explorer_snapshot_status(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="RatingsExplorerSnapshotWarm")
 @app.route(route="ratings-explorer/snapshot-warm", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def ratings_explorer_snapshot_warm(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerSnapshotWarm Azure Function endpoint."""
     started = perf_counter()
     startup = explorer.load_startup_players()
     player_search = explorer.load_player_search_snapshot()
@@ -636,6 +665,7 @@ def ratings_explorer_snapshot_warm(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="RatingsExplorerSnapshotRefresh")
 @app.route(route="ratings-explorer/snapshot-refresh", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
 def ratings_explorer_snapshot_refresh(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the RatingsExplorerSnapshotRefresh Azure Function endpoint."""
     requested_at = datetime.now(timezone.utc).isoformat()
     explorer.request_snapshot_refresh("http", requested_at)
     explorer.update_snapshot_status(
@@ -650,6 +680,7 @@ def ratings_explorer_snapshot_refresh(req: func.HttpRequest) -> func.HttpRespons
 @app.function_name(name="RatingsExplorerNightlySnapshot")
 @app.schedule(schedule="0 15 6 * * *", arg_name="timer", run_on_startup=False, use_monitor=True)
 def ratings_explorer_nightly_snapshot(timer: func.TimerRequest) -> None:
+    """Handle the RatingsExplorerNightlySnapshot Azure Function endpoint."""
     conn_str = SQL_CONNECTION_STRING
     if not conn_str:
         raise RuntimeError("Missing SQL connection string for Ratings Explorer snapshot refresh.")
@@ -671,6 +702,7 @@ def ratings_explorer_nightly_snapshot(timer: func.TimerRequest) -> None:
 @app.function_name(name="RatingsExplorerPendingSnapshotRefresh")
 @app.schedule(schedule="0 */5 * * * *", arg_name="timer", run_on_startup=False, use_monitor=True)
 def ratings_explorer_pending_snapshot_refresh(timer: func.TimerRequest) -> None:
+    """Handle the RatingsExplorerPendingSnapshotRefresh Azure Function endpoint."""
     request = explorer.load_snapshot_request()
     if not request:
         return

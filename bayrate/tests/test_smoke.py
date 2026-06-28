@@ -16,7 +16,9 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
 class BayrateSmokeTest(unittest.TestCase):
+    """Represent bayrate smoke test."""
     def test_rank_and_handicap_helpers(self) -> None:
+        """Verify that rank and handicap helpers."""
         self.assertEqual(rank_to_seed("12k"), -12.5)
         self.assertEqual(rank_to_seed("1d"), 1.5)
 
@@ -25,6 +27,7 @@ class BayrateSmokeTest(unittest.TestCase):
         self.assertGreater(sigma_px, 1.0)
 
     def test_two_tournament_replay_carries_rating_forward(self) -> None:
+        """Verify that two tournament replay carries rating forward."""
         result = run_bayrate(
             FIXTURE_DIR / "smoke_games.csv",
             FIXTURE_DIR / "smoke_ratings.csv",
@@ -49,6 +52,7 @@ class BayrateSmokeTest(unittest.TestCase):
         self.assertAlmostEqual(second_event_1001.prior_sigma, first_event_1001.sigma_after)
 
     def test_same_day_tournaments_follow_game_csv_order(self) -> None:
+        """Verify that same day tournaments follow game csv order."""
         result = run_bayrate(
             FIXTURE_DIR / "same_day_order_games.csv",
             FIXTURE_DIR / "smoke_ratings.csv",
@@ -77,6 +81,7 @@ class BayrateSmokeTest(unittest.TestCase):
         self.assertAlmostEqual(second_event_1001.prior_sigma, first_event_1001.sigma_after)
 
     def test_events_process_chronologically_before_csv_tie_breaker(self) -> None:
+        """Verify that events process chronologically before csv tie breaker."""
         result = run_bayrate(
             FIXTURE_DIR / "chronological_order_games.csv",
             FIXTURE_DIR / "smoke_ratings.csv",
@@ -107,6 +112,7 @@ class BayrateSmokeTest(unittest.TestCase):
         self.assertAlmostEqual(late_1001.prior_sigma, multiday_1001.sigma_after)
 
     def test_game_loader_reports_malformed_rows(self) -> None:
+        """Verify that game loader reports malformed rows."""
         with self.assertRaises(CsvValidationError) as context:
             load_games_from_csv(FIXTURE_DIR / "bad_games.csv", BayrateConfig())
 
@@ -117,6 +123,7 @@ class BayrateSmokeTest(unittest.TestCase):
         self.assertEqual(context.exception.errors[1].column, "Rank_1")
 
     def test_rating_loader_reports_malformed_rows(self) -> None:
+        """Verify that rating loader reports malformed rows."""
         with self.assertRaises(CsvValidationError) as context:
             load_official_history(FIXTURE_DIR / "bad_ratings.csv")
 

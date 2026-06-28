@@ -27,6 +27,7 @@ RESPONSIVENESS_GAP_THRESHOLD = 1.0
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(
         description="Run BayRate against a local experiment dataset and summarize rating quality diagnostics."
     )
@@ -55,6 +56,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     output_dir = args.output_dir or default_output_dir(args.name)
     config = load_config_from_json(args.config_json) if args.config_json else BayrateConfig()
@@ -97,6 +99,7 @@ def run_experiment_benchmark(
     baseline_summary_path: Path | None = None,
     write_full_result: bool = False,
 ) -> dict[str, Any]:
+    """Run experiment benchmark."""
     start = time.perf_counter()
     result = run_bayrate(games_path, ratings_path, config or BayrateConfig())
     elapsed_seconds = time.perf_counter() - start
@@ -146,6 +149,7 @@ def summarize_result(
     ratings_path: Path,
     elapsed_seconds: float,
 ) -> dict[str, Any]:
+    """Summarize result."""
     player_rows = [asdict(row) for row in result.player_results]
     game_rows = [asdict(row) for row in result.game_results]
     rating_deltas = [
@@ -195,6 +199,7 @@ def summarize_result(
 
 
 def responsiveness_summary(player_rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Execute the responsiveness summary routine."""
     cases = []
     improving = []
     worsening = []
@@ -249,6 +254,7 @@ def responsiveness_summary(player_rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def calibration_bins(game_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Execute the calibration bins routine."""
     bins = [
         {
             "bin": index,
@@ -289,6 +295,7 @@ def calibration_bins(game_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def compare_summaries(baseline: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
+    """Compare summaries."""
     primary_paths = [
         ("pre_event_metrics", "accuracy"),
         ("pre_event_metrics", "average_log_loss"),
@@ -335,6 +342,7 @@ def compare_summaries(baseline: dict[str, Any], candidate: dict[str, Any]) -> di
 
 
 def distribution(values: Iterable[float | int | None]) -> dict[str, Any]:
+    """Execute the distribution routine."""
     clean_values = sorted(float(value) for value in values if value is not None and math.isfinite(float(value)))
     if not clean_values:
         return {
@@ -362,6 +370,7 @@ def distribution(values: Iterable[float | int | None]) -> dict[str, Any]:
 
 
 def signed_distribution(values: Iterable[float | int | None]) -> dict[str, Any]:
+    """Execute the signed distribution routine."""
     clean_values = [float(value) for value in values if value is not None and math.isfinite(float(value))]
     result = distribution(clean_values)
     result.update(
@@ -375,6 +384,7 @@ def signed_distribution(values: Iterable[float | int | None]) -> dict[str, Any]:
 
 
 def percentile(sorted_values: list[float], percentile_value: float) -> float:
+    """Execute the percentile routine."""
     if not sorted_values:
         raise ValueError("percentile requires at least one value.")
     if len(sorted_values) == 1:
@@ -389,6 +399,7 @@ def percentile(sorted_values: list[float], percentile_value: float) -> float:
 
 
 def write_player_results_csv(path: Path, player_results: Iterable[Any]) -> None:
+    """Write player results csv."""
     columns = [
         "player_id",
         "event_key",
@@ -433,6 +444,7 @@ def write_player_results_csv(path: Path, player_results: Iterable[Any]) -> None:
 
 
 def write_game_results_csv(path: Path, game_results: Iterable[Any]) -> None:
+    """Write game results csv."""
     columns = [
         "source_game_id",
         "event_key",
@@ -460,6 +472,7 @@ def write_game_results_csv(path: Path, game_results: Iterable[Any]) -> None:
 
 
 def write_calibration_csv(path: Path, game_results: Iterable[Any]) -> None:
+    """Write calibration csv."""
     rows = calibration_bins([asdict(result) for result in game_results])
     columns = ["bin", "lower", "upper", "count", "average_predicted", "actual_win_rate", "average_brier"]
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -470,6 +483,7 @@ def write_calibration_csv(path: Path, game_results: Iterable[Any]) -> None:
 
 
 def print_benchmark_summary(artifact: dict[str, Any], output: Any) -> None:
+    """Execute the print benchmark summary routine."""
     summary = artifact["summary"]
     pre = summary["pre_event_metrics"]
     sigma = summary["sigma_after"]
@@ -516,10 +530,12 @@ def print_benchmark_summary(artifact: dict[str, Any], output: Any) -> None:
 
 
 def default_output_dir(name: str) -> Path:
+    """Execute the default output dir routine."""
     return Path(__file__).resolve().parent / "output" / "experiments" / safe_name(name)
 
 
 def load_config_from_json(path: Path) -> BayrateConfig:
+    """Load config from json."""
     payload = json.loads(path.read_text(encoding="utf-8"))
     values = payload.get("config", payload)
     if not isinstance(values, dict):
@@ -529,11 +545,13 @@ def load_config_from_json(path: Path) -> BayrateConfig:
 
 
 def safe_name(value: str) -> str:
+    """Execute the safe name routine."""
     cleaned = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in value.strip().lower())
     return cleaned.strip("-") or "experiment"
 
 
 def nested_get(value: dict[str, Any], path: tuple[str, ...]) -> Any:
+    """Execute the nested get routine."""
     current: Any = value
     for part in path:
         if not isinstance(current, dict):
@@ -543,6 +561,7 @@ def nested_get(value: dict[str, Any], path: tuple[str, ...]) -> Any:
 
 
 def numeric_delta(candidate_value: Any, baseline_value: Any) -> float | None:
+    """Execute the numeric delta routine."""
     if candidate_value is None or baseline_value is None:
         return None
     try:
@@ -552,18 +571,21 @@ def numeric_delta(candidate_value: Any, baseline_value: Any) -> float | None:
 
 
 def _safe_divide(numerator: float | int, denominator: float | int) -> float | None:
+    """Execute the safe divide routine."""
     if not denominator:
         return None
     return float(numerator) / float(denominator)
 
 
 def _fmt(value: Any) -> str:
+    """Execute the fmt routine."""
     if value is None:
         return "n/a"
     return f"{float(value):.6f}"
 
 
 def _csv_value(value: Any) -> Any:
+    """Execute the csv value routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     if value is None:
@@ -572,6 +594,7 @@ def _csv_value(value: Any) -> Any:
 
 
 def _json_default(value: Any) -> Any:
+    """Execute the json default routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     return str(value)

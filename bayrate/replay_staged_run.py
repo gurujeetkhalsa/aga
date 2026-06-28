@@ -224,6 +224,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
 @dataclass(frozen=True)
 class PlannedEvent:
+    """Represent planned event."""
     source: str
     tournament_code: str
     tournament_date: date
@@ -238,6 +239,7 @@ class PlannedEvent:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Run a staged BayRate replay without writing production tables.")
     parser.add_argument("--run-id", required=True, help="Staged BayRate RunID to replay.")
     parser.add_argument("--connection-string", help="SQL connection string. Defaults to SQL_CONNECTION_STRING/local.settings.json.")
@@ -248,6 +250,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     conn_str = args.connection_string or get_sql_connection_string()
     if not conn_str:
@@ -279,6 +282,7 @@ def run_staged_replay(
     write_artifact: bool = True,
     persist_staged_ratings: bool = False,
 ) -> dict[str, Any]:
+    """Run staged replay."""
     replay_input = build_staged_replay_input(
         adapter,
         run_id=run_id,
@@ -322,6 +326,7 @@ def build_staged_replay_input(
     allow_needs_review: bool = True,
     max_production_events: int | None = None,
 ) -> dict[str, Any]:
+    """Build staged replay input."""
     if payload is None:
         if not run_id:
             raise ValueError("Either run_id or payload is required.")
@@ -401,6 +406,7 @@ def build_staged_replay_input(
 
 
 def build_staged_rating_rows(plan: dict[str, Any], result: BayrateRunResult) -> list[dict[str, Any]]:
+    """Build staged rating rows."""
     events_by_key = {
         _event_key_for_plan_event(event): (index, event)
         for index, event in enumerate(plan.get("events") or [], start=1)
@@ -458,6 +464,7 @@ def build_staged_rating_rows(plan: dict[str, Any], result: BayrateRunResult) -> 
 
 
 def build_staged_rating_statements(run_id: str, rows: list[dict[str, Any]]) -> list[SqlStatement]:
+    """Build staged rating statements."""
     statements: list[SqlStatement] = [(DELETE_STAGED_RATINGS_SQL, (run_id,))]
     for row in rows:
         statements.append(
@@ -493,6 +500,7 @@ def build_staged_rating_statements(run_id: str, rows: list[dict[str, Any]]) -> l
 
 
 def summarize_staged_rating_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize staged rating rows."""
     events: dict[tuple[int, str | None], dict[str, Any]] = {}
     for row in rows:
         key = (row["event_ordinal"], row.get("tournament_code"))
@@ -519,6 +527,7 @@ def plan_staged_replacement_events(
     *,
     allow_needs_review: bool,
 ) -> tuple[list[PlannedEvent], list[str]]:
+    """Execute the plan staged replacement events routine."""
     if payload.get("validation_failed_count"):
         raise ValueError("Cannot replay a run with validation_failed tournaments.")
 
@@ -578,6 +587,7 @@ def plan_production_cascade_events(
     replaced_codes: set[str],
     max_production_events: int | None,
 ) -> list[PlannedEvent]:
+    """Execute the plan production cascade events routine."""
     summaries = load_production_event_summaries_from_date(adapter, anchor_event.tournament_date)
     events = []
     for row in summaries:
@@ -611,6 +621,7 @@ def plan_production_cascade_events(
 
 
 def plan_same_day_production_events(adapter: StageSqlAdapter, tournament_date: date) -> list[PlannedEvent]:
+    """Execute the plan same day production events routine."""
     events = []
     for row in load_production_event_summaries_from_date(adapter, tournament_date):
         code = _clean_text(row.get("Tournament_Code"))
@@ -634,6 +645,7 @@ def plan_same_day_production_events(adapter: StageSqlAdapter, tournament_date: d
 
 
 def load_production_event_summary(adapter: StageSqlAdapter, tournament_code: str | None) -> dict[str, Any] | None:
+    """Load production event summary."""
     if not tournament_code:
         return None
     rows = adapter.query_rows(PRODUCTION_EVENT_SUMMARY_SQL, (tournament_code,))
@@ -641,6 +653,7 @@ def load_production_event_summary(adapter: StageSqlAdapter, tournament_code: str
 
 
 def load_production_event_summaries_from_date(adapter: StageSqlAdapter, anchor_date: date) -> list[dict[str, Any]]:
+    """Load production event summaries from date."""
     return adapter.query_rows(PRODUCTION_EVENT_SUMMARIES_FROM_DATE_SQL, (anchor_date,))
 
 
@@ -650,6 +663,7 @@ def load_starter_td_list(
     *,
     same_day_predecessor_codes: list[str] | None = None,
 ) -> tuple[dict[int, TdListEntry], str]:
+    """Load starter td list."""
     predecessor_codes = list(same_day_predecessor_codes or [])
     if predecessor_codes:
         placeholders = ", ".join("?" for _ in predecessor_codes)
@@ -665,6 +679,7 @@ def load_starter_td_list(
 
 
 def _td_list_from_rows(rows: Iterable[dict[str, Any]]) -> dict[int, TdListEntry]:
+    """Execute the td list from rows routine."""
     td_list = {}
     for row in rows:
         player_id = _coerce_int(row.get("Pin_Player"))
@@ -683,6 +698,7 @@ def _td_list_from_rows(rows: Iterable[dict[str, Any]]) -> dict[int, TdListEntry]
 
 
 def _staged_event_games(payload: dict[str, Any], event: PlannedEvent) -> list[GameRecord]:
+    """Execute the staged event games routine."""
     games = []
     for entry in payload.get("staged_games") or []:
         if entry.get("source_report_ordinal") != event.source_report_ordinal:
@@ -698,6 +714,7 @@ def _staged_event_games(payload: dict[str, Any], event: PlannedEvent) -> list[Ga
 
 
 def _production_event_games(adapter: StageSqlAdapter, event: PlannedEvent) -> list[GameRecord]:
+    """Execute the production event games routine."""
     rows = adapter.query_rows(PRODUCTION_GAMES_FOR_REPLAY_SQL, (event.tournament_code,))
     games = []
     for row in rows:
@@ -713,6 +730,7 @@ def _game_record_from_row(
     tournament_code: str,
     synthetic_source_game_id: int | None = None,
 ) -> GameRecord | None:
+    """Execute the game record from row routine."""
     rated = _coerce_bool(row.get("Rated"), default=True)
     excluded = _coerce_bool(row.get("Exclude"), default=False)
     is_online = _coerce_bool(row.get("Online"), default=False)
@@ -774,6 +792,7 @@ def _game_record_from_row(
 
 
 def _coerce_bool(value: Any, *, default: bool) -> bool:
+    """Coerce bool."""
     if value is None:
         return default
     if isinstance(value, bool):
@@ -789,6 +808,7 @@ def _coerce_bool(value: Any, *, default: bool) -> bool:
 
 
 def _planned_event_sort_key(event: PlannedEvent) -> tuple[Any, ...]:
+    """Execute the planned event sort key routine."""
     rating_key = event.first_rating_row_id
     if rating_key is None:
         rating_key = 10**18
@@ -801,6 +821,7 @@ def _planned_event_sort_key(event: PlannedEvent) -> tuple[Any, ...]:
 
 
 def _planned_event_to_dict(event: PlannedEvent) -> dict[str, Any]:
+    """Execute the planned event to dict routine."""
     return {
         "source": event.source,
         "tournament_code": event.tournament_code,
@@ -817,6 +838,7 @@ def _planned_event_to_dict(event: PlannedEvent) -> dict[str, Any]:
 
 
 def _event_key_for_plan_event(event: dict[str, Any]) -> str:
+    """Execute the event key for plan event routine."""
     tournament_code = event.get("tournament_code")
     if tournament_code:
         return f"code:{tournament_code}"
@@ -827,12 +849,14 @@ def _event_key_for_plan_event(event: dict[str, Any]) -> str:
 
 
 def default_output_path(run_id: str | int | None) -> Path:
+    """Execute the default output path routine."""
     run_id_text = "unwritten" if run_id is None else str(run_id)
     safe_run_id = "".join(ch for ch in run_id_text if ch.isalnum() or ch == "-")
     return Path(__file__).resolve().parent / "output" / f"staged_replay_{safe_run_id}.json"
 
 
 def print_replay_summary(artifact: dict[str, Any], output: TextIO) -> None:
+    """Execute the print replay summary routine."""
     plan = artifact["plan"]
     anchor = plan["anchor"]
     result = artifact["bayrate_result"]
@@ -862,6 +886,7 @@ def print_replay_summary(artifact: dict[str, Any], output: TextIO) -> None:
 
 
 def _require_date(value: Any, column: str) -> date:
+    """Execute the require date routine."""
     parsed = _coerce_date(value)
     if parsed is None:
         raise ValueError(f"{column} is required for staged replay.")
@@ -869,6 +894,7 @@ def _require_date(value: Any, column: str) -> date:
 
 
 def _clean_text(value: Any) -> str | None:
+    """Clean text."""
     if value is None:
         return None
     text = str(value).strip()
@@ -876,6 +902,7 @@ def _clean_text(value: Any) -> str | None:
 
 
 def _json_default(value: Any) -> Any:
+    """Execute the json default routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     return str(value)

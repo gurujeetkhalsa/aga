@@ -21,7 +21,9 @@ from clubexpress_staging import (
 
 
 class ClubExpressStagingTest(unittest.TestCase):
+    """Represent club express staging test."""
     def test_membership_event_record_params_are_json_safe_and_keyed(self):
+        """Verify that membership event record params are json safe and keyed."""
         received_at = datetime(2026, 6, 26, 15, 45, tzinfo=timezone.utc)
         downstream = [
             DownstreamProcedure(
@@ -67,6 +69,7 @@ class ClubExpressStagingTest(unittest.TestCase):
         self.assertEqual(downstream_payload["procedures"][0]["params"]["ReceivedAt"], received_at.isoformat())
 
     def test_chapter_renewal_notice_event_records_row_count(self):
+        """Verify that chapter renewal notice event records row count."""
         received_at = datetime(2026, 5, 5, 12, 0, tzinfo=timezone.utc)
         event = build_chapter_renewal_notice_parsed_event(
             message_id="notice-msg",
@@ -92,6 +95,7 @@ class ClubExpressStagingTest(unittest.TestCase):
         self.assertEqual(parsed_payload["parsed"]["rows"][1]["chapter_id"], 25495)
 
     def test_csv_attachment_event_records_archive_action(self):
+        """Verify that csv attachment event records archive action."""
         received_at = datetime(2026, 6, 26, 23, 0, tzinfo=timezone.utc)
         event = build_csv_attachment_parsed_event(
             message_id="csv-msg",
@@ -121,6 +125,7 @@ class ClubExpressStagingTest(unittest.TestCase):
         )
 
     def test_journal_event_records_news_and_review_match_counts(self):
+        """Verify that journal event records news and review match counts."""
         received_at = datetime(2026, 6, 26, 12, 30, tzinfo=timezone.utc)
         event = build_journal_parsed_event(
             message_id="journal-msg",
@@ -156,6 +161,7 @@ class ClubExpressStagingTest(unittest.TestCase):
         self.assertEqual(downstream_payload["procedures"][0]["name"], "membership.sp_process_journal_news_email")
 
     def test_status_params_truncate_error_and_serialize_result_payload(self):
+        """Verify that status params truncate error and serialize result payload."""
         params = status_params(
             "msg-123:renewal:19987",
             "error",
@@ -170,6 +176,7 @@ class ClubExpressStagingTest(unittest.TestCase):
         self.assertEqual(result_payload["processed_at"], "2026-06-26T00:00:00+00:00")
 
     def test_result_payload_for_procedures_summarizes_downstream_calls(self):
+        """Verify that result payload for procedures summarizes downstream calls."""
         payload = result_payload_for_procedures(
             [
                 DownstreamProcedure("membership.sp_process_new_member_email", {"MessageId": "new-msg"}),

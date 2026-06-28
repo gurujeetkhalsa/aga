@@ -26,6 +26,7 @@ DEFAULT_PERFORMANCE_THRESHOLD = 1.0
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(
         description="Build player-slice diagnostics from BayRate experiment output directories."
     )
@@ -46,6 +47,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     candidates = [_parse_candidate(value) for value in args.candidate]
     artifact = build_slice_harness(
@@ -77,6 +79,7 @@ def build_slice_harness(
     stable_threshold: float = DEFAULT_STABLE_THRESHOLD,
     performance_threshold: float = DEFAULT_PERFORMANCE_THRESHOLD,
 ) -> dict[str, Any]:
+    """Build slice harness."""
     baseline_players = read_csv_rows(baseline_dir / "player_results.csv")
     labels = label_player_events(
         baseline_players,
@@ -148,6 +151,7 @@ def label_player_events(
     stable_threshold: float = DEFAULT_STABLE_THRESHOLD,
     performance_threshold: float = DEFAULT_PERFORMANCE_THRESHOLD,
 ) -> dict[tuple[str, str], dict[str, Any]]:
+    """Execute the label player events routine."""
     rows_by_player: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in player_rows:
         rows_by_player[str(row["player_id"])].append(row)
@@ -202,6 +206,7 @@ def summarize_game_slices(
     game_rows: list[dict[str, str]],
     labels: dict[tuple[str, str], dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Summarize game slices."""
     buckets: dict[tuple[str, str], dict[str, Any]] = defaultdict(_game_bucket)
     for row in game_rows:
         expected_white = parse_float(row.get("pre_event_expected_white"))
@@ -251,6 +256,7 @@ def summarize_player_slices(
     player_rows: list[dict[str, str]],
     labels: dict[tuple[str, str], dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Summarize player slices."""
     buckets: dict[tuple[str, str], dict[str, list[Any]]] = defaultdict(_player_bucket)
     for row in player_rows:
         label = labels.get((str(row["player_id"]), str(row["event_key"])))
@@ -291,6 +297,7 @@ def summarize_player_slices(
 
 
 def compare_slice_metrics(rows: list[dict[str, Any]], *, baseline_name: str) -> list[dict[str, Any]]:
+    """Compare slice metrics."""
     baseline_by_key = {
         (row["slice_type"], row["slice"]): row
         for row in rows
@@ -319,6 +326,7 @@ def compare_slice_metrics(rows: list[dict[str, Any]], *, baseline_name: str) -> 
 
 
 def comparable_metrics(row: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
+    """Execute the comparable metrics routine."""
     return [
         key
         for key, value in row.items()
@@ -330,6 +338,7 @@ def comparable_metrics(row: dict[str, Any], baseline: dict[str, Any]) -> list[st
 
 
 def add_game_metric(bucket: dict[str, Any], *, predicted: float, actual: float, player_event_key: tuple[str, str]) -> None:
+    """Execute the add game metric routine."""
     clipped = min(max(predicted, 1e-12), 1.0 - 1e-12)
     bucket["player_games"] += 1
     bucket["player_events"].add(player_event_key)
@@ -348,6 +357,7 @@ def label_future_trend(
     trend_threshold: float,
     stable_threshold: float,
 ) -> str:
+    """Execute the label future trend routine."""
     if future_count <= 0 or future_delta is None:
         return "no_future"
     if future_delta >= trend_threshold:
@@ -365,6 +375,7 @@ def label_event_performance(
     performance_threshold: float,
     stable_threshold: float,
 ) -> str:
+    """Execute the label event performance routine."""
     if performance_gap is None:
         return "no_performance"
     if performance_gap >= performance_threshold:
@@ -377,6 +388,7 @@ def label_event_performance(
 
 
 def label_activity(days_inactive: int | None) -> str:
+    """Execute the label activity routine."""
     if days_inactive is None:
         return "first_event"
     if days_inactive == 0:
@@ -393,6 +405,7 @@ def label_activity(days_inactive: int | None) -> str:
 
 
 def label_prior_sigma(value: float | None) -> str:
+    """Execute the label prior sigma routine."""
     if value is None:
         return "new/no_prior"
     if value < 0.25:
@@ -407,6 +420,7 @@ def label_prior_sigma(value: float | None) -> str:
 
 
 def label_rating(value: float | None) -> str:
+    """Execute the label rating routine."""
     if value is None:
         return "new/no_prior"
     if value <= -10:
@@ -423,11 +437,13 @@ def label_rating(value: float | None) -> str:
 
 
 def read_csv_rows(path: Path) -> list[dict[str, str]]:
+    """Read csv rows."""
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle))
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None:
+    """Write csv."""
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
@@ -436,10 +452,12 @@ def write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None
 
 
 def parse_date(value: str) -> date:
+    """Parse date."""
     return date.fromisoformat(value[:10])
 
 
 def parse_float(value: Any) -> float | None:
+    """Parse float."""
     if value is None:
         return None
     text = str(value).strip()
@@ -450,20 +468,24 @@ def parse_float(value: Any) -> float | None:
 
 
 def parse_bool(value: Any) -> bool:
+    """Parse bool."""
     return str(value).strip().lower() in {"1", "true", "yes", "y"}
 
 
 def mean(values: Iterable[Any]) -> float | None:
+    """Execute the mean routine."""
     clean = [float(value) for value in values if value is not None and math.isfinite(float(value))]
     return math.fsum(clean) / len(clean) if clean else None
 
 
 def median(values: Iterable[Any]) -> float | None:
+    """Execute the median routine."""
     clean = sorted(float(value) for value in values if value is not None and math.isfinite(float(value)))
     return statistics.median(clean) if clean else None
 
 
 def percentile(values: Iterable[Any], percentile_value: float) -> float | None:
+    """Execute the percentile routine."""
     clean = sorted(float(value) for value in values if value is not None and math.isfinite(float(value)))
     if not clean:
         return None
@@ -479,24 +501,28 @@ def percentile(values: Iterable[Any], percentile_value: float) -> float | None:
 
 
 def safe_divide(numerator: float | int, denominator: float | int) -> float | None:
+    """Execute the safe divide routine."""
     if not denominator:
         return None
     return float(numerator) / float(denominator)
 
 
 def numeric_delta(candidate_value: Any, baseline_value: Any) -> float | None:
+    """Execute the numeric delta routine."""
     if candidate_value is None or baseline_value is None:
         return None
     return float(candidate_value) - float(baseline_value)
 
 
 def csv_value(value: Any) -> Any:
+    """Execute the csv value routine."""
     if value is None:
         return ""
     return value
 
 
 def _parse_candidate(value: str) -> tuple[str, Path]:
+    """Parse candidate."""
     if "=" not in value:
         raise SystemExit(f"Candidate must be NAME=DIR, got {value!r}.")
     name, directory = value.split("=", 1)
@@ -506,6 +532,7 @@ def _parse_candidate(value: str) -> tuple[str, Path]:
 
 
 def _game_bucket() -> dict[str, Any]:
+    """Execute the game bucket routine."""
     return {
         "player_games": 0,
         "player_events": set(),
@@ -519,6 +546,7 @@ def _game_bucket() -> dict[str, Any]:
 
 
 def _player_bucket() -> dict[str, list[Any]]:
+    """Execute the player bucket routine."""
     return {
         "player_events": [],
         "future_delta": [],
@@ -531,6 +559,7 @@ def _player_bucket() -> dict[str, list[Any]]:
 
 
 def slice_sort_key(row: dict[str, Any]) -> tuple[str, int, str]:
+    """Execute the slice sort key routine."""
     return (row["slice_type"], SLICE_ORDER.get((row["slice_type"], row["slice"]), 999), row["slice"])
 
 

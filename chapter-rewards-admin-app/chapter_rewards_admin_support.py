@@ -13,10 +13,12 @@ import azure.functions as func
 
 
 def _app_root() -> Path:
+    """Execute the app root routine."""
     return Path(__file__).resolve().parent
 
 
 def response_headers(content_type: str) -> dict[str, str]:
+    """Execute the response headers routine."""
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -27,6 +29,7 @@ def response_headers(content_type: str) -> dict[str, str]:
 
 
 def json_safe_value(value: Any) -> Any:
+    """Execute the json safe value routine."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     if isinstance(value, Decimal):
@@ -37,6 +40,7 @@ def json_safe_value(value: Any) -> Any:
 
 
 def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=json_safe_value),
         status_code=status_code,
@@ -45,6 +49,7 @@ def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
 
 
 def _rewards_manual_debit_error(message: str, status_code: int = 400) -> func.HttpResponse:
+    """Execute the rewards manual debit error routine."""
     return _json_response({"ok": False, "error": message}, status_code=status_code)
 
 REWARDS_PUBLIC_BALANCES_SQL = """
@@ -670,24 +675,28 @@ EXEC [rewards].[sp_update_redemption_notes]
     @UpdatedByPrincipalId = ?
 """
 def _rewards_int(value) -> int:
+    """Execute the rewards int routine."""
     if value is None:
         return 0
     return int(value)
 
 
 def _rewards_optional_int(value) -> int | None:
+    """Execute the rewards optional int routine."""
     if value is None:
         return None
     return int(value)
 
 
 def _rewards_text(value) -> str | None:
+    """Execute the rewards text routine."""
     if value is None:
         return None
     text = str(value).strip()
     return text or None
 
 def _rewards_balance_payload(row: dict) -> dict:
+    """Execute the rewards balance payload routine."""
     available_points = _rewards_int(row.get("Available_Points"))
     return {
         "chapter_code": _rewards_text(row.get("Chapter_Code")),
@@ -720,6 +729,7 @@ def _rewards_balance_payload(row: dict) -> dict:
 
 
 def _rewards_transaction_payload(row: dict) -> dict:
+    """Execute the rewards transaction payload routine."""
     points = _rewards_int(row.get("Points_Delta"))
     return {
         "entry_count": _rewards_int(row.get("Public_Entry_Count")) or 1,
@@ -747,6 +757,7 @@ def _rewards_transaction_payload(row: dict) -> dict:
 
 
 def _rewards_lot_payload(row: dict) -> dict:
+    """Execute the rewards lot payload routine."""
     return {
         "lot_count": _rewards_int(row.get("Lot_Count")) or 1,
         "original_points": _rewards_int(row.get("Original_Points")),
@@ -764,6 +775,7 @@ def _rewards_lot_payload(row: dict) -> dict:
 
 
 def _rewards_breakdown_payload(row: dict) -> dict:
+    """Execute the rewards breakdown payload routine."""
     return {
         "source_category": _rewards_text(row.get("Source_Category")) or "other",
         "source_label": _rewards_text(row.get("Source_Label")) or "Other",
@@ -775,6 +787,7 @@ def _rewards_breakdown_payload(row: dict) -> dict:
 
 
 def _rewards_redemption_payload(row: dict) -> dict:
+    """Execute the rewards redemption payload routine."""
     points = _rewards_int(row.get("Points"))
     amount = row.get("Amount_USD")
     return {
@@ -794,6 +807,7 @@ def _rewards_redemption_payload(row: dict) -> dict:
 
 
 def _rewards_receipt_payload(row: dict) -> dict:
+    """Execute the rewards receipt payload routine."""
     receipt_id = _rewards_optional_int(row.get("ReceiptID"))
     return {
         "receipt_id": receipt_id,
@@ -812,10 +826,12 @@ def _rewards_receipt_payload(row: dict) -> dict:
 
 
 def api_route_root() -> str:
+    """Execute the api route root routine."""
     return "/api/chapter-rewards"
 
 
 def _rewards_admin_redemption_payload(row: dict, receipts: list[dict] | None = None) -> dict:
+    """Execute the rewards admin redemption payload routine."""
     payload = _rewards_redemption_payload(row)
     payload.update(
         {
@@ -834,6 +850,7 @@ def _rewards_admin_redemption_payload(row: dict, receipts: list[dict] | None = N
 
 
 def _rewards_admin_chapter_payload(row: dict) -> dict:
+    """Execute the rewards admin chapter payload routine."""
     return {
         "chapter_id": _rewards_optional_int(row.get("ChapterID")),
         "chapter_code": _rewards_text(row.get("Chapter_Code")),
@@ -846,6 +863,7 @@ def _rewards_admin_chapter_payload(row: dict) -> dict:
 
 
 def _rewards_manual_debit_payload(row: dict) -> dict:
+    """Execute the rewards manual debit payload routine."""
     points = _rewards_int(row.get("Points"))
     available = _rewards_int(row.get("Available_Points"))
     amount = row.get("Amount_USD")
@@ -880,6 +898,7 @@ def _rewards_manual_debit_payload(row: dict) -> dict:
 
 
 def _rewards_summary_payload(chapters: list[dict]) -> dict:
+    """Execute the rewards summary payload routine."""
     available_points = sum(chapter["available_points"] for chapter in chapters)
     ledger_balance = sum(chapter["ledger_balance"] for chapter in chapters)
     total_credits = sum(chapter["total_credits"] for chapter in chapters)
@@ -898,6 +917,7 @@ def _rewards_summary_payload(chapters: list[dict]) -> dict:
     }
 
 def _clean_rewards_body_text(body: dict, key: str, *, max_length: int, required: bool = False) -> tuple[str | None, str | None]:
+    """Clean rewards body text."""
     text = str(body.get(key) or "").strip()
     if not text:
         if required:
@@ -914,6 +934,7 @@ def _rewards_manual_debit_request_from_body(
     *,
     generate_request_id: bool,
 ) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the rewards manual debit request from body routine."""
     raw_chapter_id = body.get("chapter_id", body.get("chapterId"))
     chapter_id = None
     if raw_chapter_id not in (None, ""):
@@ -1004,6 +1025,7 @@ def _rewards_manual_debit_request_from_body(
 
 
 def _rewards_manual_debit_params(request: dict, *, dry_run: bool) -> tuple:
+    """Execute the rewards manual debit params routine."""
     return (
         request["chapter_id"],
         request["chapter_code"],
@@ -1023,6 +1045,7 @@ def _rewards_manual_debit_params(request: dict, *, dry_run: bool) -> tuple:
 
 
 def _safe_rewards_blob_component(value: str, fallback: str = "receipt") -> str:
+    """Execute the safe rewards blob component routine."""
     text = str(value or "").strip()
     if not text:
         text = fallback
@@ -1031,6 +1054,7 @@ def _safe_rewards_blob_component(value: str, fallback: str = "receipt") -> str:
 
 
 def _rewards_receipt_container_client():
+    """Execute the rewards receipt container client routine."""
     try:
         from azure.storage.blob import BlobServiceClient
     except ImportError as exc:
@@ -1060,6 +1084,7 @@ def _rewards_receipt_container_client():
 
 
 def _decode_receipt_upload(item: dict) -> tuple[str, str, bytes]:
+    """Decode receipt upload."""
     filename = _safe_rewards_blob_component(str(item.get("name") or "receipt"), fallback="receipt")
     content_type = str(item.get("content_type") or item.get("type") or "").strip().lower()
     if not content_type or content_type == "application/octet-stream":
@@ -1088,11 +1113,13 @@ def _decode_receipt_upload(item: dict) -> tuple[str, str, bytes]:
 
 
 def _rewards_receipt_blob_name(redemption_id: int, filename: str) -> str:
+    """Execute the rewards receipt blob name routine."""
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     return f"redemptions/{redemption_id}/{stamp}-{uuid.uuid4().hex[:12]}-{filename}"
 
 
 def _positive_body_int(body: dict, key: str) -> tuple[int | None, func.HttpResponse | None]:
+    """Execute the positive body int routine."""
     try:
         value = int(str(body.get(key) or "").strip())
     except ValueError:

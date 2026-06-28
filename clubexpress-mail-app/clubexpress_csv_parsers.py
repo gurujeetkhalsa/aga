@@ -7,6 +7,7 @@ from typing import Iterable, Optional
 
 
 class CsvValidationError(ValueError):
+    """Represent csv validation error failures."""
     pass
 
 
@@ -91,6 +92,7 @@ CHAPTER_HEADER_ALIASES = {
 
 
 def detect_attachment_report_type(name: str, content_bytes: bytes) -> Optional[str]:
+    """Execute the detect attachment report type routine."""
     if is_memchap_attachment_name(name):
         return NIGHTLY_MESSAGE_TYPE
     if is_chapter_attachment_name(name):
@@ -109,16 +111,19 @@ def detect_attachment_report_type(name: str, content_bytes: bytes) -> Optional[s
 
 
 def is_memchap_attachment_name(name: str) -> bool:
+    """Return whether memchap attachment name."""
     normalized_name = (name or "").strip().lower()
     return normalized_name.endswith(".csv") and "memchap" in normalized_name
 
 
 def is_chapter_attachment_name(name: str) -> bool:
+    """Return whether chapter attachment name."""
     normalized_name = (name or "").strip().lower()
     return normalized_name.endswith(".csv") and "chapterx" in normalized_name
 
 
 def read_csv_header_canonical(csv_bytes: bytes) -> list[str]:
+    """Read csv header canonical."""
     rows = read_csv_matrix(csv_bytes, raise_on_error=False)
     if not rows:
         return []
@@ -132,6 +137,7 @@ def read_csv_header_canonical(csv_bytes: bytes) -> list[str]:
 
 
 def is_memchap_header(headers: list[str]) -> bool:
+    """Return whether memchap header."""
     required = {
         canonicalize_header("AGAID"),
         canonicalize_header("MemberType"),
@@ -142,15 +148,18 @@ def is_memchap_header(headers: list[str]) -> bool:
 
 
 def is_member_category_header(headers: list[str]) -> bool:
+    """Return whether member category header."""
     return {canonicalize_header("AGAID"), canonicalize_header("Category")}.issubset(set(headers))
 
 
 def is_chapter_header(headers: list[str]) -> bool:
+    """Return whether chapter header."""
     mapped = {CHAPTER_HEADER_ALIASES.get(header, "") for header in headers}
     return {"ChapterID", "ChapterCode", "ChapterName"}.issubset(mapped)
 
 
 def parse_memchap_rows(csv_bytes: bytes) -> list[tuple]:
+    """Parse memchap rows."""
     csv_text = decode_csv_text(csv_bytes)
 
     reader = csv.DictReader(StringIO(csv_text))
@@ -218,6 +227,7 @@ def parse_memchap_rows(csv_bytes: bytes) -> list[tuple]:
 
 
 def parse_member_category_rows(csv_bytes: bytes) -> list[tuple[int, str]]:
+    """Parse member category rows."""
     csv_rows = read_csv_matrix(csv_bytes)
     if not csv_rows:
         raise CsvValidationError("CSV is missing a header row.")
@@ -293,6 +303,7 @@ def parse_member_category_rows(csv_bytes: bytes) -> list[tuple[int, str]]:
 
 
 def parse_chapter_rows(csv_bytes: bytes) -> list[tuple]:
+    """Parse chapter rows."""
     csv_rows = read_csv_matrix(csv_bytes)
     if not csv_rows:
         raise CsvValidationError("CSV is missing a header row.")
@@ -358,6 +369,7 @@ def parse_chapter_rows(csv_bytes: bytes) -> list[tuple]:
 
 
 def parse_date(value: str) -> date:
+    """Parse date."""
     for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y"):
         try:
             return datetime.strptime(value, fmt).date()
@@ -367,6 +379,7 @@ def parse_date(value: str) -> date:
 
 
 def parse_datetime(value: str) -> datetime:
+    """Parse datetime."""
     normalized = value.strip()
     if normalized.endswith("Z"):
         normalized = normalized[:-1] + "+00:00"
@@ -395,6 +408,7 @@ def parse_datetime(value: str) -> datetime:
 
 
 def convert_value(column: str, raw_value: str):
+    """Execute the convert value routine."""
     value = raw_value.strip()
     if value == "":
         return None
@@ -413,6 +427,7 @@ def convert_value(column: str, raw_value: str):
 
 
 def convert_chapter_value(column: str, raw_value: str):
+    """Execute the convert chapter value routine."""
     value = raw_value.strip()
     if value == "":
         if column in {"ChapterID", "ChapterCode", "ChapterName"}:
@@ -429,6 +444,7 @@ def convert_chapter_value(column: str, raw_value: str):
 
 
 def read_csv_matrix(csv_bytes: bytes, *, raise_on_error: bool = True) -> list[list[str]]:
+    """Read csv matrix."""
     try:
         csv_text = csv_bytes.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
@@ -439,6 +455,7 @@ def read_csv_matrix(csv_bytes: bytes, *, raise_on_error: bool = True) -> list[li
 
 
 def decode_csv_text(csv_bytes: bytes) -> str:
+    """Decode csv text."""
     try:
         return csv_bytes.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
@@ -446,6 +463,7 @@ def decode_csv_text(csv_bytes: bytes) -> str:
 
 
 def normalize_header(fieldnames: Iterable[Optional[str]]) -> list[str]:
+    """Normalize header."""
     normalized = []
     for field in fieldnames:
         if field is None:
@@ -456,8 +474,10 @@ def normalize_header(fieldnames: Iterable[Optional[str]]) -> list[str]:
 
 
 def canonicalize_header(value: str) -> str:
+    """Execute the canonicalize header routine."""
     return re.sub(r"[^a-z0-9]+", "", value.strip().lower())
 
 
 def is_member_agaid(agaid: Optional[int]) -> bool:
+    """Return whether member agaid."""
     return agaid is not None and agaid < MAX_MEMBER_AGAID

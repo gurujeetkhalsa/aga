@@ -17,15 +17,19 @@ CHAPTER_CODE_RE = re.compile(r"^[A-Z0-9]{3,5}$")
 
 
 class OpeningBalanceSqlAdapter(Protocol):
+    """Represent opening balance sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class OpeningBalanceRow:
+    """Represent opening balance row."""
     source_row_number: int
     legacy_agaid: int
     chapter_name: str
@@ -37,16 +41,19 @@ class OpeningBalanceRow:
 
     @property
     def reconciliation_delta(self) -> int:
+        """Execute the reconciliation delta routine."""
         return self.opening_balance_points - (
             self.prior_available_points + self.earned_points - self.used_points
         )
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return asdict(self)
 
 
 @dataclass(frozen=True)
 class OpeningBalanceImportResult:
+    """Represent opening balance import result data."""
     effective_date: date
     dry_run: bool
     run_id: int | None
@@ -63,6 +70,7 @@ class OpeningBalanceImportResult:
     new_point_total: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "effective_date": self.effective_date.isoformat(),
             "dry_run": self.dry_run,
@@ -104,6 +112,7 @@ ORDER BY [RunID] DESC
 
 
 def parse_balance_line(line: str, source_row_number: int) -> OpeningBalanceRow | None:
+    """Parse balance line."""
     stripped = re.sub(r"\s+", " ", line).strip()
     if not stripped or stripped.startswith("AGAID "):
         return None
@@ -138,6 +147,7 @@ def parse_balance_line(line: str, source_row_number: int) -> OpeningBalanceRow |
 
 
 def _split_chapter_label(label: str) -> tuple[str | None, str | None]:
+    """Execute the split chapter label routine."""
     normalized = label.strip()
     if not normalized:
         return None, None
@@ -158,6 +168,7 @@ def _split_chapter_label(label: str) -> tuple[str | None, str | None]:
 
 
 def parse_balance_text(text: str) -> list[OpeningBalanceRow]:
+    """Parse balance text."""
     rows: list[OpeningBalanceRow] = []
     unparsed: list[str] = []
     for line in text.splitlines():
@@ -177,6 +188,7 @@ def parse_balance_text(text: str) -> list[OpeningBalanceRow]:
 
 
 def parse_balance_pdf(pdf_path: Path) -> list[OpeningBalanceRow]:
+    """Parse balance pdf."""
     reader_class = _load_pdf_reader()
     reader = reader_class(str(pdf_path))
     text = "\n".join(page.extract_text() or "" for page in reader.pages)
@@ -191,6 +203,7 @@ def import_opening_balances(
     run_type: str = "import",
     dry_run: bool = False,
 ) -> OpeningBalanceImportResult:
+    """Import opening balances."""
     if not rows:
         raise ValueError("At least one opening balance row is required.")
 
@@ -226,6 +239,7 @@ def import_opening_balances(
 
 
 def print_import_result(result: OpeningBalanceImportResult, output: TextIO) -> None:
+    """Execute the print import result routine."""
     label = "Opening Balance Import Preview" if result.dry_run else "Opening Balance Import"
     print(label, file=output)
     print(f"  Effective date: {result.effective_date.isoformat()}", file=output)
@@ -245,6 +259,7 @@ def print_import_result(result: OpeningBalanceImportResult, output: TextIO) -> N
 
 
 def _load_pdf_reader():
+    """Load pdf reader."""
     try:
         from pypdf import PdfReader
 
@@ -260,6 +275,7 @@ def _load_pdf_reader():
 
 
 def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> OpeningBalanceImportResult:
+    """Execute the result from row routine."""
     return OpeningBalanceImportResult(
         effective_date=_coerce_date(row.get("EffectiveDate")) or date.today(),
         dry_run=dry_run,
@@ -279,18 +295,21 @@ def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> OpeningBalanceImp
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def _coerce_date(value: Any) -> date | None:
+    """Coerce date."""
     if value is None:
         return None
     if isinstance(value, date):
@@ -299,6 +318,7 @@ def _coerce_date(value: Any) -> date | None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Import AGA Chapter Rewards opening balances from the legacy PDF balance sheet.")
     parser.add_argument("pdf_path", type=Path, help="Path to the opening balance PDF.")
     parser.add_argument("--effective-date", type=parse_snapshot_date, default=date.today(), help="Grandfathered earned/effective date. Defaults to today.")

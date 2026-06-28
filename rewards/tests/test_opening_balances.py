@@ -5,7 +5,9 @@ from rewards import opening_balances
 
 
 class FakeOpeningBalanceAdapter:
+    """Represent fake opening balance adapter."""
     def __init__(self, *, preview=None, result=None):
+        """Initialize the fake opening balance adapter instance."""
         self.preview = preview or {
             "RunID": None,
             "EffectiveDate": date(2026, 5, 2),
@@ -38,6 +40,7 @@ class FakeOpeningBalanceAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if query == opening_balances.IMPORT_OPENING_BALANCES_SQL:
             return [self.preview]
@@ -46,11 +49,14 @@ class FakeOpeningBalanceAdapter:
         raise AssertionError("Unexpected query")
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class OpeningBalancesTest(unittest.TestCase):
+    """Represent opening balances test."""
     def test_parse_line_with_used_points(self):
+        """Verify that parse line with used points."""
         row = opening_balances.parse_balance_line(
             "19927 Albuquerque Go ALBQ 532500 306500 155000 684000",
             1,
@@ -66,6 +72,7 @@ class OpeningBalancesTest(unittest.TestCase):
         self.assertEqual(row.reconciliation_delta, 0)
 
     def test_parse_line_without_used_points(self):
+        """Verify that parse line without used points."""
         row = opening_balances.parse_balance_line(
             "14412 Ames Go Club AMES 37000 0 37000",
             2,
@@ -77,6 +84,7 @@ class OpeningBalancesTest(unittest.TestCase):
         self.assertEqual(row.opening_balance_points, 37000)
 
     def test_parse_line_with_code_attached_to_name(self):
+        """Verify that parse line with code attached to name."""
         row = opening_balances.parse_balance_line(
             "31309 Rio Grande Valley Shogi & Go SocietyRGVG 0 0 0",
             3,
@@ -88,6 +96,7 @@ class OpeningBalancesTest(unittest.TestCase):
         self.assertEqual(row.chapter_code, "RGVG")
 
     def test_parse_line_with_three_character_code(self):
+        """Verify that parse line with three character code."""
         row = opening_balances.parse_balance_line(
             "13529 Providence Go Club PVD 120000 128000 248000",
             4,
@@ -100,6 +109,7 @@ class OpeningBalancesTest(unittest.TestCase):
         self.assertEqual(row.opening_balance_points, 248000)
 
     def test_dry_run_returns_preview_without_writes(self):
+        """Verify that dry run returns preview without writes."""
         adapter = FakeOpeningBalanceAdapter()
         rows = [
             opening_balances.OpeningBalanceRow(1, 19927, "Albuquerque Go", "ALBQ", 532500, 306500, 155000, 684000)
@@ -120,6 +130,7 @@ class OpeningBalancesTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_write_executes_proc_and_reads_summary(self):
+        """Verify that write executes proc and reads summary."""
         adapter = FakeOpeningBalanceAdapter()
         rows = [
             opening_balances.OpeningBalanceRow(1, 19927, "Albuquerque Go", "ALBQ", 532500, 306500, 155000, 684000)

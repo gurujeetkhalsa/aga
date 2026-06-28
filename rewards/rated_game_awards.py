@@ -15,15 +15,19 @@ BASE_POINTS = 500
 
 
 class RatedGameAwardSqlAdapter(Protocol):
+    """Represent rated game award sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class RatedGameAwardResult:
+    """Represent rated game award result data."""
     date_from: date
     date_to: date
     dry_run: bool
@@ -40,6 +44,7 @@ class RatedGameAwardResult:
     chapter_not_current_count: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "date_from": self.date_from.isoformat(),
             "date_to": self.date_to.isoformat(),
@@ -526,6 +531,7 @@ def process_rated_game_awards(
     source_type: str = SOURCE_TYPE,
     rule_version: str = RULE_VERSION,
 ) -> RatedGameAwardResult:
+    """Process rated game awards."""
     if date_to < date_from:
         raise ValueError("date_to must be on or after date_from.")
 
@@ -591,6 +597,7 @@ def _result_from_counts(
     run_id: int | None,
     counts: dict[str, Any],
 ) -> RatedGameAwardResult:
+    """Execute the result from counts routine."""
     return RatedGameAwardResult(
         date_from=date_from,
         date_to=date_to,
@@ -610,18 +617,21 @@ def _result_from_counts(
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def print_award_result(result: RatedGameAwardResult, output: TextIO) -> None:
+    """Execute the print award result routine."""
     label = "Rated Game Awards Preview" if result.dry_run else "Rated Game Awards"
     print(label, file=output)
     print(f"  Dates: {result.date_from.isoformat()} to {result.date_to.isoformat()}", file=output)
@@ -641,6 +651,7 @@ def print_award_result(result: RatedGameAwardResult, output: TextIO) -> None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Award AGA Chapter Rewards points for eligible rated games.")
     parser.add_argument("--date", type=parse_snapshot_date, help="Single game date in YYYY-MM-DD format.")
     parser.add_argument("--date-from", type=parse_snapshot_date, help="Start game date in YYYY-MM-DD format.")

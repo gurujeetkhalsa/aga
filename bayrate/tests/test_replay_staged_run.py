@@ -10,7 +10,9 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
 class DuplicateCandidateAdapter:
+    """Represent duplicate candidate adapter."""
     def query_rows(self, query, params=()):
+        """Query rows."""
         if "FROM [membership].[members]" in query:
             return [{"AGAID": player_id, "ExpirationDate": date(2099, 1, 1)} for player_id in params]
         if "FROM [ratings].[ratings] AS r" in query and "ROW_NUMBER() OVER" in query:
@@ -51,25 +53,32 @@ class DuplicateCandidateAdapter:
         ]
 
     def execute_statements(self, statements):
+        """Execute statements."""
         raise AssertionError("Duplicate candidate test adapter should not write SQL.")
 
 
 class NoDuplicateCandidateAdapter:
+    """Represent no duplicate candidate adapter."""
     def query_rows(self, query, params=()):
+        """Query rows."""
         if "FROM [membership].[members]" in query:
             return [{"AGAID": player_id, "ExpirationDate": date(2099, 1, 1)} for player_id in params]
         return []
 
     def execute_statements(self, statements):
+        """Execute statements."""
         raise AssertionError("No-duplicate candidate test adapter should not write SQL.")
 
 
 class ReplayAdapter:
+    """Represent replay adapter."""
     def __init__(self) -> None:
+        """Initialize the replay adapter instance."""
         self.queries = []
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if "WHERE t.[Tournament_Code] = ?" in query:
             return self._event_summary(params[0])
@@ -131,9 +140,11 @@ class ReplayAdapter:
         return []
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
     def _event_summary(self, code):
+        """Execute the event summary routine."""
         summaries = {
             "OLD-SAMPLE-1": {
                 "Tournament_Code": "OLD-SAMPLE-1",
@@ -170,6 +181,7 @@ class ReplayAdapter:
 
 
 def needs_review_payload():
+    """Execute the needs review payload routine."""
     return build_staging_payload(
         [
             (
@@ -183,6 +195,7 @@ def needs_review_payload():
 
 
 def ready_new_tournament_payload():
+    """Execute the ready new tournament payload routine."""
     return build_staging_payload(
         [
             (
@@ -196,7 +209,9 @@ def ready_new_tournament_payload():
 
 
 class ReplayStagedRunTest(unittest.TestCase):
+    """Represent replay staged run test."""
     def test_replay_input_treats_same_day_production_as_predecessors_for_new_event(self) -> None:
+        """Verify that replay input treats same day production as predecessors for new event."""
         payload = ready_new_tournament_payload()
         adapter = ReplayAdapter()
 
@@ -216,6 +231,7 @@ class ReplayStagedRunTest(unittest.TestCase):
         self.assertEqual([game.tournament_code for game in replay_input["games"]], [staged_code, staged_code])
 
     def test_replay_input_replaces_duplicate_and_adds_later_same_day_cascade(self) -> None:
+        """Verify that replay input replaces duplicate and adds later same day cascade."""
         payload = needs_review_payload()
         adapter = ReplayAdapter()
 
@@ -237,6 +253,7 @@ class ReplayStagedRunTest(unittest.TestCase):
         self.assertEqual([game.tournament_code for game in replay_input["games"]], ["OLD-SAMPLE-1", "OLD-SAMPLE-1", "LATER-SAME-DAY"])
 
     def test_run_staged_replay_writes_artifact_without_sql_writes(self) -> None:
+        """Verify that run staged replay writes artifact without sql writes."""
         payload = needs_review_payload()
         adapter = ReplayAdapter()
         output_path = Path(__file__).parent / "tmp_replay_artifact.json"
@@ -253,6 +270,7 @@ class ReplayStagedRunTest(unittest.TestCase):
                 output_path.unlink()
 
     def test_run_staged_replay_can_stage_rating_rows(self) -> None:
+        """Verify that run staged replay can stage rating rows."""
         payload = needs_review_payload()
         adapter = ReplayAdapter()
 
@@ -275,6 +293,7 @@ class ReplayStagedRunTest(unittest.TestCase):
         )
 
     def test_replay_rejects_validation_failed_payload(self) -> None:
+        """Verify that replay rejects validation failed payload."""
         report = """TOURNEY Decimal Rank Suffix Sample
 start=2026-03-01
 finish=2026-03-01

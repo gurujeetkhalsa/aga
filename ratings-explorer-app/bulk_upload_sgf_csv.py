@@ -23,6 +23,7 @@ RECOMMENDED_COLUMNS = (
 
 @dataclass
 class RowPlan:
+    """Represent row plan."""
     row_number: int
     csv_row: dict[str, str]
     game: dict[str, Any] | None
@@ -34,6 +35,7 @@ class RowPlan:
 
 
 def _parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(
         description="Bulk upload SGFs from a CSV file into ratings.games.Sgf_Code and the SGF blob container."
     )
@@ -52,10 +54,12 @@ def _parse_args() -> argparse.Namespace:
 
 
 def _clean(value: Any) -> str:
+    """Execute the clean routine."""
     return str(value or "").strip()
 
 
 def _parse_int(value: str, field_name: str) -> int:
+    """Parse int."""
     text = _clean(value)
     if not text:
         raise ValueError(f"{field_name} is required.")
@@ -66,10 +70,12 @@ def _parse_int(value: str, field_name: str) -> int:
 
 
 def _parse_bool(value: str) -> bool:
+    """Parse bool."""
     return _clean(value).lower() in {"1", "true", "yes", "y", "on"}
 
 
 def _read_manifest(csv_path: Path) -> list[dict[str, str]]:
+    """Read manifest."""
     with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         if reader.fieldnames is None:
@@ -83,6 +89,7 @@ def _read_manifest(csv_path: Path) -> list[dict[str, str]]:
 
 
 def _validate_headers(fieldnames: list[str] | None) -> None:
+    """Validate headers."""
     if not fieldnames:
         raise ValueError("CSV is missing headers.")
     missing = [name for name in ("Sgf_File",) if name not in fieldnames]
@@ -91,12 +98,14 @@ def _validate_headers(fieldnames: list[str] | None) -> None:
 
 
 def _normalize_date_text(value: Any) -> str:
+    """Normalize date text."""
     text = explorer.json_safe_value(value)
     text = _clean(text)
     return text[:10] if len(text) >= 10 else text
 
 
 def _read_sgf_text(path: Path) -> str:
+    """Read sgf text."""
     for encoding in ("utf-8", "utf-8-sig", "latin-1"):
         try:
             return path.read_text(encoding=encoding)
@@ -106,6 +115,7 @@ def _read_sgf_text(path: Path) -> str:
 
 
 def _load_game_by_match_fields(conn_str: str, row: dict[str, str]) -> dict[str, Any] | None:
+    """Load game by match fields."""
     for name in REQUIRED_MATCH_COLUMNS:
         if not _clean(row.get(name)):
             raise ValueError(
@@ -157,6 +167,7 @@ ORDER BY g.[Game_ID]
 
 
 def _load_target_game(conn_str: str, row: dict[str, str]) -> dict[str, Any] | None:
+    """Load target game."""
     game_id_text = _clean(row.get("Game_ID"))
     if game_id_text:
         game = explorer.load_game_for_sgf_upload(conn_str, _parse_int(game_id_text, "Game_ID"))
@@ -167,6 +178,7 @@ def _load_target_game(conn_str: str, row: dict[str, str]) -> dict[str, Any] | No
 
 
 def _cross_check_game(row: dict[str, str], game: dict[str, Any]) -> None:
+    """Execute the cross check game routine."""
     checks = {
         "Tournament_Code": _clean(game.get("Tournament_Code")),
         "Round": _clean(game.get("Round")),
@@ -184,6 +196,7 @@ def _cross_check_game(row: dict[str, str], game: dict[str, Any]) -> None:
 
 
 def _build_plan_row(conn_str: str, csv_path: Path, row_number: int, row: dict[str, str]) -> RowPlan:
+    """Build plan row."""
     try:
         sgf_file_text = _clean(row.get("Sgf_File"))
         if not sgf_file_text:
@@ -242,6 +255,7 @@ def _build_plan_row(conn_str: str, csv_path: Path, row_number: int, row: dict[st
 
 
 def _plan_to_result(plan: RowPlan) -> dict[str, Any]:
+    """Execute the plan to result routine."""
     game = plan.game or {}
     return {
         "row_number": plan.row_number,
@@ -259,6 +273,7 @@ def _plan_to_result(plan: RowPlan) -> dict[str, Any]:
 
 
 def _apply_plan(conn_str: str, plans: list[RowPlan]) -> list[dict[str, Any]]:
+    """Apply plan."""
     results: list[dict[str, Any]] = []
     for plan in plans:
         result = _plan_to_result(plan)
@@ -282,10 +297,12 @@ def _apply_plan(conn_str: str, plans: list[RowPlan]) -> list[dict[str, Any]]:
 
 
 def _default_report_path(csv_path: Path) -> Path:
+    """Execute the default report path routine."""
     return csv_path.with_suffix(csv_path.suffix + ".results.json")
 
 
 def _summarize(results: list[dict[str, Any]]) -> dict[str, int]:
+    """Execute the summarize routine."""
     summary: dict[str, int] = {}
     for result in results:
         status = str(result.get("status") or "unknown")
@@ -294,6 +311,7 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def main() -> int:
+    """Run the command-line entry point for this module."""
     args = _parse_args()
     csv_path = Path(args.csv_file).resolve()
     if not csv_path.exists():

@@ -18,6 +18,7 @@ SQL_CONNECTION_STRING = None
 
 
 def _sql_connection_string() -> str | None:
+    """Execute the sql connection string routine."""
     global SQL_CONNECTION_STRING
     if SQL_CONNECTION_STRING is None:
         from sql_adapter import get_sql_connection_string
@@ -27,10 +28,12 @@ def _sql_connection_string() -> str | None:
 
 
 def _utc_now_text() -> str:
+    """Execute the utc now text routine."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _json_default(value):
+    """Execute the json default routine."""
     if isinstance(value, Decimal):
         if value == value.to_integral_value():
             return int(value)
@@ -39,6 +42,7 @@ def _json_default(value):
 
 
 def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=_json_default),
         status_code=status_code,
@@ -47,16 +51,19 @@ def _json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
 
 
 def _options_response() -> func.HttpResponse:
+    """Execute the options response routine."""
     return func.HttpResponse("", status_code=204, headers=rewards.response_headers("application/json; charset=utf-8"))
 
 
 def _with_debug(payload: dict, **debug_fields) -> dict:
+    """Execute the with debug routine."""
     enriched = dict(payload)
     enriched["_debug"] = {key: value for key, value in debug_fields.items() if value is not None}
     return enriched
 
 
 def _adapter_or_error() -> tuple[SqlAdapter | None, func.HttpResponse | None]:
+    """Execute the adapter or error routine."""
     conn_str = _sql_connection_string()
     if not conn_str:
         return None, func.HttpResponse(
@@ -68,6 +75,7 @@ def _adapter_or_error() -> tuple[SqlAdapter | None, func.HttpResponse | None]:
 
 
 def _login_redirect(req: func.HttpRequest) -> str:
+    """Execute the login redirect routine."""
     raw_url = getattr(req, "url", "") or "/api/chapter-rewards/admin"
     parsed = urlsplit(raw_url)
     redirect_path = parsed.path or "/api/chapter-rewards/admin"
@@ -82,6 +90,7 @@ def _authorization_response(
     *,
     html: bool = False,
 ) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the authorization response routine."""
     result = authorize_admin_permission(
         req.headers,
         adapter,
@@ -118,6 +127,7 @@ def _authorization_response(
 
 
 def _request_json(req: func.HttpRequest) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the request json routine."""
     try:
         body = req.get_json()
     except ValueError:
@@ -128,6 +138,7 @@ def _request_json(req: func.HttpRequest) -> tuple[dict | None, func.HttpResponse
 
 
 def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int = 500) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse rewards limit."""
     raw_limit = (req.params.get("limit") or "").strip()
     if not raw_limit:
         return default, None
@@ -140,6 +151,7 @@ def _parse_rewards_limit(req: func.HttpRequest, default: int = 150, maximum: int
 
 
 def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func.HttpResponse | None]:
+    """Parse rewards chapter code."""
     chapter_code = (req.params.get("chapter_code") or req.params.get("chapter") or "").strip()
     if not chapter_code:
         return None, func.HttpResponse("Query parameter 'chapter_code' is required.", status_code=400)
@@ -149,6 +161,7 @@ def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func
 
 
 def _authorized_adapter(req: func.HttpRequest) -> tuple[SqlAdapter | None, dict | None, func.HttpResponse | None]:
+    """Execute the authorized adapter routine."""
     adapter, error = _adapter_or_error()
     if error:
         return None, None, error
@@ -161,6 +174,7 @@ def _authorized_adapter(req: func.HttpRequest) -> tuple[SqlAdapter | None, dict 
 @app.function_name(name="ChapterRewardsAdminPage")
 @app.route(route="chapter-rewards/admin", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminPage Azure Function endpoint."""
     adapter, error = _adapter_or_error()
     if error:
         return error
@@ -174,6 +188,7 @@ def chapter_rewards_admin_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsAdminMe")
 @app.route(route="chapter-rewards/admin/me", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_me(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminMe Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     _, authorization, error = _authorized_adapter(req)
@@ -185,6 +200,7 @@ def chapter_rewards_admin_me(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsAdminBalances")
 @app.route(route="chapter-rewards/balances", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_balances(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminBalances Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     started = perf_counter()
@@ -214,6 +230,7 @@ def chapter_rewards_admin_balances(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsAdminChapter")
 @app.route(route="chapter-rewards/chapter", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_chapter(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminChapter Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     started = perf_counter()
@@ -269,6 +286,7 @@ def chapter_rewards_admin_chapter(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsAdminOptions")
 @app.route(route="chapter-rewards/admin/options", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_options(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminOptions Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     started = perf_counter()
@@ -295,6 +313,7 @@ def chapter_rewards_admin_options(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="ChapterRewardsAdminDebitPreview")
 @app.route(route="chapter-rewards/admin/debit-preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_debit_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminDebitPreview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     started = perf_counter()
@@ -326,6 +345,7 @@ def chapter_rewards_admin_debit_preview(req: func.HttpRequest) -> func.HttpRespo
 @app.function_name(name="ChapterRewardsAdminDebitPost")
 @app.route(route="chapter-rewards/admin/debit", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_debit_post(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminDebitPost Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     started = perf_counter()
@@ -360,6 +380,7 @@ def chapter_rewards_admin_debit_post(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="ChapterRewardsAdminRedemption")
 @app.route(route="chapter-rewards/admin/redemption", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_redemption(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminRedemption Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     adapter, authorization, error = _authorized_adapter(req)
@@ -391,6 +412,7 @@ def chapter_rewards_admin_redemption(req: func.HttpRequest) -> func.HttpResponse
 @app.function_name(name="ChapterRewardsAdminRedemptionNotes")
 @app.route(route="chapter-rewards/admin/redemption-notes", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_redemption_notes(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminRedemptionNotes Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     adapter, authorization, error = _authorized_adapter(req)
@@ -433,6 +455,7 @@ def chapter_rewards_admin_redemption_notes(req: func.HttpRequest) -> func.HttpRe
 @app.function_name(name="ChapterRewardsAdminReceiptUpload")
 @app.route(route="chapter-rewards/admin/receipt-upload", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_receipt_upload(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminReceiptUpload Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     adapter, authorization, error = _authorized_adapter(req)
@@ -503,6 +526,7 @@ def chapter_rewards_admin_receipt_upload(req: func.HttpRequest) -> func.HttpResp
 @app.function_name(name="ChapterRewardsAdminReceiptDelete")
 @app.route(route="chapter-rewards/admin/receipt-delete", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_receipt_delete(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminReceiptDelete Azure Function endpoint."""
     if req.method == "OPTIONS":
         return _options_response()
     adapter, authorization, error = _authorized_adapter(req)
@@ -537,6 +561,7 @@ def chapter_rewards_admin_receipt_delete(req: func.HttpRequest) -> func.HttpResp
 @app.function_name(name="ChapterRewardsAdminReceiptFile")
 @app.route(route="chapter-rewards/admin/receipts/{receipt_id}", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_receipt_file(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the ChapterRewardsAdminReceiptFile Azure Function endpoint."""
     adapter, _, error = _authorized_adapter(req)
     if error:
         return error

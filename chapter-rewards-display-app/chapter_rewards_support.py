@@ -14,10 +14,12 @@ except Exception:
 
 
 def _app_root() -> Path:
+    """Execute the app root routine."""
     return Path(__file__).resolve().parent
 
 
 def get_sql_connection_string() -> str | None:
+    """Return sql connection string."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn:
         return conn
@@ -34,6 +36,7 @@ def get_sql_connection_string() -> str | None:
 
 
 def response_headers(content_type: str) -> dict[str, str]:
+    """Execute the response headers routine."""
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -44,6 +47,7 @@ def response_headers(content_type: str) -> dict[str, str]:
 
 
 def json_safe_value(value: Any) -> Any:
+    """Execute the json safe value routine."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     if isinstance(value, Decimal):
@@ -54,6 +58,7 @@ def json_safe_value(value: Any) -> Any:
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
+    """Parse sql connection string."""
     parts: dict[str, str] = {}
     for item in connection_string.split(";"):
         if "=" not in item:
@@ -72,6 +77,7 @@ def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
 
 
 def _tds_connect(conn_str: str):
+    """Execute the tds connect routine."""
     sql = _parse_sql_connection_string(conn_str)
     return pytds.connect(
         server=sql["server"],
@@ -89,6 +95,7 @@ def _tds_connect(conn_str: str):
 
 
 def query_rows(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows."""
     if pyodbc is not None:
         try:
             return _query_rows_via_odbc(conn_str, query, params)
@@ -98,6 +105,7 @@ def query_rows(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -
 
 
 def _query_rows_via_odbc(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows via odbc."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -109,6 +117,7 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: list[Any] | tuple[An
 
 
 def _sql_literal(value: Any) -> str:
+    """Execute the sql literal routine."""
     if value is None:
         return "NULL"
     if isinstance(value, bool):
@@ -124,6 +133,7 @@ def _sql_literal(value: Any) -> str:
 
 
 def _query_rows_via_tds(conn_str: str, query: str, params: list[Any] | tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows via tds."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -578,24 +588,28 @@ ORDER BY request.[Request_Date] DESC, request.[Posted_At] DESC
 """
 
 def _rewards_int(value) -> int:
+    """Execute the rewards int routine."""
     if value is None:
         return 0
     return int(value)
 
 
 def _rewards_optional_int(value) -> int | None:
+    """Execute the rewards optional int routine."""
     if value is None:
         return None
     return int(value)
 
 
 def _rewards_text(value) -> str | None:
+    """Execute the rewards text routine."""
     if value is None:
         return None
     text = str(value).strip()
     return text or None
 
 def _rewards_balance_payload(row: dict) -> dict:
+    """Execute the rewards balance payload routine."""
     available_points = _rewards_int(row.get("Available_Points"))
     return {
         "chapter_code": _rewards_text(row.get("Chapter_Code")),
@@ -628,6 +642,7 @@ def _rewards_balance_payload(row: dict) -> dict:
 
 
 def _rewards_transaction_payload(row: dict) -> dict:
+    """Execute the rewards transaction payload routine."""
     points = _rewards_int(row.get("Points_Delta"))
     return {
         "entry_count": _rewards_int(row.get("Public_Entry_Count")) or 1,
@@ -655,6 +670,7 @@ def _rewards_transaction_payload(row: dict) -> dict:
 
 
 def _rewards_lot_payload(row: dict) -> dict:
+    """Execute the rewards lot payload routine."""
     return {
         "lot_count": _rewards_int(row.get("Lot_Count")) or 1,
         "original_points": _rewards_int(row.get("Original_Points")),
@@ -672,6 +688,7 @@ def _rewards_lot_payload(row: dict) -> dict:
 
 
 def _rewards_breakdown_payload(row: dict) -> dict:
+    """Execute the rewards breakdown payload routine."""
     return {
         "source_category": _rewards_text(row.get("Source_Category")) or "other",
         "source_label": _rewards_text(row.get("Source_Label")) or "Other",
@@ -683,6 +700,7 @@ def _rewards_breakdown_payload(row: dict) -> dict:
 
 
 def _rewards_redemption_payload(row: dict) -> dict:
+    """Execute the rewards redemption payload routine."""
     points = _rewards_int(row.get("Points"))
     amount = row.get("Amount_USD")
     return {
@@ -701,6 +719,7 @@ def _rewards_redemption_payload(row: dict) -> dict:
     }
 
 def _rewards_summary_payload(chapters: list[dict]) -> dict:
+    """Execute the rewards summary payload routine."""
     available_points = sum(chapter["available_points"] for chapter in chapters)
     ledger_balance = sum(chapter["ledger_balance"] for chapter in chapters)
     total_credits = sum(chapter["total_credits"] for chapter in chapters)

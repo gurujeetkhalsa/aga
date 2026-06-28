@@ -20,15 +20,19 @@ DEFAULT_SHEET_NAME = "CashOuts"
 
 
 class RedemptionSqlAdapter(Protocol):
+    """Represent redemption sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class LegacyRedemptionRow:
+    """Represent legacy redemption row."""
     source_row_number: int
     request_id: str
     chapter_id: int
@@ -42,6 +46,7 @@ class LegacyRedemptionRow:
     receipt_ref: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         result = asdict(self)
         result["request_date"] = self.request_date.isoformat()
         return result
@@ -49,6 +54,7 @@ class LegacyRedemptionRow:
 
 @dataclass(frozen=True)
 class LegacyRedemptionImportResult:
+    """Represent legacy redemption import result data."""
     dry_run: bool
     run_id: int | None
     source_as_of_date: date
@@ -70,6 +76,7 @@ class LegacyRedemptionImportResult:
     reimbursement_points: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "dry_run": self.dry_run,
             "run_id": self.run_id,
@@ -142,6 +149,7 @@ def import_legacy_redemptions(
     posted_by_principal_id: str | None = None,
     allow_dues_credit_shortfall_adjustment: bool = False,
 ) -> LegacyRedemptionImportResult:
+    """Import legacy redemptions."""
     if not rows:
         raise ValueError("At least one legacy redemption row is required.")
 
@@ -203,11 +211,13 @@ def read_legacy_redemption_workbook(
     *,
     sheet_name: str = DEFAULT_SHEET_NAME,
 ) -> list[LegacyRedemptionRow]:
+    """Read legacy redemption workbook."""
     records = _read_xlsx_records(workbook_path, sheet_name=sheet_name)
     return [legacy_redemption_from_record(record, index + 1) for index, record in enumerate(records)]
 
 
 def legacy_redemption_from_record(record: dict[str, Any], source_row_number: int) -> LegacyRedemptionRow:
+    """Execute the legacy redemption from record routine."""
     request_id = _required_text(record, "request_id")
     chapter_id = _required_int(record, "chapter_id")
     chapter_name = _required_text(record, "chapter_name")
@@ -232,6 +242,7 @@ def legacy_redemption_from_record(record: dict[str, Any], source_row_number: int
 
 
 def print_redemption_result(result: LegacyRedemptionImportResult, output: TextIO) -> None:
+    """Execute the print redemption result routine."""
     label = "Legacy Redemption Import Preview" if result.dry_run else "Legacy Redemption Import"
     print(label, file=output)
     if result.run_id is not None:
@@ -253,6 +264,7 @@ def print_redemption_result(result: LegacyRedemptionImportResult, output: TextIO
 
 
 def _read_xlsx_records(workbook_path: Path, *, sheet_name: str) -> list[dict[str, Any]]:
+    """Read xlsx records."""
     if not workbook_path.exists():
         raise FileNotFoundError(workbook_path)
 
@@ -297,6 +309,7 @@ def _read_xlsx_records(workbook_path: Path, *, sheet_name: str) -> list[dict[str
 
 
 def _load_shared_strings(archive: zipfile.ZipFile) -> list[str]:
+    """Load shared strings."""
     try:
         root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
     except KeyError:
@@ -310,6 +323,7 @@ def _load_shared_strings(archive: zipfile.ZipFile) -> list[str]:
 
 
 def _sheet_path(archive: zipfile.ZipFile, sheet_name: str) -> str:
+    """Execute the sheet path routine."""
     workbook = ET.fromstring(archive.read("xl/workbook.xml"))
     rels_root = ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
     ns = {
@@ -338,6 +352,7 @@ def _sheet_path(archive: zipfile.ZipFile, sheet_name: str) -> str:
 
 
 def _cell_value(cell: ET.Element, shared_strings: list[str]) -> Any:
+    """Execute the cell value routine."""
     cell_type = cell.attrib.get("t")
     if cell_type == "inlineStr":
         return "".join(node.text or "" for node in cell.findall(".//{http://schemas.openxmlformats.org/spreadsheetml/2006/main}t"))
@@ -362,6 +377,7 @@ def _cell_value(cell: ET.Element, shared_strings: list[str]) -> Any:
 
 
 def _column_index(cell_ref: str) -> int | None:
+    """Execute the column index routine."""
     match = re.match(r"([A-Z]+)", cell_ref.upper())
     if not match:
         return None
@@ -372,6 +388,7 @@ def _column_index(cell_ref: str) -> int | None:
 
 
 def _normalize_header(value: Any) -> str:
+    """Normalize header."""
     text = str(value or "").strip().lower()
     text = re.sub(r"[^a-z0-9]+", "_", text).strip("_")
     aliases = {
@@ -386,6 +403,7 @@ def _normalize_header(value: Any) -> str:
 
 
 def _category_and_payment_mode(notes: str) -> tuple[str, str]:
+    """Execute the category and payment mode routine."""
     normalized = notes.strip().lower()
     if normalized == "chapter renewal":
         return "chapter_renewal", "dues_credit"
@@ -395,6 +413,7 @@ def _category_and_payment_mode(notes: str) -> tuple[str, str]:
 
 
 def _required_value(record: dict[str, Any], key: str) -> Any:
+    """Execute the required value routine."""
     value = record.get(key)
     if _is_blank(value):
         raise ValueError(f"Missing required redemption field: {key}")
@@ -402,10 +421,12 @@ def _required_value(record: dict[str, Any], key: str) -> Any:
 
 
 def _required_text(record: dict[str, Any], key: str) -> str:
+    """Execute the required text routine."""
     return str(_required_value(record, key)).strip()
 
 
 def _required_int(record: dict[str, Any], key: str) -> int:
+    """Execute the required int routine."""
     value = _required_value(record, key)
     if isinstance(value, float) and not value.is_integer():
         raise ValueError(f"{key} must be an integer.")
@@ -413,6 +434,7 @@ def _required_int(record: dict[str, Any], key: str) -> int:
 
 
 def _coerce_record_date(value: Any) -> date:
+    """Coerce record date."""
     if isinstance(value, datetime):
         return value.date()
     if isinstance(value, date):
@@ -426,16 +448,19 @@ def _coerce_record_date(value: Any) -> date:
 
 
 def _text_or_empty(value: Any) -> str:
+    """Execute the text or empty routine."""
     if value is None:
         return ""
     return str(value).strip()
 
 
 def _is_blank(value: Any) -> bool:
+    """Return whether blank."""
     return value is None or str(value).strip() == ""
 
 
 def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> LegacyRedemptionImportResult:
+    """Execute the result from row routine."""
     return LegacyRedemptionImportResult(
         dry_run=dry_run,
         run_id=_coerce_optional_int(row.get("RunID")),
@@ -460,18 +485,21 @@ def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> LegacyRedemptionI
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def _coerce_date(value: Any) -> date | None:
+    """Coerce date."""
     if value is None:
         return None
     if isinstance(value, date):
@@ -480,6 +508,7 @@ def _coerce_date(value: Any) -> date | None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Import legacy-gap AGA Chapter Rewards redemptions from a workbook.")
     parser.add_argument("workbook_path", type=Path, help="Path to the redemption workbook.")
     parser.add_argument("--sheet-name", default=DEFAULT_SHEET_NAME, help=f"Worksheet name. Defaults to {DEFAULT_SHEET_NAME}.")

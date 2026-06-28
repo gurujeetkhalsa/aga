@@ -12,6 +12,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class AlgorithmStyle:
+    """Represent algorithm style."""
     key: str
     label: str
     color: str
@@ -19,6 +20,7 @@ class AlgorithmStyle:
 
 @dataclass(frozen=True)
 class RankBucket:
+    """Represent rank bucket."""
     index: int
     label: str
     min_rating: float
@@ -32,6 +34,7 @@ ALGORITHMS = [
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("simulation_dir", type=Path, help="Directory containing metadata.json and player_outcomes.csv.")
     parser.add_argument("--name", default="rank_bucket_reached", help="Output filename stem.")
@@ -40,6 +43,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     simulation_dir = args.simulation_dir
     metadata = json.loads((simulation_dir / "metadata.json").read_text(encoding="utf-8"))
@@ -68,11 +72,13 @@ def main() -> None:
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read csv."""
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle))
 
 
 def build_bucket_rows(rows: list[dict[str, str]], *, min_players: int = 1) -> list[dict[str, object]]:
+    """Build bucket rows."""
     start_ratings_by_player: dict[str, float] = {}
     for row in rows:
         start_ratings_by_player.setdefault(row["simulation_player_id"], float(row["start_rating"]))
@@ -118,6 +124,7 @@ def build_bucket_rows(rows: list[dict[str, str]], *, min_players: int = 1) -> li
 
 
 def rank_buckets(ratings: object) -> list[RankBucket]:
+    """Execute the rank buckets routine."""
     values = list(ratings)
     min_rating = min(values)
     max_rating = max(values)
@@ -159,6 +166,7 @@ def rank_buckets(ratings: object) -> list[RankBucket]:
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write csv."""
     fieldnames = [
         "bucket_index",
         "bucket_label",
@@ -177,6 +185,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, object]) -> None:
+    """Write svg."""
     width = 1180
     height = 720
     margin_left = 82
@@ -192,9 +201,11 @@ def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, 
     bar_width = max(7, (bucket_width - group_gap - bar_gap) / 2)
 
     def x_bucket(ordinal: int) -> float:
+        """Execute the x bucket routine."""
         return margin_left + ordinal * bucket_width
 
     def y(percent: float) -> float:
+        """Execute the y routine."""
         return margin_top + (100 - percent) / 100 * inner_height
 
     lines = [
@@ -275,6 +286,7 @@ def write_svg(path: Path, rows: list[dict[str, object]], *, metadata: dict[str, 
 
 
 def escape_xml(value: object) -> str:
+    """Execute the escape xml routine."""
     return (
         str(value)
         .replace("&", "&amp;")

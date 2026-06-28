@@ -13,15 +13,19 @@ SOURCE_TYPE = "point_expiration"
 
 
 class PointExpirationSqlAdapter(Protocol):
+    """Represent point expiration sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class PointExpirationResult:
+    """Represent point expiration result data."""
     as_of_date: date
     dry_run: bool
     run_id: int | None
@@ -32,6 +36,7 @@ class PointExpirationResult:
     chapter_count: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "as_of_date": self.as_of_date.isoformat(),
             "dry_run": self.dry_run,
@@ -72,6 +77,7 @@ def process_point_expirations(
     run_type: str = "manual",
     dry_run: bool = False,
 ) -> PointExpirationResult:
+    """Process point expirations."""
     params = (as_of_date, run_type, bool(dry_run))
     if dry_run:
         rows = adapter.query_rows(PROCESS_POINT_EXPIRATIONS_SQL, params)
@@ -97,6 +103,7 @@ def process_point_expirations(
 
 
 def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> PointExpirationResult:
+    """Execute the result from row routine."""
     return PointExpirationResult(
         as_of_date=_coerce_date(row.get("AsOfDate")) or date.today(),
         dry_run=dry_run,
@@ -110,18 +117,21 @@ def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> PointExpirationRe
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def _coerce_date(value: Any) -> date | None:
+    """Coerce date."""
     if value is None:
         return None
     if isinstance(value, date):
@@ -130,6 +140,7 @@ def _coerce_date(value: Any) -> date | None:
 
 
 def print_expiration_result(result: PointExpirationResult, output: TextIO) -> None:
+    """Execute the print expiration result routine."""
     label = "Point Expirations Preview" if result.dry_run else "Point Expirations"
     print(label, file=output)
     print(f"  As of: {result.as_of_date.isoformat()}", file=output)
@@ -143,6 +154,7 @@ def print_expiration_result(result: PointExpirationResult, output: TextIO) -> No
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Expire unused AGA Chapter Rewards point lots.")
     parser.add_argument("--date", dest="as_of_date", type=parse_snapshot_date, help="Processing date in YYYY-MM-DD format. Defaults to today.")
     parser.add_argument("--dry-run", action="store_true", help="Preview point expirations without writing transactions or lot allocations.")

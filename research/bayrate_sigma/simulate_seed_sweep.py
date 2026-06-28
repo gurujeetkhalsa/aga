@@ -34,6 +34,7 @@ CANDIDATE_ALGORITHM = "surprise_taper_floor_050"
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--games", type=Path, default=DEFAULT_DATASET / "games.csv")
     parser.add_argument("--ratings", type=Path, default=DEFAULT_DATASET / "ratings.csv")
@@ -68,6 +69,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     if args.seed_count <= 0:
         raise SystemExit("--seed-count must be positive")
@@ -190,6 +192,7 @@ def run_seed(
     start_date: date,
     years: float,
 ) -> list[dict[str, object]]:
+    """Run seed."""
     rng = random.Random(seed)
     base_players = sample_base_players(
         latest_ratings,
@@ -230,6 +233,7 @@ def run_seed(
 
 
 def comparison_for_seed(rows: list[dict[str, object]], *, seed: int, seed_offset: int) -> list[dict[str, object]]:
+    """Execute the comparison for seed routine."""
     by_key = {
         (str(row["algorithm"]), str(row["slice_type"]), str(row["slice_value"])): row
         for row in rows
@@ -275,6 +279,7 @@ def comparison_for_seed(rows: list[dict[str, object]], *, seed: int, seed_offset
 
 
 def aggregate_rows(rows: list[dict[str, object]], *, key_fields: list[str]) -> list[dict[str, object]]:
+    """Execute the aggregate rows routine."""
     groups: dict[tuple[object, ...], list[dict[str, object]]] = {}
     for row in rows:
         groups.setdefault(tuple(row[field] for field in key_fields), []).append(row)
@@ -305,6 +310,7 @@ def aggregate_rows(rows: list[dict[str, object]], *, key_fields: list[str]) -> l
 
 
 def numeric_metrics(rows: list[dict[str, object]], *, exclude: set[str]) -> list[str]:
+    """Execute the numeric metrics routine."""
     metrics = []
     for key in rows[0]:
         if key in exclude:
@@ -315,6 +321,7 @@ def numeric_metrics(rows: list[dict[str, object]], *, exclude: set[str]) -> list
 
 
 def percentile(values: Iterable[float], quantile: float) -> float:
+    """Execute the percentile routine."""
     ordered = sorted(values)
     if not ordered:
         raise ValueError("percentile requires at least one value")
@@ -328,12 +335,14 @@ def percentile(values: Iterable[float], quantile: float) -> float:
 
 
 def none_safe_subtract(left: object, right: object) -> float | None:
+    """Execute the none safe subtract routine."""
     if left is None or right is None:
         return None
     return float(left) - float(right)
 
 
 def is_number(value: object) -> bool:
+    """Return whether number."""
     if value is None:
         return False
     if isinstance(value, bool):
@@ -346,6 +355,7 @@ def is_number(value: object) -> bool:
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write csv."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames: list[str] = []
     for row in rows:
@@ -359,6 +369,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def write_progress(path: Path, **fields: object) -> None:
+    """Write progress."""
     path.write_text(json.dumps(fields, indent=2, default=str) + "\n", encoding="utf-8")
 
 

@@ -57,6 +57,7 @@ app = func.FunctionApp()
 
 
 def get_sql_connection_string() -> str | None:
+    """Return sql connection string."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn:
         return conn
@@ -82,6 +83,7 @@ if not SQL_CONNECTION_STRING:
 
 
 def response_headers(content_type: str) -> dict[str, str]:
+    """Execute the response headers routine."""
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -92,12 +94,14 @@ def response_headers(content_type: str) -> dict[str, str]:
 
 
 def json_safe_value(value: Any) -> Any:
+    """Execute the json safe value routine."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     return value
 
 
 def load_html(template_name: str, api_base: str = "") -> str:
+    """Load html."""
     markup = (APP_ROOT / template_name).read_text(encoding="utf-8")
     return (
         markup.replace('"__BAYRATE_API_BASE__"', json.dumps(api_base))
@@ -106,6 +110,7 @@ def load_html(template_name: str, api_base: str = "") -> str:
 
 
 def _bayrate_json_response(payload: dict, status_code: int = 200) -> func.HttpResponse:
+    """Execute the bayrate json response routine."""
     return func.HttpResponse(
         json.dumps(payload, default=json_safe_value),
         status_code=status_code,
@@ -114,6 +119,7 @@ def _bayrate_json_response(payload: dict, status_code: int = 200) -> func.HttpRe
 
 
 def _bayrate_preview_error(message: str, status_code: int = 400) -> func.HttpResponse:
+    """Execute the bayrate preview error routine."""
     payload = {"ok": False, "error": message}
     if BAYRATE_IMPORT_ERROR:
         payload["import_error"] = BAYRATE_IMPORT_ERROR
@@ -121,6 +127,7 @@ def _bayrate_preview_error(message: str, status_code: int = 400) -> func.HttpRes
 
 
 def _bayrate_modules_available(*names: str) -> bool:
+    """Execute the bayrate modules available routine."""
     modules = {
         "stage": build_staging_payload is not None and printable_payload is not None,
         "load": load_staged_run is not None and printable_payload is not None,
@@ -137,12 +144,14 @@ def _bayrate_modules_available(*names: str) -> bool:
 
 
 def _bayrate_adapter_or_error() -> tuple[object | None, func.HttpResponse | None]:
+    """Execute the bayrate adapter or error routine."""
     if SqlAdapter is None:
         return None, _bayrate_preview_error("BayRate SQL adapter is not available in this deployment.", status_code=500)
     return SqlAdapter(SQL_CONNECTION_STRING), None
 
 
 def _bayrate_login_redirect(req: func.HttpRequest) -> str:
+    """Execute the bayrate login redirect routine."""
     raw_url = getattr(req, "url", "") or "/api/bayrate"
     parsed = urlsplit(raw_url)
     redirect_path = parsed.path or "/api/bayrate"
@@ -157,6 +166,7 @@ def _bayrate_authorization_response(
     *,
     html: bool = False,
 ) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the bayrate authorization response routine."""
     if authorize_bayrate_admin is None:
         message = "BayRate authorization modules are not available in this deployment."
         if html:
@@ -193,6 +203,7 @@ def _bayrate_authorization_response(
 
 
 def _bayrate_request_json(req: func.HttpRequest) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the bayrate request json routine."""
     try:
         body = req.get_json()
     except ValueError:
@@ -206,6 +217,7 @@ def _bayrate_report_inputs_from_body(
     body: dict,
     adapter: object | None = None,
 ) -> tuple[list[tuple[str, str]] | None, list[dict] | None, func.HttpResponse | None]:
+    """Execute the bayrate report inputs from body routine."""
     reports = body.get("reports")
     if not isinstance(reports, list) or not reports:
         return None, None, _bayrate_preview_error("At least one report is required.")
@@ -242,6 +254,7 @@ def _bayrate_report_metadata_from_item(
     adapter: object | None,
     host_options_by_id: dict | None,
 ) -> tuple[dict, str | None, dict | None]:
+    """Execute the bayrate report metadata from item routine."""
     raw_metadata = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
     metadata = {}
     text_fields = {
@@ -293,6 +306,7 @@ def _bayrate_report_metadata_from_item(
 
 
 def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, written: bool = False) -> dict:
+    """Execute the bayrate payload response routine."""
     explanations = explain_staged_run_review(adapter, payload) if (adapter and explain_staged_run_review is not None) else None
     summary = printable_payload(payload, include_games=False)
     summary["written"] = written
@@ -311,6 +325,7 @@ def _bayrate_payload_response(payload: dict, *, adapter: object | None = None, w
 
 
 def _bayrate_host_chapter_from_body(adapter: object, body: dict) -> tuple[dict | None, func.HttpResponse | None]:
+    """Execute the bayrate host chapter from body routine."""
     if "host_chapter_id" not in body and "hostChapterId" not in body:
         return None, None
     raw_id = body.get("host_chapter_id", body.get("hostChapterId"))
@@ -329,6 +344,7 @@ def _bayrate_host_chapter_from_body(adapter: object, body: dict) -> tuple[dict |
 
 
 def _bayrate_optional_bool_from_body(body: dict, *names: str) -> bool | None:
+    """Execute the bayrate optional bool from body routine."""
     for name in names:
         if name not in body:
             continue
@@ -345,6 +361,7 @@ def _bayrate_optional_bool_from_body(body: dict, *names: str) -> bool | None:
 
 
 def _bayrate_commit_state(adapter: object, run_id: int | str) -> dict:
+    """Execute the bayrate commit state routine."""
     rows = adapter.query_rows(
         """
 SELECT
@@ -408,6 +425,7 @@ SELECT
 
 
 def _bayrate_replay_response(artifact: dict) -> dict:
+    """Execute the bayrate replay response routine."""
     plan = artifact.get("plan") or {}
     result = artifact.get("bayrate_result") or {}
     staged_rating_summary = artifact.get("staged_rating_summary") or {}
@@ -430,6 +448,7 @@ def _bayrate_replay_response(artifact: dict) -> dict:
 
 
 def _bayrate_same_date_groups(payload: dict) -> list[dict]:
+    """Execute the bayrate same date groups routine."""
     groups: dict[str, list[dict]] = {}
     for entry in payload.get("staged_tournaments") or []:
         row = entry.get("tournament_row") or {}
@@ -464,6 +483,7 @@ def _bayrate_same_date_groups(payload: dict) -> list[dict]:
 @app.function_name(name="BayRateStagingPage")
 @app.route(route="bayrate", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_page(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingPage Azure Function endpoint."""
     adapter, error = _bayrate_adapter_or_error()
     if error:
         return error
@@ -480,6 +500,7 @@ def bayrate_staging_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingPreview")
 @app.route(route="bayrate/preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingPreview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("stage"):
@@ -520,6 +541,7 @@ def bayrate_staging_preview(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateMetadataOptions")
 @app.route(route="bayrate/metadata-options", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_metadata_options(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateMetadataOptions Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if load_host_chapter_options is None:
@@ -540,6 +562,7 @@ def bayrate_metadata_options(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingWrite")
 @app.route(route="bayrate/stage", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_write(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingWrite Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("stage", "write"):
@@ -577,6 +600,7 @@ def bayrate_staging_write(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingReview")
 @app.route(route="bayrate/review", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingReview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("stage", "review"):
@@ -633,6 +657,7 @@ def bayrate_staging_review(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingRun")
 @app.route(route="bayrate/run", methods=["GET", "POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_run(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingRun Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("load", "review"):
@@ -665,6 +690,7 @@ def bayrate_staging_run(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingReplay")
 @app.route(route="bayrate/replay", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingReplay Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("replay"):
@@ -699,6 +725,7 @@ def bayrate_staging_replay(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingCommitPreview")
 @app.route(route="bayrate/commit-preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_commit_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingCommitPreview Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("commit"):
@@ -731,6 +758,7 @@ def bayrate_staging_commit_preview(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="BayRateStagingCommit")
 @app.route(route="bayrate/commit", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_commit(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the BayRateStagingCommit Azure Function endpoint."""
     if req.method == "OPTIONS":
         return func.HttpResponse("", status_code=204, headers=response_headers("application/json; charset=utf-8"))
     if not _bayrate_modules_available("commit"):

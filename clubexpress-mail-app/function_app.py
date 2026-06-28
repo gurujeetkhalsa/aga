@@ -72,10 +72,12 @@ try:
     import pyodbc
 except Exception:
     class _MissingPyodbc:
+        """Represent missing pyodbc."""
         Error = Exception
 
         @staticmethod
         def connect(*args, **kwargs):
+            """Execute the connect routine."""
             raise RuntimeError("pyodbc is unavailable in this environment")
 
     pyodbc = _MissingPyodbc()
@@ -262,11 +264,14 @@ _journal_name_nlp_lock = threading.Lock()
 
 
 class GmailApiError(RuntimeError):
+    """Represent gmail api error failures."""
     pass
 
 
 class _JournalHtmlParser(HTMLParser):
+    """Represent journal html parser."""
     def __init__(self) -> None:
+        """Initialize the journal html parser instance."""
         super().__init__(convert_charrefs=True)
         self.blocks: list[dict[str, object]] = []
         self._text_parts: list[str] = []
@@ -275,6 +280,7 @@ class _JournalHtmlParser(HTMLParser):
         self._link_href: Optional[str] = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        """Handle starttag."""
         normalized_tag = tag.lower()
         if normalized_tag in {"p", "div", "li", "tr", "table", "section", "article"}:
             self._flush_block()
@@ -287,6 +293,7 @@ class _JournalHtmlParser(HTMLParser):
             self._link_href = dict(attrs).get("href")
 
     def handle_endtag(self, tag: str) -> None:
+        """Handle endtag."""
         normalized_tag = tag.lower()
         if normalized_tag == "a":
             self._link_href = None
@@ -297,6 +304,7 @@ class _JournalHtmlParser(HTMLParser):
             self._flush_block()
 
     def handle_data(self, data: str) -> None:
+        """Handle data."""
         if not data:
             return
         self._text_parts.append(data)
@@ -304,10 +312,12 @@ class _JournalHtmlParser(HTMLParser):
             self._links.append(self._link_href)
 
     def close(self) -> None:
+        """Execute the close routine."""
         super().close()
         self._flush_block()
 
     def _flush_block(self) -> None:
+        """Execute the flush block routine."""
         text = re.sub(r"\s+", " ", "".join(self._text_parts)).strip()
         links = []
         seen_links = set()
@@ -330,12 +340,15 @@ class _JournalHtmlParser(HTMLParser):
 
 
 class _JournalVisibleTextParser(HTMLParser):
+    """Represent journal visible text parser."""
     def __init__(self) -> None:
+        """Initialize the journal visible text parser instance."""
         super().__init__(convert_charrefs=True)
         self._skip_depth = 0
         self._parts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        """Handle starttag."""
         normalized_tag = tag.lower()
         if normalized_tag in {"script", "style", "svg", "noscript"}:
             self._skip_depth += 1
@@ -346,6 +359,7 @@ class _JournalVisibleTextParser(HTMLParser):
             self._parts.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
+        """Handle endtag."""
         normalized_tag = tag.lower()
         if normalized_tag in {"script", "style", "svg", "noscript"}:
             if self._skip_depth:
@@ -357,12 +371,14 @@ class _JournalVisibleTextParser(HTMLParser):
             self._parts.append("\n")
 
     def handle_data(self, data: str) -> None:
+        """Handle data."""
         if self._skip_depth:
             return
         if data:
             self._parts.append(data)
 
     def get_lines(self) -> list[str]:
+        """Return lines."""
         lines = []
         for raw_line in "".join(self._parts).splitlines():
             normalized = re.sub(r"\s+", " ", raw_line).strip()
@@ -372,10 +388,12 @@ class _JournalVisibleTextParser(HTMLParser):
 
 
 class _NaolReviewHtmlParser(HTMLParser):
+    """Represent naol review html parser."""
     _BLOCK_TAGS = {"p", "div", "li", "tr", "table", "section", "article", "h1", "h2", "h3", "h4", "h5", "h6", "td"}
     _SKIP_TAGS = {"script", "style", "svg", "noscript"}
 
     def __init__(self) -> None:
+        """Initialize the naol review html parser instance."""
         super().__init__(convert_charrefs=True)
         self._skip_depth = 0
         self._parts: list[str] = []
@@ -383,6 +401,7 @@ class _NaolReviewHtmlParser(HTMLParser):
         self.tokens: list[dict[str, str]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        """Handle starttag."""
         normalized_tag = tag.lower()
         if normalized_tag in self._SKIP_TAGS:
             self._skip_depth += 1
@@ -403,6 +422,7 @@ class _NaolReviewHtmlParser(HTMLParser):
             self.tokens.append({"video_link": video_link[:1000]})
 
     def handle_endtag(self, tag: str) -> None:
+        """Handle endtag."""
         normalized_tag = tag.lower()
         if normalized_tag in self._SKIP_TAGS:
             if self._skip_depth:
@@ -414,24 +434,28 @@ class _NaolReviewHtmlParser(HTMLParser):
             self._flush_text()
 
     def handle_data(self, data: str) -> None:
+        """Handle data."""
         if self._skip_depth:
             return
         if data:
             self._parts.append(data)
 
     def _flush_text(self) -> None:
+        """Execute the flush text routine."""
         text = re.sub(r"\s+", " ", "".join(self._parts)).strip()
         if text:
             self.tokens.append({"text": text})
         self._parts = []
 
     def get_tokens(self) -> list[dict[str, str]]:
+        """Return tokens."""
         self._flush_text()
         return self.tokens
 
 
 @app.timer_trigger(schedule=DEFAULT_MAILBOX_POLL_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def poll_clubexpress_mailbox(timer: func.TimerRequest) -> None:
+    """Execute the poll clubexpress mailbox routine."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_MAILBOX_ENABLED", "false")):
         logging.info("ClubExpress mailbox polling is disabled.")
         return
@@ -452,6 +476,7 @@ def poll_clubexpress_mailbox(timer: func.TimerRequest) -> None:
 
 
 def _fetch_gmail_messages_for_processing(access_token: str, items: list[dict]) -> list[dict]:
+    """Fetch gmail messages for processing."""
     messages: list[dict] = []
     for item in items:
         message_id = item.get("id")
@@ -475,6 +500,7 @@ def _fetch_gmail_messages_for_processing(access_token: str, items: list[dict]) -
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_NEW_MEMBER_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_new_member_events(timer: func.TimerRequest) -> None:
+    """Process staged new member events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged new-member processor is disabled.")
         return
@@ -506,6 +532,7 @@ def process_staged_new_member_events(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_RENEWAL_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_renewal_events(timer: func.TimerRequest) -> None:
+    """Process staged renewal events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged renewal processor is disabled.")
         return
@@ -537,6 +564,7 @@ def process_staged_renewal_events(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_chapter_renewal_notice_events(timer: func.TimerRequest) -> None:
+    """Process staged chapter renewal notice events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged chapter-renewal notice processor is disabled.")
         return
@@ -567,6 +595,7 @@ def process_staged_chapter_renewal_notice_events(timer: func.TimerRequest) -> No
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_MEMCHAP_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_memchap_events(timer: func.TimerRequest) -> None:
+    """Process staged memchap events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged MemChap processor is disabled.")
         return
@@ -597,6 +626,7 @@ def process_staged_memchap_events(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_CHAPTER_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_chapter_events(timer: func.TimerRequest) -> None:
+    """Process staged chapter events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged ChapterX processor is disabled.")
         return
@@ -627,6 +657,7 @@ def process_staged_chapter_events(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_MEMBER_CATEGORIES_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_member_category_events(timer: func.TimerRequest) -> None:
+    """Process staged member category events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged member-category processor is disabled.")
         return
@@ -657,6 +688,7 @@ def process_staged_member_category_events(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_STAGED_JOURNAL_PROCESSOR_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_staged_journal_events(timer: func.TimerRequest) -> None:
+    """Process staged journal events."""
     if not _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_ENABLED", "false")):
         logging.info("ClubExpress staged E-Journal processor is disabled.")
         return
@@ -687,6 +719,7 @@ def process_staged_journal_events(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_SNAPSHOT_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
+    """Create rewards daily snapshot."""
     if not _is_truthy(os.environ.get("REWARDS_SNAPSHOT_ENABLED", "true")):
         logging.info("Chapter Rewards daily snapshot is disabled.")
         return
@@ -722,6 +755,7 @@ def create_rewards_daily_snapshot(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_MEMBERSHIP_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_membership_awards(timer: func.TimerRequest) -> None:
+    """Process rewards membership awards."""
     if not _is_truthy(os.environ.get("REWARDS_MEMBERSHIP_AWARDS_ENABLED", "true")):
         logging.info("Chapter Rewards membership awards are disabled.")
         return
@@ -759,6 +793,7 @@ def process_rewards_membership_awards(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_RATED_GAME_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_rated_game_awards(timer: func.TimerRequest) -> None:
+    """Process rewards rated game awards."""
     if not _is_truthy(os.environ.get("REWARDS_RATED_GAME_AWARDS_ENABLED", "true")):
         logging.info("Chapter Rewards rated-game awards are disabled.")
         return
@@ -799,6 +834,7 @@ def process_rewards_rated_game_awards(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_TOURNAMENT_AWARDS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_tournament_awards(timer: func.TimerRequest) -> None:
+    """Process rewards tournament awards."""
     if not _is_truthy(os.environ.get("REWARDS_TOURNAMENT_AWARDS_ENABLED", "true")):
         logging.info("Chapter Rewards tournament awards are disabled.")
         return
@@ -838,6 +874,7 @@ def process_rewards_tournament_awards(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_REWARDS_EXPIRATIONS_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def process_rewards_point_expirations(timer: func.TimerRequest) -> None:
+    """Process rewards point expirations."""
     if not _is_truthy(os.environ.get("REWARDS_EXPIRATIONS_ENABLED", "true")):
         logging.info("Chapter Rewards point expirations are disabled.")
         return
@@ -871,6 +908,7 @@ def process_rewards_point_expirations(timer: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule=DEFAULT_PENDING_CHAPTER_RENEWALS_EMAIL_SCHEDULE, arg_name="timer", run_on_startup=False, use_monitor=True)
 def send_pending_chapter_renewals_email(timer: func.TimerRequest) -> None:
+    """Send pending chapter renewals email."""
     if not _is_truthy(os.environ.get("PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED", "true")):
         logging.info("Pending chapter renewal email is disabled.")
         return
@@ -900,6 +938,7 @@ def send_pending_chapter_renewals_email(timer: func.TimerRequest) -> None:
 
 
 def _process_mailbox_message(access_token: str, message: dict) -> None:
+    """Process mailbox message."""
     sender = _get_header_value(message, "From")
     subject = _get_header_value(message, "Subject")
     attachments = _extract_gmail_attachments(access_token, message)
@@ -1558,6 +1597,7 @@ def _process_mailbox_message(access_token: str, message: dict) -> None:
 
 
 def _generate_tdlist_response(list_type: str) -> func.HttpResponse:
+    """Execute the generate tdlist response routine."""
     conn_str = _get_sql_connection_string()
     if not conn_str:
         return func.HttpResponse(
@@ -1594,6 +1634,7 @@ def _generate_tdlist_response(list_type: str) -> func.HttpResponse:
 
 
 def _redirect_tdlist(list_type: str) -> func.HttpResponse:
+    """Execute the redirect tdlist routine."""
     target_url = TDLIST_REDIRECT_URLS.get(list_type)
     if not target_url:
         return func.HttpResponse(f"Unsupported TDList type: {list_type}", status_code=500)
@@ -1601,6 +1642,7 @@ def _redirect_tdlist(list_type: str) -> func.HttpResponse:
 
 
 def _fetch_tdlist_rows(conn_str: str) -> list[dict[str, object]]:
+    """Fetch tdlist rows."""
     try:
         conn = pyodbc.connect(conn_str)
     except Exception:
@@ -1618,6 +1660,7 @@ def _fetch_tdlist_rows(conn_str: str) -> list[dict[str, object]]:
 
 
 def _fetch_tdlist_rows_via_tds(conn_str: str) -> list[dict[str, object]]:
+    """Fetch tdlist rows via tds."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -1628,6 +1671,7 @@ def _fetch_tdlist_rows_via_tds(conn_str: str) -> list[dict[str, object]]:
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
+    """Parse sql connection string."""
     parts: dict[str, str] = {}
     for item in connection_string.split(";"):
         if "=" not in item:
@@ -1646,6 +1690,7 @@ def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
 
 
 def _tds_connect(conn_str: str):
+    """Execute the tds connect routine."""
     if pytds is None:
         raise RuntimeError("python-tds is unavailable in this environment")
     sql = _parse_sql_connection_string(conn_str)
@@ -1665,6 +1710,7 @@ def _tds_connect(conn_str: str):
 
 
 def _render_tdlist_tab(rows: list[dict[str, object]], *, chapter_field: str) -> str:
+    """Render tdlist tab."""
     rendered_rows = []
     for row in rows:
         rendered_rows.append(
@@ -1686,6 +1732,7 @@ def _render_tdlist_tab(rows: list[dict[str, object]], *, chapter_field: str) -> 
 
 
 def _render_tdlist_fixed_width(rows: list[dict[str, object]]) -> str:
+    """Render tdlist fixed width."""
     rendered_rows = []
     for row in rows:
         chapter_code = _tdlist_text(row.get("ChapterCode")) or "none"
@@ -1702,6 +1749,7 @@ def _render_tdlist_fixed_width(rows: list[dict[str, object]]) -> str:
 
 
 def _tdlist_name(row: dict[str, object]) -> str:
+    """Execute the tdlist name routine."""
     last_name = _tdlist_text(row.get("LastName"))
     first_name = _tdlist_text(row.get("FirstName"))
     if last_name and first_name:
@@ -1710,18 +1758,21 @@ def _tdlist_name(row: dict[str, object]) -> str:
 
 
 def _tdlist_text(value: object) -> str:
+    """Execute the tdlist text routine."""
     if value is None:
         return ""
     return str(value).strip()
 
 
 def _format_tdlist_decimal(value: object, *, digits: int) -> str:
+    """Format tdlist decimal."""
     if value is None:
         return ""
     return f"{float(value):.{digits}f}"
 
 
 def _format_tdlist_date(value: object) -> str:
+    """Format tdlist date."""
     if value is None:
         return ""
     if isinstance(value, datetime):
@@ -1742,6 +1793,7 @@ def _build_memchap_parsed_event(
     subject: Optional[str],
     blob_path: Optional[str],
 ) -> ClubExpressParsedEvent:
+    """Build memchap parsed event."""
     if not blob_path:
         raise RuntimeError("Staged MemChap processing requires CLUBEXPRESS_ARCHIVE_CONTAINER and Blob storage configuration.")
 
@@ -1779,6 +1831,7 @@ def _build_chapter_parsed_event(
     subject: Optional[str],
     blob_path: Optional[str],
 ) -> ClubExpressParsedEvent:
+    """Build chapter parsed event."""
     if not blob_path:
         raise RuntimeError("Staged ChapterX processing requires CLUBEXPRESS_ARCHIVE_CONTAINER and Blob storage configuration.")
 
@@ -1816,6 +1869,7 @@ def _build_member_categories_parsed_event(
     subject: Optional[str],
     blob_path: Optional[str],
 ) -> ClubExpressParsedEvent:
+    """Build member categories parsed event."""
     if not blob_path:
         raise RuntimeError("Staged member-category processing requires CLUBEXPRESS_ARCHIVE_CONTAINER and Blob storage configuration.")
 
@@ -1843,6 +1897,7 @@ def _build_member_categories_parsed_event(
 
 
 def _find_report_attachment(attachments: list[dict], report_type: str, label: str) -> dict:
+    """Find report attachment."""
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
         if not content_bytes:
@@ -1854,6 +1909,7 @@ def _find_report_attachment(attachments: list[dict], report_type: str, label: st
 
 
 def _handle_memchap_email(conn_str: str, attachments: list[dict]) -> int:
+    """Handle memchap email."""
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
         if not content_bytes:
@@ -1866,6 +1922,7 @@ def _handle_memchap_email(conn_str: str, attachments: list[dict]) -> int:
 
 
 def _handle_chapter_email(conn_str: str, attachments: list[dict]) -> int:
+    """Handle chapter email."""
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
         if not content_bytes:
@@ -1878,6 +1935,7 @@ def _handle_chapter_email(conn_str: str, attachments: list[dict]) -> int:
 
 
 def _handle_member_categories_email(conn_str: str, attachments: list[dict]) -> int:
+    """Handle member categories email."""
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
         if not content_bytes:
@@ -1890,6 +1948,7 @@ def _handle_member_categories_email(conn_str: str, attachments: list[dict]) -> i
 
 
 def _import_memchap_bytes(conn_str: str, csv_bytes: bytes) -> int:
+    """Import memchap bytes."""
     rows = _parse_csv_rows(csv_bytes)
     _stage_and_import(conn_str, rows)
     return len(rows)
@@ -1904,6 +1963,7 @@ def _process_pending_memchap_events(
     processor_name: str = "staged_memchap_processor",
     adapter: Optional[object] = None,
 ) -> BatchProcessResult:
+    """Process pending memchap events."""
     return _process_pending_csv_attachment_events(
         conn_str,
         event_type=NIGHTLY_MESSAGE_TYPE,
@@ -1926,6 +1986,7 @@ def _process_pending_chapter_events(
     processor_name: str = "staged_chapter_processor",
     adapter: Optional[object] = None,
 ) -> BatchProcessResult:
+    """Process pending chapter events."""
     return _process_pending_csv_attachment_events(
         conn_str,
         event_type=CHAPTER_MESSAGE_TYPE,
@@ -1948,6 +2009,7 @@ def _process_pending_member_category_events(
     processor_name: str = "staged_member_category_processor",
     adapter: Optional[object] = None,
 ) -> BatchProcessResult:
+    """Process pending member category events."""
     return _process_pending_csv_attachment_events(
         conn_str,
         event_type=NIGHTLY_CATEGORY_MESSAGE_TYPE,
@@ -1971,6 +2033,7 @@ def _process_pending_chapter_renewal_notice_events(
     adapter: Optional[object] = None,
     access_token: Optional[str] = None,
 ) -> BatchProcessResult:
+    """Process pending chapter renewal notice events."""
     if execute and not confirm_replay:
         raise ValueError("Executing staged chapter-renewal notice processing requires confirm_replay=True.")
 
@@ -2058,6 +2121,7 @@ def _process_pending_chapter_renewal_notice_events(
 
 
 def _chapter_renewal_notice_result_rows(procedure_results: list[dict]) -> list[dict]:
+    """Execute the chapter renewal notice result rows routine."""
     for result in procedure_results:
         if result.get("name") != REWARDS_CHAPTER_RENEWAL_NOTICES_PROC:
             continue
@@ -2075,6 +2139,7 @@ def _process_pending_journal_events(
     processor_name: str = "staged_journal_processor",
     adapter: Optional[object] = None,
 ) -> BatchProcessResult:
+    """Process pending journal events."""
     if execute and not confirm_replay:
         raise ValueError("Executing staged E-Journal processing requires confirm_replay=True.")
 
@@ -2130,6 +2195,7 @@ def _process_pending_csv_attachment_events(
     processor_name: str,
     adapter: Optional[object] = None,
 ) -> BatchProcessResult:
+    """Process pending csv attachment events."""
     if execute and not confirm_replay:
         raise ValueError(f"Executing staged {event_type} processing requires confirm_replay=True.")
 
@@ -2206,6 +2272,7 @@ def _update_clubexpress_email_log_for_staged_event(
     *,
     error_message: Optional[str] = None,
 ) -> None:
+    """Update clubexpress email log for staged event."""
     try:
         _execute_stored_procedure(
             conn_str,
@@ -2230,6 +2297,7 @@ def _update_clubexpress_email_log_for_staged_event(
 
 
 def _process_csv_attachment_staged_event(conn_str: str, event: object, action_name: str, import_bytes) -> dict:
+    """Process csv attachment staged event."""
     parsed_payload = event.parsed_payload if isinstance(event.parsed_payload, dict) else {}
     parsed = parsed_payload.get("parsed") if isinstance(parsed_payload.get("parsed"), dict) else {}
     blob_path = event.blob_path or parsed_payload.get("blob_path")
@@ -2252,6 +2320,7 @@ def _process_csv_attachment_staged_event(conn_str: str, event: object, action_na
 
 
 def _csv_attachment_action_preview(event: object, action_name: str) -> dict:
+    """Execute the csv attachment action preview routine."""
     return {
         "name": action_name,
         "returns_rows": False,
@@ -2261,26 +2330,31 @@ def _csv_attachment_action_preview(event: object, action_name: str) -> dict:
 
 
 def _import_chapter_bytes(conn_str: str, csv_bytes: bytes) -> int:
+    """Import chapter bytes."""
     rows = _parse_chapter_rows(csv_bytes)
     _stage_and_import_chapters(conn_str, rows)
     return len(rows)
 
 
 def _import_member_categories_bytes(conn_str: str, csv_bytes: bytes) -> int:
+    """Import member categories bytes."""
     rows = _parse_member_category_rows(csv_bytes)
     _stage_and_import_member_categories(conn_str, rows)
     return len(rows)
 
 
 def _is_memchap_attachment_name(name: str) -> bool:
+    """Return whether memchap attachment name."""
     return csv_is_memchap_attachment_name(name)
 
 
 def _is_chapter_attachment_name(name: str) -> bool:
+    """Return whether chapter attachment name."""
     return csv_is_chapter_attachment_name(name)
 
 
 def _classify_message(sender: str, subject: str, attachments: list[dict]) -> str:
+    """Execute the classify message routine."""
     normalized_sender = (sender or "").strip().lower()
     normalized_subject = (subject or "").strip()
 
@@ -2301,26 +2375,32 @@ def _classify_message(sender: str, subject: str, attachments: list[dict]) -> str
 
 
 def _parse_new_member_email(text: str) -> dict:
+    """Parse new member email."""
     return parse_new_member_email(text)
 
 
 def _parse_renewal_email(text: str) -> dict:
+    """Parse renewal email."""
     return parse_renewal_email(text)
 
 
 def _parse_chapter_renewal_notice_email(message: dict) -> list[dict]:
+    """Parse chapter renewal notice email."""
     return parse_chapter_renewal_notice(_message_body_to_html(message) or "", _message_body_to_text(message))
 
 
 def _extract_chapter_renewal_notice_rows_from_html(html_body: str) -> list[dict]:
+    """Extract chapter renewal notice rows from html."""
     return extract_chapter_renewal_notice_rows_from_html(html_body)
 
 
 def _extract_chapter_renewal_notice_rows_from_text(text: str) -> list[dict]:
+    """Extract chapter renewal notice rows from text."""
     return extract_chapter_renewal_notice_rows_from_text(text)
 
 
 def _parse_journal_email(conn_str: str, message: dict) -> dict:
+    """Parse journal email."""
     subject = _get_header_value(message, "Subject")
     journal_date = _parse_journal_subject_date(subject)
     html_body = _message_body_to_html(message)
@@ -2360,6 +2440,7 @@ def _parse_journal_email(conn_str: str, message: dict) -> dict:
 
 
 def _parse_journal_subject_date(subject: str) -> date:
+    """Parse journal subject date."""
     raw_value = (subject or "").strip()
     if not raw_value.startswith(JOURNAL_SUBJECT_PREFIX):
         raise EmailProcessingError(f"Unsupported journal subject: {subject!r}")
@@ -2374,6 +2455,7 @@ def _parse_journal_subject_date(subject: str) -> date:
 
 
 def _extract_journal_articles_from_html(html_body: str) -> list[dict[str, str]]:
+    """Extract journal articles from html."""
     parser = _JournalHtmlParser()
     parser.feed(html_body)
     parser.close()
@@ -2386,11 +2468,13 @@ def _extract_journal_articles_from_html(html_body: str) -> list[dict[str, str]]:
 
 
 def _extract_journal_articles_from_text(text: str) -> list[dict[str, str]]:
+    """Extract journal articles from text."""
     lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines() if line.strip()]
     return _extract_journal_articles_from_lines(lines)
 
 
 def _normalize_journal_article_titles(articles: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Normalize journal article titles."""
     normalized_articles = []
     for article in articles:
         title = str(article.get("title") or "").strip()
@@ -2405,16 +2489,19 @@ def _normalize_journal_article_titles(articles: list[dict[str, str]]) -> list[di
 
 
 def _extract_journal_review_blog_entries_from_html(html_body: str) -> list[dict[str, str]]:
+    """Extract journal review blog entries from html."""
     lines = _extract_visible_lines_from_html(html_body)
     return _extract_journal_review_blog_entries_from_lines(lines, html_body=html_body)
 
 
 def _extract_journal_review_blog_entries_from_text(text: str) -> list[dict[str, str]]:
+    """Extract journal review blog entries from text."""
     lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines() if line.strip()]
     return _extract_journal_review_blog_entries_from_lines(lines)
 
 
 def _extract_visible_lines_from_html(html_body: str) -> list[str]:
+    """Extract visible lines from html."""
     parser = _JournalVisibleTextParser()
     parser.feed(html_body)
     parser.close()
@@ -2422,6 +2509,7 @@ def _extract_visible_lines_from_html(html_body: str) -> list[str]:
 
 
 def _extract_journal_articles_from_lines(lines: list[str], html_body: Optional[str] = None) -> list[dict[str, str]]:
+    """Extract journal articles from lines."""
     news_lines = _slice_journal_news_lines(lines)
     if not news_lines:
         return []
@@ -2436,14 +2524,17 @@ def _extract_journal_articles_from_lines(lines: list[str], html_body: Optional[s
 
 
 def _slice_journal_news_lines(lines: list[str]) -> list[str]:
+    """Execute the slice journal news lines routine."""
     return _slice_journal_section_lines(lines, "news")
 
 
 def _slice_journal_blog_lines(lines: list[str]) -> list[str]:
+    """Execute the slice journal blog lines routine."""
     return _slice_journal_section_lines(lines, "blogs")
 
 
 def _slice_journal_section_lines(lines: list[str], section_name: str) -> list[str]:
+    """Execute the slice journal section lines routine."""
     start_index = None
     for idx, line in enumerate(lines):
         if line.lower() == section_name:
@@ -2461,6 +2552,7 @@ def _slice_journal_section_lines(lines: list[str], section_name: str) -> list[st
 
 
 def _looks_like_terminal_journal_section(line: str) -> bool:
+    """Execute the looks like terminal journal section routine."""
     normalized = (line or "").strip().lower()
     return normalized in {
         "upcoming events",
@@ -2473,6 +2565,7 @@ def _looks_like_terminal_journal_section(line: str) -> bool:
 
 
 def _extract_journal_title_links(html_body: str, news_lines: list[str]) -> list[tuple[str, str]]:
+    """Extract journal title links."""
     titles_in_news = {line for line in news_lines if _looks_like_article_title(line)}
     if not titles_in_news:
         return []
@@ -2498,6 +2591,7 @@ def _extract_journal_title_links(html_body: str, news_lines: list[str]) -> list[
 
 
 def _extract_journal_review_blog_entries_from_lines(lines: list[str], html_body: Optional[str] = None) -> list[dict[str, str]]:
+    """Extract journal review blog entries from lines."""
     blog_lines = _slice_journal_blog_lines(lines)
     if not blog_lines:
         return []
@@ -2526,6 +2620,7 @@ def _extract_journal_review_blog_entries_from_lines(lines: list[str], html_body:
 
 
 def _build_articles_from_title_links(news_lines: list[str], title_links: list[tuple[str, str]]) -> list[dict[str, str]]:
+    """Build articles from title links."""
     articles = []
     title_indices = _resolve_article_title_indices(news_lines, [title for title, _ in title_links])
     if not title_indices:
@@ -2547,6 +2642,7 @@ def _build_articles_from_title_links(news_lines: list[str], title_links: list[tu
 
 
 def _resolve_article_title_indices(news_lines: list[str], ordered_titles: list[str]) -> list[int]:
+    """Execute the resolve article title indices routine."""
     if not ordered_titles:
         return []
 
@@ -2573,6 +2669,7 @@ def _resolve_article_title_indices(news_lines: list[str], ordered_titles: list[s
 
 
 def _build_article_from_news_lines(news_lines: list[str]) -> list[dict[str, str]]:
+    """Build article from news lines."""
     current = None
     articles = []
     for line in news_lines:
@@ -2603,6 +2700,7 @@ def _build_article_from_news_lines(news_lines: list[str]) -> list[dict[str, str]
 
 
 def _find_line_index(lines: list[str], target: str, start: int) -> Optional[int]:
+    """Find line index."""
     for idx in range(start, len(lines)):
         if lines[idx] == target:
             return idx
@@ -2610,6 +2708,7 @@ def _find_line_index(lines: list[str], target: str, start: int) -> Optional[int]
 
 
 def _journal_block_http_links(block: dict[str, object]) -> list[str]:
+    """Execute the journal block http links routine."""
     return [
         link[:1000]
         for link in (block.get("links") or [])
@@ -2618,6 +2717,7 @@ def _journal_block_http_links(block: dict[str, object]) -> list[str]:
 
 
 def _build_journal_articles_from_blocks(blocks: list[dict[str, object]]) -> list[dict[str, str]]:
+    """Build journal articles from blocks."""
     news_index = None
     for idx, block in enumerate(blocks):
         block_text = str(block.get("text") or "").strip().lower()
@@ -2711,16 +2811,19 @@ def _build_journal_articles_from_blocks(blocks: list[dict[str, object]]) -> list
 
 
 def _looks_like_article_title(text: str) -> bool:
+    """Execute the looks like article title routine."""
     collapsed = re.sub(r"\s+", " ", text).strip()
     word_count = len(collapsed.split())
     return 2 <= word_count <= 20 and len(collapsed) <= 180
 
 
 def _looks_like_url(text: str) -> bool:
+    """Execute the looks like url routine."""
     return bool(re.match(r"^https?://\S+$", (text or "").strip(), re.IGNORECASE))
 
 
 def _fetch_article_page_title(url: str) -> str:
+    """Fetch article page title."""
     html_body = _fetch_external_html(url)
     if not html_body:
         return ""
@@ -2741,6 +2844,7 @@ def _fetch_article_page_title(url: str) -> str:
 
 
 def _looks_like_section_heading(text: str) -> bool:
+    """Execute the looks like section heading routine."""
     collapsed = re.sub(r"\s+", " ", text).strip()
     if len(collapsed) > 60:
         return False
@@ -2750,6 +2854,7 @@ def _looks_like_section_heading(text: str) -> bool:
 
 
 def _load_member_name_lookup(conn_str: str) -> dict[str, list[tuple[int, str]]]:
+    """Load member name lookup."""
     lookup: dict[str, list[tuple[int, str]]] = {}
     conn = pyodbc.connect(conn_str)
     try:
@@ -2779,6 +2884,7 @@ def _load_member_name_lookup(conn_str: str) -> dict[str, list[tuple[int, str]]]:
 
 
 def _match_member_rows_in_article(text: str, member_lookup: dict[str, list[tuple[int, str]]]) -> list[tuple[int, str]]:
+    """Match member rows in article."""
     matched_rows = set()
     for candidate in _extract_candidate_person_names(text):
         for key in _journal_person_lookup_keys(candidate):
@@ -2789,6 +2895,7 @@ def _match_member_rows_in_article(text: str, member_lookup: dict[str, list[tuple
 
 
 def _journal_person_lookup_keys(value: str) -> set[str]:
+    """Execute the journal person lookup keys routine."""
     key = _normalize_person_name(value)
     if not key:
         return set()
@@ -2798,6 +2905,7 @@ def _journal_person_lookup_keys(value: str) -> set[str]:
 
 
 def _journal_first_name_variants(first_name: str) -> set[str]:
+    """Execute the journal first name variants routine."""
     normalized = (first_name or "").strip().lower()
     if not normalized:
         return set()
@@ -2810,6 +2918,7 @@ def _journal_first_name_variants(first_name: str) -> set[str]:
 
 
 def _journal_first_name_alias_groups() -> list[set[str]]:
+    """Execute the journal first name alias groups routine."""
     groups = [set(group) for group in JOURNAL_FIRST_NAME_ALIAS_GROUPS]
     extra_groups = os.environ.get("JOURNAL_FIRST_NAME_ALIAS_GROUPS", "")
     for raw_group in extra_groups.split(";"):
@@ -2820,6 +2929,7 @@ def _journal_first_name_alias_groups() -> list[set[str]]:
 
 
 def _extract_candidate_person_names(text: str) -> set[str]:
+    """Extract candidate person names."""
     candidates = set()
     nlp = _get_journal_name_nlp()
     if nlp is not None:
@@ -2839,6 +2949,7 @@ def _extract_candidate_person_names(text: str) -> set[str]:
 
 
 def _get_journal_name_nlp():
+    """Return journal name nlp."""
     global _journal_name_nlp, _journal_name_nlp_attempted
     if _journal_name_nlp_attempted:
         return _journal_name_nlp
@@ -2861,6 +2972,7 @@ def _get_journal_name_nlp():
 
 
 def _expand_candidate_person_names(value: str) -> set[str]:
+    """Execute the expand candidate person names routine."""
     tokens = re.findall(r"[A-Za-z]+(?:[-'][A-Za-z]+)?", value or "")
     if len(tokens) < 2:
         return set()
@@ -2875,6 +2987,7 @@ def _expand_candidate_person_names(value: str) -> set[str]:
 
 
 def _strip_journal_name_prefix(tokens: list[str]) -> list[str]:
+    """Execute the strip journal name prefix routine."""
     lowered_tokens = [token.lower() for token in tokens]
     for prefix_tokens in _journal_name_prefix_token_lists():
         prefix_length = len(prefix_tokens)
@@ -2886,6 +2999,7 @@ def _strip_journal_name_prefix(tokens: list[str]) -> list[str]:
 
 
 def _journal_name_prefix_token_lists() -> list[list[str]]:
+    """Execute the journal name prefix token lists routine."""
     configured = list(DEFAULT_JOURNAL_NAME_PREFIXES)
     extra_prefixes = os.environ.get("JOURNAL_NAME_PREFIXES", "")
     configured.extend(prefix.strip() for prefix in extra_prefixes.split(";") if prefix.strip())
@@ -2907,6 +3021,7 @@ def _extract_review_matches_from_blog_entry(
     blog_entry: dict[str, str],
     member_lookup: dict[str, list[tuple[int, str]]],
 ) -> list[dict[str, str | int]]:
+    """Extract review matches from blog entry."""
     blog_html = _fetch_external_html(blog_entry.get("link", ""))
     if not blog_html:
         return []
@@ -2962,6 +3077,7 @@ def _extract_review_matches_from_blog_entry(
 
 
 def _fetch_external_html(url: str) -> Optional[str]:
+    """Fetch external html."""
     clean_url = (url or "").strip()
     if not clean_url.startswith(("http://", "https://")):
         return None
@@ -2984,6 +3100,7 @@ def _fetch_external_html(url: str) -> Optional[str]:
 
 
 def _parse_naol_review_blog_html(html_body: str) -> dict[str, object]:
+    """Parse naol review blog html."""
     lines = _extract_visible_lines_from_html(html_body)
     title = _extract_naol_blog_title(lines, html_body)
     tokens = _extract_naol_review_tokens_from_html(html_body)
@@ -2995,6 +3112,7 @@ def _parse_naol_review_blog_html(html_body: str) -> dict[str, object]:
 
 
 def _extract_naol_blog_title(lines: list[str], html_body: str = "") -> str:
+    """Extract naol blog title."""
     title_match = re.search(r"<title\b[^>]*>(.*?)</title>", html_body or "", re.IGNORECASE | re.DOTALL)
     if title_match:
         title = re.sub(r"\s+", " ", _html_to_text(title_match.group(1))).strip()
@@ -3012,6 +3130,7 @@ def _extract_naol_blog_title(lines: list[str], html_body: str = "") -> str:
 
 
 def _extract_iframe_video_links(html_body: str) -> list[str]:
+    """Extract iframe video links."""
     links = []
     seen = set()
     pattern = re.compile(r"<iframe\b[^>]*src=[\"']([^\"']+)[\"']", re.IGNORECASE)
@@ -3032,6 +3151,7 @@ def _extract_iframe_video_links(html_body: str) -> list[str]:
 
 
 def _extract_naol_review_tokens_from_html(html_body: str) -> list[dict[str, str]]:
+    """Extract naol review tokens from html."""
     parser = _NaolReviewHtmlParser()
     parser.feed(html_body or "")
     parser.close()
@@ -3039,6 +3159,7 @@ def _extract_naol_review_tokens_from_html(html_body: str) -> list[dict[str, str]
 
 
 def _normalize_video_link(url: str) -> str:
+    """Normalize video link."""
     clean_url = (url or "").strip()
     if not clean_url.startswith(("http://", "https://")):
         return clean_url
@@ -3056,6 +3177,7 @@ def _normalize_video_link(url: str) -> str:
 
 
 def _extract_naol_review_sections(tokens: list[dict[str, str]]) -> list[dict[str, object]]:
+    """Extract naol review sections."""
     sections: list[dict[str, object]] = []
     current: Optional[dict[str, object]] = None
     in_post_body = False
@@ -3111,16 +3233,19 @@ def _extract_naol_review_sections(tokens: list[dict[str, str]]) -> list[dict[str
 
 
 def _append_naol_review_section(sections: list[dict[str, object]], section: Optional[dict[str, object]]) -> None:
+    """Execute the append naol review section routine."""
     if not section or not section.get("games") or not section.get("video_link"):
         return
     sections.append({key: value for key, value in section.items() if not key.startswith("_")})
 
 
 def _looks_like_naol_reviewer_header(line: str) -> bool:
+    """Execute the looks like naol reviewer header routine."""
     return _parse_naol_reviewer_header(line) is not None
 
 
 def _parse_naol_reviewer_header(line: str) -> Optional[dict[str, str]]:
+    """Parse naol reviewer header."""
     match = re.match(r"^\s*(?P<name>.+?)\s*\((?P<rank>\d{1,2}[kKdDpP])\)", line)
     if not match:
         return None
@@ -3131,6 +3256,7 @@ def _parse_naol_reviewer_header(line: str) -> Optional[dict[str, str]]:
 
 
 def _parse_naol_game_line(line: str) -> Optional[dict[str, str]]:
+    """Parse naol game line."""
     match = re.match(
         r"^\s*(?P<player_one>.+?)\s+(?P<rank_one>\d{1,2}[kKdDpP])\s+"
         r"(?P<player_two>.+?)\s+(?P<rank_two>\d{1,2}[kKdDpP])\s*[-–—]\s*"
@@ -3149,6 +3275,7 @@ def _parse_naol_game_line(line: str) -> Optional[dict[str, str]]:
 
 
 def _normalize_person_name(value: str) -> Optional[str]:
+    """Normalize person name."""
     tokens = re.findall(r"[A-Za-z]+(?:[-'][A-Za-z]+)?", value or "")
     if len(tokens) < 2:
         return None
@@ -3156,6 +3283,7 @@ def _normalize_person_name(value: str) -> Optional[str]:
 
 
 def _default_membership_expiration_date(received_date: date, member_type: Optional[str]) -> date:
+    """Execute the default membership expiration date routine."""
     normalized_type = (member_type or "").strip().lower()
     if normalized_type == "tournament pass":
         return received_date + timedelta(days=29)
@@ -3163,6 +3291,7 @@ def _default_membership_expiration_date(received_date: date, member_type: Option
 
 
 def _detect_message_report_type(attachments: list[dict]) -> Optional[str]:
+    """Execute the detect message report type routine."""
     for attachment in attachments:
         content_bytes = attachment.get("contentBytes")
         if not content_bytes:
@@ -3174,26 +3303,32 @@ def _detect_message_report_type(attachments: list[dict]) -> Optional[str]:
 
 
 def _detect_attachment_report_type(name: str, content_bytes: bytes) -> Optional[str]:
+    """Execute the detect attachment report type routine."""
     return detect_csv_attachment_report_type(name, content_bytes)
 
 
 def _read_csv_header_canonical(csv_bytes: bytes) -> list[str]:
+    """Read csv header canonical."""
     return csv_read_csv_header_canonical(csv_bytes)
 
 
 def _is_memchap_header(headers: list[str]) -> bool:
+    """Return whether memchap header."""
     return csv_is_memchap_header(headers)
 
 
 def _is_member_category_header(headers: list[str]) -> bool:
+    """Return whether member category header."""
     return csv_is_member_category_header(headers)
 
 
 def _is_chapter_header(headers: list[str]) -> bool:
+    """Return whether chapter header."""
     return csv_is_chapter_header(headers)
 
 
 def _message_body_to_text(message: dict) -> str:
+    """Execute the message body to text routine."""
     payload = message.get("payload") or {}
     text = _extract_message_part_text(payload, "text/plain")
     if text is not None:
@@ -3206,11 +3341,13 @@ def _message_body_to_text(message: dict) -> str:
 
 
 def _message_body_to_html(message: dict) -> Optional[str]:
+    """Execute the message body to html routine."""
     payload = message.get("payload") or {}
     return _extract_message_part_text(payload, "text/html")
 
 
 def _extract_message_part_text(part: dict, mime_type: str) -> Optional[str]:
+    """Extract message part text."""
     if (part.get("mimeType") or "").lower() == mime_type:
         data = ((part.get("body") or {}).get("data"))
         if data:
@@ -3224,6 +3361,7 @@ def _extract_message_part_text(part: dict, mime_type: str) -> Optional[str]:
 
 
 def _html_to_text(value: str) -> str:
+    """Execute the html to text routine."""
     text = re.sub(r"<br\s*/?>", "\n", value, flags=re.IGNORECASE)
     text = re.sub(r"</p\s*>", "\n", text, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", " ", text)
@@ -3231,6 +3369,7 @@ def _html_to_text(value: str) -> str:
 
 
 def _archive_message_artifacts(message_type: str, message: dict, attachments: list[dict]) -> Optional[str]:
+    """Archive message artifacts."""
     container = _archive_container_client()
     if container is None:
         return None
@@ -3264,6 +3403,7 @@ def _archive_message_artifacts(message_type: str, message: dict, attachments: li
 
 
 def _download_archived_attachment_bytes(blob_path: str, attachment_blob_name: str) -> bytes:
+    """Execute the download archived attachment bytes routine."""
     container = _archive_container_client()
     if container is None:
         raise RuntimeError("ClubExpress archive Blob container is not configured.")
@@ -3272,6 +3412,7 @@ def _download_archived_attachment_bytes(blob_path: str, attachment_blob_name: st
 
 
 def _archive_container_client() -> Optional[object]:
+    """Archive container client."""
     container_name = os.environ.get("CLUBEXPRESS_ARCHIVE_CONTAINER")
     if not container_name:
         return None
@@ -3299,14 +3440,17 @@ def _archive_container_client() -> Optional[object]:
 
 
 def _safe_blob_name(value: str) -> str:
+    """Execute the safe blob name routine."""
     return re.sub(r"[^A-Za-z0-9._-]", "_", value)
 
 
 def _message_identifier(message: dict) -> str:
+    """Execute the message identifier routine."""
     return message.get("id") or f"message-{datetime.now(timezone.utc).timestamp()}"
 
 
 def _message_received_at(message: dict) -> datetime:
+    """Execute the message received at routine."""
     internal_date = message.get("internalDate")
     if internal_date:
         return datetime.fromtimestamp(int(internal_date) / 1000, tz=timezone.utc)
@@ -3322,6 +3466,7 @@ def _lookup_members(
     limit: int,
     offset: int,
 ) -> list[dict[str, object]]:
+    """Execute the lookup members routine."""
     effective_limit = min(max(limit, 1), 100)
     effective_offset = max(offset, 0)
 
@@ -3344,6 +3489,7 @@ def _lookup_members(
         conn.close()
 
 def _json_safe_value(value: object) -> object:
+    """Execute the json safe value routine."""
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, date):
@@ -3362,6 +3508,7 @@ def _membership_reward_event_params(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> dict:
+    """Execute the membership reward event params routine."""
     source_payload = {
         "message_id": _message_identifier(message),
         "sender": sender,
@@ -3389,6 +3536,7 @@ def _journal_news_email_params(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> dict:
+    """Execute the journal news email params routine."""
     return {
         "MessageId": _message_identifier(message),
         "ReceivedAt": received_at,
@@ -3410,6 +3558,7 @@ def _chapter_renewal_confirmation_params(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> dict:
+    """Execute the chapter renewal confirmation params routine."""
     source_payload = {
         "message_id": _message_identifier(message),
         "sender": sender,
@@ -3427,10 +3576,12 @@ def _chapter_renewal_confirmation_params(
 
 
 def _rewards_snapshot_date(today: Optional[date] = None) -> date:
+    """Execute the rewards snapshot date routine."""
     return today or date.today()
 
 
 def _rewards_snapshot_params(snapshot_date: date) -> dict:
+    """Execute the rewards snapshot params routine."""
     return {
         "SnapshotDate": snapshot_date,
         "RunType": "daily",
@@ -3439,6 +3590,7 @@ def _rewards_snapshot_params(snapshot_date: date) -> dict:
 
 
 def _rewards_membership_awards_params(as_of_date: date) -> dict:
+    """Execute the rewards membership awards params routine."""
     return {
         "AsOfDate": as_of_date,
         "RunType": "daily",
@@ -3447,6 +3599,7 @@ def _rewards_membership_awards_params(as_of_date: date) -> dict:
 
 
 def _rewards_rated_game_awards_params(game_date: date) -> dict:
+    """Execute the rewards rated game awards params routine."""
     return {
         "GameDateFrom": _rewards_rated_game_awards_start_date(game_date),
         "GameDateTo": game_date,
@@ -3456,6 +3609,7 @@ def _rewards_rated_game_awards_params(game_date: date) -> dict:
 
 
 def _rewards_rated_game_awards_start_date(game_date: date) -> date:
+    """Execute the rewards rated game awards start date routine."""
     configured = (
         os.environ.get("REWARDS_RATED_GAME_AWARDS_DATE_FROM")
         or os.environ.get("REWARDS_LEDGER_START_DATE")
@@ -3474,6 +3628,7 @@ def _rewards_rated_game_awards_start_date(game_date: date) -> date:
 
 
 def _rewards_tournament_awards_params(tournament_date_to: date) -> dict:
+    """Execute the rewards tournament awards params routine."""
     return {
         "TournamentDateFrom": None,
         "TournamentDateTo": tournament_date_to,
@@ -3483,6 +3638,7 @@ def _rewards_tournament_awards_params(tournament_date_to: date) -> dict:
 
 
 def _rewards_point_expirations_params(as_of_date: date) -> dict:
+    """Execute the rewards point expirations params routine."""
     return {
         "AsOfDate": as_of_date,
         "RunType": "daily",
@@ -3500,6 +3656,7 @@ def _chapter_renewal_notice_params(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> dict:
+    """Execute the chapter renewal notice params routine."""
     notices = []
     for row in parsed_rows:
         payload = {
@@ -3537,6 +3694,7 @@ def _send_chapter_renewal_notice_summary_if_configured(
     source_subject: str,
     received_at: datetime,
 ) -> bool:
+    """Send chapter renewal notice summary if configured."""
     recipients = _configured_email_recipients("CHAPTER_RENEWAL_NOTICE_EMAIL_TO")
     if not recipients:
         return False
@@ -3552,6 +3710,7 @@ def _send_chapter_renewal_notice_summary_if_configured(
 
 
 def _coerce_summary_received_at(value: object) -> datetime:
+    """Coerce summary received at."""
     if isinstance(value, datetime):
         return value
     if isinstance(value, date):
@@ -3565,6 +3724,7 @@ def _coerce_summary_received_at(value: object) -> datetime:
 
 
 def _send_pending_chapter_renewals_email_if_configured(access_token: str, rows: list[dict], as_of_date: date) -> bool:
+    """Send pending chapter renewals email if configured."""
     recipients = _configured_email_recipients("CHAPTER_RENEWAL_PENDING_EMAIL_TO")
     if not recipients:
         recipients = _configured_email_recipients("CHAPTER_RENEWAL_NOTICE_EMAIL_TO")
@@ -3582,6 +3742,7 @@ def _send_pending_chapter_renewals_email_if_configured(access_token: str, rows: 
 
 
 def _pending_chapter_renewals_email_body(rows: list[dict], as_of_date: date) -> str:
+    """Execute the pending chapter renewals email body routine."""
     lines = [
         "Chapter Rewards pending ClubExpress renewal follow-up.",
         "",
@@ -3623,6 +3784,7 @@ def _pending_chapter_renewals_email_body(rows: list[dict], as_of_date: date) -> 
 
 
 def _chapter_renewal_notice_summary_body(result_rows: list[dict], source_subject: str, received_at: datetime) -> str:
+    """Execute the chapter renewal notice summary body routine."""
     posted = [row for row in result_rows if str(row.get("Decision") or "").lower() == "posted"]
     already_posted = [row for row in result_rows if str(row.get("Decision") or "").lower() == "already_posted"]
     insufficient = [row for row in result_rows if str(row.get("Decision") or "").lower() == "insufficient_points"]
@@ -3650,6 +3812,7 @@ def _chapter_renewal_notice_summary_body(result_rows: list[dict], source_subject
 
 
 def _chapter_renewal_notice_summary_section(title: str, rows: list[dict]) -> list[str]:
+    """Execute the chapter renewal notice summary section routine."""
     if not rows:
         return [f"{title}: none", ""]
 
@@ -3668,6 +3831,7 @@ def _chapter_renewal_notice_summary_section(title: str, rows: list[dict]) -> lis
 
 
 def _format_email_value(value: object) -> str:
+    """Format email value."""
     if value is None:
         return ""
     if isinstance(value, datetime):
@@ -3678,11 +3842,13 @@ def _format_email_value(value: object) -> str:
 
 
 def _configured_email_recipients(setting_name: str) -> list[str]:
+    """Execute the configured email recipients routine."""
     raw_value = os.environ.get(setting_name, "")
     return [part.strip() for part in re.split(r"[;,]", raw_value) if part.strip()]
 
 
 def _env_positive_int(setting_name: str, default_value: int) -> int:
+    """Execute the env positive int routine."""
     raw_value = os.environ.get(setting_name, "")
     if not raw_value:
         return default_value
@@ -3698,6 +3864,7 @@ def _env_positive_int(setting_name: str, default_value: int) -> int:
 
 
 def _chapter_renewal_notice_decision_counts(result_rows: list[dict]) -> dict[str, int]:
+    """Execute the chapter renewal notice decision counts routine."""
     counts: dict[str, int] = {}
     for row in result_rows:
         decision = str(row.get("Decision") or "").strip().lower()
@@ -3708,14 +3875,17 @@ def _chapter_renewal_notice_decision_counts(result_rows: list[dict]) -> dict[str
 
 
 def _downstream_procedure_calls(procedures: list[DownstreamProcedure]) -> list[tuple[str, dict]]:
+    """Execute the downstream procedure calls routine."""
     return [(procedure.name, procedure.params) for procedure in procedures]
 
 
 def _clubexpress_parsed_event_staging_enabled() -> bool:
+    """Execute the clubexpress parsed event staging enabled routine."""
     return _is_truthy(os.environ.get("CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED", "false"))
 
 
 def _clubexpress_staged_new_member_consumption_enabled() -> bool:
+    """Execute the clubexpress staged new member consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED", "false"))
@@ -3723,6 +3893,7 @@ def _clubexpress_staged_new_member_consumption_enabled() -> bool:
 
 
 def _clubexpress_staged_renewal_consumption_enabled() -> bool:
+    """Execute the clubexpress staged renewal consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED", "false"))
@@ -3730,6 +3901,7 @@ def _clubexpress_staged_renewal_consumption_enabled() -> bool:
 
 
 def _clubexpress_staged_chapter_renewal_notice_consumption_enabled() -> bool:
+    """Execute the clubexpress staged chapter renewal notice consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_CONSUMPTION_ENABLED", "false"))
@@ -3737,6 +3909,7 @@ def _clubexpress_staged_chapter_renewal_notice_consumption_enabled() -> bool:
 
 
 def _clubexpress_staged_memchap_consumption_enabled() -> bool:
+    """Execute the clubexpress staged memchap consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMCHAP_CONSUMPTION_ENABLED", "false"))
@@ -3744,6 +3917,7 @@ def _clubexpress_staged_memchap_consumption_enabled() -> bool:
 
 
 def _clubexpress_staged_chapter_consumption_enabled() -> bool:
+    """Execute the clubexpress staged chapter consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_CHAPTER_CONSUMPTION_ENABLED", "false"))
@@ -3751,6 +3925,7 @@ def _clubexpress_staged_chapter_consumption_enabled() -> bool:
 
 
 def _clubexpress_staged_member_categories_consumption_enabled() -> bool:
+    """Execute the clubexpress staged member categories consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_CONSUMPTION_ENABLED", "false"))
@@ -3758,6 +3933,7 @@ def _clubexpress_staged_member_categories_consumption_enabled() -> bool:
 
 
 def _clubexpress_staged_journal_consumption_enabled() -> bool:
+    """Execute the clubexpress staged journal consumption enabled routine."""
     return (
         _clubexpress_parsed_event_staging_enabled()
         and _is_truthy(os.environ.get("CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED", "false"))
@@ -3765,6 +3941,7 @@ def _clubexpress_staged_journal_consumption_enabled() -> bool:
 
 
 def _record_clubexpress_parsed_event(conn_str: str, parsed_event: ClubExpressParsedEvent) -> None:
+    """Record clubexpress parsed event."""
     if not _clubexpress_parsed_event_staging_enabled():
         return
     _execute_stored_procedure(
@@ -3779,6 +3956,7 @@ def _mark_clubexpress_parsed_event_processed(
     parsed_event: ClubExpressParsedEvent,
     result_payload: dict,
 ) -> None:
+    """Execute the mark clubexpress parsed event processed routine."""
     if not _clubexpress_parsed_event_staging_enabled():
         return
     _execute_stored_procedure(
@@ -3797,6 +3975,7 @@ def _mark_clubexpress_parsed_event_error(
     parsed_event: ClubExpressParsedEvent,
     exc: Exception,
 ) -> None:
+    """Execute the mark clubexpress parsed event error routine."""
     if not _clubexpress_parsed_event_staging_enabled():
         return
     try:
@@ -3814,16 +3993,19 @@ def _mark_clubexpress_parsed_event_error(
 
 
 def _stored_procedure_call(proc_name: str, params: dict) -> tuple[str, list]:
+    """Execute the stored procedure call routine."""
     ordered_items = [(key, value) for key, value in params.items()]
     sql = f"EXEC {proc_name} " + ", ".join(f"@{name} = ?" for name, _ in ordered_items)
     return sql, [value for _, value in ordered_items]
 
 
 def _execute_stored_procedure(conn_str: str, proc_name: str, params: dict) -> None:
+    """Execute stored procedure."""
     _execute_stored_procedures(conn_str, [(proc_name, params)])
 
 
 def _execute_stored_procedure_rows(conn_str: str, proc_name: str, params: dict) -> list[dict]:
+    """Execute stored procedure rows."""
     sql, values = _stored_procedure_call(proc_name, params)
 
     conn = pyodbc.connect(conn_str)
@@ -3845,10 +4027,13 @@ def _execute_stored_procedure_rows(conn_str: str, proc_name: str, params: dict) 
 
 
 class _ClubExpressStagedEventSqlAdapter:
+    """Represent club express staged event sql adapter."""
     def __init__(self, conn_str: str) -> None:
+        """Initialize the club express staged event sql adapter instance."""
         self.conn_str = conn_str
 
     def query_rows(self, query: str, params: Iterable[object] = ()) -> list[dict[str, object]]:
+        """Query rows."""
         conn = pyodbc.connect(self.conn_str)
         try:
             cursor = conn.cursor()
@@ -3863,6 +4048,7 @@ class _ClubExpressStagedEventSqlAdapter:
             conn.close()
 
     def execute_statements(self, statements: Iterable[tuple[str, tuple[object, ...]]]) -> None:
+        """Execute statements."""
         conn = pyodbc.connect(self.conn_str)
         try:
             cursor = conn.cursor()
@@ -3878,6 +4064,7 @@ class _ClubExpressStagedEventSqlAdapter:
 
 
 def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, dict]]) -> None:
+    """Execute stored procedures."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -3894,11 +4081,13 @@ def _execute_stored_procedures(conn_str: str, procedures: Iterable[tuple[str, di
 
 
 def _repo_root() -> Path:
+    """Execute the repo root routine."""
     return Path(__file__).resolve().parent
 
 
 
 def _get_sql_connection_string() -> Optional[str]:
+    """Return sql connection string."""
     conn = os.environ.get("SQL_CONNECTION_STRING")
     if conn:
         return conn
@@ -3916,6 +4105,7 @@ def _get_sql_connection_string() -> Optional[str]:
 
 
 def _get_gmail_access_token() -> str:
+    """Return gmail access token."""
     client_id = _require_env("GOOGLE_WORKSPACE_CLIENT_ID")
     client_secret = _require_env("GOOGLE_WORKSPACE_CLIENT_SECRET")
     refresh_token = _require_env("GOOGLE_WORKSPACE_REFRESH_TOKEN")
@@ -3941,6 +4131,7 @@ def _get_gmail_access_token() -> str:
 
 
 def _list_gmail_messages(access_token: str) -> list[dict]:
+    """List gmail messages."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     max_results = int(os.environ.get("CLUBEXPRESS_MAILBOX_BATCH_SIZE", "10"))
     query_text = os.environ.get(
@@ -3956,6 +4147,7 @@ def _list_gmail_messages(access_token: str) -> list[dict]:
 
 
 def _get_gmail_message(access_token: str, message_id: str) -> dict:
+    """Return gmail message."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     return _gmail_json_request(
         access_token,
@@ -3965,6 +4157,7 @@ def _get_gmail_message(access_token: str, message_id: str) -> dict:
 
 
 def _mark_gmail_message_processed(access_token: str, message: dict) -> None:
+    """Execute the mark gmail message processed routine."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     processed_label = os.environ.get("CLUBEXPRESS_PROCESSED_CATEGORY", "ProcessedByFunction")
     label_id = _ensure_gmail_label(access_token, processed_label)
@@ -3978,6 +4171,7 @@ def _mark_gmail_message_processed(access_token: str, message: dict) -> None:
 
 
 def _ensure_gmail_label(access_token: str, label_name: str) -> str:
+    """Ensure gmail label."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     labels = _gmail_json_request(access_token, f"/users/{parse.quote(mailbox_user)}/labels").get("labels", [])
     for label in labels:
@@ -3998,6 +4192,7 @@ def _ensure_gmail_label(access_token: str, label_name: str) -> str:
 
 
 def _send_gmail_plain_text(access_token: str, recipients: list[str], subject: str, body: str) -> None:
+    """Send gmail plain text."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     sender = os.environ.get("CHAPTER_RENEWAL_NOTICE_EMAIL_FROM", mailbox_user)
 
@@ -4024,6 +4219,7 @@ def _gmail_json_request(
     query: Optional[dict[str, str]] = None,
     body: Optional[dict] = None,
 ) -> dict:
+    """Execute the gmail json request routine."""
     url = GMAIL_API_BASE_URL + path
     if query:
         url += "?" + parse.urlencode(query)
@@ -4050,6 +4246,7 @@ def _gmail_json_request(
 
 
 def _extract_gmail_attachments(access_token: str, message: dict) -> list[dict]:
+    """Extract gmail attachments."""
     attachments = []
     payload = message.get("payload") or {}
     _collect_gmail_attachments(access_token, message, payload, attachments)
@@ -4057,6 +4254,7 @@ def _extract_gmail_attachments(access_token: str, message: dict) -> list[dict]:
 
 
 def _collect_gmail_attachments(access_token: str, message: dict, part: dict, attachments: list[dict]) -> None:
+    """Execute the collect gmail attachments routine."""
     filename = part.get("filename") or ""
     body = part.get("body") or {}
     data = body.get("data")
@@ -4081,6 +4279,7 @@ def _collect_gmail_attachments(access_token: str, message: dict, part: dict, att
 
 
 def _get_gmail_attachment_bytes(access_token: str, message: dict, attachment_id: str) -> bytes:
+    """Return gmail attachment bytes."""
     mailbox_user = _require_env("GOOGLE_WORKSPACE_MAILBOX")
     message_id = _message_identifier(message)
     response = _gmail_json_request(
@@ -4094,6 +4293,7 @@ def _get_gmail_attachment_bytes(access_token: str, message: dict, attachment_id:
 
 
 def _get_header_value(message: dict, header_name: str) -> str:
+    """Return header value."""
     headers = ((message.get("payload") or {}).get("headers") or [])
     for header in headers:
         if (header.get("name") or "").lower() == header_name.lower():
@@ -4102,15 +4302,18 @@ def _get_header_value(message: dict, header_name: str) -> str:
 
 
 def _decode_base64url(value: str) -> bytes:
+    """Decode base64url."""
     padding = '=' * (-len(value) % 4)
     return base64.urlsafe_b64decode(value + padding)
 
 
 def _decode_base64url_to_text(value: str) -> str:
+    """Decode base64url to text."""
     return _decode_base64url(value).decode("utf-8", errors="replace")
 
 
 def _require_env(name: str) -> str:
+    """Execute the require env routine."""
     value = os.environ.get(name)
     if not value:
         raise RuntimeError(f"Missing required application setting {name}.")
@@ -4118,10 +4321,12 @@ def _require_env(name: str) -> str:
 
 
 def _is_truthy(value: str) -> bool:
+    """Return whether truthy."""
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _extract_csv_bytes(req: func.HttpRequest) -> bytes:
+    """Extract csv bytes."""
     body = req.get_body() or b""
     content_type = req.headers.get("content-type", "")
 
@@ -4149,46 +4354,57 @@ def _extract_csv_bytes(req: func.HttpRequest) -> bytes:
 
 
 def _parse_date(value: str) -> date:
+    """Parse date."""
     return csv_parse_date(value)
 
 
 def _parse_datetime(value: str) -> datetime:
+    """Parse datetime."""
     return csv_parse_datetime(value)
 
 
 def _normalize_header(fieldnames: Iterable[Optional[str]]) -> list[str]:
+    """Normalize header."""
     return csv_normalize_header(fieldnames)
 
 
 def _canonicalize_header(value: str) -> str:
+    """Execute the canonicalize header routine."""
     return csv_canonicalize_header(value)
 
 
 def _parse_csv_rows(csv_bytes: bytes) -> list[tuple]:
+    """Parse csv rows."""
     return parse_memchap_rows(csv_bytes)
 
 
 def _parse_member_category_rows(csv_bytes: bytes) -> list[tuple[int, str]]:
+    """Parse member category rows."""
     return parse_csv_member_category_rows(csv_bytes)
 
 
 def _parse_chapter_rows(csv_bytes: bytes) -> list[tuple]:
+    """Parse chapter rows."""
     return parse_csv_chapter_rows(csv_bytes)
 
 
 def _read_csv_matrix(csv_bytes: bytes, *, raise_on_error: bool = True) -> list[list[str]]:
+    """Read csv matrix."""
     return csv_read_csv_matrix(csv_bytes, raise_on_error=raise_on_error)
 
 
 def _decode_csv_text(csv_bytes: bytes) -> str:
+    """Decode csv text."""
     return csv_decode_csv_text(csv_bytes)
 
 
 def _is_member_agaid(agaid: Optional[int]) -> bool:
+    """Return whether member agaid."""
     return csv_is_member_agaid(agaid)
 
 
 def _stage_and_import(conn_str: str, rows: list[tuple]) -> None:
+    """Stage and import."""
     insert_sql = (
         "INSERT INTO staging.memchap ("
         + ", ".join(f"[{column}]" for column in STAGING_COLUMNS)
@@ -4214,6 +4430,7 @@ def _stage_and_import(conn_str: str, rows: list[tuple]) -> None:
 
 
 def _stage_and_import_chapters(conn_str: str, rows: list[tuple]) -> None:
+    """Stage and import chapters."""
     insert_sql = (
         "INSERT INTO staging.chapters ("
         + ", ".join(f"[{column}]" for column in CHAPTER_COLUMNS)
@@ -4239,6 +4456,7 @@ def _stage_and_import_chapters(conn_str: str, rows: list[tuple]) -> None:
 
 
 def _stage_and_import_member_categories(conn_str: str, rows: list[tuple[int, str]]) -> None:
+    """Stage and import member categories."""
     insert_sql = "INSERT INTO staging.member_categories ([AGAID], [Category]) VALUES (?, ?)"
 
     conn = pyodbc.connect(conn_str)

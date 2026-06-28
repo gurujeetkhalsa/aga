@@ -7,7 +7,9 @@ from rewards import tournament_awards
 
 
 class FakeTournamentAwardAdapter:
+    """Represent fake tournament award adapter."""
     def __init__(self, *, preview=None, result=None):
+        """Initialize the fake tournament award adapter instance."""
         self.preview = preview or {
             "RunID": None,
             "TournamentDateFrom": None,
@@ -47,6 +49,7 @@ class FakeTournamentAwardAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if query == tournament_awards.PROCESS_TOURNAMENT_AWARDS_SQL:
             return [self.preview]
@@ -55,17 +58,21 @@ class FakeTournamentAwardAdapter:
         raise AssertionError("Unexpected query")
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class TournamentAwardsTest(unittest.TestCase):
+    """Represent tournament awards test."""
     def test_formula_matches_configured_curve(self):
+        """Verify that formula matches configured curve."""
         self.assertEqual(tournament_awards.calculate_tournament_host_points(15), 0)
         self.assertEqual(tournament_awards.calculate_tournament_host_points(16), 2306)
         self.assertEqual(tournament_awards.calculate_tournament_host_points(350), 514161)
         self.assertEqual(tournament_awards.calculate_tournament_host_points(700), 1000000)
 
     def test_dry_run_returns_preview_without_writes(self):
+        """Verify that dry run returns preview without writes."""
         adapter = FakeTournamentAwardAdapter()
 
         result = tournament_awards.process_tournament_awards(
@@ -85,6 +92,7 @@ class TournamentAwardsTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_write_executes_proc_and_reads_summary(self):
+        """Verify that write executes proc and reads summary."""
         adapter = FakeTournamentAwardAdapter()
 
         result = tournament_awards.process_tournament_awards(
@@ -123,6 +131,7 @@ class TournamentAwardsTest(unittest.TestCase):
         )
 
     def test_rejects_reversed_date_range(self):
+        """Verify that rejects reversed date range."""
         with self.assertRaisesRegex(ValueError, "date_to"):
             tournament_awards.process_tournament_awards(
                 FakeTournamentAwardAdapter(),
@@ -131,6 +140,7 @@ class TournamentAwardsTest(unittest.TestCase):
             )
 
     def test_cli_rejects_date_and_range_together(self):
+        """Verify that cli rejects date and range together."""
         with redirect_stderr(StringIO()):
             with self.assertRaises(SystemExit):
                 tournament_awards.main(

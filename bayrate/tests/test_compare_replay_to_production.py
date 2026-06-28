@@ -7,7 +7,9 @@ from bayrate.compare_replay_to_production import compare_replay_artifact_to_prod
 
 
 class FakeRatingsAdapter:
+    """Represent fake ratings adapter."""
     def query_rows(self, query, params=()):
+        """Query rows."""
         return [
             {
                 "id": 10,
@@ -28,11 +30,14 @@ class FakeRatingsAdapter:
         ]
 
     def execute_statements(self, statements):
+        """Execute statements."""
         raise AssertionError("Replay comparison should not write SQL.")
 
 
 class CompareReplayToProductionTest(unittest.TestCase):
+    """Represent compare replay to production test."""
     def test_compare_replay_artifact_to_production_summarizes_rating_deltas(self) -> None:
+        """Verify that compare replay artifact to production summarizes rating deltas."""
         artifact_path = Path(__file__).parent / "tmp_compare_replay_artifact.json"
         output_path = Path(__file__).parent / "tmp_compare_replay_output.json"
         artifact = {

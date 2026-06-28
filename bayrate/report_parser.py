@@ -15,10 +15,12 @@ try:
     import pyodbc
 except Exception:
     class _MissingPyodbc:
+        """Represent missing pyodbc."""
         Error = Exception
 
         @staticmethod
         def connect(*args, **kwargs):
+            """Execute the connect routine."""
             raise RuntimeError("pyodbc is unavailable in this environment")
 
     pyodbc = _MissingPyodbc()
@@ -98,6 +100,7 @@ CSV_TABLE_SPECS = {
 
 @dataclass
 class ParsedPlayer:
+    """Represent parsed player."""
     agaid: int
     name: str
     raw_strength: str
@@ -106,6 +109,7 @@ class ParsedPlayer:
 
 @dataclass
 class ParsedGame:
+    """Represent parsed game."""
     white_id: int
     black_id: int
     result: str
@@ -116,6 +120,7 @@ class ParsedGame:
 
 @dataclass
 class ParsedUnreportedGame:
+    """Represent parsed unreported game."""
     white_id: int
     black_id: int
     handicap: int
@@ -124,6 +129,7 @@ class ParsedUnreportedGame:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Parse AGA ratings report text into ratings.tournaments and ratings.games rows.")
     parser.add_argument("inputs", nargs="*", type=Path, help="Optional report text files. Reads stdin when omitted.")
     parser.add_argument("--connection-string", help="Optional SQL connection string used for tournament-code reuse and membership warnings.")
@@ -134,6 +140,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     conn_str = args.connection_string or _load_connection_string_optional()
     if args.inputs:
@@ -155,6 +162,7 @@ def parse_reports_to_rows(
     *,
     continue_on_error: bool = False,
 ) -> dict[str, Any]:
+    """Parse reports to rows."""
     parsed_reports = []
     tournament_rows = []
     game_rows = []
@@ -200,6 +208,7 @@ def parse_reports_to_rows(
 
 
 def _parse_error_report_payload(source_name: str, raw_text: str, exc: Exception, source_ordinal: int) -> dict[str, Any]:
+    """Parse error report payload."""
     title = _best_effort_title(raw_text) or Path(source_name).name or f"Report {source_ordinal}"
     parse_error = str(exc) or exc.__class__.__name__
     return {
@@ -239,6 +248,7 @@ def _parse_error_report_payload(source_name: str, raw_text: str, exc: Exception,
 
 
 def _best_effort_title(raw_text: str) -> str | None:
+    """Execute the best effort title routine."""
     lines = raw_text.splitlines()
     for idx, line in enumerate(lines):
         header_match = HEADER_RE.match(line)
@@ -260,6 +270,7 @@ def _best_effort_title(raw_text: str) -> str | None:
 
 
 def parse_report_to_rows(raw_text: str, conn_str: str | None = None) -> dict[str, Any]:
+    """Parse report to rows."""
     report_lines = _extract_report_lines(raw_text)
     parsed = _parse_report_sections(report_lines)
 
@@ -346,6 +357,7 @@ def parse_report_to_rows(raw_text: str, conn_str: str | None = None) -> dict[str
 
 
 def _players_payload(players: dict[int, ParsedPlayer]) -> list[dict[str, Any]]:
+    """Execute the players payload routine."""
     return [
         {
             "agaid": player.agaid,
@@ -358,6 +370,7 @@ def _players_payload(players: dict[int, ParsedPlayer]) -> list[dict[str, Any]]:
 
 
 def _extract_report_lines(raw_text: str) -> list[str]:
+    """Extract report lines."""
     lines = raw_text.splitlines()
     start_idx = None
     for idx, line in enumerate(lines):
@@ -370,6 +383,7 @@ def _extract_report_lines(raw_text: str) -> list[str]:
 
 
 def _parse_report_sections(lines: list[str]) -> dict[str, Any]:
+    """Parse report sections."""
     if not lines:
         raise ValueError("Report is empty after extracting tournament block.")
 
@@ -522,6 +536,7 @@ def _parse_report_sections(lines: list[str]) -> dict[str, Any]:
 
 
 def _parse_players(lines: list[str], start_idx: int) -> tuple[dict[int, ParsedPlayer], int]:
+    """Parse players."""
     players: dict[int, ParsedPlayer] = {}
     idx = start_idx
     while idx < len(lines):
@@ -567,6 +582,7 @@ def _parse_games(
     lines: list[str],
     start_idx: int,
 ) -> tuple[list[ParsedGame], list[ParsedUnreportedGame], set[int], int, list[int | None]]:
+    """Parse games."""
     games: list[ParsedGame] = []
     unreported_games: list[ParsedUnreportedGame] = []
     round_numbers: set[int] = set()
@@ -620,6 +636,7 @@ def _consume_game_tokens(
     unreported_games: list[ParsedUnreportedGame],
     current_round: str | None,
 ) -> None:
+    """Execute the consume game tokens routine."""
     while len(buffer) >= 5:
         if not INT_TOKEN_RE.match(buffer[0]) or not INT_TOKEN_RE.match(buffer[1]):
             raise ValueError(f"Game row has invalid player IDs near tokens: {buffer[:5]}")
@@ -646,6 +663,7 @@ def _flush_game_buffer(
     unreported_games: list[ParsedUnreportedGame],
     current_round: str | None,
 ) -> None:
+    """Execute the flush game buffer routine."""
     if not buffer:
         return
     if len(buffer) % 5 != 0:
@@ -654,6 +672,7 @@ def _flush_game_buffer(
 
 
 def _next_nonempty_line(lines: list[str], start_idx: int) -> tuple[int, str] | None:
+    """Execute the next nonempty line routine."""
     idx = start_idx
     while idx < len(lines):
         stripped = lines[idx].strip()
@@ -664,11 +683,13 @@ def _next_nonempty_line(lines: list[str], start_idx: int) -> tuple[int, str] | N
 
 
 def _is_strength_token(value: str) -> bool:
+    """Return whether strength token."""
     text = value.strip()
     return bool(RANK_TOKEN_RE.match(text) or NUMERIC_STRENGTH_RE.match(text))
 
 
 def _normalize_strength(value: str) -> str:
+    """Normalize strength."""
     text = value.strip()
     if RANK_TOKEN_RE.match(text):
         return text.lower()
@@ -678,6 +699,7 @@ def _normalize_strength(value: str) -> str:
 
 
 def _numeric_strength_to_rank(value: str) -> str:
+    """Execute the numeric strength to rank routine."""
     rating = float(value)
     if rating >= 0:
         return f"{math.floor(rating)}d"
@@ -685,6 +707,7 @@ def _numeric_strength_to_rank(value: str) -> str:
 
 
 def _normalize_komi(value: str) -> int:
+    """Normalize komi."""
     text = value.strip()
     if not KOMI_TOKEN_RE.match(text):
         raise ValueError(f"Unsupported komi value {value!r}")
@@ -692,12 +715,14 @@ def _normalize_komi(value: str) -> int:
 
 
 def _parse_date_required(value: Any, field_name: str) -> date:
+    """Parse date required."""
     if value is None:
         raise ValueError(f"{field_name} is missing.")
     return _parse_date(str(value))
 
 
 def _parse_date(value: str) -> date:
+    """Parse date."""
     text = value.strip()
     for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y"):
         try:
@@ -708,6 +733,7 @@ def _parse_date(value: str) -> date:
 
 
 def _strip_quotes(value: str) -> str:
+    """Execute the strip quotes routine."""
     text = value.strip()
     if len(text) >= 2 and text[0] == text[-1] and text[0] in {"'", '"'}:
         return text[1:-1]
@@ -715,6 +741,7 @@ def _strip_quotes(value: str) -> str:
 
 
 def _parse_location(metadata: dict[str, Any], title: str) -> tuple[str | None, str | None, str | None, list[dict[str, Any]]]:
+    """Parse location."""
     warnings: list[dict[str, Any]] = []
     location = metadata.get("location")
     if location:
@@ -727,6 +754,7 @@ def _parse_location(metadata: dict[str, Any], title: str) -> tuple[str | None, s
 
 
 def _parse_location_text(location_text: str) -> tuple[str | None, str | None, str | None]:
+    """Parse location text."""
     cleaned = location_text.strip()
     parts = [part.strip() for part in cleaned.split(",") if part.strip()]
     if not parts:
@@ -737,6 +765,7 @@ def _parse_location_text(location_text: str) -> tuple[str | None, str | None, st
 
 
 def _infer_location_from_title(title: str) -> tuple[str | None, str | None, str | None]:
+    """Execute the infer location from title routine."""
     parts = [part.strip() for part in title.split(",") if part.strip()]
     if len(parts) >= 2 and STATE_CODE_RE.match(parts[-1]):
         return parts[-2], parts[-1].upper(), "US"
@@ -744,6 +773,7 @@ def _infer_location_from_title(title: str) -> tuple[str | None, str | None, str 
 
 
 def _resolve_tournament_code(title: str, start_date: date, conn_str: str | None) -> tuple[str, list[dict[str, Any]]]:
+    """Execute the resolve tournament code routine."""
     warnings: list[dict[str, Any]] = []
     normalized_title = _normalize_title_for_match(title)
     if conn_str:
@@ -779,6 +809,7 @@ def _resolve_tournament_code(title: str, start_date: date, conn_str: str | None)
 
 
 def _find_existing_tournament_codes(conn_str: str, start_date: date, normalized_title: str) -> list[dict[str, Any]]:
+    """Find existing tournament codes."""
     sql = """
 SELECT Tournament_Code, Tournament_Descr
 FROM ratings.tournaments
@@ -798,6 +829,7 @@ WHERE Tournament_Date = ?
 
 
 def _normalize_title_for_match(title: str) -> str:
+    """Normalize title for match."""
     ascii_text = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
     words = NORMALIZE_TITLE_WORD_RE.findall(ascii_text.lower())
     normalized = []
@@ -810,6 +842,7 @@ def _normalize_title_for_match(title: str) -> str:
 
 
 def _generate_tournament_code(title: str, start_date: date) -> str:
+    """Execute the generate tournament code routine."""
     ascii_text = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii").lower()
     words = [word for word in NORMALIZE_TITLE_WORD_RE.findall(ascii_text) if word not in STOP_WORDS]
     if not words:
@@ -819,6 +852,7 @@ def _generate_tournament_code(title: str, start_date: date) -> str:
 
 
 def _load_membership_expirations(conn_str: str, player_ids: Any) -> dict[int, date | None]:
+    """Load membership expirations."""
     player_ids = sorted(set(int(player_id) for player_id in player_ids))
     if not player_ids:
         return {}
@@ -843,6 +877,7 @@ def _build_membership_warnings(
     game_date: date,
     tournament_code: str,
 ) -> list[dict[str, Any]]:
+    """Build membership warnings."""
     warnings: list[dict[str, Any]] = []
     if membership_map is None:
         return warnings
@@ -888,6 +923,7 @@ def _build_membership_warnings(
 
 
 def _load_connection_string_optional() -> str | None:
+    """Load connection string optional."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn and conn.strip():
         return conn
@@ -906,6 +942,7 @@ def _load_connection_string_optional() -> str | None:
 
 
 def _infer_rounds_from_game_order(games: list[ParsedGame]) -> list[int]:
+    """Execute the infer rounds from game order routine."""
     inferred_round_numbers: list[int] = []
     current_round = 1
     players_in_round: set[int] = set()
@@ -922,6 +959,7 @@ def _infer_rounds_from_game_order(games: list[ParsedGame]) -> list[int]:
     return inferred_round_numbers
 
 def _write_csv_exports(output_dir: Path, payload: dict[str, Any]) -> None:
+    """Write csv exports."""
     output_dir.mkdir(parents=True, exist_ok=True)
     tournament_path = output_dir / "tournaments.csv"
     games_path = output_dir / "games.csv"
@@ -932,6 +970,7 @@ def _write_csv_exports(output_dir: Path, payload: dict[str, Any]) -> None:
 
 
 def _write_csv_rows(csv_path: Path, columns: tuple[str, ...], rows: list[dict[str, Any]]) -> None:
+    """Write csv rows."""
     with csv_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(columns), extrasaction="ignore")
         writer.writeheader()
@@ -940,6 +979,7 @@ def _write_csv_rows(csv_path: Path, columns: tuple[str, ...], rows: list[dict[st
 
 
 def _format_csv_value(value: Any) -> str:
+    """Format csv value."""
     if value is None:
         return ""
     if isinstance(value, date):

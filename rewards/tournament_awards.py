@@ -22,15 +22,19 @@ STATE_CHAMPIONSHIP_POINTS = 200000
 
 
 class TournamentAwardSqlAdapter(Protocol):
+    """Represent tournament award sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class TournamentAwardResult:
+    """Represent tournament award result data."""
     date_from: date | None
     date_to: date
     dry_run: bool
@@ -52,6 +56,7 @@ class TournamentAwardResult:
     missing_reward_event_key_count: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "date_from": self.date_from.isoformat() if self.date_from else None,
             "date_to": self.date_to.isoformat(),
@@ -113,6 +118,7 @@ def calculate_tournament_host_points(
     max_support: int = MAX_SUPPORT,
     exponent: float = EXPONENT,
 ) -> int:
+    """Calculate tournament host points."""
     _validate_formula_parameters(
         min_games=min_games,
         max_games=max_games,
@@ -144,6 +150,7 @@ def process_tournament_awards(
     state_source_type: str = STATE_SOURCE_TYPE,
     rule_version: str = RULE_VERSION,
 ) -> TournamentAwardResult:
+    """Process tournament awards."""
     date_to = date_to or date.today()
     if date_from and date_to < date_from:
         raise ValueError("date_to must be on or after date_from.")
@@ -211,6 +218,7 @@ def _validate_formula_parameters(
     exponent: float,
     state_championship_points: int,
 ) -> None:
+    """Validate formula parameters."""
     if min_games < 0:
         raise ValueError("min_games must be nonnegative.")
     if max_games <= min_games:
@@ -224,6 +232,7 @@ def _validate_formula_parameters(
 
 
 def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> TournamentAwardResult:
+    """Execute the result from row routine."""
     return TournamentAwardResult(
         date_from=_coerce_date(row.get("TournamentDateFrom")),
         date_to=_coerce_date(row.get("TournamentDateTo")) or date.today(),
@@ -248,18 +257,21 @@ def _result_from_row(row: dict[str, Any], *, dry_run: bool) -> TournamentAwardRe
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def _coerce_date(value: Any) -> date | None:
+    """Coerce date."""
     if value is None:
         return None
     if isinstance(value, date):
@@ -268,6 +280,7 @@ def _coerce_date(value: Any) -> date | None:
 
 
 def print_award_result(result: TournamentAwardResult, output: TextIO) -> None:
+    """Execute the print award result routine."""
     label = "Tournament Awards Preview" if result.dry_run else "Tournament Awards"
     print(label, file=output)
     start = result.date_from.isoformat() if result.date_from else "all"
@@ -288,6 +301,7 @@ def print_award_result(result: TournamentAwardResult, output: TextIO) -> None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Award AGA Chapter Rewards points for hosted tournaments.")
     parser.add_argument("--date", type=parse_snapshot_date, help="Single event date in YYYY-MM-DD format.")
     parser.add_argument("--date-from", type=parse_snapshot_date, help="Start event date in YYYY-MM-DD format.")

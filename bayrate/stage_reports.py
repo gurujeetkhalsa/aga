@@ -166,14 +166,18 @@ NAME_TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
 class StageSqlAdapter(Protocol):
+    """Represent stage sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 def reserve_bayrate_run_id(adapter: StageSqlAdapter) -> int:
+    """Execute the reserve bayrate run id routine."""
     rows = adapter.query_rows(BAYRATE_NEXT_RUN_ID_SQL)
     if not rows:
         raise ValueError("Could not reserve a BayRate RunID.")
@@ -181,6 +185,7 @@ def reserve_bayrate_run_id(adapter: StageSqlAdapter) -> int:
 
 
 def assign_payload_run_id(payload: dict[str, Any], run_id: int | str) -> dict[str, Any]:
+    """Execute the assign payload run id routine."""
     run_identifier = _coerce_run_id(run_id)
     payload["run_id"] = run_identifier
     for entry in payload.get("staged_tournaments") or []:
@@ -191,6 +196,7 @@ def assign_payload_run_id(payload: dict[str, Any], run_id: int | str) -> dict[st
 
 
 def ensure_payload_run_id(payload: dict[str, Any], adapter: StageSqlAdapter) -> dict[str, Any]:
+    """Ensure payload run id."""
     if payload.get("run_id") is None:
         assign_payload_run_id(payload, reserve_bayrate_run_id(adapter))
     else:
@@ -200,6 +206,7 @@ def ensure_payload_run_id(payload: dict[str, Any], adapter: StageSqlAdapter) -> 
 
 @dataclass
 class ProductionTournamentCandidate:
+    """Represent production tournament candidate."""
     tournament_code: str
     tournament_descr: str | None = None
     tournament_date: date | None = None
@@ -211,10 +218,12 @@ class ProductionTournamentCandidate:
 
     @property
     def normalized_title(self) -> str:
+        """Execute the normalized title routine."""
         return _normalize_title_for_match(self.tournament_descr or "")
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Stage one or more AGA tournament reports for a future BayRate run.")
     parser.add_argument("inputs", nargs="+", type=Path, help="Report text files to parse and stage.")
     parser.add_argument("--connection-string", help="SQL connection string. Defaults to SQL_CONNECTION_STRING/local.settings.json.")
@@ -226,6 +235,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     try:
         adapter: StageSqlAdapter | None = None
@@ -258,6 +268,7 @@ def stage_report_files(
     run_id: int | str | None = None,
     today: date | None = None,
 ) -> dict[str, Any]:
+    """Stage report files."""
     if adapter is None and connection_string:
         adapter = SqlAdapter(connection_string)
     if adapter is None and not dry_run:
@@ -285,6 +296,7 @@ def build_staging_payload(
     today: date | None = None,
     report_metadata: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    """Build staging payload."""
     run_identifier = _coerce_run_id(run_id) if run_id is not None else None
     processing_date = today or date.today()
     parsed = parse_reports_to_rows(reports, continue_on_error=True)
@@ -536,12 +548,14 @@ def build_staging_payload(
 
 
 def _initial_code_source(parser_warnings: list[dict[str, Any]]) -> str:
+    """Execute the initial code source routine."""
     if any(warning.get("type") == "generated_tournament_code" for warning in parser_warnings):
         return "generated"
     return "parser"
 
 
 def _unique_generated_tournament_code(base_code: str, reserved_codes: set[str]) -> str:
+    """Execute the unique generated tournament code routine."""
     base = str(base_code or "").strip()[:32] or "generated"
     if base not in reserved_codes:
         return base
@@ -554,6 +568,7 @@ def _unique_generated_tournament_code(base_code: str, reserved_codes: set[str]) 
 
 
 def validate_tournament_row(tournament_row: dict[str, Any], game_rows: list[dict[str, Any]]) -> list[str]:
+    """Validate tournament row."""
     errors = []
     for column in ("Tournament_Code", "Tournament_Descr", "Tournament_Date", "Elab_Date"):
         if _is_blank(tournament_row.get(column)):
@@ -567,6 +582,7 @@ def validate_tournament_row(tournament_row: dict[str, Any], game_rows: list[dict
 
 
 def validate_game_row(game_row: dict[str, Any]) -> list[str]:
+    """Validate game row."""
     errors = []
     required_columns = (
         "Tournament_Code",
@@ -611,6 +627,7 @@ def validate_game_row(game_row: dict[str, Any]) -> list[str]:
 
 
 def build_tournament_age_warning(tournament_date: Any, *, today: date | None = None) -> dict[str, Any] | None:
+    """Build tournament age warning."""
     event_date = _coerce_date(tournament_date)
     if event_date is None:
         return None
@@ -641,6 +658,7 @@ def validate_tournament_memberships(
     today: date | None = None,
     membership_records: dict[int, dict[str, Any]] | None = None,
 ) -> list[str]:
+    """Validate tournament memberships."""
     return [
         str(warning.get("message") or warning.get("type"))
         for warning in build_membership_validation_warnings(
@@ -661,6 +679,7 @@ def build_membership_validation_warnings(
     today: date | None = None,
     membership_records: dict[int, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
+    """Build membership validation warnings."""
     event_date = _coerce_date(tournament_date)
     if event_date is None:
         return []
@@ -720,10 +739,12 @@ def build_membership_validation_warnings(
 
 
 def warning_requires_review(warning: dict[str, Any]) -> bool:
+    """Execute the warning requires review routine."""
     return bool(warning.get("review_required") or warning.get("severity") == "review")
 
 
 def review_reason_for_warnings(warnings: list[dict[str, Any]]) -> str | None:
+    """Execute the review reason for warnings routine."""
     if not warnings:
         return None
     messages = [str(warning.get("message") or warning.get("type") or "Review required.") for warning in warnings]
@@ -737,6 +758,7 @@ def build_membership_name_warnings(
     player_rows: list[dict[str, Any]],
     membership_records: dict[int, dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Build membership name warnings."""
     warnings: list[dict[str, Any]] = []
     for player in player_rows:
         player_id = _coerce_int(player.get("agaid") or player.get("AGAID"))
@@ -771,6 +793,7 @@ def build_rank_mismatch_warnings(
     game_rows: list[dict[str, Any]],
     player_rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Build rank mismatch warnings."""
     event_date = _coerce_date(tournament_date)
     if event_date is None:
         return []
@@ -830,6 +853,7 @@ def build_rank_mismatch_warnings(
 
 
 def load_membership_records(adapter: StageSqlAdapter, player_ids: Iterable[int]) -> dict[int, dict[str, Any]]:
+    """Load membership records."""
     distinct_player_ids = _distinct_player_ids(player_ids)
     if not distinct_player_ids:
         return {}
@@ -857,6 +881,7 @@ def load_membership_records(adapter: StageSqlAdapter, player_ids: Iterable[int])
 
 
 def load_membership_expirations(adapter: StageSqlAdapter, player_ids: Iterable[int]) -> dict[int, date | None]:
+    """Load membership expirations."""
     return {
         player_id: record.get("expiration_date")
         for player_id, record in load_membership_records(adapter, player_ids).items()
@@ -868,6 +893,7 @@ def load_current_ratings_before_date(
     player_ids: Iterable[int],
     event_date: date,
 ) -> dict[int, dict[str, Any]]:
+    """Load current ratings before date."""
     distinct_player_ids = _distinct_player_ids(player_ids)
     if not distinct_player_ids:
         return {}
@@ -886,6 +912,7 @@ def load_current_ratings_before_date(
 
 
 def _distinct_player_ids(player_ids: Iterable[int]) -> list[int]:
+    """Execute the distinct player ids routine."""
     return sorted(
         {
             player_id
@@ -896,6 +923,7 @@ def _distinct_player_ids(player_ids: Iterable[int]) -> list[int]:
 
 
 def _entry_ranks_by_player(game_rows: list[dict[str, Any]]) -> dict[int, str]:
+    """Execute the entry ranks by player routine."""
     ranks: dict[int, str] = {}
     for row in game_rows:
         for player_column, rank_column in (("Pin_Player_1", "Rank_1"), ("Pin_Player_2", "Rank_2")):
@@ -907,6 +935,7 @@ def _entry_ranks_by_player(game_rows: list[dict[str, Any]]) -> dict[int, str]:
 
 
 def _normalize_rank_text(value: Any) -> str | None:
+    """Normalize rank text."""
     text = _clean_text(value)
     if text is None:
         return None
@@ -915,6 +944,7 @@ def _normalize_rank_text(value: Any) -> str | None:
 
 
 def _rank_index(rank_text: str | None) -> int | None:
+    """Execute the rank index routine."""
     if rank_text is None:
         return None
     text = str(rank_text).strip().lower().replace(" ", "")
@@ -935,6 +965,7 @@ def _rank_index(rank_text: str | None) -> int | None:
 
 
 def _rating_to_compact_rank(rating: float | None) -> str | None:
+    """Execute the rating to compact rank routine."""
     if rating is None:
         return None
     if rating >= 1:
@@ -943,6 +974,7 @@ def _rating_to_compact_rank(rating: float | None) -> str | None:
 
 
 def _names_compatible(left: str, right: str) -> bool:
+    """Execute the names compatible routine."""
     left_tokens = _name_tokens(left)
     right_tokens = _name_tokens(right)
     if not left_tokens or not right_tokens:
@@ -957,6 +989,7 @@ def _names_compatible(left: str, right: str) -> bool:
 
 
 def _token_set_compatible(shorter: set[str], longer: set[str]) -> bool:
+    """Execute the token set compatible routine."""
     if len(shorter) > len(longer):
         return False
     for token in shorter:
@@ -969,11 +1002,13 @@ def _token_set_compatible(shorter: set[str], longer: set[str]) -> bool:
 
 
 def _name_tokens(value: str) -> tuple[str, ...]:
+    """Execute the name tokens routine."""
     ascii_text = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii").lower()
     return tuple(NAME_TOKEN_RE.findall(ascii_text))
 
 
 def _row_value(row: dict[str, Any], key: str) -> Any:
+    """Execute the row value routine."""
     if key in row:
         return row[key]
     lowered = key.lower()
@@ -984,6 +1019,7 @@ def _row_value(row: dict[str, Any], key: str) -> Any:
 
 
 def _is_blank(value: Any) -> bool:
+    """Return whether blank."""
     if value is None:
         return True
     if isinstance(value, str) and not value.strip():
@@ -997,6 +1033,7 @@ def load_production_candidates(
     *,
     window_days: int = DUPLICATE_DATE_WINDOW_DAYS,
 ) -> list[ProductionTournamentCandidate]:
+    """Load production candidates."""
     parsed_date = _coerce_date(tournament_date)
     if parsed_date is None:
         return []
@@ -1034,6 +1071,7 @@ def find_likely_duplicate(
     game_rows: list[dict[str, Any]],
     candidates: list[ProductionTournamentCandidate],
 ) -> dict[str, Any] | None:
+    """Find likely duplicate."""
     staged_code = str(tournament_row.get("Tournament_Code") or "").strip()
     staged_players = _players_from_games(game_rows)
     staged_games = {signature for row in game_rows if (signature := _game_signature(row)) is not None}
@@ -1075,6 +1113,7 @@ def duplicate_score_parts(
     staged_games: set[tuple[Any, ...]],
     candidate: ProductionTournamentCandidate,
 ) -> dict[str, float]:
+    """Execute the duplicate score parts routine."""
     staged_title = _normalize_title_for_match(tournament_row.get("Tournament_Descr") or "")
     title_score = _token_jaccard(staged_title, candidate.normalized_title)
     staged_date = _coerce_date(tournament_row.get("Tournament_Date"))
@@ -1090,6 +1129,7 @@ def duplicate_score_parts(
 
 
 def _token_jaccard(left: str, right: str) -> float:
+    """Execute the token jaccard routine."""
     left_tokens = set(left.split())
     right_tokens = set(right.split())
     if not left_tokens and not right_tokens:
@@ -1100,6 +1140,7 @@ def _token_jaccard(left: str, right: str) -> float:
 
 
 def _date_score(left: date | None, right: date | None) -> float:
+    """Execute the date score routine."""
     if left is None or right is None:
         return 0.0
     days = abs((left - right).days)
@@ -1113,6 +1154,7 @@ def _date_score(left: date | None, right: date | None) -> float:
 
 
 def _location_score(tournament_row: dict[str, Any], candidate: ProductionTournamentCandidate) -> float:
+    """Execute the location score routine."""
     city = _clean_text(tournament_row.get("City"))
     state = _clean_text(tournament_row.get("State_Code"))
     country = _clean_text(tournament_row.get("Country_Code"))
@@ -1131,12 +1173,14 @@ def _location_score(tournament_row: dict[str, Any], candidate: ProductionTournam
 
 
 def _overlap_score(left: set[Any], right: set[Any]) -> float:
+    """Execute the overlap score routine."""
     if not left or not right:
         return 0.0
     return len(left & right) / min(len(left), len(right))
 
 
 def _players_from_games(game_rows: list[dict[str, Any]]) -> set[int]:
+    """Execute the players from games routine."""
     players = set()
     for row in game_rows:
         for column in ("Pin_Player_1", "Pin_Player_2"):
@@ -1147,6 +1191,7 @@ def _players_from_games(game_rows: list[dict[str, Any]]) -> set[int]:
 
 
 def _game_signature(row: dict[str, Any]) -> tuple[Any, ...] | None:
+    """Execute the game signature routine."""
     player_1 = _coerce_int(row.get("Pin_Player_1"))
     player_2 = _coerce_int(row.get("Pin_Player_2"))
     if player_1 is None or player_2 is None:
@@ -1165,6 +1210,7 @@ def _game_signature(row: dict[str, Any]) -> tuple[Any, ...] | None:
 
 
 def rollup_status(statuses: list[str]) -> str:
+    """Execute the rollup status routine."""
     if any(status == "validation_failed" for status in statuses):
         return "validation_failed"
     if any(status == "needs_review" for status in statuses):
@@ -1175,6 +1221,7 @@ def rollup_status(statuses: list[str]) -> str:
 
 
 def refresh_payload_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    """Refresh payload summary."""
     tournaments = payload.get("staged_tournaments") or []
     games = payload.get("staged_games") or []
     payload["tournament_count"] = len(tournaments)
@@ -1188,6 +1235,7 @@ def refresh_payload_summary(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def apply_report_metadata_to_tournament_row(tournament_row: dict[str, Any], metadata: dict[str, Any] | None) -> None:
+    """Apply report metadata to tournament row."""
     if not metadata:
         return
     text_fields = {
@@ -1228,6 +1276,7 @@ def apply_tournament_review_decision(
     reward_event_name: str | None = None,
     reward_is_state_championship: Any = None,
 ) -> dict[str, Any]:
+    """Apply tournament review decision."""
     tournament = _find_staged_tournament(payload, source_report_ordinal)
     if tournament is None:
         raise ValueError(f"Source report ordinal {source_report_ordinal} was not found in staged payload.")
@@ -1316,6 +1365,7 @@ def set_tournament_reward_event(
     reward_event_name: str | None = None,
     reward_is_state_championship: Any = None,
 ) -> None:
+    """Set tournament reward event."""
     row = tournament["tournament_row"]
     key = _clean_text(reward_event_key) if reward_event_key is not None else _clean_text(row.get("Reward_Event_Key"))
     name = _clean_text(reward_event_name) if reward_event_name is not None else _clean_text(row.get("Reward_Event_Name"))
@@ -1343,6 +1393,7 @@ def set_tournament_host_chapter(
     host_chapter_code: str | None = None,
     host_chapter_name: str | None = None,
 ) -> None:
+    """Set tournament host chapter."""
     row = tournament["tournament_row"]
     parsed_id = _coerce_int(host_chapter_id)
     if parsed_id is None:
@@ -1367,6 +1418,7 @@ def set_tournament_host_chapter(
 
 
 def _find_staged_tournament(payload: dict[str, Any], source_report_ordinal: int) -> dict[str, Any] | None:
+    """Find staged tournament."""
     for tournament in payload.get("staged_tournaments") or []:
         if tournament.get("source_report_ordinal") == source_report_ordinal:
             return tournament
@@ -1374,6 +1426,7 @@ def _find_staged_tournament(payload: dict[str, Any], source_report_ordinal: int)
 
 
 def _staged_games_for_tournament(payload: dict[str, Any], source_report_ordinal: int) -> list[dict[str, Any]]:
+    """Execute the staged games for tournament routine."""
     return [
         game
         for game in payload.get("staged_games") or []
@@ -1382,6 +1435,7 @@ def _staged_games_for_tournament(payload: dict[str, Any], source_report_ordinal:
 
 
 def build_insert_statements(payload: dict[str, Any]) -> list[SqlStatement]:
+    """Build insert statements."""
     if payload.get("run_id") is None:
         raise ValueError("Cannot write BayRate staging rows before a RunID has been reserved.")
     statements: list[SqlStatement] = []
@@ -1574,6 +1628,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
 
 def load_staged_run(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, Any]:
+    """Load staged run."""
     run_identifier = _coerce_run_id(run_id)
     run_rows = adapter.query_rows(
         """
@@ -1690,6 +1745,7 @@ ORDER BY [Source_Report_Ordinal], [Source_Game_Ordinal]
 
 
 def build_review_update_statements(payload: dict[str, Any]) -> list[SqlStatement]:
+    """Build review update statements."""
     statements: list[SqlStatement] = []
     for entry in payload.get("staged_tournaments") or []:
         row = entry["tournament_row"]
@@ -1806,10 +1862,12 @@ WHERE [RunID] = ?
 
 
 def update_staged_run_review(adapter: StageSqlAdapter, payload: dict[str, Any]) -> None:
+    """Update staged run review."""
     adapter.execute_statements(build_review_update_statements(refresh_payload_summary(payload)))
 
 
 def load_host_chapter_options(adapter: StageSqlAdapter) -> list[dict[str, Any]]:
+    """Load host chapter options."""
     rows = adapter.query_rows(HOST_CHAPTER_OPTIONS_SQL)
     options: list[dict[str, Any]] = []
     seen_ids: set[int] = set()
@@ -1841,6 +1899,7 @@ def load_host_chapter_options(adapter: StageSqlAdapter) -> list[dict[str, Any]]:
 
 
 def explain_staged_run_review(adapter: StageSqlAdapter, payload: dict[str, Any]) -> dict[str, Any]:
+    """Execute the explain staged run review routine."""
     explanations = []
     for tournament in payload.get("staged_tournaments") or []:
         explanations.append(explain_staged_tournament_review(adapter, payload, tournament))
@@ -1855,6 +1914,7 @@ def explain_staged_tournament_review(
     payload: dict[str, Any],
     tournament: dict[str, Any],
 ) -> dict[str, Any]:
+    """Execute the explain staged tournament review routine."""
     row = tournament["tournament_row"]
     duplicate = tournament.get("duplicate_candidate") or {}
     duplicate_code = duplicate.get("tournament_code")
@@ -1892,12 +1952,14 @@ def explain_staged_tournament_review(
 
 
 def load_production_tournament_game_rows(adapter: StageSqlAdapter, tournament_code: str | None) -> list[dict[str, Any]]:
+    """Load production tournament game rows."""
     if not tournament_code:
         return []
     return adapter.query_rows(PRODUCTION_TOURNAMENT_GAMES_SQL, (tournament_code,))
 
 
 def load_same_date_production_tournaments(adapter: StageSqlAdapter, tournament_date: Any) -> list[dict[str, Any]]:
+    """Load same date production tournaments."""
     parsed_date = _coerce_date(tournament_date)
     if parsed_date is None:
         return []
@@ -1908,6 +1970,7 @@ def compare_staged_to_production_games(
     staged_game_entries: list[dict[str, Any]],
     production_game_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    """Compare staged to production games."""
     staged_by_signature: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
     production_by_signature: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
 
@@ -1952,6 +2015,7 @@ def compare_staged_to_production_games(
 
 
 def _format_staged_game_for_review(entry: dict[str, Any]) -> dict[str, Any]:
+    """Format staged game for review."""
     row = entry["game_row"]
     return {
         "source_game_ordinal": entry.get("source_game_ordinal"),
@@ -1966,6 +2030,7 @@ def _format_staged_game_for_review(entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def _format_production_game_for_review(row: dict[str, Any]) -> dict[str, Any]:
+    """Format production game for review."""
     return {
         "game_id": row.get("Game_ID"),
         "game_date": _json_default(row.get("Game_Date")),
@@ -1979,12 +2044,14 @@ def _format_production_game_for_review(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _signature_sort_key(signature: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Execute the signature sort key routine."""
     game_date = signature[0]
     date_key = game_date.isoformat() if isinstance(game_date, date) else str(game_date)
     return (date_key, *(str("" if item is None else item) for item in signature[1:]))
 
 
 def _payload_tournament_from_sql_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the payload tournament from sql row routine."""
     duplicate_code = row.get("Duplicate_Candidate_Code")
     duplicate_candidate = None
     if duplicate_code:
@@ -2032,6 +2099,7 @@ def _payload_tournament_from_sql_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _payload_game_from_sql_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Execute the payload game from sql row routine."""
     return {
         "run_id": _coerce_run_id(row.get("RunID")),
         "source_report_ordinal": int(row.get("Source_Report_Ordinal")),
@@ -2063,6 +2131,7 @@ def _payload_game_from_sql_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def bayrate_game_csv_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Execute the bayrate game csv rows routine."""
     rows = []
     columns = CSV_TABLE_SPECS["games"]
     for entry in payload["staged_games"]:
@@ -2074,6 +2143,7 @@ def bayrate_game_csv_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def printable_payload(payload: dict[str, Any], *, include_games: bool = False) -> dict[str, Any]:
+    """Execute the printable payload routine."""
     result = {
         "run_id": payload["run_id"],
         "status": payload["status"],
@@ -2135,6 +2205,7 @@ def printable_payload(payload: dict[str, Any], *, include_games: bool = False) -
 
 
 def _coerce_date(value: Any) -> date | None:
+    """Coerce date."""
     if isinstance(value, datetime):
         return value.date()
     if isinstance(value, date):
@@ -2153,6 +2224,7 @@ def _coerce_date(value: Any) -> date | None:
 
 
 def _coerce_int(value: Any) -> int | None:
+    """Coerce int."""
     if value is None:
         return None
     try:
@@ -2165,6 +2237,7 @@ def _coerce_int(value: Any) -> int | None:
 
 
 def _coerce_bool(value: Any) -> bool:
+    """Coerce bool."""
     if isinstance(value, bool):
         return value
     if value is None:
@@ -2178,6 +2251,7 @@ def _coerce_bool(value: Any) -> bool:
 
 
 def _coerce_run_id(value: Any) -> int:
+    """Coerce run id."""
     if value is None:
         raise ValueError("BayRate RunID is required.")
     text = str(value).strip()
@@ -2193,6 +2267,7 @@ def _coerce_run_id(value: Any) -> int:
 
 
 def _coerce_float(value: Any) -> float | None:
+    """Coerce float."""
     if value is None:
         return None
     try:
@@ -2205,6 +2280,7 @@ def _coerce_float(value: Any) -> float | None:
 
 
 def _clean_text(value: Any) -> str | None:
+    """Clean text."""
     if value is None:
         return None
     text = str(value).strip()
@@ -2212,10 +2288,12 @@ def _clean_text(value: Any) -> str | None:
 
 
 def _has_host_chapter(row: dict[str, Any]) -> bool:
+    """Return whether host chapter."""
     return _coerce_int(row.get("Host_ChapterID")) is not None and bool(_clean_text(row.get("Host_ChapterCode")))
 
 
 def _ensure_reward_event_defaults(row: dict[str, Any]) -> None:
+    """Ensure reward event defaults."""
     if not _clean_text(row.get("Reward_Event_Key")):
         row["Reward_Event_Key"] = _clean_text(row.get("Tournament_Code"))
     if not _clean_text(row.get("Reward_Event_Name")):
@@ -2223,6 +2301,7 @@ def _ensure_reward_event_defaults(row: dict[str, Any]) -> None:
 
 
 def _host_chapter_label(row: dict[str, Any]) -> str | None:
+    """Execute the host chapter label routine."""
     code = _clean_text(row.get("Host_ChapterCode"))
     name = _clean_text(row.get("Host_ChapterName"))
     if code and name:
@@ -2231,6 +2310,7 @@ def _host_chapter_label(row: dict[str, Any]) -> str | None:
 
 
 def _host_chapter_required_warning() -> dict[str, Any]:
+    """Execute the host chapter required warning routine."""
     return {
         "type": "host_chapter_required",
         "severity": "review",
@@ -2240,6 +2320,7 @@ def _host_chapter_required_warning() -> dict[str, Any]:
 
 
 def _json_default(value: Any) -> Any:
+    """Execute the json default routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     if isinstance(value, set):
@@ -2250,10 +2331,12 @@ def _json_default(value: Any) -> Any:
 
 
 def _json_dumps(value: Any) -> str:
+    """Execute the json dumps routine."""
     return json.dumps(value, default=_json_default, sort_keys=True)
 
 
 def _json_loads(value: Any, default: Any) -> Any:
+    """Execute the json loads routine."""
     if value is None:
         return default
     if not isinstance(value, str):
@@ -2268,6 +2351,7 @@ def _json_loads(value: Any, default: Any) -> Any:
 
 
 def _float_or_none(value: Any) -> float | None:
+    """Execute the float or none routine."""
     if value is None:
         return None
     try:

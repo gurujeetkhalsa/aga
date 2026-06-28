@@ -6,7 +6,9 @@ from rewards import snapshot_generator as snapshots
 
 
 class FakeAdapter:
+    """Represent fake adapter."""
     def __init__(self, *, existing=None, preview=None, result=None):
+        """Initialize the fake adapter instance."""
         self.existing = existing or {
             "ExistingMemberSnapshotCount": 0,
             "ExistingChapterSnapshotCount": 0,
@@ -26,6 +28,7 @@ class FakeAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if query == snapshots.SNAPSHOT_EXISTING_COUNTS_SQL:
             return [self.existing]
@@ -36,11 +39,14 @@ class FakeAdapter:
         raise AssertionError("Unexpected query")
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class SnapshotGeneratorTest(unittest.TestCase):
+    """Represent snapshot generator test."""
     def test_dry_run_returns_preview_without_writes(self):
+        """Verify that dry run returns preview without writes."""
         adapter = FakeAdapter()
 
         result = snapshots.create_daily_snapshot(adapter, date(2026, 5, 2), dry_run=True)
@@ -52,6 +58,7 @@ class SnapshotGeneratorTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_existing_snapshot_requires_replace(self):
+        """Verify that existing snapshot requires replace."""
         adapter = FakeAdapter(
             existing={
                 "ExistingMemberSnapshotCount": 10,
@@ -65,6 +72,7 @@ class SnapshotGeneratorTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_write_passes_replace_flag_and_returns_result(self):
+        """Verify that write passes replace flag and returns result."""
         adapter = FakeAdapter()
 
         result = snapshots.create_daily_snapshot(adapter, date(2026, 5, 2), run_type="manual", replace=True)
@@ -77,6 +85,7 @@ class SnapshotGeneratorTest(unittest.TestCase):
         self.assertEqual(params, (date(2026, 5, 2), "manual", snapshots.MAX_MEMBER_AGAID, True))
 
     def test_parse_snapshot_date_rejects_bad_format(self):
+        """Verify that parse snapshot date rejects bad format."""
         with self.assertRaises(argparse.ArgumentTypeError):
             snapshots.parse_snapshot_date("05/02/2026")
 

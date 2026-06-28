@@ -128,6 +128,7 @@ ORDER BY r.[Pin_Player], r.[Elab_Date], r.[id]
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description="Export a local CSV dataset for BayRate sigma experiments.")
     parser.add_argument("--min-game-date", required=True, help="Benchmark window start date, YYYY-MM-DD.")
     parser.add_argument("--max-game-date", help="Optional benchmark window end date, YYYY-MM-DD.")
@@ -137,6 +138,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     connection_string = args.connection_string or get_sql_connection_string()
     if not connection_string:
@@ -168,6 +170,7 @@ def export_experiment_dataset(
     min_game_date: date,
     max_game_date: date | None = None,
 ) -> dict[str, Any]:
+    """Export experiment dataset."""
     output_dir.mkdir(parents=True, exist_ok=True)
     max_date_param = max_game_date
     game_params = (min_game_date, max_date_param, max_date_param, min_game_date, max_date_param, max_date_param)
@@ -203,6 +206,7 @@ def export_experiment_dataset(
 
 
 def write_csv(path: Path, columns: list[str], rows: Iterable[dict[str, Any]], *, include_header: bool) -> None:
+    """Write csv."""
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns)
         if include_header:
@@ -212,6 +216,7 @@ def write_csv(path: Path, columns: list[str], rows: Iterable[dict[str, Any]], *,
 
 
 def _csv_value(value: Any) -> Any:
+    """Execute the csv value routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     if value is None:
@@ -220,6 +225,7 @@ def _csv_value(value: Any) -> Any:
 
 
 def _json_default(value: Any) -> Any:
+    """Execute the json default routine."""
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     return str(value)

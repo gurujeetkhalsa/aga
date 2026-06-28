@@ -12,6 +12,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class AlgorithmStyle:
+    """Represent algorithm style."""
     key: str
     label: str
     color: str
@@ -25,6 +26,7 @@ ALGORITHMS = [
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("simulation_dir", type=Path, help="Directory containing metadata.json and player_trajectories.csv.")
     parser.add_argument("--name", default="catchup_cumulative_reached", help="Output filename stem.")
@@ -33,6 +35,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     simulation_dir = args.simulation_dir
     metadata = json.loads((simulation_dir / "metadata.json").read_text(encoding="utf-8"))
@@ -93,15 +96,18 @@ def main() -> None:
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read csv."""
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return list(csv.DictReader(handle))
 
 
 def self_promote_groups(player_rows: list[dict[str, str]]) -> dict[str, str]:
+    """Execute the self promote groups routine."""
     return {row["simulation_player_id"]: row["self_promote"] for row in player_rows}
 
 
 def count_groups(player_groups: dict[str, str]) -> dict[str, int]:
+    """Execute the count groups routine."""
     counts = {"False": 0, "True": 0}
     for value in player_groups.values():
         counts[value] += 1
@@ -115,6 +121,7 @@ def first_reach_days(
     total_days: int,
     player_groups: dict[str, str] | None = None,
 ) -> dict[str, list[int]]:
+    """Execute the first reach days routine."""
     reached_by_algorithm: dict[str, dict[str, int]] = {}
     for row in rows:
         if row["reached"] != "True":
@@ -141,6 +148,7 @@ def build_series(
     total_players: int,
     total_days: int,
 ) -> dict[str, object]:
+    """Build series."""
     points = [{"day": 0, "pct": 0.0}]
     reached = 0
     index = 0
@@ -172,6 +180,7 @@ def write_chart_data(
     series: list[dict[str, object]],
     total_days: int,
 ) -> None:
+    """Write chart data."""
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=["algorithm", "day", "month", "reached", "total", "percent"])
         writer.writeheader()
@@ -205,6 +214,7 @@ def write_svg(
     metadata: dict[str, object],
     subtitle: str,
 ) -> None:
+    """Write svg."""
     width = 1100
     height = 700
     margin_left = 82
@@ -215,12 +225,15 @@ def write_svg(
     inner_height = height - margin_top - margin_bottom
 
     def x(day: float) -> float:
+        """Execute the x routine."""
         return margin_left + day / total_days * inner_width
 
     def y(percent: float) -> float:
+        """Execute the y routine."""
         return margin_top + (100 - percent) / 100 * inner_height
 
     def path_for(points: list[dict[str, float]]) -> str:
+        """Execute the path for routine."""
         parts = []
         for index, point in enumerate(points):
             command = "M" if index == 0 else "L"
@@ -310,6 +323,7 @@ def write_svg(
 
 
 def escape_xml(value: object) -> str:
+    """Execute the escape xml routine."""
     return (
         str(value)
         .replace("&", "&amp;")

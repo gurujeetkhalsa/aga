@@ -70,18 +70,22 @@ _capture_container_client = None
 
 
 def _now_utc() -> str:
+    """Execute the now utc routine."""
     return datetime.now(timezone.utc).isoformat()
 
 
 def _as_multi_value_dict(items: dict[str, str]) -> dict[str, list[str]]:
+    """Execute the as multi value dict routine."""
     return {key: [value] for key, value in items.items()}
 
 
 def _query_from_url(url: str) -> dict[str, list[str]]:
+    """Query from url."""
     return parse.parse_qs(parse.urlsplit(url).query, keep_blank_values=True)
 
 
 def _url_with_query(url: str, params: dict[str, str]) -> str:
+    """Execute the url with query routine."""
     parts = parse.urlsplit(url)
     query_items = parse.parse_qsl(parts.query, keep_blank_values=True)
     query_items.extend((key, value) for key, value in params.items() if value is not None)
@@ -97,11 +101,13 @@ def _url_with_query(url: str, params: dict[str, str]) -> str:
 
 
 def _redacted_value(value: Any) -> str:
+    """Execute the redacted value routine."""
     text = "" if value is None else str(value)
     return f"[redacted length={len(text)}]"
 
 
 def _redact_url(url: str) -> str:
+    """Execute the redact url routine."""
     parts = parse.urlsplit(url)
     query_items = []
     for key, value in parse.parse_qsl(parts.query, keep_blank_values=True):
@@ -121,6 +127,7 @@ def _redact_url(url: str) -> str:
 
 
 def _looks_like_sensitive_url(value: str) -> bool:
+    """Execute the looks like sensitive url routine."""
     if "?" not in value:
         return False
 
@@ -132,6 +139,7 @@ def _looks_like_sensitive_url(value: str) -> bool:
 
 
 def _redact_text(text: str) -> str:
+    """Execute the redact text routine."""
     if not text:
         return text
 
@@ -155,6 +163,7 @@ def _redact_text(text: str) -> str:
 
 
 def _sanitize_for_output(value: Any, key_name: str = "") -> Any:
+    """Execute the sanitize for output routine."""
     lowered_key = key_name.lower()
     if lowered_key in SENSITIVE_QUERY_KEYS or lowered_key in SENSITIVE_HEADER_KEYS:
         return _redacted_value(value)
@@ -181,10 +190,12 @@ def _sanitize_for_output(value: Any, key_name: str = "") -> Any:
 
 
 def _header_dict(req: func.HttpRequest) -> dict[str, str]:
+    """Execute the header dict routine."""
     return {key: value for key, value in req.headers.items()}
 
 
 def _cookies_from_header(headers: dict[str, str]) -> dict[str, str]:
+    """Execute the cookies from header routine."""
     cookie_header = headers.get("cookie") or headers.get("Cookie") or ""
     if not cookie_header:
         return {}
@@ -195,16 +206,19 @@ def _cookies_from_header(headers: dict[str, str]) -> dict[str, str]:
 
 
 def _body_text(body: bytes) -> tuple[str, bool]:
+    """Execute the body text routine."""
     clipped = body[:MAX_CAPTURE_BYTES]
     text = clipped.decode("utf-8", errors="replace")
     return text, len(body) > MAX_CAPTURE_BYTES
 
 
 def _content_type(headers: dict[str, str]) -> str:
+    """Execute the content type routine."""
     return (headers.get("content-type") or headers.get("Content-Type") or "").lower()
 
 
 def _parsed_body(body_text: str, content_type: str) -> dict[str, Any] | None:
+    """Execute the parsed body routine."""
     if not body_text:
         return None
 
@@ -221,15 +235,18 @@ def _parsed_body(body_text: str, content_type: str) -> dict[str, Any] | None:
 
 
 def _request_url_without_query(url: str) -> str:
+    """Execute the request url without query routine."""
     parts = parse.urlsplit(url)
     return parse.urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
 
 
 def _authorization_url() -> str:
+    """Execute the authorization url routine."""
     return OAUTH_AUTHORIZE_URL or f"{CLUBEXPRESS_CLUB_DOMAIN}/content.aspx"
 
 
 def _dedupe_urls(urls: list[str]) -> list[str]:
+    """Execute the dedupe urls routine."""
     seen = set()
     deduped = []
     for url in urls:
@@ -242,6 +259,7 @@ def _dedupe_urls(urls: list[str]) -> list[str]:
 
 
 def _token_urls() -> list[str]:
+    """Execute the token urls routine."""
     if OAUTH_TOKEN_URLS:
         return _dedupe_urls(
             [url for url in OAUTH_TOKEN_URLS.replace("\n", ",").split(",")]
@@ -264,11 +282,13 @@ def _token_urls() -> list[str]:
 
 
 def _basic_auth_header(client_id: str, client_secret: str) -> str:
+    """Execute the basic auth header routine."""
     credentials = f"{client_id}:{client_secret}".encode("utf-8")
     return f"Basic {base64.b64encode(credentials).decode('ascii')}"
 
 
 def _callback_url_for_request(req: func.HttpRequest, probe_token: str) -> str:
+    """Execute the callback url for request routine."""
     if OAUTH_REDIRECT_URI:
         return OAUTH_REDIRECT_URI
 
@@ -289,6 +309,7 @@ def _callback_url_for_request(req: func.HttpRequest, probe_token: str) -> str:
 
 
 def _build_authorization_start(req: func.HttpRequest, probe_token: str) -> dict[str, str]:
+    """Build authorization start."""
     client_id = req.params.get("client_id") or OAUTH_CLIENT_ID
     if not client_id:
         raise ValueError("Missing CLUBEXPRESS_OAUTH_CLIENT_ID app setting or client_id query parameter.")
@@ -318,6 +339,7 @@ def _build_authorization_start(req: func.HttpRequest, probe_token: str) -> dict[
 
 
 def _build_capture(req: func.HttpRequest, probe_token: str) -> dict[str, Any]:
+    """Build capture."""
     body = req.get_body()
     body_text, body_clipped = _body_text(body)
     headers = _header_dict(req)
@@ -356,11 +378,13 @@ def _build_capture(req: func.HttpRequest, probe_token: str) -> dict[str, Any]:
 
 
 def _remember_capture(capture: dict[str, Any]) -> None:
+    """Execute the remember capture routine."""
     _captures.append(capture)
     del _captures[:-CAPTURE_LIMIT]
 
 
 def _get_capture_container_client():
+    """Return capture container client."""
     global _capture_container_client
 
     if _capture_container_client is not None:
@@ -390,6 +414,7 @@ def _get_capture_container_client():
 
 
 def _persist_capture(capture: dict[str, Any]) -> dict[str, Any]:
+    """Execute the persist capture routine."""
     container_client = _get_capture_container_client()
     if container_client is None:
         return {"persisted": False, "reason": "blob storage unavailable; retained in memory only"}
@@ -414,6 +439,7 @@ def _persist_capture(capture: dict[str, Any]) -> dict[str, Any]:
 
 
 def _recent_persisted_captures(limit: int) -> tuple[list[dict[str, Any]], str | None]:
+    """Execute the recent persisted captures routine."""
     container_client = _get_capture_container_client()
     if container_client is None:
         return [], "blob storage unavailable"
@@ -435,6 +461,7 @@ def _recent_persisted_captures(limit: int) -> tuple[list[dict[str, Any]], str | 
 
 
 def _json_response(payload: dict[str, Any] | list[dict[str, Any]], status_code: int = 200) -> func.HttpResponse:
+    """Execute the json response routine."""
     return func.HttpResponse(
         json.dumps(payload, indent=2, sort_keys=True),
         status_code=status_code,
@@ -443,10 +470,12 @@ def _json_response(payload: dict[str, Any] | list[dict[str, Any]], status_code: 
 
 
 def _is_authorized_probe_token(probe_token: str) -> bool:
+    """Return whether authorized probe token."""
     return not EXPECTED_PROBE_TOKEN or probe_token == EXPECTED_PROBE_TOKEN
 
 
 def _first_capture_value(capture: dict[str, Any], *names: str) -> str | None:
+    """Execute the first capture value routine."""
     lowered_names = {name.lower() for name in names}
     query = capture.get("query", {})
     for key, values in query.items():
@@ -462,6 +491,7 @@ def _first_capture_value(capture: dict[str, Any], *names: str) -> str | None:
 
 
 def _parse_response_body(body_text: str) -> Any:
+    """Parse response body."""
     if not body_text:
         return ""
 
@@ -484,6 +514,7 @@ def _parse_response_body(body_text: str) -> Any:
 
 
 def _decode_http_body(raw_body: bytes, headers: Any) -> str:
+    """Decode http body."""
     encoding = ""
     try:
         encoding = (headers.get("Content-Encoding") or "").lower()
@@ -506,6 +537,7 @@ def _decode_http_body(raw_body: bytes, headers: Any) -> str:
 
 
 def _first_nested_value(value: Any, *names: str) -> str | None:
+    """Execute the first nested value routine."""
     lowered_names = {name.lower() for name in names}
     if isinstance(value, dict):
         for key, item in value.items():
@@ -526,6 +558,7 @@ def _first_nested_value(value: Any, *names: str) -> str | None:
 
 
 def _member_number_from_response(capture: dict[str, Any], token_body: Any) -> str | None:
+    """Execute the member number from response routine."""
     return (
         _first_capture_value(capture, "member_number", "membernumber", "member_no", "member")
         or _first_nested_value(
@@ -541,6 +574,7 @@ def _member_number_from_response(capture: dict[str, Any], token_body: Any) -> st
 
 
 def _try_fetch_member_info(access_token: str, member_number: str | None = None) -> dict[str, Any]:
+    """Execute the try fetch member info routine."""
     params = {"access_token": access_token}
     if member_number:
         params["member_number"] = member_number
@@ -577,6 +611,7 @@ def _try_fetch_member_info(access_token: str, member_number: str | None = None) 
 
 
 def _try_exchange_authorization_code(capture: dict[str, Any]) -> dict[str, Any] | None:
+    """Execute the try exchange authorization code routine."""
     code = _first_capture_value(capture, "code")
     if not code:
         return None
@@ -700,6 +735,7 @@ def _try_exchange_authorization_code(capture: dict[str, Any]) -> dict[str, Any] 
     methods=["GET"],
 )
 def clubexpress_sso_probe_start(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the clubexpress-sso-probe-start/{probe_token} Azure Function endpoint."""
     probe_token = req.route_params.get("probe_token", "")
     if not _is_authorized_probe_token(probe_token):
         return _json_response({"error": "not found"}, status_code=HTTPStatus.NOT_FOUND)
@@ -755,6 +791,7 @@ def clubexpress_sso_probe_start(req: func.HttpRequest) -> func.HttpResponse:
     methods=["GET", "POST", "OPTIONS"],
 )
 def clubexpress_sso_probe(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the clubexpress-sso-probe/{probe_token} Azure Function endpoint."""
     probe_token = req.route_params.get("probe_token", "")
     if not _is_authorized_probe_token(probe_token):
         return _json_response({"error": "not found"}, status_code=HTTPStatus.NOT_FOUND)
@@ -788,6 +825,7 @@ def clubexpress_sso_probe(req: func.HttpRequest) -> func.HttpResponse:
     methods=["GET"],
 )
 def clubexpress_sso_probe_start_short(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the s/{probe_token} Azure Function endpoint."""
     return clubexpress_sso_probe_start(req)
 
 
@@ -797,6 +835,7 @@ def clubexpress_sso_probe_start_short(req: func.HttpRequest) -> func.HttpRespons
     methods=["GET", "POST", "OPTIONS"],
 )
 def clubexpress_sso_probe_short(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the c/{probe_token} Azure Function endpoint."""
     return clubexpress_sso_probe(req)
 
 
@@ -806,6 +845,7 @@ def clubexpress_sso_probe_short(req: func.HttpRequest) -> func.HttpResponse:
     methods=["GET"],
 )
 def clubexpress_sso_probe_last(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the clubexpress-sso-probe-last/{probe_token} Azure Function endpoint."""
     probe_token = req.route_params.get("probe_token", "")
     if not _is_authorized_probe_token(probe_token):
         return _json_response({"error": "not found"}, status_code=HTTPStatus.NOT_FOUND)
@@ -833,4 +873,5 @@ def clubexpress_sso_probe_last(req: func.HttpRequest) -> func.HttpResponse:
     methods=["GET"],
 )
 def clubexpress_sso_probe_last_short(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the l/{probe_token} Azure Function endpoint."""
     return clubexpress_sso_probe_last(req)

@@ -22,12 +22,15 @@ from research.bayrate_sigma.simulate_improver_catchup import (
 
 
 class SimulateImproverCatchupTest(unittest.TestCase):
+    """Represent simulate improver catchup test."""
     def test_one_rank_stronger_handles_kyu_dan_boundary(self) -> None:
+        """Verify that one rank stronger handles kyu dan boundary."""
         self.assertAlmostEqual(one_rank_stronger(-2.5), -1.5)
         self.assertAlmostEqual(one_rank_stronger(-1.5), 1.5)
         self.assertAlmostEqual(one_rank_stronger(1.5), 2.5)
 
     def test_activity_parser_and_schedule(self) -> None:
+        """Verify that activity parser and schedule."""
         self.assertEqual(parse_activity_levels("low:8, high:50"), [("low", 8), ("high", 50)])
 
         dates = scheduled_dates(date(2026, 1, 1), games_per_year=8, years=1.0, rng=random.Random(1))
@@ -37,12 +40,14 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertEqual(dates, sorted(dates))
 
     def test_sigma_band_boundaries(self) -> None:
+        """Verify that sigma band boundaries."""
         self.assertEqual(sigma_band(0.24), "narrow_<0.25")
         self.assertEqual(sigma_band(0.25), "medium_0.25_to_<0.50")
         self.assertEqual(sigma_band(0.50), "wide_0.50_to_<0.90")
         self.assertEqual(sigma_band(0.90), "very_wide_>=0.90")
 
     def test_surprise_sigma_config_is_opt_in(self) -> None:
+        """Verify that surprise sigma config is opt in."""
         game = GameRecord(
             source_game_id=1,
             tournament_code="SIM",
@@ -82,6 +87,7 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertGreater(surprise_white.sigma_after, baseline_white.sigma_after)
 
     def test_surprise_persistence_can_wait_for_repeated_surprise(self) -> None:
+        """Verify that surprise persistence can wait for repeated surprise."""
         games = [
             GameRecord(
                 source_game_id=1,
@@ -150,6 +156,7 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertGreater(persistent_white_second.sigma_after, one_event_white_second.sigma_after)
 
     def test_shannon_surprise_mode_uses_log_observed_probability(self) -> None:
+        """Verify that shannon surprise mode uses log observed probability."""
         game = GameRecord(
             source_game_id=1,
             tournament_code="SIM",
@@ -203,6 +210,7 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertGreater(shannon_white.sigma_after, residual_white.sigma_after)
 
     def test_shannon_excess_is_centered_around_expectation(self) -> None:
+        """Verify that shannon excess is centered around expectation."""
         predicted = 0.75
         win_excess = _signed_observed_information_excess(1.0, predicted)
         loss_excess = _signed_observed_information_excess(0.0, predicted)
@@ -212,6 +220,7 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertLess(loss_excess, 0.0)
 
     def test_volatility_trigger_scales_by_explainable_variance(self) -> None:
+        """Verify that volatility trigger scales by explainable variance."""
         narrow = _signed_volatility_trigger_score(
             rating_score=4.0,
             rating_information=4.0,
@@ -233,6 +242,7 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertLess(negative, 0.0)
 
     def test_volatility_min_pre_post_uses_smaller_remaining_jump(self) -> None:
+        """Verify that volatility min pre post uses smaller remaining jump."""
         score = _signed_surprise_sigma_score(
             pre_residual=0.0,
             post_residual=0.0,
@@ -252,6 +262,7 @@ class SimulateImproverCatchupTest(unittest.TestCase):
         self.assertLess(score, 0.5)
 
     def test_hybrid_volatility_keeps_stored_sigma_cool_and_carries_temporary_boost(self) -> None:
+        """Verify that hybrid volatility keeps stored sigma cool and carries temporary boost."""
         sigma_after, _persistence, temporary_boost = _calc_posterior_sigma_after_noise(
             0.2,
             surprise_residual=0.0,

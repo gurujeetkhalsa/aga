@@ -14,6 +14,7 @@ from typing import Iterable
 
 @dataclass(frozen=True)
 class HistoryPoint:
+    """Represent history point."""
     date: datetime
     rating: float
     sigma: float
@@ -22,6 +23,7 @@ class HistoryPoint:
 
 @dataclass(frozen=True)
 class HistorySeries:
+    """Represent history series."""
     label: str
     points: list[HistoryPoint]
     line_color: str
@@ -32,6 +34,7 @@ class HistorySeries:
 
 
 def _parse_date(value: str) -> datetime | None:
+    """Parse date."""
     text = (value or "").strip()
     if not text:
         return None
@@ -42,6 +45,7 @@ def _parse_date(value: str) -> datetime | None:
 
 
 def _parse_float(value: str) -> float | None:
+    """Parse float."""
     text = (value or "").strip()
     if not text:
         return None
@@ -52,6 +56,7 @@ def _parse_float(value: str) -> float | None:
 
 
 def read_official_ratings(path: Path, agaid: int) -> list[HistoryPoint]:
+    """Read official ratings."""
     points: list[HistoryPoint] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.reader(handle)
@@ -68,6 +73,7 @@ def read_official_ratings(path: Path, agaid: int) -> list[HistoryPoint]:
 
 
 def read_player_results(path: Path, agaid: int) -> list[HistoryPoint]:
+    """Read player results."""
     points: list[HistoryPoint] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -84,6 +90,7 @@ def read_player_results(path: Path, agaid: int) -> list[HistoryPoint]:
 
 
 def chart_rating(value: float) -> float:
+    """Execute the chart rating routine."""
     if value <= -1.0:
         return value
     if value >= 1.0:
@@ -92,12 +99,14 @@ def chart_rating(value: float) -> float:
 
 
 def chart_tick_label(tick: int) -> str:
+    """Execute the chart tick label routine."""
     if tick == -1:
         return "1/-1"
     return f"{tick + 2:d}" if tick >= 0 else f"{tick:d}"
 
 
 def _points_extent(series: Iterable[HistorySeries]) -> tuple[datetime, datetime, float, float]:
+    """Execute the points extent routine."""
     all_points = [point for item in series for point in item.points]
     if not all_points:
         raise ValueError("No history points were found for the requested AGAID.")
@@ -114,6 +123,7 @@ def _points_extent(series: Iterable[HistorySeries]) -> tuple[datetime, datetime,
 
 
 def render_overlay_svg(agaid: int, series: list[HistorySeries], title: str | None = None) -> str:
+    """Render overlay svg."""
     non_empty_series = [item for item in series if item.points]
     if not non_empty_series:
         raise ValueError(f"No history points found for AGAID {agaid}.")
@@ -129,19 +139,24 @@ def render_overlay_svg(agaid: int, series: list[HistorySeries], title: str | Non
     plot_h = height - top - bottom
 
     def x_pos(dt: datetime) -> float:
+        """Execute the x pos routine."""
         total_days = (max_date - min_date).days or 1
         return left + (((dt - min_date).days) / total_days) * plot_w
 
     def y_pos(rating: float) -> float:
+        """Execute the y pos routine."""
         return top + ((max_chart_rating - chart_rating(rating)) / (max_chart_rating - min_chart_rating)) * plot_h
 
     def y_pos_chart(chart_value: float) -> float:
+        """Execute the y pos chart routine."""
         return top + ((max_chart_rating - chart_value) / (max_chart_rating - min_chart_rating)) * plot_h
 
     def polyline(points: list[HistoryPoint]) -> str:
+        """Execute the polyline routine."""
         return " ".join(f"{x_pos(point.date):.2f},{y_pos(point.rating):.2f}" for point in points)
 
     def sigma_band(points: list[HistoryPoint]) -> str:
+        """Execute the sigma band routine."""
         upper = [
             f"{x_pos(point.date):.2f},{y_pos_chart(chart_rating(point.rating) + point.sigma):.2f}"
             for point in points
@@ -236,6 +251,7 @@ def render_overlay_svg(agaid: int, series: list[HistorySeries], title: str | Non
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """Build arg parser."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agaid", type=int, required=True, help="AGA player id to render.")
     parser.add_argument("--official-ratings", type=Path, help="Headerless official ratings CSV.")
@@ -248,6 +264,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """Run the command-line entry point for this module."""
     args = build_arg_parser().parse_args()
     series: list[HistorySeries] = []
     if args.official_ratings:

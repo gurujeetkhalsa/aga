@@ -46,6 +46,7 @@ INIT_SIGMA_S = [
 
 @dataclass(slots=True)
 class BayrateConfig:
+    """Store bayrate configuration."""
     allow_online_games: bool = False
     min_game_date: date | None = None
     max_game_date: date | None = None
@@ -67,17 +68,21 @@ class BayrateConfig:
 
 @dataclass(slots=True)
 class CsvRowError:
+    """Represent csv row error failures."""
     path: Path
     line_number: int
     column: str
     message: str
 
     def format(self) -> str:
+        """Execute the format routine."""
         return f"{self.path}:{self.line_number}: {self.column}: {self.message}"
 
 
 class CsvValidationError(ValueError):
+    """Represent csv validation error failures."""
     def __init__(self, errors: list[CsvRowError]) -> None:
+        """Initialize the csv validation error instance."""
         self.errors = errors
         detail = "\n".join(error.format() for error in errors[:10])
         more = "" if len(errors) <= 10 else f"\n... {len(errors) - 10} more error(s)"
@@ -86,6 +91,7 @@ class CsvValidationError(ValueError):
 
 @dataclass(slots=True)
 class GameRecord:
+    """Represent game record."""
     source_game_id: int
     tournament_code: str | None
     game_date: date
@@ -102,6 +108,7 @@ class GameRecord:
 
 @dataclass(slots=True)
 class OfficialSnapshot:
+    """Represent official snapshot."""
     player_id: int
     rating: float
     sigma: float
@@ -112,6 +119,7 @@ class OfficialSnapshot:
 
 @dataclass(slots=True)
 class TdListEntry:
+    """Represent td list entry."""
     player_id: int
     rating: float
     sigma: float
@@ -120,6 +128,7 @@ class TdListEntry:
 
 @dataclass(slots=True)
 class EventRecord:
+    """Represent event record."""
     event_key: str
     event_date: date
     tournament_code: str | None
@@ -128,6 +137,7 @@ class EventRecord:
 
 @dataclass(slots=True)
 class PreparedGame:
+    """Represent prepared game."""
     source_game_id: int
     game_date: date
     tournament_code: str | None
@@ -144,6 +154,7 @@ class PreparedGame:
 
 @dataclass(slots=True)
 class PreparedPlayer:
+    """Represent prepared player."""
     player_id: int
     index: int
     rank_seed: float
@@ -156,6 +167,7 @@ class PreparedPlayer:
 
 @dataclass(slots=True)
 class EventPlayerResult:
+    """Represent event player result data."""
     player_id: int
     event_key: str
     event_date: date
@@ -170,6 +182,7 @@ class EventPlayerResult:
 
 @dataclass(slots=True)
 class EventGameResult:
+    """Represent event game result data."""
     source_game_id: int
     event_key: str
     event_date: date
@@ -187,12 +200,14 @@ class EventGameResult:
 
 @dataclass(slots=True)
 class Metrics:
+    """Represent metrics."""
     games: int = 0
     correct_predictions: int = 0
     log_loss_sum: float = 0.0
     brier_sum: float = 0.0
 
     def record(self, predicted_white: float, actual_white: float) -> None:
+        """Execute the record routine."""
         clipped = min(max(predicted_white, 1e-12), 1.0 - 1e-12)
         self.games += 1
         self.correct_predictions += int((predicted_white >= 0.5) == (actual_white >= 0.5))
@@ -200,6 +215,7 @@ class Metrics:
         self.brier_sum += (predicted_white - actual_white) ** 2
 
     def as_dict(self) -> dict[str, float | int]:
+        """Execute the as dict routine."""
         if self.games == 0:
             return {"games": 0, "accuracy": 0.0, "average_log_loss": 0.0, "average_brier": 0.0}
         return {
@@ -212,6 +228,7 @@ class Metrics:
 
 @dataclass(slots=True)
 class BayrateRunResult:
+    """Represent bayrate run result data."""
     config: dict[str, float | int | str | None | bool]
     event_count: int
     player_count: int
@@ -222,6 +239,7 @@ class BayrateRunResult:
 
 
 def _parse_date(value: str | None) -> date | None:
+    """Parse date."""
     if value is None:
         return None
     text = value.strip()
@@ -236,6 +254,7 @@ def _parse_date(value: str | None) -> date | None:
 
 
 def _parse_int(value: str | None) -> int | None:
+    """Parse int."""
     if value is None:
         return None
     text = value.strip()
@@ -245,6 +264,7 @@ def _parse_int(value: str | None) -> int | None:
 
 
 def _parse_float(value: str | None) -> float | None:
+    """Parse float."""
     if value is None:
         return None
     text = value.strip()
@@ -254,6 +274,7 @@ def _parse_float(value: str | None) -> float | None:
 
 
 def _parse_csv_bool(value: str | int | None) -> bool:
+    """Parse csv bool."""
     if value is None:
         raise ValueError("missing boolean value")
     if isinstance(value, int):
@@ -267,6 +288,7 @@ def _parse_csv_bool(value: str | int | None) -> bool:
 
 
 def rank_to_seed(rank_text: str | None) -> float | None:
+    """Execute the rank to seed routine."""
     if rank_text is None:
         return None
     text = rank_text.strip()
@@ -285,6 +307,7 @@ def rank_to_seed(rank_text: str | None) -> float | None:
 
 
 def _cubic_spline_interp(xs: list[float], ys: list[float], x: float) -> float:
+    """Execute the cubic spline interp routine."""
     if x <= xs[0]:
         return ys[0]
     if x >= xs[-1]:
@@ -320,6 +343,7 @@ def _cubic_spline_interp(xs: list[float], ys: list[float], x: float) -> float:
     )
 
 def calc_init_sigma(seed: float) -> float:
+    """Execute the calc init sigma routine."""
     if seed > 7.5:
         return 1.0
     if seed < -50.5:
@@ -329,14 +353,17 @@ def calc_init_sigma(seed: float) -> float:
 
 
 def close_boundary(value: float) -> float:
+    """Close boundary."""
     return value - 1.0 if value > 0 else value + 1.0
 
 
 def open_boundary(value: float) -> float:
+    """Open boundary."""
     return value + 1.0 if value > 0 else value - 1.0
 
 
 def calc_handicap_eqv(handicap: int, komi: float) -> tuple[float, float]:
+    """Execute the calc handicap eqv routine."""
     if handicap in (0, 1):
         handicapeqv = 0.580 - 0.0757 * komi
         sigma_px = 1.0649 - 0.0021976 * komi + 0.00014984 * komi * komi
@@ -355,6 +382,7 @@ def calc_handicap_eqv(handicap: int, komi: float) -> tuple[float, float]:
 
 
 def normal_win_probability(rd: float, sigma_px: float) -> float:
+    """Execute the normal win probability routine."""
     p = 0.5 * math.erfc(-rd / (sigma_px * SQRT2))
     return min(max(p, MIN_PROBABILITY), 1.0 - MIN_PROBABILITY)
 
@@ -385,6 +413,7 @@ def _read_required_value(
     line_number: int,
     errors: list[CsvRowError],
 ) -> str | None:
+    """Read required value."""
     value = row.get(column)
     if value is None or not value.strip():
         errors.append(CsvRowError(path, line_number, column, "required value is missing"))
@@ -399,6 +428,7 @@ def _parse_required_int(
     line_number: int,
     errors: list[CsvRowError],
 ) -> int | None:
+    """Parse required int."""
     value = _read_required_value(row, column, path, line_number, errors)
     if value is None:
         return None
@@ -419,6 +449,7 @@ def _parse_optional_int(
     line_number: int,
     errors: list[CsvRowError],
 ) -> int | None:
+    """Parse optional int."""
     try:
         return _parse_int(row.get(column))
     except ValueError as exc:
@@ -433,6 +464,7 @@ def _parse_required_float(
     line_number: int,
     errors: list[CsvRowError],
 ) -> float | None:
+    """Parse required float."""
     value = _read_required_value(row, column, path, line_number, errors)
     if value is None:
         return None
@@ -453,6 +485,7 @@ def _parse_required_date(
     line_number: int,
     errors: list[CsvRowError],
 ) -> date | None:
+    """Parse required date."""
     value = _read_required_value(row, column, path, line_number, errors)
     if value is None:
         return None
@@ -473,6 +506,7 @@ def _parse_required_bool(
     line_number: int,
     errors: list[CsvRowError],
 ) -> bool | None:
+    """Parse required bool."""
     value = _read_required_value(row, column, path, line_number, errors)
     if value is None:
         return None
@@ -484,6 +518,7 @@ def _parse_required_bool(
 
 
 def _add_rank_error(path: Path, line_number: int, column: str, value: str | None, errors: list[CsvRowError]) -> None:
+    """Execute the add rank error routine."""
     if value is None or not value.strip():
         errors.append(CsvRowError(path, line_number, column, "required value is missing"))
     else:
@@ -491,6 +526,7 @@ def _add_rank_error(path: Path, line_number: int, column: str, value: str | None
 
 
 def load_games_from_csv(path: Path, config: BayrateConfig) -> list[GameRecord]:
+    """Load games from csv."""
     games: list[GameRecord] = []
     errors: list[CsvRowError] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
@@ -580,6 +616,7 @@ def load_games_from_csv(path: Path, config: BayrateConfig) -> list[GameRecord]:
 
 
 def load_official_history(path: Path) -> dict[int, list[OfficialSnapshot]]:
+    """Load official history."""
     history: dict[int, list[OfficialSnapshot]] = {}
     errors: list[CsvRowError] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
@@ -617,6 +654,7 @@ def load_official_history(path: Path) -> dict[int, list[OfficialSnapshot]]:
 
 
 def latest_snapshot_before(snapshots: list[OfficialSnapshot] | None, event_date: date) -> OfficialSnapshot | None:
+    """Execute the latest snapshot before routine."""
     if not snapshots:
         return None
     latest: OfficialSnapshot | None = None
@@ -628,6 +666,7 @@ def latest_snapshot_before(snapshots: list[OfficialSnapshot] | None, event_date:
 
 
 def build_events(games: Iterable[GameRecord]) -> list[EventRecord]:
+    """Build events."""
     grouped: dict[str, EventRecord] = {}
     for game in games:
         if game.tournament_code:
@@ -655,6 +694,7 @@ def _prepare_event(
     history: dict[int, list[OfficialSnapshot]],
     config: BayrateConfig,
 ) -> tuple[list[PreparedPlayer], list[PreparedGame]]:
+    """Execute the prepare event routine."""
     participant_rank_seed: dict[int, float] = {}
     win_count: dict[int, int] = {}
     for game in event.games:
@@ -749,6 +789,7 @@ def _prepare_event(
 
 
 def _calc_pt_and_gradient(players: list[PreparedPlayer], games: list[PreparedGame], ratings: list[float]) -> tuple[float, list[float]]:
+    """Execute the calc pt and gradient routine."""
     gradient = [0.0] * len(players)
     pt = 0.0
     for player in players:
@@ -774,10 +815,12 @@ def _calc_pt_and_gradient(players: list[PreparedPlayer], games: list[PreparedGam
 
 
 def _dot(a: list[float], b: list[float]) -> float:
+    """Execute the dot routine."""
     return sum(x * y for x, y in zip(a, b))
 
 
 def _norm(a: list[float]) -> float:
+    """Execute the norm routine."""
     return math.sqrt(_dot(a, a))
 
 
@@ -787,6 +830,7 @@ def _solve_event_ratings(
     config: BayrateConfig,
     rng: random.Random,
 ) -> tuple[list[float], int]:
+    """Execute the solve event ratings routine."""
     ratings = [player.seed + rng.uniform(0.0, config.optimizer_random_jitter) for player in players]
     best_ratings = ratings[:]
     best_pt, gradient = _calc_pt_and_gradient(players, games, ratings)
@@ -832,6 +876,7 @@ def _solve_event_ratings(
 
 
 def _calc_sigma2(players: list[PreparedPlayer], games: list[PreparedGame], ratings: list[float]) -> list[float]:
+    """Execute the calc sigma2 routine."""
     new_sigma = [0.0] * len(players)
     for player in players:
         sum_x2w = 0.0
@@ -868,6 +913,7 @@ def _run_events(
     *,
     td_list: dict[int, TdListEntry],
 ) -> BayrateRunResult:
+    """Run events."""
     rng = random.Random(config.random_seed)
     pre_metrics = Metrics()
     post_metrics = Metrics()
@@ -956,6 +1002,7 @@ def run_bayrate_loaded(
     *,
     initial_td_list: dict[int, TdListEntry] | None = None,
 ) -> BayrateRunResult:
+    """Run bayrate loaded."""
     effective_config = config or BayrateConfig()
     events = build_events(games)
     if effective_config.max_events is not None:
@@ -974,6 +1021,7 @@ def run_bayrate(
     ratings_path: Path,
     config: BayrateConfig | None = None,
 ) -> BayrateRunResult:
+    """Run bayrate."""
     effective_config = config or BayrateConfig()
     games = load_games_from_csv(games_path, effective_config)
     history = load_official_history(ratings_path)
@@ -981,6 +1029,7 @@ def run_bayrate(
 
 
 def result_to_json(result: BayrateRunResult) -> str:
+    """Execute the result to json routine."""
     return json.dumps(
         {
             "config": result.config,

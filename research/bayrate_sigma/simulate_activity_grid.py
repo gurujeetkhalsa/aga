@@ -54,6 +54,7 @@ ALGORITHMS = {
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ratings", type=Path, default=DEFAULT_DATASET / "ratings.csv")
     parser.add_argument("--template-games", type=Path, default=DEFAULT_FULL_HISTORY)
@@ -89,6 +90,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     started = time.perf_counter()
     output_dir = args.output_dir / args.name
@@ -256,6 +258,7 @@ def main() -> None:
 
 
 def parse_activity_values(text: str) -> list[int]:
+    """Parse activity values."""
     values = [int(part.strip()) for part in text.split(",") if part.strip()]
     if not values:
         raise ValueError("At least one games-per-year value is required")
@@ -265,6 +268,7 @@ def parse_activity_values(text: str) -> list[int]:
 
 
 def select_algorithms(text: str) -> dict[str, BayrateConfig]:
+    """Execute the select algorithms routine."""
     names = [part.strip() for part in text.split(",") if part.strip()]
     if not names:
         raise ValueError("At least one algorithm name is required")
@@ -276,6 +280,7 @@ def select_algorithms(text: str) -> dict[str, BayrateConfig]:
 
 
 def load_config_from_json(path: Path) -> BayrateConfig:
+    """Load config from json."""
     payload = json.loads(path.read_text(encoding="utf-8"))
     values = payload.get("config", payload)
     if not isinstance(values, dict):
@@ -285,6 +290,7 @@ def load_config_from_json(path: Path) -> BayrateConfig:
 
 
 def last_game_dates_by_player(games: Iterable[GameRecord]) -> dict[int, date]:
+    """Execute the last game dates by player routine."""
     dates: dict[int, date] = {}
     for game in games:
         dates[game.white_agaid] = max(dates.get(game.white_agaid, game.game_date), game.game_date)
@@ -299,6 +305,7 @@ def active_snapshots(
     active_since: date,
     max_players: int | None,
 ) -> list[RatingSnapshot]:
+    """Execute the active snapshots routine."""
     selected = [
         snapshot
         for snapshot in snapshots
@@ -317,6 +324,7 @@ def build_players(
     true_strength_closed_delta: float,
     self_promote_closed_delta: float,
 ) -> tuple[list[SimulatedPlayer], dict[int, date]]:
+    """Build players."""
     players: list[SimulatedPlayer] = []
     initial_dates: dict[int, date] = {}
     next_id = 10_000_000
@@ -342,6 +350,7 @@ def build_players(
 
 
 def snapshots_by_player_id(snapshots: list[RatingSnapshot]) -> dict[int, RatingSnapshot]:
+    """Execute the snapshots by player id routine."""
     return {snapshot.player_id: snapshot for snapshot in snapshots}
 
 
@@ -351,6 +360,7 @@ def player_rows(
     snapshots: dict[int, RatingSnapshot],
     start_date: date,
 ) -> list[dict[str, object]]:
+    """Execute the player rows routine."""
     rows = []
     for player in players:
         snapshot = snapshots[player.original_agaid]
@@ -385,6 +395,7 @@ def milestone_rows_for_result(
     year_count: int,
     inactivity_growth_per_day: float,
 ) -> list[dict[str, object]]:
+    """Execute the milestone rows for result routine."""
     target_ids = {player.simulation_player_id for player in players}
     rows_by_player = {player_id: [] for player_id in target_ids}
     for row in player_results:
@@ -438,6 +449,7 @@ def milestone_rows_for_result(
 
 
 def summarize_milestones(rows: list[dict[str, object]], *, games_per_year: int, algorithm: str) -> list[dict[str, object]]:
+    """Summarize milestones."""
     output = []
     for year in sorted({int(row["year"]) for row in rows}):
         year_rows = [row for row in rows if int(row["year"]) == year]
@@ -465,6 +477,7 @@ def summarize_milestones(rows: list[dict[str, object]], *, games_per_year: int, 
 
 
 def print_summary(rows: list[dict[str, object]], *, prefix: str) -> None:
+    """Execute the print summary routine."""
     parts = []
     for row in rows:
         parts.append(
@@ -476,6 +489,7 @@ def print_summary(rows: list[dict[str, object]], *, prefix: str) -> None:
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write csv."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames: list[str] = []
     for row in rows:
@@ -489,6 +503,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def write_progress(path: Path, **fields: object) -> None:
+    """Write progress."""
     path.write_text(json.dumps(fields, indent=2, default=str) + "\n", encoding="utf-8")
 
 

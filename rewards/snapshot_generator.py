@@ -12,15 +12,19 @@ MAX_MEMBER_AGAID = 50000
 
 
 class SnapshotSqlAdapter(Protocol):
+    """Represent snapshot sql adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class SnapshotResult:
+    """Represent snapshot result data."""
     snapshot_date: date
     dry_run: bool
     run_id: int | None
@@ -36,6 +40,7 @@ class SnapshotResult:
     existing_chapter_snapshot_count: int = 0
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "snapshot_date": self.snapshot_date.isoformat(),
             "dry_run": self.dry_run,
@@ -387,6 +392,7 @@ def create_daily_snapshot(
     replace: bool = False,
     max_member_agaid: int = MAX_MEMBER_AGAID,
 ) -> SnapshotResult:
+    """Create daily snapshot."""
     existing = _load_existing_counts(adapter, snapshot_date)
     if dry_run:
         preview = _load_preview_counts(adapter, snapshot_date, max_member_agaid=max_member_agaid)
@@ -441,6 +447,7 @@ def create_daily_snapshot(
 
 
 def _load_existing_counts(adapter: SnapshotSqlAdapter, snapshot_date: date) -> dict[str, int]:
+    """Load existing counts."""
     rows = adapter.query_rows(SNAPSHOT_EXISTING_COUNTS_SQL, (snapshot_date, snapshot_date))
     row = rows[0] if rows else {}
     return {
@@ -455,6 +462,7 @@ def _load_preview_counts(
     *,
     max_member_agaid: int,
 ) -> dict[str, int]:
+    """Load preview counts."""
     rows = adapter.query_rows(SNAPSHOT_PREVIEW_SQL, (snapshot_date, max_member_agaid))
     if not rows:
         raise RuntimeError(f"Could not preview rewards snapshot for {snapshot_date.isoformat()}.")
@@ -469,6 +477,7 @@ def _result_from_counts(
     counts: dict[str, Any],
     existing: dict[str, int],
 ) -> SnapshotResult:
+    """Execute the result from counts routine."""
     return SnapshotResult(
         snapshot_date=snapshot_date,
         dry_run=dry_run,
@@ -487,18 +496,21 @@ def _result_from_counts(
 
 
 def _coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def _coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def parse_snapshot_date(value: str | None) -> date:
+    """Parse snapshot date."""
     if not value:
         return date.today()
     try:
@@ -508,6 +520,7 @@ def parse_snapshot_date(value: str | None) -> date:
 
 
 def print_snapshot_result(result: SnapshotResult, output: TextIO) -> None:
+    """Execute the print snapshot result routine."""
     label = "Rewards Snapshot Preview" if result.dry_run else "Rewards Snapshot"
     print(label, file=output)
     print(f"  Date: {result.snapshot_date.isoformat()}", file=output)
@@ -530,6 +543,7 @@ def print_snapshot_result(result: SnapshotResult, output: TextIO) -> None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = argparse.ArgumentParser(description="Build AGA Chapter Rewards daily snapshots.")
     parser.add_argument("--date", dest="snapshot_date", type=parse_snapshot_date, help="Snapshot date in YYYY-MM-DD format. Defaults to today.")
     parser.add_argument("--dry-run", action="store_true", help="Preview source counts without writing snapshots.")

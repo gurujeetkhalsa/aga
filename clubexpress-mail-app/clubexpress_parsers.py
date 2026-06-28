@@ -5,11 +5,14 @@ from typing import Optional
 
 
 class EmailProcessingError(ValueError):
+    """Represent email processing error failures."""
     pass
 
 
 class _HtmlTableParser(HTMLParser):
+    """Represent html table parser."""
     def __init__(self) -> None:
+        """Initialize the html table parser instance."""
         super().__init__(convert_charrefs=True)
         self.tables: list[list[list[str]]] = []
         self._table_depth = 0
@@ -18,6 +21,7 @@ class _HtmlTableParser(HTMLParser):
         self._cell_parts: list[str] | None = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        """Handle starttag."""
         normalized_tag = tag.lower()
         if normalized_tag == "table":
             self._table_depth += 1
@@ -36,6 +40,7 @@ class _HtmlTableParser(HTMLParser):
             self._cell_parts.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
+        """Handle endtag."""
         normalized_tag = tag.lower()
         if normalized_tag == "table":
             if self._table_depth == 1 and self._current_table is not None:
@@ -63,11 +68,13 @@ class _HtmlTableParser(HTMLParser):
             self._current_row = None
 
     def handle_data(self, data: str) -> None:
+        """Handle data."""
         if self._cell_parts is not None and data:
             self._cell_parts.append(data)
 
 
 def parse_new_member_email(text: str) -> dict:
+    """Parse new member email."""
     segment = _slice_between_markers(text, "membership in American Go Association.", "Club Url")
     agaid = _extract_required_int(segment, r"Member Number:\s*(\d+)", "AGAID")
     member_type = _extract_member_type(segment)
@@ -94,6 +101,7 @@ def parse_new_member_email(text: str) -> dict:
 
 
 def parse_renewal_email(text: str) -> dict:
+    """Parse renewal email."""
     segment = _slice_between_markers(text, "A membership renewal has been processed for American Go Association.", "Club Url")
     member_type = _extract_member_type(segment)
     return {
@@ -108,6 +116,7 @@ def parse_renewal_email(text: str) -> dict:
 
 
 def parse_chapter_renewal_notice(html_body: str, text_body: str) -> list[dict]:
+    """Parse chapter renewal notice."""
     rows = extract_chapter_renewal_notice_rows_from_html(html_body or "")
     if not rows:
         rows = extract_chapter_renewal_notice_rows_from_text(text_body or "")
@@ -115,6 +124,7 @@ def parse_chapter_renewal_notice(html_body: str, text_body: str) -> list[dict]:
 
 
 def extract_chapter_renewal_notice_rows_from_html(html_body: str) -> list[dict]:
+    """Extract chapter renewal notice rows from html."""
     if not html_body:
         return []
 
@@ -129,6 +139,7 @@ def extract_chapter_renewal_notice_rows_from_html(html_body: str) -> list[dict]:
 
 
 def extract_chapter_renewal_notice_rows_from_text(text: str) -> list[dict]:
+    """Extract chapter renewal notice rows from text."""
     lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
     if not lines:
         return []
@@ -151,6 +162,7 @@ def extract_chapter_renewal_notice_rows_from_text(text: str) -> list[dict]:
 
 
 def _slice_between_markers(text: str, start_marker: str, end_marker: str) -> str:
+    """Execute the slice between markers routine."""
     if start_marker in text:
         text = text.split(start_marker, 1)[1]
     if end_marker in text:
@@ -159,6 +171,7 @@ def _slice_between_markers(text: str, start_marker: str, end_marker: str) -> str
 
 
 def _extract_name_line(text: str) -> Optional[str]:
+    """Extract name line."""
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     for line in lines[:8]:
         if ":" in line:
@@ -169,6 +182,7 @@ def _extract_name_line(text: str) -> Optional[str]:
 
 
 def _extract_member_type(text: str) -> str:
+    """Extract member type."""
     return _extract_required_text(
         text,
         r"(?:Member(?:ship)?\s+)?Type:\s*(.*?)\s*(?=(?:(?:New|Updated|Current)\s+)?(?:Member(?:ship)?\s+)?Expiration(?:\s+Date)?|Expires|Paid\s+Through|Good\s+Through|Total)\s*:?",
@@ -177,6 +191,7 @@ def _extract_member_type(text: str) -> str:
 
 
 def _extract_membership_expiration_date(text: str) -> Optional[date]:
+    """Extract membership expiration date."""
     date_pattern = r"(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})"
     preferred_patterns = (
         rf"\b(?:New|Updated|Current)\s+(?:Member(?:ship)?\s+)?Expiration(?:\s+Date)?\s*:?\s*{date_pattern}",
@@ -200,6 +215,7 @@ def _extract_membership_expiration_date(text: str) -> Optional[date]:
 
 
 def _parse_email_date(value: str, label: str) -> date:
+    """Parse email date."""
     normalized = (value or "").strip()
     for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y", "%m/%d/%y", "%m-%d-%y"):
         try:
@@ -210,6 +226,7 @@ def _parse_email_date(value: str, label: str) -> date:
 
 
 def _extract_required_text(text: str, pattern: str, label: str) -> str:
+    """Extract required text."""
     value = _extract_optional_text(text, pattern)
     if value is None or value == "":
         raise EmailProcessingError(f"Could not extract required field {label}.")
@@ -217,6 +234,7 @@ def _extract_required_text(text: str, pattern: str, label: str) -> str:
 
 
 def _extract_optional_text(text: str, pattern: str) -> Optional[str]:
+    """Extract optional text."""
     match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
     if not match:
         return None
@@ -224,6 +242,7 @@ def _extract_optional_text(text: str, pattern: str) -> Optional[str]:
 
 
 def _extract_required_int(text: str, pattern: str, label: str) -> int:
+    """Extract required int."""
     match = re.search(pattern, text, re.IGNORECASE)
     if not match:
         raise EmailProcessingError(f"Could not extract required integer field {label}.")
@@ -231,6 +250,7 @@ def _extract_required_int(text: str, pattern: str, label: str) -> int:
 
 
 def _extract_chapter_renewal_notice_rows_from_matrix(matrix: list[list[str]]) -> list[dict]:
+    """Extract chapter renewal notice rows from matrix."""
     rows: list[dict] = []
     for header_index, header_row in enumerate(matrix):
         header_lookup = _chapter_renewal_notice_header_lookup(header_row)
@@ -263,6 +283,7 @@ def _extract_chapter_renewal_notice_rows_from_matrix(matrix: list[list[str]]) ->
 
 
 def _chapter_renewal_notice_record(header_row: list[str], row: list[str]) -> dict[str, str]:
+    """Execute the chapter renewal notice record routine."""
     if not any(str(cell or "").strip() for cell in row):
         return {}
     record: dict[str, str] = {}
@@ -275,6 +296,7 @@ def _chapter_renewal_notice_record(header_row: list[str], row: list[str]) -> dic
 
 
 def _chapter_renewal_notice_header_lookup(header_row: list[str]) -> dict[str, int]:
+    """Execute the chapter renewal notice header lookup routine."""
     lookup: dict[str, int] = {}
     for index, header in enumerate(header_row):
         key = _chapter_renewal_notice_header_key(header)
@@ -284,6 +306,7 @@ def _chapter_renewal_notice_header_lookup(header_row: list[str]) -> dict[str, in
 
 
 def _chapter_renewal_notice_header_key(header: str) -> str:
+    """Execute the chapter renewal notice header key routine."""
     normalized = re.sub(r"[^a-z0-9]+", "", str(header or "").strip().lower())
     aliases = {
         "member": "member",
@@ -297,6 +320,7 @@ def _chapter_renewal_notice_header_key(header: str) -> str:
 
 
 def _split_renewal_notice_text_row(line: str) -> list[str]:
+    """Execute the split renewal notice text row routine."""
     if "\t" in line:
         return [cell.strip() for cell in line.split("\t")]
     if "|" in line:
@@ -305,11 +329,13 @@ def _split_renewal_notice_text_row(line: str) -> list[str]:
 
 
 def _extract_chapter_id_from_member_cell(value: str) -> int | None:
+    """Extract chapter id from member cell."""
     match = re.search(r"\d+", value or "")
     return int(match.group(0)) if match else None
 
 
 def _dedupe_chapter_renewal_notice_rows(rows: list[dict]) -> list[dict]:
+    """Execute the dedupe chapter renewal notice rows routine."""
     deduped = []
     seen: set[int] = set()
     for row in rows:

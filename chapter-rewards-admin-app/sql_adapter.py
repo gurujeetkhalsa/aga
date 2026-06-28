@@ -25,19 +25,24 @@ SqlStatement = tuple[str, tuple[Any, ...]]
 
 
 class SqlAdapter:
+    """Represent sql adapter."""
     def __init__(self, connection_string: str) -> None:
+        """Initialize the sql adapter instance."""
         if not connection_string or not connection_string.strip():
             raise ValueError("SQL connection string is required.")
         self.connection_string = connection_string
 
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         return query_rows(self.connection_string, query, tuple(params))
 
     def execute_statements(self, statements: Iterable[SqlStatement]) -> None:
+        """Execute statements."""
         execute_statements(self.connection_string, list(statements))
 
 
 def get_sql_connection_string() -> str | None:
+    """Return sql connection string."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn and conn.strip():
         return conn
@@ -59,6 +64,7 @@ def get_sql_connection_string() -> str | None:
 
 
 def query_rows(conn_str: str, query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+    """Query rows."""
     if pyodbc is not None:
         try:
             return _query_rows_via_odbc(conn_str, query, params)
@@ -69,6 +75,7 @@ def query_rows(conn_str: str, query: str, params: tuple[Any, ...] = ()) -> list[
 
 
 def execute_statements(conn_str: str, statements: list[SqlStatement]) -> None:
+    """Execute statements."""
     if not statements:
         return
     if pyodbc is not None:
@@ -82,6 +89,7 @@ def execute_statements(conn_str: str, statements: list[SqlStatement]) -> None:
 
 
 def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows via odbc."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -93,6 +101,7 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> 
 
 
 def _execute_statements_via_odbc(conn_str: str, statements: list[SqlStatement]) -> None:
+    """Execute statements via odbc."""
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -107,6 +116,7 @@ def _execute_statements_via_odbc(conn_str: str, statements: list[SqlStatement]) 
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
+    """Parse sql connection string."""
     parts: dict[str, str] = {}
     for item in connection_string.split(";"):
         if "=" not in item:
@@ -126,6 +136,7 @@ def _parse_sql_connection_string(connection_string: str) -> dict[str, object]:
 
 
 def _tds_connect(conn_str: str):
+    """Execute the tds connect routine."""
     if pytds is None:
         raise RuntimeError("Neither pyodbc nor pytds is available for SQL access.")
     sql = _parse_sql_connection_string(conn_str)
@@ -147,6 +158,7 @@ def _tds_connect(conn_str: str):
 
 
 def _sql_literal(value: Any) -> str:
+    """Execute the sql literal routine."""
     if value is None:
         return "NULL"
     if isinstance(value, bool):
@@ -160,6 +172,7 @@ def _sql_literal(value: Any) -> str:
 
 
 def _render_query(query: str, params: tuple[Any, ...]) -> str:
+    """Render query."""
     rendered = query
     for value in params:
         rendered = rendered.replace("?", _sql_literal(value), 1)
@@ -167,6 +180,7 @@ def _render_query(query: str, params: tuple[Any, ...]) -> str:
 
 
 def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Query rows via tds."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -177,6 +191,7 @@ def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> l
 
 
 def _execute_statements_via_tds(conn_str: str, statements: list[SqlStatement]) -> None:
+    """Execute statements via tds."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()

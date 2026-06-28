@@ -34,6 +34,7 @@ RENEWAL_EVENT_TYPE = "renewal"
 
 
 def print_event_list(events: list[StagedClubExpressEvent], output: TextIO) -> None:
+    """Execute the print event list routine."""
     if not events:
         print("(no staged ClubExpress events)", file=output)
         return
@@ -59,6 +60,7 @@ def print_event_preview(
     attempts: list[dict[str, Any]] | None = None,
     include_payloads: bool = False,
 ) -> None:
+    """Execute the print event preview routine."""
     print("ClubExpress Parsed Event", file=output)
     print(f"  ID: {event.parsed_event_id}", file=output)
     print(f"  Event key: {event.event_key}", file=output)
@@ -91,6 +93,7 @@ def print_event_preview(
 
 
 def print_replay_result(result: ReplayResult, output: TextIO) -> None:
+    """Execute the print replay result routine."""
     label = "Replay executed" if result.executed else "Replay preview"
     print(label, file=output)
     print(f"  Event key: {result.event_key}", file=output)
@@ -103,6 +106,7 @@ def print_replay_result(result: ReplayResult, output: TextIO) -> None:
 
 
 def print_batch_result(result, output: TextIO) -> None:
+    """Execute the print batch result routine."""
     label = "Staged event processing" if result.executed else "Staged event processing preview"
     print(label, file=output)
     print(f"  Event type: {result.event_type}", file=output)
@@ -114,6 +118,7 @@ def print_batch_result(result, output: TextIO) -> None:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = build_parser()
     args = parser.parse_args(argv)
     conn_str = args.connection_string or get_sql_connection_string()
@@ -273,6 +278,7 @@ def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build parser."""
     parser = argparse.ArgumentParser(description="Preview or replay staged ClubExpress parsed events.")
     parser.add_argument("--connection-string", help="SQL connection string. Defaults to SQL_CONNECTION_STRING/local.settings.json.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -342,12 +348,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _add_event_selector_args(parser: argparse.ArgumentParser) -> None:
+    """Execute the add event selector args routine."""
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--event-key", help="membership.clubexpress_parsed_events.Event_Key value.")
     group.add_argument("--id", type=int, help="membership.clubexpress_parsed_events.Parsed_Event_ID value.")
 
 
 def _positive_int(value: str) -> int:
+    """Execute the positive int routine."""
     parsed = int(value)
     if parsed <= 0:
         raise argparse.ArgumentTypeError("value must be positive")
@@ -355,6 +363,7 @@ def _positive_int(value: str) -> int:
 
 
 def _format_table(rows: list[dict[str, Any]], columns: list[tuple[str, str]]) -> str:
+    """Format table."""
     if not rows:
         return "(no rows)"
     rendered = [[_format_value(row.get(key)) for key, _ in columns] for row in rows]
@@ -372,6 +381,7 @@ def _format_table(rows: list[dict[str, Any]], columns: list[tuple[str, str]]) ->
 
 
 def _format_value(value: Any) -> str:
+    """Format value."""
     if value is None:
         return ""
     if isinstance(value, datetime):
@@ -382,6 +392,7 @@ def _format_value(value: Any) -> str:
 
 
 def _indent(text: str, prefix: str) -> str:
+    """Execute the indent routine."""
     return "\n".join(prefix + line if line else prefix.rstrip() for line in text.splitlines())
 
 

@@ -70,6 +70,7 @@ DEFAULT_RANK_GUARDRAIL_BANDS = (
 
 @dataclass(frozen=True)
 class PreparedScenario:
+    """Represent prepared scenario."""
     name: str
     games_per_year: int
     self_promote_delta: float
@@ -80,6 +81,7 @@ class PreparedScenario:
 
 @dataclass(frozen=True)
 class ScoreWeights:
+    """Represent score weights."""
     mean_abs_gap: float = 0.0
     gap_gaussian_nll: float = 0.0
     under_progress: float = 1.0
@@ -107,6 +109,7 @@ class ScoreWeights:
 
 @dataclass(frozen=True)
 class HistoricalBenchmark:
+    """Represent historical benchmark."""
     games_path: Path
     ratings_path: Path
     baseline_log_loss: float
@@ -119,6 +122,7 @@ class HistoricalBenchmark:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse args."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ratings", type=Path, default=DEFAULT_DATASET / "ratings.csv")
     parser.add_argument("--template-games", type=Path, default=DEFAULT_FULL_HISTORY)
@@ -224,6 +228,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the command-line entry point for this module."""
     args = parse_args()
     validate_search_ranges(args)
     optuna = load_optuna()
@@ -354,6 +359,7 @@ def main() -> None:
     )
 
     def objective(trial: Any) -> float:
+        """Execute the objective routine."""
         trial_started = time.perf_counter()
         config = suggest_config(
             trial,
@@ -495,6 +501,7 @@ def main() -> None:
 
 
 def load_optuna() -> Any:
+    """Load optuna."""
     try:
         import optuna
     except ModuleNotFoundError as exc:
@@ -503,6 +510,7 @@ def load_optuna() -> Any:
 
 
 def parse_float_list(text: str, *, field_name: str) -> list[float]:
+    """Parse float list."""
     values = [float(part.strip()) for part in text.split(",") if part.strip()]
     if not values:
         raise ValueError(f"At least one {field_name} is required")
@@ -510,6 +518,7 @@ def parse_float_list(text: str, *, field_name: str) -> list[float]:
 
 
 def parse_int_list(text: str, *, field_name: str) -> list[int]:
+    """Parse int list."""
     values = [int(part.strip()) for part in text.split(",") if part.strip()]
     if not values:
         raise ValueError(f"At least one {field_name} is required")
@@ -517,6 +526,7 @@ def parse_int_list(text: str, *, field_name: str) -> list[int]:
 
 
 def parse_string_list(text: str, *, field_name: str) -> list[str]:
+    """Parse string list."""
     values = [part.strip() for part in text.split(",") if part.strip()]
     if not values:
         raise ValueError(f"At least one {field_name} is required")
@@ -524,6 +534,7 @@ def parse_string_list(text: str, *, field_name: str) -> list[str]:
 
 
 def parse_score_modes(text: str) -> tuple[str, ...]:
+    """Parse score modes."""
     modes = tuple(parse_string_list(text, field_name="score mode"))
     unsupported = sorted(set(modes) - set(SCORE_MODES))
     if unsupported:
@@ -532,6 +543,7 @@ def parse_score_modes(text: str) -> tuple[str, ...]:
 
 
 def validate_search_ranges(args: argparse.Namespace) -> None:
+    """Validate search ranges."""
     parse_score_modes(args.score_modes)
     ranges = [
         ("taper start", args.taper_start_min, args.taper_start_max),
@@ -569,6 +581,7 @@ def validate_search_ranges(args: argparse.Namespace) -> None:
 
 
 def completed_trial_count(study: Any) -> int:
+    """Execute the completed trial count routine."""
     return sum(1 for trial in study.trials if trial.state.name == "COMPLETE")
 
 
@@ -588,6 +601,7 @@ def suggest_config(
     tune_persistence_same_direction: bool = False,
     score_modes: tuple[str, ...] = SCORE_MODES,
 ) -> BayrateConfig:
+    """Execute the suggest config routine."""
     taper_start = suggest_float_range(trial, "surprise_taper_start_rating", taper_start_range)
     taper_width = suggest_float_range(trial, "surprise_taper_width", taper_width_range)
     persistence_weight = suggest_float_range(
@@ -633,6 +647,7 @@ def suggest_config(
 
 
 def suggest_float_range(trial: Any, name: str, value_range: tuple[float, float]) -> float:
+    """Execute the suggest float range routine."""
     low, high = value_range
     if math.isclose(low, high, rel_tol=0.0, abs_tol=1e-12):
         return float(low)
@@ -646,6 +661,7 @@ def enqueue_seed_configs(
     taper_width_range: tuple[float, float] = (0.5, 5.0),
     score_modes: tuple[str, ...] = SCORE_MODES,
 ) -> None:
+    """Execute the enqueue seed configs routine."""
     for path in config_paths:
         params = trial_params_from_config(
             load_config_from_json(path),
@@ -665,6 +681,7 @@ def trial_params_from_config(
     taper_width_range: tuple[float, float] = (0.5, 5.0),
     score_modes: tuple[str, ...] = SCORE_MODES,
 ) -> dict[str, object]:
+    """Execute the trial params from config routine."""
     if config.surprise_sigma_base is None:
         raise ValueError("Seed config must set surprise_sigma_base")
     if config.surprise_sigma_cap is None:
@@ -699,10 +716,12 @@ def trial_params_from_config(
 
 
 def study_has_trial_params(study: Any, params: dict[str, object]) -> bool:
+    """Execute the study has trial params routine."""
     return any(trial_params_match(existing_trial_params(trial), params) for trial in study.trials)
 
 
 def existing_trial_params(trial: Any) -> dict[str, object]:
+    """Execute the existing trial params routine."""
     if trial.params:
         return dict(trial.params)
     fixed_params = trial.system_attrs.get("fixed_params", {})
@@ -710,6 +729,7 @@ def existing_trial_params(trial: Any) -> dict[str, object]:
 
 
 def trial_params_match(left: dict[str, object], right: dict[str, object]) -> bool:
+    """Execute the trial params match routine."""
     if set(left) != set(right):
         return False
     for key, left_value in left.items():
@@ -737,6 +757,7 @@ def prepare_scenarios(
     seed: int,
     allow_online_games: bool,
 ) -> list[PreparedScenario]:
+    """Execute the prepare scenarios routine."""
     latest_ratings = load_latest_ratings(ratings_path)
     full_history_games = load_games_from_csv(
         last_game_source_path,
@@ -808,6 +829,7 @@ def prepare_scenarios(
 
 
 def load_historical_benchmark(args: argparse.Namespace) -> HistoricalBenchmark | None:
+    """Load historical benchmark."""
     if args.historical_games is None and args.historical_ratings is None:
         return None
     if args.historical_games is None or args.historical_ratings is None:
@@ -838,6 +860,7 @@ def load_historical_benchmark(args: argparse.Namespace) -> HistoricalBenchmark |
 
 
 def historical_run_config(config: BayrateConfig, args_or_benchmark: argparse.Namespace | HistoricalBenchmark) -> BayrateConfig:
+    """Execute the historical run config routine."""
     values = asdict(config)
     run_config = BayrateConfig(**values)
     run_config.allow_online_games = bool(args_or_benchmark.historical_allow_online_games) if isinstance(
@@ -860,6 +883,7 @@ def historical_run_config(config: BayrateConfig, args_or_benchmark: argparse.Nam
 
 
 def evaluate_historical_config(config: BayrateConfig, benchmark: HistoricalBenchmark) -> dict[str, float]:
+    """Execute the evaluate historical config routine."""
     result = run_bayrate(
         benchmark.games_path,
         benchmark.ratings_path,
@@ -885,6 +909,7 @@ def evaluate_historical_config(config: BayrateConfig, benchmark: HistoricalBench
 
 
 def score_historical_metrics(metrics: dict[str, float], weights: ScoreWeights) -> float:
+    """Execute the score historical metrics routine."""
     score = (
         weights.historical_log_loss * float(metrics["historical_log_loss_delta"])
         + weights.historical_brier * float(metrics["historical_brier_delta"])
@@ -904,6 +929,7 @@ def evaluate_config(
     weights: ScoreWeights,
     keep_milestones: bool = False,
 ) -> tuple[float, list[dict[str, object]]] | tuple[float, list[dict[str, object]], list[dict[str, object]]]:
+    """Execute the evaluate config routine."""
     summaries: list[dict[str, object]] = []
     all_milestones: list[dict[str, object]] = []
     for scenario in scenarios:
@@ -937,6 +963,7 @@ def evaluate_config(
 
 
 def summarize_for_score(rows: list[dict[str, object]], *, scenario: PreparedScenario) -> list[dict[str, object]]:
+    """Summarize for score."""
     summaries = []
     player_by_id = {player.simulation_player_id: player for player in scenario.players}
     for year in sorted({int(row["year"]) for row in rows}):
@@ -969,6 +996,7 @@ def summary_for_rows(
     slice_type: str,
     slice_value: str,
 ) -> dict[str, object]:
+    """Execute the summary for rows routine."""
     progress = [rank_change_percent(row) for row in rows]
     sigmas = [float(row["sigma_at_milestone"]) for row in rows]
     gaps = [float(row["gap_to_true"]) for row in rows]
@@ -1014,6 +1042,7 @@ def rating_bands_for_rows(
     rows: list[dict[str, object]],
     player_by_id: dict[int, SimulatedPlayer],
 ) -> set[str]:
+    """Execute the rating bands for rows routine."""
     return {
         band
         for row in rows
@@ -1025,6 +1054,7 @@ def rating_band_for_milestone(
     row: dict[str, object],
     player_by_id: dict[int, SimulatedPlayer],
 ) -> str | None:
+    """Execute the rating band for milestone routine."""
     if row.get("rating_band"):
         return str(row["rating_band"])
     player_id = row.get("simulation_player_id")
@@ -1035,6 +1065,7 @@ def rating_band_for_milestone(
 
 
 def rank_change_percent(row: dict[str, object]) -> float:
+    """Execute the rank change percent routine."""
     start_rating = float(row["start_rating"])
     true_strength = float(row["true_strength"])
     denom = true_strength - start_rating
@@ -1044,14 +1075,17 @@ def rank_change_percent(row: dict[str, object]) -> float:
 
 
 def rate_at_least(values: list[float], threshold: float) -> float:
+    """Execute the rate at least routine."""
     return sum(value >= threshold for value in values) / len(values) * 100.0 if values else 0.0
 
 
 def rate_greater_than(values: list[float], threshold: float) -> float:
+    """Execute the rate greater than routine."""
     return sum(value > threshold for value in values) / len(values) * 100.0 if values else 0.0
 
 
 def gaussian_gap_nll_for_rms(rms_gap: float) -> float:
+    """Execute the gaussian gap nll for rms routine."""
     fitted_sd = max(float(rms_gap), 1e-6)
     return math.log(fitted_sd) + 0.5
 
@@ -1062,6 +1096,7 @@ def score_summaries(
     score_years: set[int],
     weights: ScoreWeights,
 ) -> float:
+    """Execute the score summaries routine."""
     score_rows = [
         row
         for row in summaries
@@ -1078,6 +1113,7 @@ def score_summaries(
 
 
 def score_summary(row: dict[str, object], weights: ScoreWeights) -> float:
+    """Execute the score summary routine."""
     mean_progress = float(row["mean_rank_change_pct"])
     reached_rate = float(row["reached_rate"])
     median_sigma = float(row["median_sigma"])
@@ -1105,6 +1141,7 @@ def score_rank_guardrails(
     score_years: set[int],
     weights: ScoreWeights,
 ) -> float:
+    """Execute the score rank guardrails routine."""
     if (
         weights.rank_overshoot_125 == 0.0
         and weights.rank_overshoot_150 == 0.0
@@ -1144,6 +1181,7 @@ def rank_guardrail_rows(
     score_years: set[int],
     weights: ScoreWeights,
 ) -> list[dict[str, object]]:
+    """Execute the rank guardrail rows routine."""
     return [
         row
         for row in summaries
@@ -1155,6 +1193,7 @@ def rank_guardrail_rows(
 
 
 def aggregate_summaries(summaries: list[dict[str, object]], *, weights: ScoreWeights) -> dict[str, float]:
+    """Execute the aggregate summaries routine."""
     final_year = max(int(item["year"]) for item in summaries)
     score_rows = [
         row
@@ -1182,11 +1221,13 @@ def aggregate_summaries(summaries: list[dict[str, object]], *, weights: ScoreWei
 
 
 def flatten_config(config: BayrateConfig) -> dict[str, object]:
+    """Execute the flatten config routine."""
     values = asdict(config)
     return {f"config_{key}": value for key, value in values.items()}
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write csv."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames: list[str] = []
     for row in rows:
@@ -1201,6 +1242,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def read_csv(path: Path) -> list[dict[str, object]]:
+    """Read csv."""
     if not path.exists():
         return []
     with path.open(encoding="utf-8", newline="") as handle:
@@ -1208,16 +1250,20 @@ def read_csv(path: Path) -> list[dict[str, object]]:
 
 
 class FixedTrial:
+    """Represent fixed trial."""
     def __init__(self, params: dict[str, object]) -> None:
+        """Initialize the fixed trial instance."""
         self.params = params
 
     def suggest_float(self, name: str, low: float, high: float) -> float:
+        """Execute the suggest float routine."""
         value = self.params[name]
         if not isinstance(value, (int, float)):
             raise TypeError(f"Expected numeric fixed value for {name}")
         return float(value)
 
     def suggest_categorical(self, name: str, choices: list[object]) -> object:
+        """Execute the suggest categorical routine."""
         value = self.params[name]
         if value not in choices:
             raise ValueError(f"Fixed value {value!r} for {name} is not in {choices!r}")

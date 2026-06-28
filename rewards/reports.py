@@ -13,7 +13,9 @@ DEFAULT_TOP = 25
 
 
 class RewardsReportAdapter(Protocol):
+    """Represent rewards report adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
 
@@ -23,6 +25,7 @@ FetchReport = Callable[[RewardsReportAdapter, argparse.Namespace], list[dict[str
 
 @dataclass(frozen=True)
 class ReportSpec:
+    """Represent report spec."""
     title: str
     columns: tuple[Column, ...]
     fetch: FetchReport
@@ -317,10 +320,12 @@ PENDING_CHAPTER_RENEWAL_COLUMNS: tuple[Column, ...] = (
 
 
 def fetch_balances(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch balances."""
     return adapter.query_rows(BALANCES_SQL, (args.top, args.chapter_code, args.chapter_code))
 
 
 def fetch_transactions(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch transactions."""
     return adapter.query_rows(
         TRANSACTIONS_SQL,
         (args.top, args.chapter_code, args.chapter_code, args.source_type, args.source_type),
@@ -328,6 +333,7 @@ def fetch_transactions(adapter: RewardsReportAdapter, args: argparse.Namespace) 
 
 
 def fetch_lots(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch lots."""
     return adapter.query_rows(
         LOTS_SQL,
         (args.top, args.chapter_code, args.chapter_code, args.aging_status, args.aging_status),
@@ -335,14 +341,17 @@ def fetch_lots(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[
 
 
 def fetch_runs(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch runs."""
     return adapter.query_rows(RUNS_SQL, (args.top, args.processor, args.processor, args.status, args.status))
 
 
 def fetch_membership_events(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch membership events."""
     return adapter.query_rows(MEMBERSHIP_EVENTS_SQL, (args.top, args.status, args.status))
 
 
 def fetch_chapter_renewal_notices(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch chapter renewal notices."""
     return adapter.query_rows(
         CHAPTER_RENEWAL_NOTICES_SQL,
         (args.top, args.chapter_code, args.chapter_code, args.status, args.status),
@@ -350,6 +359,7 @@ def fetch_chapter_renewal_notices(adapter: RewardsReportAdapter, args: argparse.
 
 
 def fetch_pending_chapter_renewals(adapter: RewardsReportAdapter, args: argparse.Namespace) -> list[dict[str, Any]]:
+    """Fetch pending chapter renewals."""
     return adapter.query_rows(
         PENDING_CHAPTER_RENEWALS_SQL,
         (args.top, args.chapter_code, args.chapter_code),
@@ -376,6 +386,7 @@ REPORTS: dict[str, ReportSpec] = {
 
 
 def format_table(rows: list[dict[str, Any]], columns: tuple[Column, ...]) -> str:
+    """Format table."""
     if not rows:
         return "(no rows)"
 
@@ -396,15 +407,18 @@ def format_table(rows: list[dict[str, Any]], columns: tuple[Column, ...]) -> str
 
 
 def print_report(title: str, rows: list[dict[str, Any]], columns: tuple[Column, ...], output: TextIO) -> None:
+    """Execute the print report routine."""
     print(title, file=output)
     print(format_table(rows, columns), file=output)
 
 
 def rows_as_json(rows: list[dict[str, Any]]) -> str:
+    """Execute the rows as json routine."""
     return json.dumps(rows, default=_json_default, indent=2, sort_keys=True)
 
 
 def _format_value(value: Any) -> str:
+    """Format value."""
     if value is None:
         return ""
     if isinstance(value, datetime):
@@ -419,6 +433,7 @@ def _format_value(value: Any) -> str:
 
 
 def _json_default(value: Any) -> str | int | float:
+    """Execute the json default routine."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     if isinstance(value, Decimal):
@@ -429,6 +444,7 @@ def _json_default(value: Any) -> str | int | float:
 
 
 def _positive_int(value: str) -> int:
+    """Execute the positive int routine."""
     parsed = int(value)
     if parsed < 1:
         raise argparse.ArgumentTypeError("value must be positive")
@@ -436,6 +452,7 @@ def _positive_int(value: str) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build parser."""
     parser = argparse.ArgumentParser(description="Inspect AGA Chapter Rewards balances and audit history.")
     parser.add_argument("report", choices=sorted(REPORTS), help="Report to run.")
     parser.add_argument("--top", type=_positive_int, default=DEFAULT_TOP, help=f"Maximum rows to return. Defaults to {DEFAULT_TOP}.")
@@ -450,6 +467,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None, output: TextIO = sys.stdout) -> int:
+    """Run the command-line entry point for this module."""
     parser = build_parser()
     args = parser.parse_args(argv)
 

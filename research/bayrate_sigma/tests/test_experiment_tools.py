@@ -13,10 +13,13 @@ TMP_DIR = Path(__file__).parent / "tmp_experiment_tools"
 
 
 class FakeExperimentExportAdapter:
+    """Represent fake experiment export adapter."""
     def __init__(self) -> None:
+        """Initialize the fake experiment export adapter instance."""
         self.queries = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if "FROM [ratings].[games] AS g" in query and "SELECT" in query and "Game_ID" in query:
             return [
@@ -50,15 +53,19 @@ class FakeExperimentExportAdapter:
         ]
 
     def execute_statements(self, statements):
+        """Execute statements."""
         raise AssertionError("Experiment dataset export should not write SQL.")
 
 
 class ExperimentToolTest(unittest.TestCase):
+    """Represent experiment tool test."""
     def tearDown(self) -> None:
+        """Execute the tearDown routine."""
         if TMP_DIR.exists():
             shutil.rmtree(TMP_DIR)
 
     def test_run_experiment_benchmark_writes_summary_and_comparison(self) -> None:
+        """Verify that run experiment benchmark writes summary and comparison."""
         baseline = run_experiment_benchmark(
             games_path=FIXTURE_DIR / "smoke_games.csv",
             ratings_path=FIXTURE_DIR / "smoke_ratings.csv",
@@ -83,11 +90,13 @@ class ExperimentToolTest(unittest.TestCase):
         self.assertEqual(comparison["metric_deltas"]["pre_event_metrics.average_log_loss"]["delta"], 0.0)
 
     def test_distribution_handles_empty_and_percentiles(self) -> None:
+        """Verify that distribution handles empty and percentiles."""
         self.assertEqual(distribution([])["count"], 0)
         self.assertEqual(distribution([1, 2, 3])["median"], 2.0)
         self.assertAlmostEqual(distribution([1, 2, 3])["p90"], 2.8)
 
     def test_load_config_from_json_accepts_best_config_wrapper(self) -> None:
+        """Verify that load config from json accepts best config wrapper."""
         config_path = TMP_DIR / "best_config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(
@@ -101,6 +110,7 @@ class ExperimentToolTest(unittest.TestCase):
         self.assertEqual(config.surprise_sigma_score_mode, "pre")
 
     def test_export_experiment_dataset_writes_csv_snapshot(self) -> None:
+        """Verify that export experiment dataset writes csv snapshot."""
         adapter = FakeExperimentExportAdapter()
 
         metadata = export_experiment_dataset(

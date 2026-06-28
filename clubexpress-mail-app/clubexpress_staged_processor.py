@@ -20,25 +20,31 @@ ALLOWED_DOWNSTREAM_PROCEDURES = {
 
 
 class ClubExpressStagedEventAdapter(Protocol):
+    """Represent club express staged event adapter."""
     def query_rows(self, query: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
+        """Query rows."""
         ...
 
     def execute_statements(self, statements: Iterable[tuple[str, tuple[Any, ...]]]) -> None:
+        """Execute statements."""
         ...
 
 
 @dataclass(frozen=True)
 class DownstreamCall:
+    """Represent downstream call."""
     name: str
     params: dict[str, Any]
 
     @property
     def returns_rows(self) -> bool:
+        """Execute the returns rows routine."""
         return self.name in ROW_RETURNING_PROCEDURES
 
 
 @dataclass(frozen=True)
 class StagedClubExpressEvent:
+    """Represent staged club express event."""
     parsed_event_id: int
     message_id: str
     event_key: str
@@ -62,6 +68,7 @@ class StagedClubExpressEvent:
     downstream_calls: list[DownstreamCall]
 
     def as_summary_dict(self) -> dict[str, Any]:
+        """Execute the as summary dict routine."""
         return {
             "parsed_event_id": self.parsed_event_id,
             "message_id": self.message_id,
@@ -83,6 +90,7 @@ class StagedClubExpressEvent:
 
 @dataclass(frozen=True)
 class ReplayResult:
+    """Represent replay result data."""
     event_key: str
     executed: bool
     status_before: str
@@ -90,6 +98,7 @@ class ReplayResult:
     procedure_results: list[dict[str, Any]]
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "event_key": self.event_key,
             "executed": self.executed,
@@ -101,6 +110,7 @@ class ReplayResult:
 
 @dataclass(frozen=True)
 class BatchProcessResult:
+    """Represent batch process result data."""
     event_type: str
     executed: bool
     selected_count: int
@@ -109,6 +119,7 @@ class BatchProcessResult:
     results: list[dict[str, Any]]
 
     def as_dict(self) -> dict[str, Any]:
+        """Execute the as dict routine."""
         return {
             "event_type": self.event_type,
             "executed": self.executed,
@@ -205,6 +216,7 @@ def list_events(
     status: str | None = None,
     event_type: str | None = None,
 ) -> list[StagedClubExpressEvent]:
+    """List events."""
     rows = adapter.query_rows(LIST_EVENTS_SQL, (top, status, status, event_type, event_type))
     return [event_from_row(row) for row in rows]
 
@@ -215,6 +227,7 @@ def list_pending_events(
     event_type: str,
     top: int = DEFAULT_TOP,
 ) -> list[StagedClubExpressEvent]:
+    """List pending events."""
     rows = adapter.query_rows(LIST_PENDING_EVENTS_SQL, (top, event_type))
     return [event_from_row(row) for row in rows]
 
@@ -225,6 +238,7 @@ def load_event(
     event_key: str | None = None,
     parsed_event_id: int | None = None,
 ) -> StagedClubExpressEvent:
+    """Load event."""
     if bool(event_key) == bool(parsed_event_id):
         raise ValueError("Pass exactly one of event_key or parsed_event_id.")
     if event_key:
@@ -243,6 +257,7 @@ def load_recent_attempts(
     *,
     top: int = 5,
 ) -> list[dict[str, Any]]:
+    """Load recent attempts."""
     rows = adapter.query_rows(RECENT_ATTEMPTS_SQL, (top, event_key))
     attempts = []
     for row in rows:
@@ -260,6 +275,7 @@ def load_recent_attempts(
 
 
 def event_from_row(row: dict[str, Any]) -> StagedClubExpressEvent:
+    """Execute the event from row routine."""
     downstream_payload = parse_optional_json(row.get("Downstream_Payload_Json")) or {}
     return StagedClubExpressEvent(
         parsed_event_id=coerce_int(row.get("Parsed_Event_ID")),
@@ -287,6 +303,7 @@ def event_from_row(row: dict[str, Any]) -> StagedClubExpressEvent:
 
 
 def parse_downstream_calls(payload: dict[str, Any]) -> list[DownstreamCall]:
+    """Parse downstream calls."""
     calls = []
     for item in payload.get("procedures") or []:
         if not isinstance(item, dict):
@@ -310,6 +327,7 @@ def replay_event(
     allow_processed: bool = False,
     force_processing: bool = False,
 ) -> ReplayResult:
+    """Execute the replay event routine."""
     if not event.downstream_calls:
         raise ValueError(f"Parsed event {event.event_key} has no downstream calls to replay.")
     if not execute:
@@ -343,6 +361,7 @@ def process_pending_events(
     confirm_replay: bool = False,
     processor_name: str = "staged_event_processor",
 ) -> BatchProcessResult:
+    """Process pending events."""
     events = list_pending_events(adapter, event_type=event_type, top=top)
     results: list[dict[str, Any]] = []
     processed_count = 0
@@ -388,6 +407,7 @@ def process_staged_event(
     processor_name: str,
     executed_via_replay: bool = False,
 ) -> ReplayResult:
+    """Process staged event."""
     if event.status != "staged":
         raise ValueError(f"Refusing to process event {event.event_key} with status {event.status!r}.")
     mark_event_status(adapter, event.event_key, "processing")
@@ -415,10 +435,12 @@ def execute_downstream_calls(
     adapter: ClubExpressStagedEventAdapter,
     calls: list[DownstreamCall],
 ) -> list[dict[str, Any]]:
+    """Execute downstream calls."""
     results: list[dict[str, Any]] = []
     pending_statements: list[tuple[str, tuple[Any, ...]]] = []
 
     def flush_pending() -> None:
+        """Execute the flush pending routine."""
         if not pending_statements:
             return
         adapter.execute_statements(pending_statements)
@@ -455,6 +477,7 @@ def execute_downstream_calls(
 
 
 def stored_procedure_statement(call: DownstreamCall) -> tuple[str, tuple[Any, ...]]:
+    """Execute the stored procedure statement routine."""
     if call.name not in ALLOWED_DOWNSTREAM_PROCEDURES:
         raise ValueError(f"Unsupported downstream procedure: {call.name!r}")
     ordered_items = list(call.params.items())
@@ -474,6 +497,7 @@ def mark_event_status(
     error_message: str | None = None,
     result_payload: dict[str, Any] | None = None,
 ) -> None:
+    """Execute the mark event status routine."""
     adapter.execute_statements(
         [
             (
@@ -490,11 +514,13 @@ def mark_event_status(
 
 
 def stored_procedure_sql_name(name: str) -> str:
+    """Execute the stored procedure sql name routine."""
     schema, proc = name.split(".", 1)
     return f"[{schema}].[{proc}]"
 
 
 def procedure_preview(call: DownstreamCall) -> dict[str, Any]:
+    """Execute the procedure preview routine."""
     return {
         "name": call.name,
         "returns_rows": call.returns_rows,
@@ -504,6 +530,7 @@ def procedure_preview(call: DownstreamCall) -> dict[str, Any]:
 
 
 def procedure_name_from_exec(query: str) -> str:
+    """Execute the procedure name from exec routine."""
     prefix = "EXEC "
     text = query.strip()
     if not text.upper().startswith(prefix):
@@ -513,6 +540,7 @@ def procedure_name_from_exec(query: str) -> str:
 
 
 def parse_optional_json(value: Any) -> Any:
+    """Parse optional json."""
     if value is None or value == "":
         return None
     if isinstance(value, (dict, list)):
@@ -521,24 +549,28 @@ def parse_optional_json(value: Any) -> Any:
 
 
 def coerce_int(value: Any) -> int:
+    """Coerce int."""
     if value is None:
         return 0
     return int(value)
 
 
 def coerce_optional_int(value: Any) -> int | None:
+    """Coerce optional int."""
     if value is None:
         return None
     return int(value)
 
 
 def truncate_error(error_message: str | None) -> str | None:
+    """Execute the truncate error routine."""
     if error_message is None:
         return None
     return str(error_message)[:4000]
 
 
 def json_safe_value(value: Any) -> Any:
+    """Execute the json safe value routine."""
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, date):

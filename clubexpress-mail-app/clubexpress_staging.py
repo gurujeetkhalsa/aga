@@ -6,12 +6,14 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class DownstreamProcedure:
+    """Represent downstream procedure."""
     name: str
     params: dict
 
 
 @dataclass(frozen=True)
 class ClubExpressParsedEvent:
+    """Represent club express parsed event."""
     message_id: str
     event_key: str
     message_type: str
@@ -28,6 +30,7 @@ class ClubExpressParsedEvent:
     downstream_payload_json: Optional[str]
 
     def record_params(self) -> dict:
+        """Record params."""
         return {
             "MessageId": self.message_id,
             "EventKey": self.event_key,
@@ -47,6 +50,7 @@ class ClubExpressParsedEvent:
 
 
 def parsed_event_key(message_id: str, event_type: str, entity_id: Optional[int] = None) -> str:
+    """Execute the parsed event key routine."""
     parts = [str(message_id), str(event_type)]
     if entity_id is not None:
         parts.append(str(entity_id))
@@ -66,6 +70,7 @@ def build_membership_parsed_event(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> ClubExpressParsedEvent:
+    """Build membership parsed event."""
     agaid = int(parsed["AGAID"])
     parsed_payload = _source_payload(
         message_id=message_id,
@@ -105,6 +110,7 @@ def build_chapter_renewal_notice_parsed_event(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> ClubExpressParsedEvent:
+    """Build chapter renewal notice parsed event."""
     parsed_payload = _source_payload(
         message_id=message_id,
         sender=sender,
@@ -145,6 +151,7 @@ def build_csv_attachment_parsed_event(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> ClubExpressParsedEvent:
+    """Build csv attachment parsed event."""
     parsed_payload = _source_payload(
         message_id=message_id,
         sender=sender,
@@ -199,6 +206,7 @@ def build_journal_parsed_event(
     subject: Optional[str] = None,
     blob_path: Optional[str] = None,
 ) -> ClubExpressParsedEvent:
+    """Build journal parsed event."""
     articles = parsed.get("Articles") or []
     matches = parsed.get("Matches") or []
     review_matches = parsed.get("ReviewMatches") or []
@@ -240,6 +248,7 @@ def status_params(
     error_message: Optional[str] = None,
     result_payload: Optional[dict] = None,
 ) -> dict:
+    """Execute the status params routine."""
     return {
         "EventKey": event_key,
         "Status": status,
@@ -253,6 +262,7 @@ def result_payload_for_procedures(
     *,
     extra: Optional[dict] = None,
 ) -> dict:
+    """Execute the result payload for procedures routine."""
     payload = {
         "procedures": [{"name": procedure.name} for procedure in procedures],
     }
@@ -269,6 +279,7 @@ def _source_payload(
     blob_path: Optional[str],
     parsed: dict,
 ) -> dict:
+    """Execute the source payload routine."""
     return {
         "message_id": message_id,
         "sender": sender,
@@ -279,6 +290,7 @@ def _source_payload(
 
 
 def _downstream_payload_json(procedures: list[DownstreamProcedure]) -> Optional[str]:
+    """Execute the downstream payload json routine."""
     if not procedures:
         return None
     return _json_dumps(
@@ -295,10 +307,12 @@ def _downstream_payload_json(procedures: list[DownstreamProcedure]) -> Optional[
 
 
 def _json_dumps(value: object) -> str:
+    """Execute the json dumps routine."""
     return json.dumps(_json_safe_value(value), sort_keys=True, separators=(",", ":"))
 
 
 def _json_safe_value(value: object) -> object:
+    """Execute the json safe value routine."""
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, date):
@@ -313,6 +327,7 @@ def _json_safe_value(value: object) -> object:
 
 
 def _truncate_error(error_message: Optional[str]) -> Optional[str]:
+    """Execute the truncate error routine."""
     if error_message is None:
         return None
     return str(error_message)[:4000]

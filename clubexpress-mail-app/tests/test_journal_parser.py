@@ -19,7 +19,9 @@ spec.loader.exec_module(mailapp)
 
 
 class JournalParserTest(unittest.TestCase):
+    """Represent journal parser test."""
     def test_naol_review_parser_does_not_shift_videos_after_missing_iframe(self):
+        """Verify that naol review parser does not shift videos after missing iframe."""
         html_body = """
         <html><body>
           <p><strong>Yilun Yang (7P) (8:30 to 9:30PM)</strong></p>
@@ -75,6 +77,7 @@ class JournalParserTest(unittest.TestCase):
         )
 
     def test_heading_articles_use_linked_headlines_only_as_link_lookup(self):
+        """Verify that heading articles use linked headlines only as link lookup."""
         html_body = """
         <html><body>
           <h3>News</h3>
@@ -120,7 +123,9 @@ class JournalParserTest(unittest.TestCase):
 
 
 class MembershipRewardEventTest(unittest.TestCase):
+    """Represent membership reward event test."""
     def test_mailbox_candidates_are_fetched_and_sorted_oldest_first(self):
+        """Verify that mailbox candidates are fetched and sorted oldest first."""
         messages_by_id = {
             "newer": {"id": "newer", "internalDate": "2000"},
             "older": {"id": "older", "internalDate": "1000"},
@@ -138,6 +143,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual([message["id"] for message in messages], ["older", "newer"])
 
     def test_renewal_parser_extracts_expiration_date_between_type_and_total(self):
+        """Verify that renewal parser extracts expiration date between type and total."""
         text = """
         A membership renewal has been processed for American Go Association.
 
@@ -161,12 +167,14 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertFalse(parsed["IsChapterMember"])
 
     def test_tournament_pass_default_expiration_is_thirty_day_window(self):
+        """Verify that tournament pass default expiration is thirty day window."""
         self.assertEqual(
             mailapp._default_membership_expiration_date(date(2026, 6, 13), "Tournament Pass"),
             date(2026, 7, 12),
         )
 
     def test_membership_reward_event_params_preserve_source_context(self):
+        """Verify that membership reward event params preserve source context."""
         received_at = datetime(2026, 5, 2, 15, 30, tzinfo=timezone.utc)
 
         params = mailapp._membership_reward_event_params(
@@ -197,6 +205,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertFalse(payload["parsed"]["IsChapterMember"])
 
     def test_stored_procedure_call_orders_params(self):
+        """Verify that stored procedure call orders params."""
         sql, values = mailapp._stored_procedure_call(
             "rewards.sp_record_membership_event",
             {"MessageId": "msg-123", "AGAID": 12345},
@@ -209,6 +218,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(values, ["msg-123", 12345])
 
     def test_new_member_staged_consumption_skips_direct_downstream_writes(self):
+        """Verify that new member staged consumption skips direct downstream writes."""
         text = """
         Thank you for purchasing a membership in American Go Association.
 
@@ -281,6 +291,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(gmail_marks, ["new-member-msg"])
 
     def test_renewal_staged_consumption_skips_direct_downstream_writes(self):
+        """Verify that renewal staged consumption skips direct downstream writes."""
         text = """
         A membership renewal has been processed for American Go Association.
 
@@ -367,6 +378,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(gmail_marks, ["renewal-msg"])
 
     def test_chapter_renewal_notice_staged_consumption_skips_direct_processing(self):
+        """Verify that chapter renewal notice staged consumption skips direct processing."""
         message = {
             "id": "notice-msg",
             "internalDate": "1777942800000",
@@ -443,6 +455,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(gmail_marks, ["notice-msg"])
 
     def test_journal_staged_consumption_skips_direct_downstream_writes(self):
+        """Verify that journal staged consumption skips direct downstream writes."""
         text = """
         News
         Tournament Results
@@ -526,6 +539,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(gmail_marks, ["journal-msg"])
 
     def test_memchap_staged_consumption_skips_direct_import(self):
+        """Verify that memchap staged consumption skips direct import."""
         message = {
             "id": "memchap-msg",
             "internalDate": "1782518400000",
@@ -594,6 +608,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(gmail_marks, ["memchap-msg"])
 
     def test_chapter_staged_consumption_skips_direct_import(self):
+        """Verify that chapter staged consumption skips direct import."""
         message = {
             "id": "chapter-msg",
             "internalDate": "1782518400000",
@@ -662,6 +677,7 @@ class MembershipRewardEventTest(unittest.TestCase):
         self.assertEqual(gmail_marks, ["chapter-msg"])
 
     def test_member_categories_staged_consumption_skips_direct_import(self):
+        """Verify that member categories staged consumption skips direct import."""
         message = {
             "id": "category-msg",
             "internalDate": "1782518400000",
@@ -731,7 +747,9 @@ class MembershipRewardEventTest(unittest.TestCase):
 
 
 class RewardsSnapshotTest(unittest.TestCase):
+    """Represent rewards snapshot test."""
     def test_rewards_snapshot_params_do_not_replace_existing_snapshots(self):
+        """Verify that rewards snapshot params do not replace existing snapshots."""
         params = mailapp._rewards_snapshot_params(date(2026, 5, 2))
 
         self.assertEqual(
@@ -745,7 +763,9 @@ class RewardsSnapshotTest(unittest.TestCase):
 
 
 class RewardsMembershipAwardsTest(unittest.TestCase):
+    """Represent rewards membership awards test."""
     def test_rewards_membership_awards_params_write_daily_run(self):
+        """Verify that rewards membership awards params write daily run."""
         params = mailapp._rewards_membership_awards_params(date(2026, 5, 2))
 
         self.assertEqual(
@@ -759,7 +779,9 @@ class RewardsMembershipAwardsTest(unittest.TestCase):
 
 
 class RewardsRatedGameAwardsTest(unittest.TestCase):
+    """Represent rewards rated game awards test."""
     def test_rewards_rated_game_awards_params_write_daily_run_on_ledger_start(self):
+        """Verify that rewards rated game awards params write daily run on ledger start."""
         params = mailapp._rewards_rated_game_awards_params(date(2026, 5, 2))
 
         self.assertEqual(
@@ -773,6 +795,7 @@ class RewardsRatedGameAwardsTest(unittest.TestCase):
         )
 
     def test_rewards_rated_game_awards_params_scan_from_ledger_start(self):
+        """Verify that rewards rated game awards params scan from ledger start."""
         params = mailapp._rewards_rated_game_awards_params(date(2026, 5, 21))
 
         self.assertEqual(
@@ -786,6 +809,7 @@ class RewardsRatedGameAwardsTest(unittest.TestCase):
         )
 
     def test_rewards_rated_game_awards_params_allow_configured_start_date(self):
+        """Verify that rewards rated game awards params allow configured start date."""
         original = os.environ.get("REWARDS_RATED_GAME_AWARDS_DATE_FROM")
         os.environ["REWARDS_RATED_GAME_AWARDS_DATE_FROM"] = "2026-05-16"
         try:
@@ -808,7 +832,9 @@ class RewardsRatedGameAwardsTest(unittest.TestCase):
 
 
 class RewardsTournamentAwardsTest(unittest.TestCase):
+    """Represent rewards tournament awards test."""
     def test_rewards_tournament_awards_params_scan_through_daily_date(self):
+        """Verify that rewards tournament awards params scan through daily date."""
         params = mailapp._rewards_tournament_awards_params(date(2026, 5, 3))
 
         self.assertEqual(
@@ -823,7 +849,9 @@ class RewardsTournamentAwardsTest(unittest.TestCase):
 
 
 class RewardsPointExpirationsTest(unittest.TestCase):
+    """Represent rewards point expirations test."""
     def test_rewards_point_expirations_params_write_daily_run(self):
+        """Verify that rewards point expirations params write daily run."""
         params = mailapp._rewards_point_expirations_params(date(2028, 5, 3))
 
         self.assertEqual(
@@ -837,13 +865,16 @@ class RewardsPointExpirationsTest(unittest.TestCase):
 
 
 class ChapterRenewalNoticeTest(unittest.TestCase):
+    """Represent chapter renewal notice test."""
     def test_membership_renewal_emails_subject_is_classified(self):
+        """Verify that membership renewal emails subject is classified."""
         self.assertEqual(
             mailapp._classify_message("ClubExpress <scheduler@mail2.clubexpress.com>", "Membership Renewal Emails", []),
             mailapp.CHAPTER_RENEWAL_NOTICE_MESSAGE_TYPE,
         )
 
     def test_parse_chapter_renewal_notice_html_table_extracts_chapters_only(self):
+        """Verify that parse chapter renewal notice html table extracts chapters only."""
         html_body = """
         <html><body>
           <table>
@@ -863,6 +894,7 @@ class ChapterRenewalNoticeTest(unittest.TestCase):
         self.assertEqual(rows[1]["member_raw"], "25495 - Ghost City Go")
 
     def test_chapter_renewal_notice_params_include_points_and_payload(self):
+        """Verify that chapter renewal notice params include points and payload."""
         received_at = datetime(2026, 5, 5, 1, 15, tzinfo=timezone.utc)
         parsed_rows = [
             {
@@ -891,6 +923,7 @@ class ChapterRenewalNoticeTest(unittest.TestCase):
         self.assertEqual(notices[0]["source_payload"]["subject"], "Membership Renewal Emails")
 
     def test_chapter_renewal_confirmation_params_use_chapter_id(self):
+        """Verify that chapter renewal confirmation params use chapter id."""
         received_at = datetime(2026, 5, 5, 14, 30, tzinfo=timezone.utc)
         parsed = {
             "AGAID": 14182,
@@ -916,6 +949,7 @@ class ChapterRenewalNoticeTest(unittest.TestCase):
         self.assertEqual(payload["blob_path"], "member_renewal/2026/05/05/msg-confirm")
 
     def test_pending_chapter_renewals_email_body_lists_debited_chapters(self):
+        """Verify that pending chapter renewals email body lists debited chapters."""
         body = mailapp._pending_chapter_renewals_email_body(
             [
                 {
@@ -936,6 +970,7 @@ class ChapterRenewalNoticeTest(unittest.TestCase):
         self.assertIn("txn 1269", body)
 
     def test_pending_chapter_renewals_email_body_handles_empty_list(self):
+        """Verify that pending chapter renewals email body handles empty list."""
         body = mailapp._pending_chapter_renewals_email_body([], date(2026, 5, 6))
 
         self.assertIn("Pending debited chapters: 0", body)
@@ -943,7 +978,9 @@ class ChapterRenewalNoticeTest(unittest.TestCase):
 
 
 class ChapterCsvImportTest(unittest.TestCase):
+    """Represent chapter csv import test."""
     def test_chapterx_filename_is_classified_as_chapter_csv(self):
+        """Verify that chapterx filename is classified as chapter csv."""
         report_type = mailapp._detect_attachment_report_type(
             "Immediate_Chapterx.csv",
             b"ID,Name,Short Name,City,State,Status\r\n32477,Test Club,TST,Seattle,WA,Active\r\n",
@@ -952,6 +989,7 @@ class ChapterCsvImportTest(unittest.TestCase):
         self.assertEqual(report_type, mailapp.CHAPTER_MESSAGE_TYPE)
 
     def test_chapter_rows_accept_extra_clubexpress_columns_and_aliases(self):
+        """Verify that chapter rows accept extra clubexpress columns and aliases."""
         rows = mailapp._parse_chapter_rows(
             b"Report generated,ignored\r\n"
             b"ID,Name,Short Name,City,State,Primary Contact Member ID,Date Created,Status,Extra\r\n"
@@ -966,6 +1004,7 @@ class ChapterCsvImportTest(unittest.TestCase):
         self.assertEqual(rows[0][7], "Active")
 
     def test_chapter_rows_reject_duplicate_chapter_ids(self):
+        """Verify that chapter rows reject duplicate chapter ids."""
         with self.assertRaisesRegex(mailapp.CsvValidationError, "Duplicate ChapterID"):
             mailapp._parse_chapter_rows(
                 b"ChapterID,ChapterName,ChapterCode\r\n"
@@ -974,6 +1013,7 @@ class ChapterCsvImportTest(unittest.TestCase):
             )
 
     def test_chapter_rows_reject_missing_required_headers(self):
+        """Verify that chapter rows reject missing required headers."""
         with self.assertRaisesRegex(mailapp.CsvValidationError, "ChapterID, ChapterCode, ChapterName"):
             mailapp._parse_chapter_rows(
                 b"ChapterID,ChapterName,City,State\r\n"
@@ -981,6 +1021,7 @@ class ChapterCsvImportTest(unittest.TestCase):
             )
 
     def test_chapter_rows_reject_blank_required_values(self):
+        """Verify that chapter rows reject blank required values."""
         with self.assertRaisesRegex(mailapp.CsvValidationError, "Column ChapterCode is required"):
             mailapp._parse_chapter_rows(
                 b"ChapterID,ChapterName,ChapterCode\r\n"
@@ -989,7 +1030,9 @@ class ChapterCsvImportTest(unittest.TestCase):
 
 
 class MemChapCsvImportTest(unittest.TestCase):
+    """Represent mem chap csv import test."""
     def test_memchap_rows_accept_active_header_as_mislabeled_agaid(self):
+        """Verify that memchap rows accept active header as mislabeled agaid."""
         header = ["Active", *mailapp.STAGING_COLUMNS[1:], "Member.DateCreated"]
         values = {column: "" for column in mailapp.STAGING_COLUMNS}
         values.update(
@@ -1014,6 +1057,7 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual(rows[0][mailapp.STAGING_COLUMNS.index("ChapterID")], 32292)
 
     def test_process_pending_memchap_events_imports_archived_attachment(self):
+        """Verify that process pending memchap events imports archived attachment."""
         prefix = "nightly_memchap_csv/2026/06/26/memchap-msg"
         row = {
             "Parsed_Event_ID": 21,
@@ -1099,6 +1143,7 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual(result.results[0]["status_after"], "processed")
 
     def test_process_pending_chapter_events_imports_archived_attachment(self):
+        """Verify that process pending chapter events imports archived attachment."""
         prefix = "chapter_csv/2026/06/26/chapter-msg"
         row = {
             "Parsed_Event_ID": 22,
@@ -1184,6 +1229,7 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual(result.results[0]["status_after"], "processed")
 
     def test_process_pending_member_category_events_imports_archived_attachment(self):
+        """Verify that process pending member category events imports archived attachment."""
         prefix = "nightly_member_categories_csv/2026/06/26/category-msg"
         row = {
             "Parsed_Event_ID": 23,
@@ -1269,6 +1315,7 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertEqual(result.results[0]["status_after"], "processed")
 
     def test_process_pending_chapter_renewal_notice_events_runs_proc_and_sends_summary(self):
+        """Verify that process pending chapter renewal notice events runs proc and sends summary."""
         prefix = "chapter_renewal_notice/2026/05/04/notice-msg"
         result_rows = [
             {
@@ -1394,6 +1441,7 @@ class MemChapCsvImportTest(unittest.TestCase):
         self.assertIsNone(email_logs[0][1]["ErrorMessage"])
 
     def test_process_pending_journal_events_replays_downstream_procedure(self):
+        """Verify that process pending journal events replays downstream procedure."""
         prefix = "american_go_e_journal/2026/06/26/journal-msg"
         row = {
             "Parsed_Event_ID": 24,
@@ -1479,13 +1527,16 @@ class MemChapCsvImportTest(unittest.TestCase):
 
 
 class _FakeStagedAdapter:
+    """Represent fake staged adapter."""
     def __init__(self, rows, query_rows_by_marker=None):
+        """Initialize the fake staged adapter instance."""
         self.rows = rows
         self.query_rows_by_marker = query_rows_by_marker or {}
         self.queries = []
         self.executed = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         for marker, rows in self.query_rows_by_marker.items():
             if marker in query:
@@ -1493,6 +1544,7 @@ class _FakeStagedAdapter:
         return self.rows
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.executed.append(list(statements))
 
 

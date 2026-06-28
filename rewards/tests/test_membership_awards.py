@@ -5,7 +5,9 @@ from rewards import membership_awards
 
 
 class FakeMembershipAwardAdapter:
+    """Represent fake membership award adapter."""
     def __init__(self, *, preview=None, result=None):
+        """Initialize the fake membership award adapter instance."""
         self.preview = preview or {
             "RunID": None,
             "AsOfDate": date(2026, 5, 2),
@@ -35,6 +37,7 @@ class FakeMembershipAwardAdapter:
         self.statements = []
 
     def query_rows(self, query, params=()):
+        """Query rows."""
         self.queries.append((query, tuple(params)))
         if query == membership_awards.PROCESS_MEMBERSHIP_AWARDS_SQL:
             return [self.preview]
@@ -43,11 +46,14 @@ class FakeMembershipAwardAdapter:
         raise AssertionError("Unexpected query")
 
     def execute_statements(self, statements):
+        """Execute statements."""
         self.statements.extend(list(statements))
 
 
 class MembershipAwardsTest(unittest.TestCase):
+    """Represent membership awards test."""
     def test_dry_run_returns_preview_without_writes(self):
+        """Verify that dry run returns preview without writes."""
         adapter = FakeMembershipAwardAdapter()
 
         result = membership_awards.process_membership_awards(
@@ -64,6 +70,7 @@ class MembershipAwardsTest(unittest.TestCase):
         self.assertEqual(adapter.statements, [])
 
     def test_write_executes_proc_and_reads_summary(self):
+        """Verify that write executes proc and reads summary."""
         adapter = FakeMembershipAwardAdapter()
 
         result = membership_awards.process_membership_awards(
