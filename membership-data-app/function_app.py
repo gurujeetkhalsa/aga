@@ -848,7 +848,7 @@ def _render_tdlist_fixed_width(rows: list[dict[str, object]]) -> str:
         rendered_rows.append(
             f"{_tdlist_name(row):<28}"
             f"{str(row['AGAID'] or ''):>6} "
-            f"{_tdlist_text(row.get('MemberType')):<7} "
+            f"{_tdlist_member_type_label(row.get('MemberType')):<5} "
             f"{_format_tdlist_decimal(row.get('Rating'), digits=1):>6} "
             f"{_format_tdlist_date(row.get('ExpirationDate')):>10} "
             f"{chapter_code:<4} "
@@ -869,6 +869,24 @@ def _tdlist_text(value: object) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def _tdlist_member_type_label(value: object) -> str:
+    text = _tdlist_text(value)
+    key = re.sub(r"[^a-z0-9]+", "", text.lower())
+    if not key:
+        return ""
+    if key.startswith("youth"):
+        return "Youth"
+    if key.startswith("life") or key.startswith("lifetime"):
+        return "Life"
+    if key.startswith("comp") or key.startswith("complimentary"):
+        return "Comp"
+    if "pass" in key:
+        return "Pass"
+    if key.startswith("full") or key.startswith("adult") or key.startswith("regular"):
+        return "Full"
+    return text[:5]
 
 
 def _format_tdlist_decimal(value: object, *, digits: int) -> str:
