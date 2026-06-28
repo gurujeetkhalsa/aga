@@ -348,18 +348,29 @@ def _bayrate_commit_state(adapter: object, run_id: int | str) -> dict:
     rows = adapter.query_rows(
         """
 SELECT
+    (SELECT JSON_VALUE(
+        CASE WHEN ISJSON([SummaryJson]) = 1 THEN [SummaryJson] ELSE N'{}' END,
+        N'$.commit_status'
+    ) FROM [ratings].[bayrate_runs] WHERE [RunID] = ?) AS [AuditCommitStatus],
+    (SELECT JSON_VALUE(
+        CASE WHEN ISJSON([SummaryJson]) = 1 THEN [SummaryJson] ELSE N'{}' END,
+        N'$.superseded_by_run_id'
+    ) FROM [ratings].[bayrate_runs] WHERE [RunID] = ?) AS [SupersededByRunID],
     (SELECT COUNT(*) FROM [ratings].[bayrate_staged_ratings] WHERE [RunID] = ?) AS [StagedRatingCount],
     (SELECT COUNT(*) FROM [ratings].[bayrate_staged_ratings] WHERE [RunID] = ? AND [Planned_Rating_Row_ID] IS NOT NULL) AS [PlannedRatingCount],
     (SELECT COUNT(*) FROM [ratings].[bayrate_staged_games] WHERE [RunID] = ?) AS [StagedGameCount],
     (SELECT COUNT(*) FROM [ratings].[bayrate_staged_games] WHERE [RunID] = ? AND [Game_ID] IS NOT NULL) AS [PlannedGameCount]
 """,
-        (run_id, run_id, run_id, run_id),
+        (run_id, run_id, run_id, run_id, run_id, run_id),
     )
     row = rows[0] if rows else {}
+    audit_commit_status = str(row.get("AuditCommitStatus") or "").strip()
+    superseded_by_run_id = row.get("SupersededByRunID")
     staged_rating_count = int(row.get("StagedRatingCount") or 0)
     planned_rating_count = int(row.get("PlannedRatingCount") or 0)
     staged_game_count = int(row.get("StagedGameCount") or 0)
     planned_game_count = int(row.get("PlannedGameCount") or 0)
+    superseded = audit_commit_status == "superseded"
     partial_marker = (
         0 < planned_rating_count < staged_rating_count
         or 0 < planned_game_count < staged_game_count
@@ -372,7 +383,10 @@ SELECT
         and planned_game_count == staged_game_count
         and not partial_marker
     )
-    if partial_marker:
+    if superseded:
+        state = "superseded"
+        committed = True
+    elif partial_marker:
         state = "partial_commit_marker"
     elif committed:
         state = "committed"
@@ -383,6 +397,8 @@ SELECT
     return {
         "state": state,
         "committed": committed,
+        "audit_commit_status": audit_commit_status or None,
+        "superseded_by_run_id": superseded_by_run_id,
         "has_staged_ratings": staged_rating_count > 0,
         "staged_rating_count": staged_rating_count,
         "planned_rating_count": planned_rating_count,

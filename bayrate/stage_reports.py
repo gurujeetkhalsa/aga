@@ -20,6 +20,8 @@ from bayrate.sql_adapter import SqlAdapter, SqlStatement, get_sql_connection_str
 VALIDATION_STATUSES = {"staged", "validation_failed", "needs_review", "ready_for_rating"}
 DUPLICATE_DATE_WINDOW_DAYS = 7
 DUPLICATE_SCORE_THRESHOLD = 0.74
+STALE_TOURNAMENT_REPORT_DAYS = 30
+STALE_TOURNAMENT_REPORT_WARNING_TYPE = "stale_tournament_report"
 
 PRODUCTION_CANDIDATES_SQL = """
 SELECT
@@ -119,12 +121,14 @@ SELECT
     [ChapterID],
     [ChapterCode],
     [ChapterName],
+    [Status],
     [City],
     [State]
 FROM [membership].[chapters]
 WHERE [ChapterID] IS NOT NULL
   AND NULLIF(LTRIM(RTRIM([ChapterCode])), N'') IS NOT NULL
   AND NULLIF(LTRIM(RTRIM([ChapterName])), N'') IS NOT NULL
+  AND COALESCE(NULLIF(UPPER(LTRIM(RTRIM([Status]))), N''), N'ACTIVE') <> N'DROPPED'
 ORDER BY [ChapterCode], [ChapterName], [ChapterID]
 """
 
@@ -316,6 +320,9 @@ def build_staging_payload(
         game_rows = [dict(row) for row in report["game_rows"]]
         player_rows = [dict(row) for row in report.get("players") or []]
         parser_warnings = [dict(warning) for warning in report.get("warnings") or []]
+        stale_warning = build_tournament_age_warning(tournament_row.get("Tournament_Date"), today=processing_date)
+        if stale_warning:
+            parser_warnings.append(stale_warning)
         normalized_title = _normalize_title_for_match(tournament_row.get("Tournament_Descr") or "")
         original_code = tournament_row.get("Tournament_Code")
         code_source = _initial_code_source(parser_warnings)
@@ -601,6 +608,29 @@ def validate_game_row(game_row: dict[str, Any]) -> list[str]:
     if pin_1 is not None and pin_2 is not None and pin_1 == pin_2:
         errors.append("Pin_Player_1 and Pin_Player_2 must be different")
     return errors
+
+
+def build_tournament_age_warning(tournament_date: Any, *, today: date | None = None) -> dict[str, Any] | None:
+    event_date = _coerce_date(tournament_date)
+    if event_date is None:
+        return None
+    processing_date = today or date.today()
+    age_days = (processing_date - event_date).days
+    if age_days <= STALE_TOURNAMENT_REPORT_DAYS:
+        return None
+    return {
+        "type": STALE_TOURNAMENT_REPORT_WARNING_TYPE,
+        "severity": "review",
+        "review_required": True,
+        "event_date": event_date,
+        "processing_date": processing_date,
+        "age_days": age_days,
+        "max_age_days": STALE_TOURNAMENT_REPORT_DAYS,
+        "message": (
+            f"Tournament date {event_date.isoformat()} is {age_days} days before processing date "
+            f"{processing_date.isoformat()}; reports older than {STALE_TOURNAMENT_REPORT_DAYS} days require operator approval."
+        ),
+    }
 
 
 def validate_tournament_memberships(
@@ -1787,6 +1817,9 @@ def load_host_chapter_options(adapter: StageSqlAdapter) -> list[dict[str, Any]]:
         chapter_id = _coerce_int(row.get("ChapterID"))
         code = _clean_text(row.get("ChapterCode"))
         name = _clean_text(row.get("ChapterName"))
+        status = (_clean_text(row.get("Status")) or "").upper()
+        if status == "DROPPED":
+            continue
         if chapter_id is None or not code or not name or chapter_id in seen_ids:
             continue
         seen_ids.add(chapter_id)

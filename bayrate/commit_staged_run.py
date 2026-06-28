@@ -188,6 +188,60 @@ SET
 WHERE [RunID] = ?
 """
 
+PREVIOUS_COMMITTED_RUNS_SQL_TEMPLATE = """
+SELECT DISTINCT r.[RunID]
+FROM [ratings].[bayrate_runs] AS r
+WHERE r.[RunID] <> ?
+  AND JSON_VALUE(
+        CASE WHEN ISJSON(r.[SummaryJson]) = 1 THEN r.[SummaryJson] ELSE N'{{}}' END,
+        N'$.commit_status'
+      ) = N'committed'
+  AND
+  (
+      EXISTS
+      (
+          SELECT 1
+          FROM [ratings].[bayrate_staged_ratings] AS sr
+          WHERE sr.[RunID] = r.[RunID]
+            AND sr.[Planned_Rating_Row_ID] IS NOT NULL
+            AND sr.[Tournament_Code] IN ({rating_placeholders})
+      )
+      OR EXISTS
+      (
+          SELECT 1
+          FROM [ratings].[bayrate_staged_games] AS sg
+          WHERE sg.[RunID] = r.[RunID]
+            AND sg.[Game_ID] IS NOT NULL
+            AND sg.[Tournament_Code] IN ({game_placeholders})
+      )
+  )
+ORDER BY r.[RunID]
+"""
+
+MARK_SUPERSEDED_RUNS_SQL_TEMPLATE = """
+UPDATE [ratings].[bayrate_runs]
+SET
+    [Last_Updated_At] = SYSUTCDATETIME(),
+    [SummaryJson] = JSON_MODIFY(
+        JSON_MODIFY(
+            JSON_MODIFY(
+                JSON_MODIFY(
+                    CASE WHEN ISJSON([SummaryJson]) = 1 THEN [SummaryJson] ELSE N'{{}}' END,
+                    N'$.commit_status',
+                    N'superseded'
+                ),
+                N'$.superseded_by_run_id',
+                ?
+            ),
+            N'$.superseded_at_utc',
+            CONVERT(nvarchar(33), SYSUTCDATETIME(), 127) + N'Z'
+        ),
+        N'$.superseded_reason',
+        ?
+    )
+WHERE [RunID] IN ({run_placeholders})
+"""
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Preview or execute a BayRate staged-run production commit.")
@@ -298,6 +352,12 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
     production_rating_summaries = load_production_rating_summaries(adapter, affected_rating_codes)
     production_tournament_rows = load_production_tournaments_for_codes(adapter, staged_tournament_codes)
     max_ids = load_production_max_ids(adapter)
+    superseded_run_ids = load_previous_committed_run_ids(
+        adapter,
+        run_id_int,
+        rating_codes=affected_rating_codes,
+        game_codes=staged_tournament_codes,
+    )
 
     planned_games = plan_game_ids(staged_games, production_game_rows, int(max_ids.get("MaxGameID") or 0))
     planned_ratings = plan_rating_ids(staged_ratings, production_rating_summaries, int(max_ids.get("MaxRatingID") or 0))
@@ -307,6 +367,11 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         production_tournament_rows=production_tournament_rows,
         production_game_rows=production_game_rows,
     )
+    if superseded_run_ids:
+        warnings.append(
+            "Previously committed BayRate run(s) will be marked superseded: "
+            + ", ".join(str(run_id) for run_id in superseded_run_ids)
+        )
     requires_sgf_acknowledgement = any(row.get("Sgf_Code") for row in production_game_rows)
 
     production_write_count = (
@@ -326,6 +391,7 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         "existing_tournament_codes": _ordered_unique(row.get("Tournament_Code") for row in production_tournament_rows),
         "delete_rating_tournament_codes": affected_rating_codes,
         "replace_game_tournament_codes": staged_tournament_codes,
+        "superseded_run_ids": superseded_run_ids,
         "tournament_upsert_count": len(staged_tournaments),
         "game_insert_count": len(planned_games),
         "rating_insert_count": len(planned_ratings),
@@ -346,6 +412,24 @@ def load_staged_rating_rows(adapter: StageSqlAdapter, run_id: int) -> list[dict[
 def load_production_max_ids(adapter: StageSqlAdapter) -> dict[str, Any]:
     rows = adapter.query_rows(PRODUCTION_MAX_IDS_SQL)
     return rows[0] if rows else {"MaxGameID": 0, "MaxRatingID": 0}
+
+
+def load_previous_committed_run_ids(
+    adapter: StageSqlAdapter,
+    run_id: int,
+    *,
+    rating_codes: list[str],
+    game_codes: list[str],
+) -> list[int]:
+    code_set = _ordered_unique([*rating_codes, *game_codes])
+    if not code_set:
+        return []
+    query = PREVIOUS_COMMITTED_RUNS_SQL_TEMPLATE.format(
+        rating_placeholders=_placeholders(code_set),
+        game_placeholders=_placeholders(code_set),
+    )
+    rows = adapter.query_rows(query, (run_id, *code_set, *code_set))
+    return [_require_int(row.get("RunID"), "RunID") for row in rows]
 
 
 def load_production_tournaments_for_codes(adapter: StageSqlAdapter, codes: list[str]) -> list[dict[str, Any]]:
@@ -543,6 +627,9 @@ def build_commit_statements(
                 ),
             )
         )
+    superseded_run_ids = [int(run_id) for run_id in plan.get("superseded_run_ids") or []]
+    if superseded_run_ids:
+        statements.append(build_superseded_runs_statement(plan, superseded_run_ids))
     statements.append(
         (
             UPDATE_COMMIT_AUDIT_SQL,
@@ -553,6 +640,16 @@ def build_commit_statements(
         )
     )
     return statements
+
+
+def build_superseded_runs_statement(plan: dict[str, Any], superseded_run_ids: list[int]) -> SqlStatement:
+    affected_codes = _ordered_unique(plan.get("affected_tournament_codes") or [])
+    reason = (
+        f"Superseded by BayRate RunID {plan['run_id']}"
+        + (f"; replaced tournament codes: {', '.join(affected_codes)}" if affected_codes else "")
+    )
+    query = MARK_SUPERSEDED_RUNS_SQL_TEMPLATE.format(run_placeholders=_placeholders(superseded_run_ids))
+    return query, (plan["run_id"], reason, *superseded_run_ids)
 
 
 def build_tournament_upsert_statement(tournament: dict[str, Any]) -> SqlStatement:
@@ -641,6 +738,8 @@ def print_commit_plan(plan: dict[str, Any], output: TextIO) -> None:
     print(f"  Status: {plan['status']}", file=output)
     print(f"  Staged tournament(s): {', '.join(plan['staged_tournament_codes'])}", file=output)
     print(f"  Affected rating tournament(s): {', '.join(plan['affected_tournament_codes'])}", file=output)
+    if plan.get("superseded_run_ids"):
+        print(f"  Superseded previous run(s): {', '.join(str(run_id) for run_id in plan['superseded_run_ids'])}", file=output)
     print(f"  Tournament upserts: {plan['tournament_upsert_count']}", file=output)
     print(f"  Game inserts: {plan['game_insert_count']}", file=output)
     print(f"  Rating inserts: {plan['rating_insert_count']}", file=output)
@@ -660,6 +759,7 @@ def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "existing_tournament_codes": plan.get("existing_tournament_codes") or [],
         "delete_rating_tournament_codes": plan.get("delete_rating_tournament_codes") or [],
         "replace_game_tournament_codes": plan.get("replace_game_tournament_codes") or [],
+        "superseded_run_ids": plan.get("superseded_run_ids") or [],
         "tournament_upsert_count": plan.get("tournament_upsert_count", 0),
         "game_insert_count": plan.get("game_insert_count", 0),
         "rating_insert_count": plan.get("rating_insert_count", 0),
@@ -697,6 +797,7 @@ def _commit_audit_summary(
         "affected_tournament_codes": printable.get("affected_tournament_codes") or [],
         "staged_tournament_codes": printable.get("staged_tournament_codes") or [],
         "production_cascade_tournament_codes": printable.get("production_cascade_tournament_codes") or [],
+        "superseded_run_ids": printable.get("superseded_run_ids") or [],
         "production_write_count": printable.get("production_write_count", 0),
         "game_id_range": printable.get("game_id_range"),
         "rating_id_range": printable.get("rating_id_range"),

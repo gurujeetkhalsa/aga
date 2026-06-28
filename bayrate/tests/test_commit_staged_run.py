@@ -5,15 +5,27 @@ from bayrate.commit_staged_run import build_commit_plan, build_commit_statements
 
 
 class CommitAdapter:
-    def __init__(self, *, status="ready_for_rating", staged_ratings=None, production_games=None, production_ratings=None, production_tournaments=None):
+    def __init__(
+        self,
+        *,
+        status="ready_for_rating",
+        staged_ratings=None,
+        production_games=None,
+        production_ratings=None,
+        production_tournaments=None,
+        previous_committed_runs=None,
+    ):
         self.status = status
         self.staged_ratings = list(self.default_staged_ratings() if staged_ratings is None else staged_ratings)
         self.production_games = list(production_games or [])
         self.production_ratings = list(production_ratings or [])
         self.production_tournaments = list(production_tournaments or [])
+        self.previous_committed_runs = list(previous_committed_runs or [])
         self.statements = []
 
     def query_rows(self, query, params=()):
+        if "FROM [ratings].[bayrate_runs] AS r" in query:
+            return [{"RunID": run_id} for run_id in self.previous_committed_runs]
         if "FROM [ratings].[bayrate_runs]" in query:
             return [
                 {
@@ -190,6 +202,23 @@ class CommitStagedRunTest(unittest.TestCase):
         )
 
         self.assertEqual([row["planned_rating_row_id"] for row in plan["planned_ratings"]], [201, 202])
+
+    def test_build_commit_plan_marks_previous_committed_run_superseded(self) -> None:
+        plan = build_commit_plan(CommitAdapter(previous_committed_runs=[35]), 1)
+
+        self.assertEqual(plan["superseded_run_ids"], [35])
+        self.assertTrue(
+            any("marked superseded: 35" in warning for warning in plan["warnings"]),
+            plan["warnings"],
+        )
+        preview = printable_commit_plan(plan)
+        self.assertEqual(preview["superseded_run_ids"], [35])
+
+        statements = build_commit_statements(plan)
+        sql_text = "\n".join(statement[0] for statement in statements)
+        self.assertIn("N'$.commit_status'", sql_text)
+        self.assertIn("N'superseded'", sql_text)
+        self.assertIn("N'$.superseded_by_run_id'", sql_text)
 
     def test_build_commit_plan_rejects_runs_without_replay_rows(self) -> None:
         with self.assertRaisesRegex(ValueError, "Run Replay before commit"):
