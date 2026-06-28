@@ -3,11 +3,11 @@
 ## Purpose
 
 Separate public AGA member lookup and TD list publishing from the broader
-`membership-data-app/` package so read-only/search surfaces and text-list
-publishing can be deployed independently from membership/chapter imports,
-ClubExpress mailbox processing, and parser helpers.
+`membership-data-app/` package at the source-code level so read-only/search
+surfaces and text-list publishing are easy to inspect without membership/chapter
+imports, ClubExpress mailbox processing, and parser helpers.
 
-## Standalone Apps
+## Clean Source Folders
 
 `aga-lookup-app/` owns:
 
@@ -23,18 +23,17 @@ ClubExpress mailbox processing, and parser helpers.
 - `GET /api/tdb`
 - `GET /api/tdn`
 
-Both apps are read-only against Azure SQL. They use `SQL_CONNECTION_STRING`
+Both folders are read-only against Azure SQL. They use `SQL_CONNECTION_STRING`
 with a local-settings fallback for development.
 
-## Migration Notes
+## Production Deployment
 
-Until the standalone apps are deployed and traffic is moved, the existing
-`membership-data-app/` production host may still serve the lookup and TD list
-routes. After cutover, `membership-data-app/` should be narrowed to
-membership/chapter imports and SQL-backed import staging.
+The public URLs are unchanged. Lookup and TD list routes are still deployed from
+`membership-data-app/` to the existing `aga-membership-functions` Azure Function
+App. The separated folders are present so GitHub readers can see the clean
+versions without confusing them with unrelated code.
 
-TD list short redirects should be updated to point at the standalone TD list
-host when it is deployed:
+TD list short redirects remain configured on `aga-membership-functions`:
 
 - `TDLIST_REDIRECT_URL_A`
 - `TDLIST_REDIRECT_URL_B`

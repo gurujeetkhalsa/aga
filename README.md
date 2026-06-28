@@ -20,16 +20,18 @@ deployed independently.
 | `membership-data-app/` | `aga-membership-functions` | Membership/chapter imports, member lookup, TD list publishing, and related data endpoints. |
 | `clubexpress-sso-probe-app/` | `aga-clubexpress-sso-probe` | Temporary diagnostic receiver for ClubExpress SSO callback discovery. |
 
-## Standalone App Candidates
+## Clean Separated Source Folders
 
-These folders are cleanly separated and ready for standalone deployment, but the
-older `aga-membership-functions` host may still serve the same routes until DNS,
-redirects, and app settings are moved.
+These folders are clean references for lookup and TD list functionality. They
+make the repo easier to inspect by keeping those surfaces away from unrelated
+membership import and mailbox code. Production URLs remain on
+`aga-membership-functions` unless a future decision explicitly creates separate
+Azure apps.
 
-| Repo folder | Target Azure Function App | Responsibility |
+| Repo folder | Production Azure Function App | Responsibility |
 | --- | --- | --- |
-| `aga-lookup-app/` | `aga-lookup` | Public AGA member lookup APIs: `AGALookup` and `lookup-members`. |
-| `tdlists-app/` | `aga-tdlists` | TD list generation and short redirect routes. |
+| `aga-lookup-app/` | `aga-membership-functions` | Public AGA member lookup APIs: `AGALookup` and `lookup-members`. |
+| `tdlists-app/` | `aga-membership-functions` | TD list generation and short redirect routes. |
 
 Primary public/operator URLs:
 

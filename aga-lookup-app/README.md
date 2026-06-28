@@ -1,10 +1,16 @@
 # AGA Lookup App
 
-Standalone Azure Functions package for public AGA member lookup APIs.
+Clean separated Azure Functions source folder for public AGA member lookup APIs.
 
-Target standalone URL after deployment:
+Production deployment:
 
-https://aga-lookup.azurewebsites.net/api/AGALookup
+These routes currently deploy from `membership-data-app/` to
+`aga-membership-functions`; this folder exists so the lookup implementation is
+easy to inspect without unrelated membership import or mailbox code.
+
+Current production URL:
+
+https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/AGALookup
 
 Routes:
 

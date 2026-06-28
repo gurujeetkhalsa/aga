@@ -1,10 +1,17 @@
 # TD Lists App
 
-Standalone Azure Functions package for AGA TD list generation and short redirects.
+Clean separated Azure Functions source folder for AGA TD list generation and
+short redirects.
 
-Target standalone URL after deployment:
+Production deployment:
 
-https://aga-tdlists.azurewebsites.net/api/GenerateTDListA
+These routes currently deploy from `membership-data-app/` to
+`aga-membership-functions`; this folder exists so the TD list implementation is
+easy to inspect without unrelated membership import or mailbox code.
+
+Current production URL:
+
+https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/GenerateTDListA
 
 Routes:
 

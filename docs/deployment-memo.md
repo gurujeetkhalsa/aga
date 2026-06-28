@@ -21,15 +21,17 @@ Use this table as the source of truth for current separated production deploymen
 
 `ratings-explorer-app/` is the older mixed host retained during transition. Do not use it as the source of truth for new BayRate, rewards, or public Ratings Explorer changes unless explicitly maintaining that legacy mixed deployment.
 
-## Standalone Targets Pending Cutover
+## Clean Separated Source Folders
 
-These folders are separated in the repo and should become their own Function
-Apps once app settings, redirects, and any public references are moved:
+These folders are separated in the repo so GitHub readers can inspect lookup and
+TD list functionality without unrelated membership import or mailbox code. They
+do not imply separate Azure Function Apps. Production lookup and TD list URLs
+remain on `aga-membership-functions`.
 
-| Target Azure Function App | Repo folder | Responsibility |
+| Repo folder | Production Azure Function App | Responsibility |
 | --- | --- | --- |
-| `aga-lookup` | `aga-lookup-app/` | Public AGA member lookup APIs. |
-| `aga-tdlists` | `tdlists-app/` | TD list generation and short redirects. |
+| `aga-lookup-app/` | `aga-membership-functions` | Public AGA member lookup APIs. |
+| `tdlists-app/` | `aga-membership-functions` | TD list generation and short redirects. |
 
 ## App Detail Notes
 
@@ -219,9 +221,10 @@ Purpose:
 
 Separation note:
 
-- `aga-lookup-app/` and `tdlists-app/` are the repo-clean standalone targets
-  for lookup and TD list routes. Until cutover, this app remains the production
-  host for those endpoints.
+- `aga-lookup-app/` and `tdlists-app/` are clean separated source folders for
+  lookup and TD list routes. They exist to make the repo easier to inspect.
+  Production deployment for these routes remains `membership-data-app/` to
+  `aga-membership-functions`.
 
 Primary functions in this app:
 
