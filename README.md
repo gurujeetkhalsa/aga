@@ -20,6 +20,17 @@ deployed independently.
 | `membership-data-app/` | `aga-membership-functions` | Membership/chapter imports, member lookup, TD list publishing, and related data endpoints. |
 | `clubexpress-sso-probe-app/` | `aga-clubexpress-sso-probe` | Temporary diagnostic receiver for ClubExpress SSO callback discovery. |
 
+## Standalone App Candidates
+
+These folders are cleanly separated and ready for standalone deployment, but the
+older `aga-membership-functions` host may still serve the same routes until DNS,
+redirects, and app settings are moved.
+
+| Repo folder | Target Azure Function App | Responsibility |
+| --- | --- | --- |
+| `aga-lookup-app/` | `aga-lookup` | Public AGA member lookup APIs: `AGALookup` and `lookup-members`. |
+| `tdlists-app/` | `aga-tdlists` | TD list generation and short redirect routes. |
+
 Primary public/operator URLs:
 
 - BayRate: `https://aga-bayrate.azurewebsites.net/api/bayrate`
@@ -76,3 +87,4 @@ separation decisions are documented in:
 - `docs/chapter-rewards-admin-separation.md`
 - `docs/clubexpress-email-processing-separation.md`
 - `docs/bayrate-separation.md`
+- `docs/lookup-tdlists-separation.md`

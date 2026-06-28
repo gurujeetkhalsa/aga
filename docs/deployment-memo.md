@@ -21,6 +21,16 @@ Use this table as the source of truth for current separated production deploymen
 
 `ratings-explorer-app/` is the older mixed host retained during transition. Do not use it as the source of truth for new BayRate, rewards, or public Ratings Explorer changes unless explicitly maintaining that legacy mixed deployment.
 
+## Standalone Targets Pending Cutover
+
+These folders are separated in the repo and should become their own Function
+Apps once app settings, redirects, and any public references are moved:
+
+| Target Azure Function App | Repo folder | Responsibility |
+| --- | --- | --- |
+| `aga-lookup` | `aga-lookup-app/` | Public AGA member lookup APIs. |
+| `aga-tdlists` | `tdlists-app/` | TD list generation and short redirects. |
+
 ## App Detail Notes
 
 ### `aga-ratings-explorer`
@@ -206,6 +216,12 @@ Purpose:
 - membership/chapter import
 - member lookup API
 - TD list publishing endpoints
+
+Separation note:
+
+- `aga-lookup-app/` and `tdlists-app/` are the repo-clean standalone targets
+  for lookup and TD list routes. Until cutover, this app remains the production
+  host for those endpoints.
 
 Primary functions in this app:
 
