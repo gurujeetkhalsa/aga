@@ -18,6 +18,17 @@ Not included:
 
 The original BayRate code was GPL-licensed; the copied license is in `COPYING`.
 
+## Copyright And License
+
+Original BayRate portions are copyright 2010 Philip Waldron. The Python port,
+Azure Functions workflow, staging/replay/commit integration, report parsing,
+SQL adapters, tests, and deployment packaging portions are copyright 2026
+American Go Association.
+
+BayRate is licensed under the GNU General Public License, version 3 or later
+(`GPL-3.0-or-later`). See `COPYING` for the license text and `NOTICE.md` for
+source/provenance details.
+
 ## Input Files
 
 `--games` expects a CSV with the game-export style columns used by the ratings database:

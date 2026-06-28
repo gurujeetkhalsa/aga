@@ -28,6 +28,7 @@ $BayRateTarget = Join-Path $Target "bayrate"
 New-Item -ItemType Directory -Path $BayRateTarget -Force | Out-Null
 Copy-Item -Path (Join-Path $BayRateSource "*.py") -Destination $BayRateTarget -Force
 Copy-Item -Path (Join-Path $BayRateSource "COPYING") -Destination $BayRateTarget -Force
+Copy-Item -Path (Join-Path $BayRateSource "NOTICE.md") -Destination $BayRateTarget -Force
 Copy-Item -Path (Join-Path $BayRateSource "README.md") -Destination $BayRateTarget -Force
 
 Write-Output $Target

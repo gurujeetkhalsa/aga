@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2010 Philip Waldron
+-- SPDX-FileCopyrightText: 2026 American Go Association
+-- SPDX-License-Identifier: GPL-3.0-or-later
+
 /*
 Archive the March 25 BayRate experiment tables before installing the report
 staging schema.

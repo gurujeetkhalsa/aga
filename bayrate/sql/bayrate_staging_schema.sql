@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2010 Philip Waldron
+-- SPDX-FileCopyrightText: 2026 American Go Association
+-- SPDX-License-Identifier: GPL-3.0-or-later
+
 IF SCHEMA_ID(N'ratings') IS NULL
     EXEC(N'CREATE SCHEMA [ratings]');
 

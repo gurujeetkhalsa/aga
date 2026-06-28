@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2010 Philip Waldron
+# SPDX-FileCopyrightText: 2026 American Go Association
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """Command-line entry point for the clean Python BayRate port."""
 
 from __future__ import annotations

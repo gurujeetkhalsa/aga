@@ -5,6 +5,13 @@ Standalone Azure Functions package for the BayRate tournament rating workflow.
 Target standalone URL after deployment:
 
 https://aga-bayrate.azurewebsites.net/api/bayrate
+Copyright and license: original BayRate portions are copyright 2010 Philip
+Waldron; AGA-authored Python port, Azure Functions workflow, staging/replay,
+commit integration, report parsing, SQL adapters, tests, and deployment
+packaging portions are copyright 2026 American Go Association. BayRate is
+licensed under the GNU General Public License, version 3 or later
+(`GPL-3.0-or-later`). See `bayrate/COPYING` and `bayrate/NOTICE.md` in prepared
+deployment packages.
 
 Included responsibilities:
 
