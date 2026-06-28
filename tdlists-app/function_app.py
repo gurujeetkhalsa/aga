@@ -1,3 +1,5 @@
+"""TD list HTTP functions, redirects, SQL access helpers, and text renderers."""
+
 import json
 import os
 import re
@@ -82,6 +84,7 @@ ORDER BY m.[LastName], m.[FirstName], m.[AGAID]
 
 
 def _get_sql_connection_string() -> str | None:
+    """Return the SQL connection string from app settings or local development settings."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn and conn.strip():
         return conn
@@ -105,40 +108,47 @@ def _get_sql_connection_string() -> str | None:
 @app.function_name(name="GenerateTDListA")
 @app.route(route="GenerateTDListA", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def generate_tdlist_a(req: func.HttpRequest) -> func.HttpResponse:
+    """Generate the tab-delimited TDListA export using chapter codes."""
     return _generate_tdlist_response("A")
 
 
 @app.function_name(name="GenerateTDListB")
 @app.route(route="GenerateTDListB", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def generate_tdlist_b(req: func.HttpRequest) -> func.HttpResponse:
+    """Generate the tab-delimited TDListB export using chapter names."""
     return _generate_tdlist_response("B")
 
 
 @app.function_name(name="GenerateTDListN")
 @app.route(route="GenerateTDListN", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def generate_tdlist_n(req: func.HttpRequest) -> func.HttpResponse:
+    """Generate the fixed-width TDListN export for tournament-director tooling."""
     return _generate_tdlist_response("N")
 
 
 @app.function_name(name="TDListShortA")
 @app.route(route="tda", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def tdlist_short_a(req: func.HttpRequest) -> func.HttpResponse:
+    """Redirect the short TDListA URL to the configured full export URL."""
     return _redirect_tdlist("A")
 
 
 @app.function_name(name="TDListShortB")
 @app.route(route="tdb", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def tdlist_short_b(req: func.HttpRequest) -> func.HttpResponse:
+    """Redirect the short TDListB URL to the configured full export URL."""
     return _redirect_tdlist("B")
 
 
 @app.function_name(name="TDListShortN")
 @app.route(route="tdn", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def tdlist_short_n(req: func.HttpRequest) -> func.HttpResponse:
+    """Redirect the short TDListN URL to the configured full export URL."""
     return _redirect_tdlist("N")
 
 
 def _generate_tdlist_response(list_type: str) -> func.HttpResponse:
+    """Fetch membership rows, render the requested TD list format, and return it as text."""
     conn_str = _get_sql_connection_string()
     if not conn_str:
         return func.HttpResponse("Missing SQL_CONNECTION_STRING application setting.", status_code=500)
@@ -168,6 +178,7 @@ def _generate_tdlist_response(list_type: str) -> func.HttpResponse:
 
 
 def _redirect_tdlist(list_type: str) -> func.HttpResponse:
+    """Return an HTTP redirect for a configured TD list short route."""
     target_url = TDLIST_REDIRECT_URLS.get(list_type)
     if not target_url:
         return func.HttpResponse(f"Unsupported TDList type: {list_type}", status_code=500)
@@ -175,10 +186,12 @@ def _redirect_tdlist(list_type: str) -> func.HttpResponse:
 
 
 def _fetch_tdlist_rows(conn_str: str) -> list[dict[str, Any]]:
+    """Fetch current non-dropped members and their latest ratings for TD list rendering."""
     return _query_rows(conn_str, TDLIST_QUERY, (MAX_MEMBER_AGAID,))
 
 
 def _query_rows(conn_str: str, query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+    """Run a SQL query using pyodbc when available, otherwise fall back to python-tds."""
     if pyodbc is not None:
         try:
             return _query_rows_via_odbc(conn_str, query, params)
@@ -189,6 +202,7 @@ def _query_rows(conn_str: str, query: str, params: tuple[Any, ...] = ()) -> list
 
 
 def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Run a parameterized SQL query through an ODBC connection."""
     assert pyodbc is not None
     conn = pyodbc.connect(conn_str)
     try:
@@ -201,6 +215,7 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> 
 
 
 def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Run a SQL query through python-tds using rendered literals."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -211,6 +226,7 @@ def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> l
 
 
 def _tds_connect(conn_str: str):
+    """Open a python-tds connection from an ADO-style SQL connection string."""
     if pytds is None:
         raise RuntimeError("Neither pyodbc nor python-tds is available for SQL access.")
     sql = _parse_sql_connection_string(conn_str)
@@ -232,6 +248,7 @@ def _tds_connect(conn_str: str):
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, Any]:
+    """Parse an ADO-style SQL connection string into python-tds connection fields."""
     parts: dict[str, str] = {}
     for item in connection_string.split(";"):
         if "=" not in item:
@@ -251,6 +268,7 @@ def _parse_sql_connection_string(connection_string: str) -> dict[str, Any]:
 
 
 def _sql_literal(value: Any) -> str:
+    """Render a Python value as a SQL literal for the python-tds fallback path."""
     if value is None:
         return "NULL"
     if isinstance(value, bool):
@@ -263,6 +281,7 @@ def _sql_literal(value: Any) -> str:
 
 
 def _render_query(query: str, params: tuple[Any, ...]) -> str:
+    """Replace positional question-mark parameters with SQL literals for python-tds."""
     rendered = query
     for value in params:
         rendered = rendered.replace("?", _sql_literal(value), 1)
@@ -270,6 +289,7 @@ def _render_query(query: str, params: tuple[Any, ...]) -> str:
 
 
 def _render_tdlist_tab(rows: list[dict[str, Any]], *, chapter_field: str) -> str:
+    """Render TDListA or TDListB as tab-delimited text."""
     rendered_rows = []
     for row in rows:
         rendered_rows.append(
@@ -291,6 +311,7 @@ def _render_tdlist_tab(rows: list[dict[str, Any]], *, chapter_field: str) -> str
 
 
 def _render_tdlist_fixed_width(rows: list[dict[str, Any]]) -> str:
+    """Render TDListN as fixed-width text with short member-type labels."""
     rendered_rows = []
     for row in rows:
         chapter_code = _tdlist_text(row.get("ChapterCode")) or "none"
@@ -307,6 +328,7 @@ def _render_tdlist_fixed_width(rows: list[dict[str, Any]]) -> str:
 
 
 def _tdlist_name(row: dict[str, Any]) -> str:
+    """Return the display name used in TD list exports."""
     last_name = _tdlist_text(row.get("LastName"))
     first_name = _tdlist_text(row.get("FirstName"))
     if last_name and first_name:
@@ -315,12 +337,14 @@ def _tdlist_name(row: dict[str, Any]) -> str:
 
 
 def _tdlist_text(value: Any) -> str:
+    """Return a stripped string value, treating nulls as blank text."""
     if value is None:
         return ""
     return str(value).strip()
 
 
 def _tdlist_member_type_label(value: Any) -> str:
+    """Map full membership type names to the short TDListN status labels."""
     text = _tdlist_text(value)
     key = re.sub(r"[^a-z0-9]+", "", text.lower())
     if not key:
@@ -339,12 +363,14 @@ def _tdlist_member_type_label(value: Any) -> str:
 
 
 def _format_tdlist_decimal(value: Any, *, digits: int) -> str:
+    """Format a numeric TD list value with the requested decimal places."""
     if value is None:
         return ""
     return f"{float(value):.{digits}f}"
 
 
 def _format_tdlist_date(value: Any) -> str:
+    """Format a date or datetime in the historical TD list month/day/year format."""
     if value is None:
         return ""
     if isinstance(value, datetime):

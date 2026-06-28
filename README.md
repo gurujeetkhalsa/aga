@@ -51,6 +51,8 @@ Primary public/operator URLs:
 - `shared/` contains helpers that are intentionally shared by more than one app.
 - `scripts/` contains deployment and operations scripts. Use app-specific
   deploy-prep scripts when present.
+- `sql/stored-procedures/` contains a complete exported snapshot of live Azure
+  SQL stored procedure definitions for GitHub inspection and recovery.
 - `docs/` contains separation notes, deployment notes, architecture notes, and
   historical session memos.
 

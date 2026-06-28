@@ -1,3 +1,5 @@
+"""Public AGA member lookup HTTP functions and SQL access helpers."""
+
 import json
 import math
 import os
@@ -38,6 +40,7 @@ AGA_LOOKUP_MEMBER_TYPES = {
 
 
 def _get_sql_connection_string() -> str | None:
+    """Return the SQL connection string from app settings or local development settings."""
     conn = os.environ.get("SQL_CONNECTION_STRING") or os.environ.get("MYSQL_SYNC_SQL_CONNECTION_STRING")
     if conn and conn.strip():
         return conn
@@ -59,6 +62,7 @@ def _get_sql_connection_string() -> str | None:
 
 
 def _json_response(payload: dict[str, Any], status_code: int = 200) -> func.HttpResponse:
+    """Serialize a JSON API response using the shared safe-value converter."""
     return func.HttpResponse(
         json.dumps(payload, default=_json_safe_value),
         mimetype="application/json",
@@ -67,14 +71,17 @@ def _json_response(payload: dict[str, Any], status_code: int = 200) -> func.Http
 
 
 def _text_response(message: str, status_code: int) -> func.HttpResponse:
+    """Return a plain-text HTTP response with the requested status code."""
     return func.HttpResponse(message, status_code=status_code)
 
 
 def _normalized_query_param_name(name: str) -> str:
+    """Normalize query parameter names so snakeCase, camelCase, and hyphenated forms match."""
     return re.sub(r"[-_\s]+", "", str(name)).lower()
 
 
 def _query_param(req: func.HttpRequest, *names: str, default: str = "") -> str:
+    """Return the first matching query parameter value from a set of accepted names."""
     accepted_names = {_normalized_query_param_name(name) for name in names}
     for key, value in (req.params or {}).items():
         if _normalized_query_param_name(key) in accepted_names:
@@ -83,6 +90,7 @@ def _query_param(req: func.HttpRequest, *names: str, default: str = "") -> str:
 
 
 def _parse_optional_rating_filter(raw_text: str, name: str) -> tuple[float | None, func.HttpResponse | None]:
+    """Parse an optional numeric rating filter or return a validation response."""
     if not raw_text:
         return None, None
     try:
@@ -97,6 +105,7 @@ def _parse_optional_rating_filter(raw_text: str, name: str) -> tuple[float | Non
 @app.function_name(name="LookupMembers")
 @app.route(route="lookup-members", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def lookup_members(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the legacy lookup-members API backed by api.sp_lookup_members."""
     conn_str = _get_sql_connection_string()
     if not conn_str:
         return _text_response("Missing SQL_CONNECTION_STRING application setting.", 500)
@@ -177,6 +186,7 @@ def lookup_members(req: func.HttpRequest) -> func.HttpResponse:
 @app.function_name(name="AGALookup")
 @app.route(route="AGALookup", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def aga_lookup(req: func.HttpRequest) -> func.HttpResponse:
+    """Handle the public AGALookup API with richer member, rating, and chapter filters."""
     conn_str = _get_sql_connection_string()
     if not conn_str:
         return _text_response("Missing SQL_CONNECTION_STRING application setting.", 500)
@@ -306,6 +316,7 @@ def _lookup_members(
     limit: int,
     offset: int,
 ) -> list[dict[str, Any]]:
+    """Fetch one page of legacy lookup results through the SQL stored procedure."""
     effective_limit = min(max(limit, 1), 100)
     effective_offset = max(offset, 0)
     return _query_rows(
@@ -330,6 +341,7 @@ def _aga_lookup_members(
     limit: int | None,
     offset: int,
 ) -> list[dict[str, Any]]:
+    """Fetch AGALookup results with inline SQL filters across membership and ratings tables."""
     where_clauses = ["m.[AGAID] < ?"]
     params: list[Any] = [MAX_MEMBER_AGAID]
 
@@ -429,6 +441,7 @@ ORDER BY m.[LastName], m.[FirstName], m.[AGAID]
 
 
 def _query_rows(conn_str: str, query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+    """Run a SQL query using pyodbc when available, otherwise fall back to python-tds."""
     if pyodbc is not None:
         try:
             return _query_rows_via_odbc(conn_str, query, params)
@@ -439,6 +452,7 @@ def _query_rows(conn_str: str, query: str, params: tuple[Any, ...] = ()) -> list
 
 
 def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Run a parameterized SQL query through an ODBC connection."""
     assert pyodbc is not None
     conn = pyodbc.connect(conn_str)
     try:
@@ -451,6 +465,7 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> 
 
 
 def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> list[dict[str, Any]]:
+    """Run a SQL query through python-tds using rendered literals."""
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
@@ -461,6 +476,7 @@ def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> l
 
 
 def _tds_connect(conn_str: str):
+    """Open a python-tds connection from an ADO-style SQL connection string."""
     if pytds is None:
         raise RuntimeError("Neither pyodbc nor python-tds is available for SQL access.")
     sql = _parse_sql_connection_string(conn_str)
@@ -482,6 +498,7 @@ def _tds_connect(conn_str: str):
 
 
 def _parse_sql_connection_string(connection_string: str) -> dict[str, Any]:
+    """Parse an ADO-style SQL connection string into python-tds connection fields."""
     parts: dict[str, str] = {}
     for item in connection_string.split(";"):
         if "=" not in item:
@@ -501,6 +518,7 @@ def _parse_sql_connection_string(connection_string: str) -> dict[str, Any]:
 
 
 def _sql_literal(value: Any) -> str:
+    """Render a Python value as a SQL literal for the python-tds fallback path."""
     if value is None:
         return "NULL"
     if isinstance(value, bool):
@@ -513,6 +531,7 @@ def _sql_literal(value: Any) -> str:
 
 
 def _render_query(query: str, params: tuple[Any, ...]) -> str:
+    """Replace positional question-mark parameters with SQL literals for python-tds."""
     rendered = query
     for value in params:
         rendered = rendered.replace("?", _sql_literal(value), 1)
@@ -520,6 +539,7 @@ def _render_query(query: str, params: tuple[Any, ...]) -> str:
 
 
 def _json_safe_value(value: Any) -> Any:
+    """Convert dates and datetimes into JSON-safe ISO strings."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     return value
