@@ -169,6 +169,7 @@ LEFT JOIN [membership].[chapters] AS c
 LEFT JOIN current_ratings AS cr
     ON cr.[AGAID] = m.[AGAID]
 WHERE m.[AGAID] < ?
+  AND UPPER(LTRIM(RTRIM(m.[Status]))) IN (N'ACTIVE', N'EXPIRED')
 ORDER BY m.[LastName], m.[FirstName], m.[AGAID]
 """
 

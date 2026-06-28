@@ -27,6 +27,9 @@ Routes:
 `TDListN` uses fixed member type labels so columns stay aligned:
 `Youth`, `Full`, `Life`, `Comp`, and `Pass`.
 
+TD list queries include only members whose status is `Active` or `Expired`;
+`Dropped` members are excluded.
+
 This app intentionally excludes:
 
 - Membership/chapter imports.
