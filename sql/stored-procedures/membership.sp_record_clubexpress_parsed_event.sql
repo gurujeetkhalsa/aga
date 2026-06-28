@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [membership].[sp_record_clubexpress_parsed_event].
 SET ANSI_NULLS ON;

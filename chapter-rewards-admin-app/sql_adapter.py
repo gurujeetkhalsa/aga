@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 import json
 import os
 from contextlib import suppress

@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [rewards].[sp_process_legacy_gap_rated_game_awards].
 SET ANSI_NULLS ON;

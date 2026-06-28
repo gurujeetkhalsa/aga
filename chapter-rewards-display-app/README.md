@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Chapter Rewards Display App
 
 This is the standalone Function App package for the public Chapter Rewards display surface.

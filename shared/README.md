@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Shared Code
 
 Put code here only when it is genuinely shared by more than one app.

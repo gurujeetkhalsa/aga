@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [ratings].[sp_grant_admin_permission].
 SET ANSI_NULLS ON;

@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [membership].[sp_find_invalid_youth_members].
 SET ANSI_NULLS ON;

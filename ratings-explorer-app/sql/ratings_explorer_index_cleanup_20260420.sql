@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 /*
 Ratings Explorer SQL cleanup applied to production on 2026-04-20.
 

@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 SET ANSI_NULLS ON;
 GO
 SET QUOTED_IDENTIFIER ON;

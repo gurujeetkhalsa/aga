@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [dbo].[sp_upgraddiagrams].
 SET ANSI_NULLS ON;

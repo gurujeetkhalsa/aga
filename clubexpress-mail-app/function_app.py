@@ -1,4 +1,6 @@
-﻿import base64
+﻿# Copyright 2026, American Go Association, All rights reserved
+
+import base64
 import html
 import json
 import logging

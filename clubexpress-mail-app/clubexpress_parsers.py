@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 import re
 from datetime import date, datetime
 from html.parser import HTMLParser

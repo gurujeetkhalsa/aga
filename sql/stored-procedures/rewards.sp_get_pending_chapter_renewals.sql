@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [rewards].[sp_get_pending_chapter_renewals].
 SET ANSI_NULLS ON;

@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # TD Lists App
 
 Clean separated Azure Functions source folder for AGA TD list generation and

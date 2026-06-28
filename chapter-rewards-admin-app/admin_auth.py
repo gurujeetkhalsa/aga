@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 from __future__ import annotations
 
 import base64

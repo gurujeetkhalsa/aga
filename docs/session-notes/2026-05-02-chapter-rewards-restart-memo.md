@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Chapter Rewards Restart Memo
 
 Date: 2026-05-02

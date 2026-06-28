@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # AGA Functions Monorepo
 
 This repository contains the AGA Azure Functions codebase split into focused,

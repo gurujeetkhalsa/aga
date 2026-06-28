@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 import html
 import json
 import math

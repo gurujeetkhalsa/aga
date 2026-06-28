@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 import json
 from datetime import datetime, timezone
 from decimal import Decimal

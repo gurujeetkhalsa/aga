@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 """Public AGA member lookup HTTP functions and SQL access helpers."""
 
 import json

@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Ratings Explorer Display App
 
 This is the separated Function App candidate for the public Ratings Explorer display surface.

@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [rewards].[sp_create_daily_snapshot].
 SET ANSI_NULLS ON;

@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 import json
 from dataclasses import dataclass
 from datetime import date, datetime

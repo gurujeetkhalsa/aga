@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Chapter Rewards Design
 
 Date: 2026-05-02

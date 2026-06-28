@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Live Stored Procedure Snapshot
 
 This folder contains scripted definitions for every non-system stored procedure found in the AGA Azure SQL database during the 2026-06-28T16:27:42Z audit.

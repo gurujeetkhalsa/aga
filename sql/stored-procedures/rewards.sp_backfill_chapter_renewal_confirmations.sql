@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 -- Live Azure SQL stored procedure export.
 -- Source object: [rewards].[sp_backfill_chapter_renewal_confirmations].
 SET ANSI_NULLS ON;

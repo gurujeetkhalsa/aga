@@ -1,3 +1,5 @@
+-- Copyright 2026, American Go Association, All rights reserved
+
 IF SCHEMA_ID(N'staging') IS NULL
     EXEC(N'CREATE SCHEMA [staging]');
 GO

@@ -1,3 +1,5 @@
+# Copyright 2026, American Go Association, All rights reserved
+
 import unittest
 from contextlib import redirect_stderr
 from datetime import date

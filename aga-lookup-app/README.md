@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # AGA Lookup App
 
 Clean separated Azure Functions source folder for public AGA member lookup APIs.

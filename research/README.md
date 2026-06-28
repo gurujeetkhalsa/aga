@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # Research And Experiments
 
 This folder is for non-production research, benchmarks, simulations, and one-off

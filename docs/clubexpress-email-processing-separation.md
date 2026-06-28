@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # ClubExpress Email Processing Separation
 
 ## Goal

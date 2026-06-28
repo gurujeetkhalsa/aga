@@ -1,3 +1,5 @@
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+
 # ClubExpress SSO Probe App
 
 Temporary Azure Functions receiver for discovering what ClubExpress sends during its SSO redirect/callback.
