@@ -4039,13 +4039,19 @@ class _ClubExpressStagedEventSqlAdapter:
         conn = pyodbc.connect(self.conn_str)
         try:
             cursor = conn.cursor()
-            cursor.execute(query, *tuple(params))
-            rows = []
-            if cursor.description:
-                columns = [column[0] for column in cursor.description]
-                rows = [dict(zip(columns, record)) for record in cursor.fetchall()]
-            cursor.close()
-            return rows
+            try:
+                cursor.execute(query, *tuple(params))
+                rows = []
+                if cursor.description:
+                    columns = [column[0] for column in cursor.description]
+                    rows = [dict(zip(columns, record)) for record in cursor.fetchall()]
+                conn.commit()
+                return rows
+            finally:
+                cursor.close()
+        except Exception:
+            conn.rollback()
+            raise
         finally:
             conn.close()
 

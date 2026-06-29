@@ -95,9 +95,17 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: tuple[Any, ...]) -> 
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
-        cursor.execute(query, *params)
-        columns = [column[0] for column in cursor.description]
-        return [dict(zip(columns, record)) for record in cursor.fetchall()]
+        try:
+            cursor.execute(query, *params)
+            columns = [column[0] for column in cursor.description]
+            rows = [dict(zip(columns, record)) for record in cursor.fetchall()]
+            conn.commit()
+            return rows
+        finally:
+            cursor.close()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -186,8 +194,16 @@ def _query_rows_via_tds(conn_str: str, query: str, params: tuple[Any, ...]) -> l
     conn = _tds_connect(conn_str)
     try:
         cursor = conn.cursor()
-        cursor.execute(_render_query(query, params))
-        return list(cursor.fetchall())
+        try:
+            cursor.execute(_render_query(query, params))
+            rows = list(cursor.fetchall())
+            conn.commit()
+            return rows
+        finally:
+            cursor.close()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 

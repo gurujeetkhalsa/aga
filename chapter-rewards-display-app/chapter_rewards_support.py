@@ -111,9 +111,17 @@ def _query_rows_via_odbc(conn_str: str, query: str, params: list[Any] | tuple[An
     conn = pyodbc.connect(conn_str)
     try:
         cursor = conn.cursor()
-        cursor.execute(query, list(params))
-        columns = [column[0] for column in cursor.description]
-        return [dict(zip(columns, record)) for record in cursor.fetchall()]
+        try:
+            cursor.execute(query, list(params))
+            columns = [column[0] for column in cursor.description]
+            rows = [dict(zip(columns, record)) for record in cursor.fetchall()]
+            conn.commit()
+            return rows
+        finally:
+            cursor.close()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
