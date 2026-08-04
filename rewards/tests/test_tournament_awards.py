@@ -4,6 +4,7 @@ import unittest
 from contextlib import redirect_stderr
 from datetime import date
 from io import StringIO
+from pathlib import Path
 
 from rewards import tournament_awards
 
@@ -72,6 +73,13 @@ class TournamentAwardsTest(unittest.TestCase):
         self.assertEqual(tournament_awards.calculate_tournament_host_points(16), 2306)
         self.assertEqual(tournament_awards.calculate_tournament_host_points(350), 514161)
         self.assertEqual(tournament_awards.calculate_tournament_host_points(700), 1000000)
+
+    def test_sql_suppresses_tournament_awards_for_aga_no_host_option(self):
+        """Verify that the AGA sentinel cannot receive tournament-host awards."""
+        sql_path = Path(tournament_awards.__file__).parent / "sql" / "tournament_award_processing.sql"
+        sql = sql_path.read_text(encoding="utf-8")
+
+        self.assertGreaterEqual(sql.count("WHEN UPPER(g.[Host_ChapterCode]) = N'AGA' THEN 0"), 2)
 
     def test_dry_run_returns_preview_without_writes(self):
         """Verify that dry run returns preview without writes."""

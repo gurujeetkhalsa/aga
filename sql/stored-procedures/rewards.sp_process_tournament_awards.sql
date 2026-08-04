@@ -138,6 +138,9 @@ BEGIN
             CAST(g.[Is_State_Championship] AS bit) AS [Is_State_Championship],
             CAST(
                 CASE
+                    -- AGA marks tournaments with no chapter host, including
+                    -- tournaments held at the U.S. Go Congress.
+                    WHEN UPPER(g.[Host_ChapterCode]) = N'AGA' THEN 0
                     WHEN COALESCE(gc.[Rated_Game_Count], 0) <= @MinGames THEN 0
                     WHEN COALESCE(gc.[Rated_Game_Count], 0) >= @MaxGames THEN @MaxSupport * 1000
                     ELSE ROUND(
@@ -149,7 +152,14 @@ BEGIN
                 END
                 AS int
             ) AS [Host_Award_Points],
-            CAST(CASE WHEN g.[Is_State_Championship] = 1 THEN @StateChampionshipPoints ELSE 0 END AS int) AS [State_Championship_Points]
+            CAST(
+                CASE
+                    WHEN UPPER(g.[Host_ChapterCode]) = N'AGA' THEN 0
+                    WHEN g.[Is_State_Championship] = 1 THEN @StateChampionshipPoints
+                    ELSE 0
+                END
+                AS int
+            ) AS [State_Championship_Points]
         FROM [groups] AS g
         LEFT JOIN [game_counts] AS gc
             ON gc.[Host_ChapterID] = g.[Host_ChapterID]

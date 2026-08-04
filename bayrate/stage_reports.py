@@ -136,6 +136,13 @@ WHERE [ChapterID] IS NOT NULL
 ORDER BY [ChapterCode], [ChapterName], [ChapterID]
 """
 
+# BayRate still requires an explicit hosting selection for every tournament.
+# AGA is the sentinel for events, such as U.S. Go Congress tournaments, that
+# have no chapter eligible for tournament-host rewards.
+AGA_NO_HOST_CHAPTER_ID = -1
+AGA_NO_HOST_CHAPTER_CODE = "AGA"
+AGA_NO_HOST_CHAPTER_NAME = "American Go Association"
+
 CURRENT_RATINGS_BEFORE_DATE_SQL_TEMPLATE = """
 WITH ranked AS (
     SELECT
@@ -1873,8 +1880,18 @@ def update_staged_run_review(adapter: StageSqlAdapter, payload: dict[str, Any]) 
 def load_host_chapter_options(adapter: StageSqlAdapter) -> list[dict[str, Any]]:
     """Load host chapter options."""
     rows = adapter.query_rows(HOST_CHAPTER_OPTIONS_SQL)
-    options: list[dict[str, Any]] = []
-    seen_ids: set[int] = set()
+    options: list[dict[str, Any]] = [
+        {
+            "chapter_id": AGA_NO_HOST_CHAPTER_ID,
+            "chapter_code": AGA_NO_HOST_CHAPTER_CODE,
+            "chapter_name": AGA_NO_HOST_CHAPTER_NAME,
+            "city": None,
+            "state": None,
+            "label": "AGA - No hosting chapter",
+            "earns_tournament_host_points": False,
+        }
+    ]
+    seen_ids: set[int] = {AGA_NO_HOST_CHAPTER_ID}
     for row in rows:
         chapter_id = _coerce_int(row.get("ChapterID"))
         code = _clean_text(row.get("ChapterCode"))
@@ -1897,6 +1914,7 @@ def load_host_chapter_options(adapter: StageSqlAdapter) -> list[dict[str, Any]]:
                 "city": _clean_text(row.get("City")),
                 "state": state,
                 "label": label,
+                "earns_tournament_host_points": True,
             }
         )
     return options

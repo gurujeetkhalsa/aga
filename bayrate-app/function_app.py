@@ -287,8 +287,8 @@ def _bayrate_report_metadata_from_item(
         host_chapter_id = int(str(raw_host_id).strip())
     except (TypeError, ValueError):
         return {}, "host_chapter_id must be an integer.", host_options_by_id
-    if host_chapter_id <= 0:
-        return {}, "host_chapter_id must be a positive integer.", host_options_by_id
+    if host_chapter_id == 0 or host_chapter_id < -1:
+        return {}, "host_chapter_id must be a positive chapter ID or -1 for AGA.", host_options_by_id
     if adapter is not None and load_host_chapter_options is not None:
         if host_options_by_id is None:
             host_options_by_id = {
@@ -337,8 +337,8 @@ def _bayrate_host_chapter_from_body(adapter: object, body: dict) -> tuple[dict |
         host_chapter_id = int(str(raw_id).strip())
     except (TypeError, ValueError):
         return None, _bayrate_preview_error("host_chapter_id must be an integer.")
-    if host_chapter_id <= 0:
-        return None, _bayrate_preview_error("host_chapter_id must be a positive integer.")
+    if host_chapter_id == 0 or host_chapter_id < -1:
+        return None, _bayrate_preview_error("host_chapter_id must be a positive chapter ID or -1 for AGA.")
     if load_host_chapter_options is None:
         return None, _bayrate_preview_error("BayRate host chapter lookup is not available.", status_code=500)
     for option in load_host_chapter_options(adapter):

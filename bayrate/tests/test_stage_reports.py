@@ -14,6 +14,7 @@ from bayrate.stage_reports import (
     build_staging_payload,
     compare_staged_to_production_games,
     explain_staged_run_review,
+    load_host_chapter_options,
     stage_report_files,
 )
 
@@ -53,6 +54,60 @@ class FakeAdapter:
 
 class StageReportsTest(unittest.TestCase):
     """Represent stage reports test."""
+    def test_host_chapter_options_include_aga_and_exclude_dropped_chapters(self) -> None:
+        """Verify that AGA is offered while dropped chapters stay hidden."""
+        adapter = FakeAdapter(
+            candidate_rows=[
+                {
+                    "ChapterID": 10,
+                    "ChapterCode": "SEAG",
+                    "ChapterName": "Seattle Go Center",
+                    "Status": "Active",
+                    "City": "Seattle",
+                    "State": "WA",
+                },
+                {
+                    "ChapterID": 20,
+                    "ChapterCode": "DROP",
+                    "ChapterName": "Dropped Chapter",
+                    "Status": "Dropped",
+                    "City": "Drop City",
+                    "State": "DC",
+                },
+            ]
+        )
+
+        options = load_host_chapter_options(adapter)
+
+        self.assertEqual([option["chapter_code"] for option in options], ["AGA", "SEAG"])
+        self.assertEqual(options[0]["chapter_id"], -1)
+        self.assertFalse(options[0]["earns_tournament_host_points"])
+        self.assertTrue(options[1]["earns_tournament_host_points"])
+
+    def test_aga_no_host_option_can_be_marked_ready(self) -> None:
+        """Verify that AGA records a no-host decision without blocking rating."""
+        payload = stage_report_files(
+            [FIXTURE_DIR / "report_compact_one.txt"],
+            adapter=FakeAdapter(),
+            dry_run=True,
+            today=date(2026, 1, 15),
+        )
+
+        apply_tournament_review_decision(
+            payload,
+            1,
+            host_chapter_id=-1,
+            host_chapter_code="AGA",
+            host_chapter_name="American Go Association",
+            mark_ready=True,
+        )
+
+        tournament = payload["staged_tournaments"][0]
+        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(tournament["tournament_row"]["Host_ChapterID"], -1)
+        self.assertEqual(tournament["tournament_row"]["Host_ChapterCode"], "AGA")
+        self.assertTrue(all(game["status"] == "ready_for_rating" for game in payload["staged_games"]))
+
     def test_stage_multiple_reports_writes_run_tournaments_and_games(self) -> None:
         """Verify that stage multiple reports writes run tournaments and games."""
         adapter = FakeAdapter()
