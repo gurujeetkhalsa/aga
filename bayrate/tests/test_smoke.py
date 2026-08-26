@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 from pathlib import Path
 import unittest
 
@@ -9,6 +8,7 @@ from bayrate.core import (
     BayrateConfig,
     CsvValidationError,
     calc_handicap_eqv,
+    calculate_performance_rating,
     load_games_from_csv,
     load_official_history,
     rank_to_seed,
@@ -21,6 +21,22 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 class BayrateSmokeTest(unittest.TestCase):
     """Represent bayrate smoke test."""
+    def test_performance_rating_formula(self) -> None:
+        """Verify that performance rating formula."""
+        self.assertAlmostEqual(
+            calculate_performance_rating([(6.0, True), (6.0, False)]),
+            6.0,
+        )
+        self.assertAlmostEqual(
+            calculate_performance_rating([(5.0, True), (9.0, False)]),
+            5.75,
+        )
+        self.assertAlmostEqual(
+            calculate_performance_rating([(5.0, True), (7.0, True), (6.0, True), (8.0, True), (4.0, True)]),
+            8.0,
+        )
+        self.assertIsNone(calculate_performance_rating([(8.0, False), (7.0, False)]))
+
     def test_rank_and_handicap_helpers(self) -> None:
         """Verify that rank and handicap helpers."""
         self.assertEqual(rank_to_seed("12k"), -12.5)
@@ -54,6 +70,7 @@ class BayrateSmokeTest(unittest.TestCase):
 
         self.assertAlmostEqual(second_event_1001.prior_rating, first_event_1001.rating_after)
         self.assertAlmostEqual(second_event_1001.prior_sigma, first_event_1001.sigma_after)
+        self.assertAlmostEqual(first_event_1001.performance_rating, 3.0)
 
     def test_same_day_tournaments_follow_game_csv_order(self) -> None:
         """Verify that same day tournaments follow game csv order."""

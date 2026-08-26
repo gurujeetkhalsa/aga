@@ -1,12 +1,11 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 import base64
 import json
 import unittest
 
-from bayrate.auth import authorize_bayrate_admin, extract_bayrate_principal
+from bayrate.auth import authorize_admin_permission, authorize_bayrate_admin, extract_bayrate_principal
 
 
 class FakeAuthAdapter:
@@ -89,9 +88,11 @@ class BayRateAuthTest(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.status_code, 401)
 
-    def test_active_sql_admin_is_authorized(self) -> None:
-        """Verify that active sql admin is authorized."""
-        adapter = FakeAuthAdapter(rows=[{"AdminID": 7, "Principal_Name": "admin@example.org"}])
+    def test_active_scoped_permission_is_authorized(self) -> None:
+        """Verify that active scoped permission is authorized."""
+        adapter = FakeAuthAdapter(
+            rows=[{"AdminPermissionID": 7, "Principal_Name": "admin@example.org", "Permission_Code": "bayrate_run"}]
+        )
 
         result = authorize_bayrate_admin(
             {
@@ -102,8 +103,27 @@ class BayRateAuthTest(unittest.TestCase):
         )
 
         self.assertTrue(result.ok)
-        self.assertEqual(result.admin_row["AdminID"], 7)
-        self.assertEqual(adapter.queries[0][1], ("admin@example.org",))
+        self.assertEqual(result.admin_row["AdminPermissionID"], 7)
+        self.assertEqual(adapter.queries[0][1], ("bayrate_run", "admin_all", "admin@example.org", "bayrate_run"))
+
+    def test_admin_all_authorizes_specific_feature(self) -> None:
+        """Verify that admin all authorizes specific feature."""
+        adapter = FakeAuthAdapter(
+            rows=[{"AdminPermissionID": 8, "Principal_Name": "admin@example.org", "Permission_Code": "admin_all"}]
+        )
+
+        result = authorize_admin_permission(
+            {
+                "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
+            },
+            adapter,
+            required_permission="rewards_redemptions",
+            feature_label="Chapter Rewards",
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.admin_row["Permission_Code"], "admin_all")
 
     def test_non_admin_is_forbidden(self) -> None:
         """Verify that non admin is forbidden."""
@@ -124,7 +144,7 @@ class BayRateAuthTest(unittest.TestCase):
             {
                 "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
             },
-            FakeAuthAdapter(error=RuntimeError("Invalid object name 'ratings.bayrate_admins'.")),
+            FakeAuthAdapter(error=RuntimeError("Invalid object name 'ratings.admin_permissions'.")),
             environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
         )
 
@@ -136,7 +156,7 @@ class BayRateAuthTest(unittest.TestCase):
         """Verify that local dev email can supply principal."""
         result = authorize_bayrate_admin(
             {},
-            FakeAuthAdapter(rows=[{"AdminID": 9}]),
+            FakeAuthAdapter(rows=[{"AdminPermissionID": 9, "Permission_Code": "bayrate_run"}]),
             environ={"BAYRATE_DEV_AUTH_EMAIL": "local-admin@example.org"},
         )
 

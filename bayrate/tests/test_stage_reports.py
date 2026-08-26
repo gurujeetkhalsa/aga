@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 import csv
 import unittest
 from datetime import date
@@ -20,6 +19,14 @@ from bayrate.stage_reports import (
 
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_PROCESSING_DATE = date(2026, 1, 15)
+HOST_METADATA = {
+    "host_chapter_id": 10,
+    "host_chapter_code": "SEAG",
+    "host_chapter_name": "Seattle Go Center",
+    "reward_event_key": "sample-event",
+    "reward_event_name": "Sample Event",
+}
 
 
 class FakeAdapter:
@@ -54,8 +61,8 @@ class FakeAdapter:
 
 class StageReportsTest(unittest.TestCase):
     """Represent stage reports test."""
-    def test_host_chapter_options_include_aga_and_exclude_dropped_chapters(self) -> None:
-        """Verify that AGA is offered while dropped chapters stay hidden."""
+    def test_host_chapter_options_exclude_dropped_chapters(self) -> None:
+        """Verify that host chapter options exclude dropped chapters."""
         adapter = FakeAdapter(
             candidate_rows=[
                 {
@@ -83,14 +90,15 @@ class StageReportsTest(unittest.TestCase):
         self.assertEqual(options[0]["chapter_id"], -1)
         self.assertFalse(options[0]["earns_tournament_host_points"])
         self.assertTrue(options[1]["earns_tournament_host_points"])
+        self.assertIn("DROPPED", adapter.queries[0][0])
 
     def test_aga_no_host_option_can_be_marked_ready(self) -> None:
-        """Verify that AGA records a no-host decision without blocking rating."""
+        """Verify that AGA records an explicit no-host decision without blocking rating."""
         payload = stage_report_files(
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),
             dry_run=True,
-            today=date(2026, 1, 15),
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         apply_tournament_review_decision(
@@ -117,6 +125,7 @@ class StageReportsTest(unittest.TestCase):
             [FIXTURE_DIR / "report_compact_one.txt", FIXTURE_DIR / "report_compact_two.txt"],
             adapter=adapter,
             run_id=run_id,
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         self.assertEqual(payload["run_id"], run_id)
@@ -140,6 +149,7 @@ class StageReportsTest(unittest.TestCase):
         payload = stage_report_files(
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=adapter,
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         self.assertEqual(payload["run_id"], 42)
@@ -155,6 +165,7 @@ class StageReportsTest(unittest.TestCase):
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),
             dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         tournament = payload["staged_tournaments"][0]
@@ -203,6 +214,7 @@ class StageReportsTest(unittest.TestCase):
                     "reward_is_state_championship": True,
                 }
             ],
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         tournament = payload["staged_tournaments"][0]
@@ -218,6 +230,110 @@ class StageReportsTest(unittest.TestCase):
         self.assertEqual(row["Reward_Event_Name"], "Operator Linked Event")
         self.assertEqual(row["Reward_Is_State_Championship"], 1)
         self.assertFalse(any(warning.get("type") == "host_chapter_required" for warning in tournament["parser_warnings"]))
+
+    def test_old_tournament_report_requires_operator_review(self) -> None:
+        """Verify that old tournament report requires operator review."""
+        report = """TOURNEY Old Date Sample
+start=2026-05-01
+finish=2026-05-01
+location=Seattle, WA
+rules=AGA
+
+PLAYERS (2)
+3001 Old One 1D
+3002 Old Two 2D
+
+GAMES (1)
+3001 3002 W 0 7
+END
+"""
+
+        payload = build_staging_payload(
+            [("old_date_report.txt", report)],
+            adapter=FakeAdapter(),
+            report_metadata=[HOST_METADATA],
+            today=date(2026, 6, 1),
+        )
+
+        tournament = payload["staged_tournaments"][0]
+        warnings = [
+            warning
+            for warning in tournament["parser_warnings"]
+            if warning.get("type") == "stale_tournament_report"
+        ]
+        self.assertEqual(payload["status"], "needs_review")
+        self.assertEqual(tournament["status"], "needs_review")
+        self.assertEqual(len(warnings), 1)
+        self.assertTrue(warnings[0]["review_required"])
+        self.assertEqual(warnings[0]["age_days"], 31)
+        self.assertEqual(warnings[0]["max_age_days"], 30)
+        self.assertIn("31 days before processing date 2026-06-01", warnings[0]["message"])
+
+    def test_tournament_report_at_thirty_days_does_not_require_age_review(self) -> None:
+        """Verify that tournament report at thirty days does not require age review."""
+        report = """TOURNEY Thirty Day Sample
+start=2026-05-01
+finish=2026-05-01
+location=Seattle, WA
+rules=AGA
+
+PLAYERS (2)
+3001 Boundary One 1D
+3002 Boundary Two 2D
+
+GAMES (1)
+3001 3002 W 0 7
+END
+"""
+
+        payload = build_staging_payload(
+            [("thirty_day_report.txt", report)],
+            adapter=FakeAdapter(),
+            report_metadata=[HOST_METADATA],
+            today=date(2026, 5, 31),
+        )
+
+        tournament = payload["staged_tournaments"][0]
+        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertFalse(
+            any(warning.get("type") == "stale_tournament_report" for warning in tournament["parser_warnings"])
+        )
+
+    def test_operator_can_approve_old_tournament_report(self) -> None:
+        """Verify that operator can approve old tournament report."""
+        report = """TOURNEY Old Date Approval Sample
+start=2026-05-01
+finish=2026-05-01
+location=Seattle, WA
+rules=AGA
+
+PLAYERS (2)
+3001 Approval One 1D
+3002 Approval Two 2D
+
+GAMES (1)
+3001 3002 W 0 7
+END
+"""
+
+        payload = build_staging_payload(
+            [("old_date_approval_report.txt", report)],
+            adapter=FakeAdapter(),
+            report_metadata=[HOST_METADATA],
+            today=date(2026, 6, 1),
+        )
+
+        self.assertEqual(payload["status"], "needs_review")
+        apply_tournament_review_decision(
+            payload,
+            1,
+            mark_ready=True,
+            operator_note="Old report date approved.",
+        )
+
+        tournament = payload["staged_tournaments"][0]
+        self.assertEqual(payload["status"], "ready_for_rating")
+        self.assertEqual(tournament["metadata"]["operator_note"], "Old report date approved.")
 
     def test_duplicate_candidate_with_different_code_needs_review(self) -> None:
         """Verify that duplicate candidate with different code needs review."""
@@ -258,7 +374,12 @@ class StageReportsTest(unittest.TestCase):
             ]
         )
 
-        payload = stage_report_files([FIXTURE_DIR / "report_compact_one.txt"], adapter=adapter, dry_run=True)
+        payload = stage_report_files(
+            [FIXTURE_DIR / "report_compact_one.txt"],
+            adapter=adapter,
+            dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
+        )
 
         self.assertEqual(payload["status"], "needs_review")
         tournament = payload["staged_tournaments"][0]
@@ -289,7 +410,12 @@ class StageReportsTest(unittest.TestCase):
             ]
         )
 
-        payload = stage_report_files([FIXTURE_DIR / "report_compact_one.txt"], adapter=adapter, dry_run=True)
+        payload = stage_report_files(
+            [FIXTURE_DIR / "report_compact_one.txt"],
+            adapter=adapter,
+            dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
+        )
         tournament = payload["staged_tournaments"][0]
 
         self.assertEqual(payload["status"], "needs_review")
@@ -335,7 +461,7 @@ GAMES (1)
 END
 """
 
-        payload = build_staging_payload([("2026BPO.txt", report)], adapter=adapter)
+        payload = build_staging_payload([("2026BPO.txt", report)], adapter=adapter, today=date(2026, 4, 30))
         tournament = payload["staged_tournaments"][0]
 
         self.assertEqual(payload["status"], "needs_review")
@@ -366,6 +492,7 @@ END
         payload = build_staging_payload(
             [("decimal_rank_suffix_report.txt", report)],
             adapter=FakeAdapter(),
+            today=date(2026, 3, 10),
         )
 
         self.assertEqual(payload["status"], "validation_failed")
@@ -395,7 +522,8 @@ END
             [
                 ("broken_upload.txt", broken_report),
                 ("pasted_report.txt", later_warning_report),
-            ]
+            ],
+            today=date(2026, 4, 10),
         )
 
         self.assertEqual(payload["status"], "validation_failed")
@@ -430,6 +558,7 @@ END
         payload = build_staging_payload(
             [("unreported_result.txt", report)],
             adapter=FakeAdapter(),
+            today=date(2026, 5, 15),
         )
 
         self.assertEqual(payload["status"], "needs_review")
@@ -523,6 +652,7 @@ END
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=adapter,
             dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         warnings = payload["staged_tournaments"][0]["parser_warnings"]
@@ -560,6 +690,7 @@ END
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=adapter,
             dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
         )
 
         warnings = [
@@ -581,6 +712,7 @@ END
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),
             dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
         )
         rows = bayrate_game_csv_rows(payload)
 
@@ -608,6 +740,7 @@ END
         payload = build_staging_payload(
             [("report_compact_one.txt", (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"))],
             adapter=adapter,
+            today=FIXTURE_PROCESSING_DATE,
         )
         payload["staged_tournaments"][0]["status"] = "needs_review"
         payload["staged_tournaments"][0]["duplicate_candidate"] = {
@@ -667,6 +800,7 @@ END
             [FIXTURE_DIR / "report_compact_one.txt"],
             adapter=FakeAdapter(),
             dry_run=True,
+            today=FIXTURE_PROCESSING_DATE,
         )
         production_rows = [
             {

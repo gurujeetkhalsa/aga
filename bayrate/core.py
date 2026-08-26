@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 import csv
 import json
 import math
@@ -16,6 +15,10 @@ SQRT2 = math.sqrt(2.0)
 SQRT2PI = math.sqrt(2.0 / math.pi)
 LOG_SQRT_2PI = 0.5 * math.log(2.0 * math.pi)
 MIN_PROBABILITY = 1e-300
+PERFORMANCE_SIGMA_PX = 1.0569
+PERFORMANCE_ALL_WINS_BONUS = 1.5
+PERFORMANCE_LOSS_CAP_ABOVE_HIGHEST_WIN = 1.5
+PERFORMANCE_ALL_WINS_TOP_OPPONENTS = 4
 
 INIT_SIGMA_R = [
     -49.5, -48.5, -47.5, -46.5, -45.5,
@@ -68,6 +71,20 @@ class BayrateConfig:
     partial_reseed_rating_factor: float = 0.32127
     partial_reseed_sigma_base: float = 0.256
     partial_reseed_sigma_power: float = 1.9475
+    posterior_process_noise: float = 0.0
+    surprise_sigma_base: float | None = None
+    surprise_sigma_scale: float = 0.0
+    surprise_sigma_deadband: float = 0.0
+    surprise_sigma_cap: float | None = None
+    surprise_sigma_score_mode: str = "pre"
+    surprise_sigma_gate_base_by_deadband: bool = False
+    surprise_taper_start_rating: float | None = None
+    surprise_taper_end_rating: float | None = None
+    surprise_taper_floor: float = 1.0
+    surprise_persistence_weight: float = 0.0
+    surprise_persistence_decay: float = 0.0
+    surprise_persistence_cap: float | None = None
+    surprise_persistence_same_direction_only: bool = False
 
 
 @dataclass(slots=True)
@@ -128,6 +145,8 @@ class TdListEntry:
     rating: float
     sigma: float
     last_rating_date: date
+    surprise_persistence_score: float = 0.0
+    temporary_sigma_boost: float = 0.0
 
 
 @dataclass(slots=True)
@@ -180,6 +199,7 @@ class EventPlayerResult:
     seed_before_closing_boundary: float
     prior_rating: float | None
     prior_sigma: float | None
+    performance_rating: float | None
     rating_after: float
     sigma_after: float
 
@@ -389,6 +409,108 @@ def normal_win_probability(rd: float, sigma_px: float) -> float:
     """Execute the normal win probability routine."""
     p = 0.5 * math.erfc(-rd / (sigma_px * SQRT2))
     return min(max(p, MIN_PROBABILITY), 1.0 - MIN_PROBABILITY)
+
+
+def _normal_win_probability_slope(rd: float, sigma_px: float) -> float:
+    """Execute the normal win probability slope routine."""
+    z = rd / sigma_px
+    return math.exp(-0.5 * z * z - LOG_SQRT_2PI) / sigma_px
+
+
+def _normal_hazard(z: float) -> float:
+    """Execute the normal hazard routine."""
+    if z < -10.0:
+        x = -z
+        return x + 1.0 / x
+    pdf = math.exp(-0.5 * z * z) / math.sqrt(2.0 * math.pi)
+    cdf = 0.5 * math.erfc(-z / SQRT2)
+    return pdf / max(cdf, MIN_PROBABILITY)
+
+
+def _performance_rating_gradient(
+    rating: float,
+    won_opponent_ratings: list[float],
+    lost_opponent_ratings: list[float],
+    sigma_px: float,
+) -> float:
+    """Execute the performance rating gradient routine."""
+    inv_sigma = 1.0 / sigma_px
+    gradient = 0.0
+    for opponent_rating in won_opponent_ratings:
+        gradient += _normal_hazard((rating - opponent_rating) * inv_sigma) * inv_sigma
+    for opponent_rating in lost_opponent_ratings:
+        gradient -= _normal_hazard((opponent_rating - rating) * inv_sigma) * inv_sigma
+    return gradient
+
+
+def calculate_performance_rating(
+    opponent_results: Iterable[tuple[float, bool]],
+    *,
+    sigma_px: float = PERFORMANCE_SIGMA_PX,
+) -> float | None:
+    """Calculate performance rating."""
+    records = [(float(opponent_rating), bool(player_won)) for opponent_rating, player_won in opponent_results]
+    if not records:
+        return None
+
+    won_opponent_ratings = [opponent_rating for opponent_rating, player_won in records if player_won]
+    lost_opponent_ratings = [opponent_rating for opponent_rating, player_won in records if not player_won]
+    if not won_opponent_ratings:
+        return None
+    if not lost_opponent_ratings:
+        top_opponents = sorted(won_opponent_ratings, reverse=True)[:PERFORMANCE_ALL_WINS_TOP_OPPONENTS]
+        return PERFORMANCE_ALL_WINS_BONUS + sum(top_opponents) / len(top_opponents)
+
+    highest_defeated = max(won_opponent_ratings)
+    loss_cap = highest_defeated + PERFORMANCE_LOSS_CAP_ABOVE_HIGHEST_WIN
+    lowest_lost = min(lost_opponent_ratings)
+    if lowest_lost > loss_cap:
+        lost_opponent_ratings = [
+            loss_cap if opponent_rating == lowest_lost else opponent_rating
+            for opponent_rating in lost_opponent_ratings
+        ]
+
+    all_opponent_ratings = won_opponent_ratings + lost_opponent_ratings
+    lo = min(all_opponent_ratings) - 8.0 * sigma_px
+    hi = max(all_opponent_ratings) + 8.0 * sigma_px
+
+    for _ in range(20):
+        if _performance_rating_gradient(lo, won_opponent_ratings, lost_opponent_ratings, sigma_px) > 0.0:
+            break
+        lo -= 8.0 * sigma_px
+    for _ in range(20):
+        if _performance_rating_gradient(hi, won_opponent_ratings, lost_opponent_ratings, sigma_px) < 0.0:
+            break
+        hi += 8.0 * sigma_px
+
+    for _ in range(100):
+        mid = (lo + hi) / 2.0
+        if _performance_rating_gradient(mid, won_opponent_ratings, lost_opponent_ratings, sigma_px) > 0.0:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+def _calc_event_performance_ratings(
+    players: list[PreparedPlayer],
+    games: list[PreparedGame],
+    pre_event_ratings: list[float],
+) -> list[float | None]:
+    """Execute the calc event performance ratings routine."""
+    opponent_results: list[list[tuple[float, bool]]] = [[] for _ in players]
+    has_non_even_game = [False] * len(players)
+    for game in games:
+        if game.handicap not in (0, 1):
+            has_non_even_game[game.white_idx] = True
+            has_non_even_game[game.black_idx] = True
+            continue
+        opponent_results[game.white_idx].append((pre_event_ratings[game.black_idx], game.white_wins))
+        opponent_results[game.black_idx].append((pre_event_ratings[game.white_idx], not game.white_wins))
+    return [
+        None if has_non_even_game[player.index] else calculate_performance_rating(opponent_results[player.index])
+        for player in players
+    ]
 
 
 GAME_CSV_REQUIRED_COLUMNS = [
@@ -757,6 +879,8 @@ def _prepare_event(
                     seed = td_entry.rating
                     day_count = max(0, (event.event_date - td_entry.last_rating_date).days)
                     prior_sigma = math.sqrt(td_entry.sigma * td_entry.sigma + (config.inactivity_growth_per_day * day_count) ** 2)
+                if _is_hybrid_volatility_mode(config.surprise_sigma_score_mode) and td_entry.temporary_sigma_boost > 0.0:
+                    prior_sigma = math.sqrt(prior_sigma * prior_sigma + td_entry.temporary_sigma_boost * td_entry.temporary_sigma_boost)
         players.append(
             PreparedPlayer(
                 player_id=player_id,
@@ -910,6 +1034,297 @@ def _calc_sigma2(players: list[PreparedPlayer], games: list[PreparedGame], ratin
     return new_sigma
 
 
+def _surprise_taper_multiplier(rating: float, config: BayrateConfig) -> float:
+    """Execute the surprise taper multiplier routine."""
+    start = config.surprise_taper_start_rating
+    end = config.surprise_taper_end_rating
+    if start is None or end is None:
+        return 1.0
+    floor = min(max(config.surprise_taper_floor, 0.0), 1.0)
+    if end <= start:
+        return floor if rating >= start else 1.0
+    if rating <= start:
+        return 1.0
+    if rating >= end:
+        return floor
+    progress = (rating - start) / (end - start)
+    return 1.0 - progress * (1.0 - floor)
+
+
+def _surprise_sigma_score(
+    *,
+    pre_residual: float,
+    post_residual: float,
+    pre_information: float,
+    post_information: float,
+    pre_information_excess: float,
+    post_information_excess: float,
+    pre_volatility_score: float,
+    pre_volatility_information: float,
+    post_volatility_score: float,
+    post_volatility_information: float,
+    prior_sigma: float,
+    game_count: int,
+    mode: str,
+) -> float:
+    """Execute the surprise sigma score routine."""
+    return abs(
+        _signed_surprise_sigma_score(
+            pre_residual=pre_residual,
+            post_residual=post_residual,
+            pre_information=pre_information,
+            post_information=post_information,
+            pre_information_excess=pre_information_excess,
+            post_information_excess=post_information_excess,
+            pre_volatility_score=pre_volatility_score,
+            pre_volatility_information=pre_volatility_information,
+            post_volatility_score=post_volatility_score,
+            post_volatility_information=post_volatility_information,
+            prior_sigma=prior_sigma,
+            game_count=game_count,
+            mode=mode,
+        )
+    )
+
+
+def _signed_surprise_sigma_score(
+    *,
+    pre_residual: float,
+    post_residual: float,
+    pre_information: float,
+    post_information: float,
+    pre_information_excess: float,
+    post_information_excess: float,
+    game_count: int,
+    mode: str,
+    pre_volatility_score: float = 0.0,
+    pre_volatility_information: float = 0.0,
+    post_volatility_score: float = 0.0,
+    post_volatility_information: float = 0.0,
+    prior_sigma: float = 0.0,
+) -> float:
+    """Execute the signed surprise sigma score routine."""
+    if game_count <= 0:
+        return 0.0
+    scale = math.sqrt(game_count)
+    pre_score = pre_residual / scale
+    post_score = post_residual / scale
+    if mode == "pre":
+        return pre_score
+    if mode == "post":
+        return post_score
+    if mode == "min_pre_post":
+        return pre_score if abs(pre_score) <= abs(post_score) else post_score
+    pre_information_score = pre_information / scale
+    post_information_score = post_information / scale
+    if mode == "pre_shannon":
+        return pre_information_score
+    if mode == "post_shannon":
+        return post_information_score
+    if mode == "min_pre_post_shannon":
+        return (
+            pre_information_score
+            if abs(pre_information_score) <= abs(post_information_score)
+            else post_information_score
+        )
+    pre_information_excess_score = pre_information_excess / scale
+    post_information_excess_score = post_information_excess / scale
+    if mode == "pre_shannon_excess":
+        return pre_information_excess_score
+    if mode == "post_shannon_excess":
+        return post_information_excess_score
+    if mode == "min_pre_post_shannon_excess":
+        return (
+            pre_information_excess_score
+            if abs(pre_information_excess_score) <= abs(post_information_excess_score)
+            else post_information_excess_score
+        )
+    pre_volatility = _signed_volatility_trigger_score(
+        rating_score=pre_volatility_score,
+        rating_information=pre_volatility_information,
+        prior_sigma=prior_sigma,
+    )
+    post_volatility = _signed_volatility_trigger_score(
+        rating_score=post_volatility_score,
+        rating_information=post_volatility_information,
+        prior_sigma=prior_sigma,
+    )
+    if mode == "volatility_pre":
+        return pre_volatility
+    if mode == "volatility_post":
+        return post_volatility
+    if mode == "volatility_min_pre_post":
+        return pre_volatility if abs(pre_volatility) <= abs(post_volatility) else post_volatility
+    if mode == "volatility_hybrid_pre_post":
+        return post_volatility
+    if mode == "volatility_hybrid_pre_min":
+        return pre_volatility if abs(pre_volatility) <= abs(post_volatility) else post_volatility
+    raise ValueError(f"Unknown surprise sigma score mode: {mode}")
+
+
+def _is_hybrid_volatility_mode(mode: str) -> bool:
+    """Return whether hybrid volatility mode."""
+    return mode in {"volatility_hybrid_pre_post", "volatility_hybrid_pre_min"}
+
+
+def _signed_volatility_trigger_score(
+    *,
+    rating_score: float,
+    rating_information: float,
+    prior_sigma: float,
+) -> float:
+    """Return a Glicko-style jump score scaled by explainable variance."""
+    if rating_information <= 0.0:
+        return 0.0
+    event_variance = 1.0 / rating_information
+    estimated_jump = rating_score * event_variance
+    explainable_variance = prior_sigma * prior_sigma + event_variance
+    if explainable_variance <= 0.0:
+        return 0.0
+    return estimated_jump / math.sqrt(explainable_variance)
+
+
+def _record_volatility_evidence(
+    *,
+    score: list[float],
+    information: list[float],
+    player_index: int,
+    actual: float,
+    expected: float,
+    probability_slope: float,
+) -> None:
+    """Record volatility evidence."""
+    outcome_variance = max(expected * (1.0 - expected), 1e-12)
+    score[player_index] += (actual - expected) * probability_slope / outcome_variance
+    information[player_index] += probability_slope * probability_slope / outcome_variance
+
+
+def _signed_observed_information(actual: float, predicted: float) -> float:
+    """Execute the signed observed information routine."""
+    observed_probability = predicted if actual >= 0.5 else 1.0 - predicted
+    clipped = min(max(observed_probability, 1e-12), 1.0)
+    direction = 1.0 if actual >= predicted else -1.0
+    return direction * -math.log(clipped)
+
+
+def _expected_signed_observed_information(predicted: float) -> float:
+    """Execute the expected signed observed information routine."""
+    clipped = min(max(predicted, 1e-12), 1.0 - 1e-12)
+    win_information = -math.log(clipped)
+    loss_information = -math.log(1.0 - clipped)
+    return clipped * win_information - (1.0 - clipped) * loss_information
+
+
+def _signed_observed_information_excess(actual: float, predicted: float) -> float:
+    """Execute the signed observed information excess routine."""
+    return _signed_observed_information(actual, predicted) - _expected_signed_observed_information(predicted)
+
+
+def _cap_signed(value: float, cap: float | None) -> float:
+    """Execute the cap signed routine."""
+    if cap is None:
+        return value
+    limit = abs(cap)
+    return min(max(value, -limit), limit)
+
+
+def _surprise_persistence_scores(
+    *,
+    signed_score: float,
+    previous_score: float,
+    config: BayrateConfig,
+) -> tuple[float, float]:
+    """Execute the surprise persistence scores routine."""
+    decay = min(max(config.surprise_persistence_decay, 0.0), 1.0)
+    retained = previous_score * decay
+    if config.surprise_persistence_same_direction_only and retained * signed_score < 0.0:
+        retained = 0.0
+    retained = _cap_signed(retained, config.surprise_persistence_cap)
+    effective_score = signed_score + config.surprise_persistence_weight * retained
+    updated_score = _cap_signed(retained + signed_score, config.surprise_persistence_cap)
+    return abs(effective_score), updated_score
+
+
+def _surprise_noise_from_score(score: float, pre_event_rating: float, config: BayrateConfig) -> float:
+    """Execute the surprise noise from score routine."""
+    surprise_excess = max(0.0, score - config.surprise_sigma_deadband)
+    if config.surprise_sigma_gate_base_by_deadband and surprise_excess <= 0.0:
+        return 0.0
+    surprise_noise = config.surprise_sigma_scale * surprise_excess
+    noise = math.sqrt(config.surprise_sigma_base * config.surprise_sigma_base + surprise_noise * surprise_noise)
+    if config.surprise_sigma_cap is not None:
+        noise = min(noise, config.surprise_sigma_cap)
+    return noise * _surprise_taper_multiplier(pre_event_rating, config)
+
+
+def _calc_posterior_sigma_after_noise(
+    posterior_sigma: float,
+    *,
+    surprise_residual: float,
+    post_surprise_residual: float,
+    surprise_information: float,
+    post_surprise_information: float,
+    surprise_information_excess: float,
+    post_surprise_information_excess: float,
+    pre_volatility_score: float,
+    pre_volatility_information: float,
+    post_volatility_score: float,
+    post_volatility_information: float,
+    surprise_game_count: int,
+    previous_surprise_persistence: float,
+    pre_event_rating: float,
+    prior_sigma: float,
+    config: BayrateConfig,
+) -> tuple[float, float, float]:
+    """Execute the calc posterior sigma after noise routine."""
+    noise_squared = config.posterior_process_noise * config.posterior_process_noise
+    updated_surprise_persistence = previous_surprise_persistence
+    temporary_sigma_boost = 0.0
+    if config.surprise_sigma_base is not None:
+        signed_score = _signed_surprise_sigma_score(
+            pre_residual=surprise_residual,
+            post_residual=post_surprise_residual,
+            pre_information=surprise_information,
+            post_information=post_surprise_information,
+            pre_information_excess=surprise_information_excess,
+            post_information_excess=post_surprise_information_excess,
+            pre_volatility_score=pre_volatility_score,
+            pre_volatility_information=pre_volatility_information,
+            post_volatility_score=post_volatility_score,
+            post_volatility_information=post_volatility_information,
+            prior_sigma=prior_sigma,
+            game_count=surprise_game_count,
+            mode=config.surprise_sigma_score_mode,
+        )
+        score, updated_surprise_persistence = _surprise_persistence_scores(
+            signed_score=signed_score,
+            previous_score=previous_surprise_persistence,
+            config=config,
+        )
+        noise = _surprise_noise_from_score(score, pre_event_rating, config)
+        if _is_hybrid_volatility_mode(config.surprise_sigma_score_mode):
+            boost_signed_score = _signed_surprise_sigma_score(
+                pre_residual=surprise_residual,
+                post_residual=post_surprise_residual,
+                pre_information=surprise_information,
+                post_information=post_surprise_information,
+                pre_information_excess=surprise_information_excess,
+                post_information_excess=post_surprise_information_excess,
+                pre_volatility_score=pre_volatility_score,
+                pre_volatility_information=pre_volatility_information,
+                post_volatility_score=post_volatility_score,
+                post_volatility_information=post_volatility_information,
+                prior_sigma=prior_sigma,
+                game_count=surprise_game_count,
+                mode="volatility_pre",
+            )
+            temporary_sigma_boost = _surprise_noise_from_score(abs(boost_signed_score), pre_event_rating, config)
+        noise_squared += noise * noise
+    if noise_squared <= 0.0:
+        return posterior_sigma, updated_surprise_persistence, temporary_sigma_boost
+    return math.sqrt(posterior_sigma * posterior_sigma + noise_squared), updated_surprise_persistence, temporary_sigma_boost
+
+
 def _run_events(
     events: list[EventRecord],
     history: dict[int, list[OfficialSnapshot]],
@@ -937,13 +1352,74 @@ def _run_events(
         posterior_sigma = _calc_sigma2(players, prepared_games, ratings_closed)
         ratings_open = [open_boundary(r) for r in ratings_closed]
         seeds_open = [open_boundary(player.seed) for player in players]
+        performance_ratings = _calc_event_performance_ratings(players, prepared_games, seeds_open)
+        surprise_residual = [0.0] * len(players)
+        post_surprise_residual = [0.0] * len(players)
+        surprise_information = [0.0] * len(players)
+        post_surprise_information = [0.0] * len(players)
+        surprise_information_excess = [0.0] * len(players)
+        post_surprise_information_excess = [0.0] * len(players)
+        pre_volatility_score = [0.0] * len(players)
+        pre_volatility_information = [0.0] * len(players)
+        post_volatility_score = [0.0] * len(players)
+        post_volatility_information = [0.0] * len(players)
+        surprise_game_count = [0] * len(players)
 
         for game in prepared_games:
             pre_rd = seeds_open[game.white_idx] - seeds_open[game.black_idx] - game.handicapeqv
             post_rd = ratings_open[game.white_idx] - ratings_open[game.black_idx] - game.handicapeqv
             pre_prob = normal_win_probability(pre_rd, game.sigma_px)
             post_prob = normal_win_probability(post_rd, game.sigma_px)
+            pre_slope = _normal_win_probability_slope(pre_rd, game.sigma_px)
+            post_slope = _normal_win_probability_slope(post_rd, game.sigma_px)
             actual_white = 1.0 if game.white_wins else 0.0
+            actual_black = 1.0 - actual_white
+            surprise_residual[game.white_idx] += actual_white - pre_prob
+            surprise_residual[game.black_idx] += (1.0 - actual_white) - (1.0 - pre_prob)
+            post_surprise_residual[game.white_idx] += actual_white - post_prob
+            post_surprise_residual[game.black_idx] += (1.0 - actual_white) - (1.0 - post_prob)
+            surprise_information[game.white_idx] += _signed_observed_information(actual_white, pre_prob)
+            surprise_information[game.black_idx] += _signed_observed_information(actual_black, 1.0 - pre_prob)
+            post_surprise_information[game.white_idx] += _signed_observed_information(actual_white, post_prob)
+            post_surprise_information[game.black_idx] += _signed_observed_information(actual_black, 1.0 - post_prob)
+            surprise_information_excess[game.white_idx] += _signed_observed_information_excess(actual_white, pre_prob)
+            surprise_information_excess[game.black_idx] += _signed_observed_information_excess(actual_black, 1.0 - pre_prob)
+            post_surprise_information_excess[game.white_idx] += _signed_observed_information_excess(actual_white, post_prob)
+            post_surprise_information_excess[game.black_idx] += _signed_observed_information_excess(actual_black, 1.0 - post_prob)
+            _record_volatility_evidence(
+                score=pre_volatility_score,
+                information=pre_volatility_information,
+                player_index=game.white_idx,
+                actual=actual_white,
+                expected=pre_prob,
+                probability_slope=pre_slope,
+            )
+            _record_volatility_evidence(
+                score=pre_volatility_score,
+                information=pre_volatility_information,
+                player_index=game.black_idx,
+                actual=actual_black,
+                expected=1.0 - pre_prob,
+                probability_slope=pre_slope,
+            )
+            _record_volatility_evidence(
+                score=post_volatility_score,
+                information=post_volatility_information,
+                player_index=game.white_idx,
+                actual=actual_white,
+                expected=post_prob,
+                probability_slope=post_slope,
+            )
+            _record_volatility_evidence(
+                score=post_volatility_score,
+                information=post_volatility_information,
+                player_index=game.black_idx,
+                actual=actual_black,
+                expected=1.0 - post_prob,
+                probability_slope=post_slope,
+            )
+            surprise_game_count[game.white_idx] += 1
+            surprise_game_count[game.black_idx] += 1
             pre_metrics.record(pre_prob, actual_white)
             post_metrics.record(post_prob, actual_white)
             game_results.append(
@@ -966,7 +1442,28 @@ def _run_events(
 
         for player in players:
             rating_after = ratings_open[player.index]
-            sigma_after = posterior_sigma[player.index]
+            previous_td_entry = td_list.get(player.player_id)
+            previous_surprise_persistence = (
+                previous_td_entry.surprise_persistence_score if previous_td_entry is not None else 0.0
+            )
+            sigma_after, surprise_persistence_after, temporary_sigma_boost_after = _calc_posterior_sigma_after_noise(
+                posterior_sigma[player.index],
+                surprise_residual=surprise_residual[player.index],
+                post_surprise_residual=post_surprise_residual[player.index],
+                surprise_information=surprise_information[player.index],
+                post_surprise_information=post_surprise_information[player.index],
+                surprise_information_excess=surprise_information_excess[player.index],
+                post_surprise_information_excess=post_surprise_information_excess[player.index],
+                pre_volatility_score=pre_volatility_score[player.index],
+                pre_volatility_information=pre_volatility_information[player.index],
+                post_volatility_score=post_volatility_score[player.index],
+                post_volatility_information=post_volatility_information[player.index],
+                surprise_game_count=surprise_game_count[player.index],
+                previous_surprise_persistence=previous_surprise_persistence,
+                pre_event_rating=seeds_open[player.index],
+                prior_sigma=player.prior_sigma,
+                config=config,
+            )
             player_results.append(
                 EventPlayerResult(
                     player_id=player.player_id,
@@ -977,6 +1474,7 @@ def _run_events(
                     seed_before_closing_boundary=open_boundary(player.seed),
                     prior_rating=player.prior_rating_for_update,
                     prior_sigma=player.prior_sigma_for_update,
+                    performance_rating=performance_ratings[player.index],
                     rating_after=rating_after,
                     sigma_after=sigma_after,
                 )
@@ -986,6 +1484,8 @@ def _run_events(
                 rating=rating_after,
                 sigma=sigma_after,
                 last_rating_date=event.event_date,
+                surprise_persistence_score=surprise_persistence_after,
+                temporary_sigma_boost=temporary_sigma_boost_after,
             )
 
     return BayrateRunResult(

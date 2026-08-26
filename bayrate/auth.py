@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 from __future__ import annotations
 
 import base64
@@ -35,6 +34,10 @@ ROLE_CLAIM_TYPES = {
     "role",
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
 }
+ADMIN_ALL_PERMISSION = "admin_all"
+BAYRATE_RUN_PERMISSION = "bayrate_run"
+REWARDS_REDEMPTIONS_PERMISSION = "rewards_redemptions"
+SGF_IMPORT_PERMISSION = "sgf_import"
 
 
 @dataclass(frozen=True)
@@ -66,6 +69,24 @@ def authorize_bayrate_admin(
     environ: Mapping[str, str] | None = None,
 ) -> BayRateAuthorizationResult:
     """Execute the authorize bayrate admin routine."""
+    return authorize_admin_permission(
+        headers,
+        adapter,
+        required_permission=BAYRATE_RUN_PERMISSION,
+        feature_label="BayRate",
+        environ=environ,
+    )
+
+
+def authorize_admin_permission(
+    headers: Mapping[str, Any],
+    adapter: Any,
+    *,
+    required_permission: str,
+    feature_label: str,
+    environ: Mapping[str, str] | None = None,
+) -> BayRateAuthorizationResult:
+    """Execute the authorize admin permission routine."""
     env = os.environ if environ is None else environ
     if not bayrate_auth_runtime_configured(env):
         return BayRateAuthorizationResult(
@@ -82,24 +103,24 @@ def authorize_bayrate_admin(
         return BayRateAuthorizationResult(
             ok=False,
             status_code=401,
-            error="Sign in is required before running BayRate.",
+            error=f"Sign in is required before using {feature_label}.",
         )
 
     try:
-        admin_row = find_bayrate_admin(adapter, principal)
+        admin_row = find_admin_permission(adapter, principal, required_permission=required_permission)
     except Exception as exc:
         message = str(exc)
-        if "bayrate_admins" in message.lower() or "invalid object name" in message.lower():
+        if "admin_permissions" in message.lower() or "invalid object name" in message.lower():
             return BayRateAuthorizationResult(
                 ok=False,
                 status_code=503,
-                error="BayRate admin authorization table is missing. Apply bayrate/sql/bayrate_authorization_schema.sql.",
+                error="Admin permission table is missing. Apply bayrate/sql/bayrate_authorization_schema.sql.",
                 principal=principal,
             )
         return BayRateAuthorizationResult(
             ok=False,
             status_code=503,
-            error="BayRate admin authorization could not be verified.",
+            error=f"{feature_label} authorization could not be verified.",
             principal=principal,
         )
 
@@ -107,7 +128,7 @@ def authorize_bayrate_admin(
         return BayRateAuthorizationResult(
             ok=False,
             status_code=403,
-            error=f"{principal.principal_name} is not an active BayRate admin.",
+            error=f"{principal.principal_name} does not have {required_permission} permission.",
             principal=principal,
         )
 
@@ -182,6 +203,16 @@ def extract_bayrate_principal(
 
 def find_bayrate_admin(adapter: Any, principal: BayRatePrincipal) -> dict[str, Any] | None:
     """Find bayrate admin."""
+    return find_admin_permission(adapter, principal, required_permission=BAYRATE_RUN_PERMISSION)
+
+
+def find_admin_permission(
+    adapter: Any,
+    principal: BayRatePrincipal,
+    *,
+    required_permission: str,
+) -> dict[str, Any] | None:
+    """Find admin permission."""
     where_parts: list[str] = []
     params: list[Any] = []
 
@@ -201,17 +232,21 @@ def find_bayrate_admin(adapter: Any, principal: BayRatePrincipal) -> dict[str, A
     rows = adapter.query_rows(
         f"""
 SELECT TOP (1)
-    [AdminID],
+    [AdminPermissionID],
     [Principal_Name],
     [Principal_Id],
     [Display_Name],
+    [Permission_Code],
     [Created_At]
-FROM [ratings].[bayrate_admins]
+FROM [ratings].[admin_permissions]
 WHERE [Is_Active] = 1
+  AND [Permission_Code] IN (?, ?)
   AND ({' OR '.join(where_parts)})
-ORDER BY [AdminID]
+ORDER BY
+    CASE WHEN [Permission_Code] = ? THEN 0 ELSE 1 END,
+    [AdminPermissionID]
 """,
-        tuple(params),
+        (required_permission, ADMIN_ALL_PERMISSION, *params, required_permission),
     )
     return rows[0] if rows else None
 

@@ -1,16 +1,23 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 import unittest
 from datetime import date
 from pathlib import Path
 
 from bayrate.replay_staged_run import build_staged_replay_input, run_staged_replay
-from bayrate.stage_reports import build_staging_payload
+from bayrate.stage_reports import apply_tournament_review_decision, build_staging_payload
 
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_PROCESSING_DATE = date(2026, 1, 15)
+HOST_METADATA = {
+    "host_chapter_id": 10,
+    "host_chapter_code": "SEAG",
+    "host_chapter_name": "Seattle Go Center",
+    "reward_event_key": "sample-event",
+    "reward_event_name": "Sample Event",
+}
 
 
 class DuplicateCandidateAdapter:
@@ -195,6 +202,7 @@ def needs_review_payload():
         ],
         adapter=DuplicateCandidateAdapter(),
         run_id=777,
+        today=FIXTURE_PROCESSING_DATE,
     )
 
 
@@ -209,6 +217,24 @@ def ready_new_tournament_payload():
         ],
         adapter=NoDuplicateCandidateAdapter(),
         run_id=778,
+        report_metadata=[HOST_METADATA],
+        today=FIXTURE_PROCESSING_DATE,
+    )
+
+
+def stale_needs_review_payload():
+    """Execute the stale needs review payload routine."""
+    return build_staging_payload(
+        [
+            (
+                "report_compact_one.txt",
+                (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"),
+            )
+        ],
+        adapter=NoDuplicateCandidateAdapter(),
+        run_id=779,
+        report_metadata=[HOST_METADATA],
+        today=date(2026, 2, 15),
     )
 
 
@@ -255,6 +281,28 @@ class ReplayStagedRunTest(unittest.TestCase):
         self.assertEqual(plan["starter"]["same_day_predecessor_tournament_codes"], ["PREV-SAME-DAY"])
         self.assertIn("same-day predecessors: PREV-SAME-DAY", plan["starter"]["source"])
         self.assertEqual([game.tournament_code for game in replay_input["games"]], ["OLD-SAMPLE-1", "OLD-SAMPLE-1", "LATER-SAME-DAY"])
+
+    def test_replay_rejects_unapproved_stale_tournament_report(self) -> None:
+        """Verify that replay rejects unapproved stale tournament report."""
+        payload = stale_needs_review_payload()
+
+        with self.assertRaisesRegex(ValueError, "stale tournament report"):
+            build_staged_replay_input(ReplayAdapter(), payload=payload)
+
+    def test_replay_allows_stale_tournament_report_after_operator_approval(self) -> None:
+        """Verify that replay allows stale tournament report after operator approval."""
+        payload = stale_needs_review_payload()
+        apply_tournament_review_decision(
+            payload,
+            1,
+            mark_ready=True,
+            operator_note="Old report date approved.",
+        )
+
+        replay_input = build_staged_replay_input(ReplayAdapter(), payload=payload)
+
+        self.assertEqual(replay_input["plan"]["staged_run_status"], "ready_for_rating")
+        self.assertEqual(replay_input["plan"]["staged_event_count"], 1)
 
     def test_run_staged_replay_writes_artifact_without_sql_writes(self) -> None:
         """Verify that run staged replay writes artifact without sql writes."""
@@ -312,7 +360,7 @@ GAMES (1)
 3001 3002 W 0 7
 END
 """
-        payload = build_staging_payload([("bad.txt", report)], adapter=DuplicateCandidateAdapter())
+        payload = build_staging_payload([("bad.txt", report)], adapter=DuplicateCandidateAdapter(), today=date(2026, 3, 10))
 
         with self.assertRaisesRegex(ValueError, "validation_failed"):
             build_staged_replay_input(ReplayAdapter(), payload=payload)

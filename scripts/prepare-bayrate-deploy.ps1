@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 param(
     [string]$OutputRoot
 )
@@ -48,9 +47,11 @@ foreach ($FileName in $AllowedBayRateFiles) {
     Copy-Item -Path $SourcePath -Destination $BayRateTarget -Force
 }
 
-$CopyingPath = Join-Path $BayRateSource "COPYING"
-if (Test-Path $CopyingPath) {
-    Copy-Item -Path $CopyingPath -Destination $BayRateTarget -Force
+foreach ($NoticeFileName in @("COPYING", "NOTICE.md")) {
+    $NoticePath = Join-Path $BayRateSource $NoticeFileName
+    if (Test-Path $NoticePath) {
+        Copy-Item -Path $NoticePath -Destination $BayRateTarget -Force
+    }
 }
 
 Write-Output $Target
