@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2010 Philip Waldron
 # SPDX-FileCopyrightText: 2026 American Go Association
 # SPDX-License-Identifier: GPL-3.0-or-later
-
 import argparse
 import json
 import sys
@@ -20,7 +19,14 @@ from bayrate.core import (
     run_bayrate_loaded,
 )
 from bayrate.sql_adapter import SqlAdapter, SqlStatement, get_sql_connection_string
-from bayrate.stage_reports import StageSqlAdapter, _coerce_date, _coerce_float, _coerce_int, load_staged_run
+from bayrate.stage_reports import (
+    STALE_TOURNAMENT_REPORT_WARNING_TYPE,
+    StageSqlAdapter,
+    _coerce_date,
+    _coerce_float,
+    _coerce_int,
+    load_staged_run,
+)
 
 
 PRODUCTION_EVENT_SUMMARY_SQL = """
@@ -460,7 +466,9 @@ def build_staged_rating_rows(plan: dict[str, Any], result: BayrateRunResult) -> 
                 "production_rating_row_id": None,
                 "rating_delta": None,
                 "sigma_delta": None,
-                "metadata": {},
+                "metadata": {
+                    "performance_rating": player_result.performance_rating,
+                },
             }
         )
     rows.sort(key=lambda row: (row["event_ordinal"], row["player_ordinal"], row["pin_player"]))
@@ -541,6 +549,8 @@ def plan_staged_replacement_events(
         status = tournament.get("status")
         if status == "validation_failed":
             raise ValueError("Cannot replay a validation_failed staged tournament.")
+        if status != "ready_for_rating" and _has_stale_tournament_report_warning(tournament):
+            raise ValueError("Run contains a stale tournament report. Review and mark it ready_for_rating before replay.")
         if status == "needs_review" and not allow_needs_review:
             raise ValueError("Run is needs_review. Review it first or omit --require-ready.")
 
@@ -582,6 +592,14 @@ def plan_staged_replacement_events(
             )
         )
     return events, warnings
+
+
+def _has_stale_tournament_report_warning(tournament: dict[str, Any]) -> bool:
+    """Return whether stale tournament report warning."""
+    return any(
+        warning.get("type") == STALE_TOURNAMENT_REPORT_WARNING_TYPE
+        for warning in tournament.get("parser_warnings") or []
+    )
 
 
 def plan_production_cascade_events(
