@@ -1982,8 +1982,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
         if (!response.ok || !payload.ok) throw new Error(payload.error || `Commit failed with HTTP ${response.status}`);
         state.commitPreview = payload.commit_plan;
         state.commitState = payload.commit_state || { state: "committed", committed: true };
-        els.previewStatus.textContent = "Production commit complete";
         renderPreview(state.previewPayload);
+        if (payload.snapshot_refresh && payload.snapshot_refresh.queued) {
+          els.previewStatus.textContent = "Production commit complete; Ratings Explorer refresh queued";
+        } else {
+          els.previewStatus.textContent = "Production commit complete; Ratings Explorer refresh needs attention";
+          const refreshError = payload.snapshot_refresh && payload.snapshot_refresh.error
+            ? payload.snapshot_refresh.error
+            : "The Ratings Explorer snapshot refresh was not queued.";
+          els.previewOutput.insertAdjacentHTML(
+            "afterbegin",
+            `<div class="message review"><span class="warning-title">Snapshot refresh warning</span> ${escapeHtml(refreshError)}</div>`,
+          );
+        }
       } catch (error) {
         els.previewStatus.textContent = "Commit failed";
         els.previewOutput.insertAdjacentHTML("afterbegin", `<div class="error">${escapeHtml(error.message)}</div>`);

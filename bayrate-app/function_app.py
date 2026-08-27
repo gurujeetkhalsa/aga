@@ -23,6 +23,7 @@ try:
     from bayrate.auth import authorize_bayrate_admin
     from bayrate.commit_staged_run import build_commit_plan, commit_staged_run, printable_commit_plan
     from bayrate.replay_staged_run import run_staged_replay
+    from bayrate.snapshot_refresh import queue_ratings_explorer_snapshot_refresh
     from bayrate.sql_adapter import SqlAdapter
     from bayrate.stage_reports import (
         apply_tournament_review_decision,
@@ -43,6 +44,7 @@ except Exception as exc:
     commit_staged_run = None
     printable_commit_plan = None
     run_staged_replay = None
+    queue_ratings_explorer_snapshot_refresh = None
     SqlAdapter = None
     apply_tournament_review_decision = None
     build_insert_statements = None
@@ -803,10 +805,20 @@ def bayrate_staging_commit(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as exc:
         return _bayrate_preview_error(str(exc), status_code=500)
 
+    try:
+        snapshot_refresh = queue_ratings_explorer_snapshot_refresh()
+    except Exception as exc:
+        snapshot_refresh = {
+            "ok": False,
+            "queued": False,
+            "error": str(exc),
+        }
+
     return _bayrate_json_response(
         {
             "ok": True,
             "commit_plan": printable_commit_plan(plan),
             "commit_state": _bayrate_commit_state(adapter, run_id),
+            "snapshot_refresh": snapshot_refresh,
         }
     )

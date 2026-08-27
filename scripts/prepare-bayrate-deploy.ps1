@@ -35,6 +35,7 @@ $AllowedBayRateFiles = @(
     "core.py",
     "report_parser.py",
     "replay_staged_run.py",
+    "snapshot_refresh.py",
     "sql_adapter.py",
     "stage_reports.py"
 )

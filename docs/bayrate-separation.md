@@ -40,7 +40,12 @@ Run `.\scripts\prepare-bayrate-deploy.ps1` from the repo root and publish from t
 - `core.py`
 - `report_parser.py`
 - `replay_staged_run.py`
+- `snapshot_refresh.py`
 - `sql_adapter.py`
 - `stage_reports.py`
+
+The standalone app requires `RATINGS_EXPLORER_SNAPSHOT_REFRESH_KEY` so a successful
+production commit can queue the protected Ratings Explorer snapshot refresh endpoint.
+`RATINGS_EXPLORER_SNAPSHOT_REFRESH_URL` can override the default standalone endpoint.
 
 `core.py` remains included because it is the rating engine. Its normal rating-uncertainty calculations are part of BayRate itself; the excluded material is code for changing, tuning, simulating, or visualizing alternate sigma behavior.

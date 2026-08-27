@@ -38,5 +38,10 @@ Deployment notes:
 - The prep script copies this app plus only the allowlisted `bayrate/` modules needed for the rating process.
 - Admin routes require Azure App Service Authentication, `BAYRATE_TRUST_EASY_AUTH=true`, and active `bayrate_run` or `admin_all` rows in `ratings.admin_permissions`.
 - The app requires `SQL_CONNECTION_STRING` or `MYSQL_SYNC_SQL_CONNECTION_STRING`.
+- Set `RATINGS_EXPLORER_SNAPSHOT_REFRESH_KEY` to the function key for the Ratings Explorer
+  `snapshot-refresh` endpoint. After a successful production commit, BayRate queues a snapshot
+  refresh and reports the queue result without misreporting an already-completed commit as failed.
+- `RATINGS_EXPLORER_SNAPSHOT_REFRESH_URL` may override the default standalone Ratings Explorer
+  endpoint when needed.
 
 The core rating engine still calculates and persists rating uncertainty because BayRate ratings require it. What is intentionally excluded here is code for changing, tuning, simulating, or visualizing alternate sigma behavior.
