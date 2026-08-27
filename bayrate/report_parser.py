@@ -302,7 +302,7 @@ def parse_report_to_rows(raw_text: str, conn_str: str | None = None) -> dict[str
         "Reward_Event_Name": None,
         "Reward_Is_State_Championship": 0,
         "Rounds": parsed["round_count"],
-        "Total_Players": len(parsed["players"]),
+        "Total_Players": parsed["total_players"],
         "Wallist": None,
         "Elab_Date": parsed["finish_date"],
         "status": None,
@@ -503,6 +503,16 @@ def _parse_report_sections(lines: list[str]) -> dict[str, Any]:
 
     start_date = _parse_date_required(metadata.get("start"), "start")
     finish_date = _parse_date_required(metadata.get("finish"), "finish")
+    total_players = len(players)
+    if metadata.get("total_players") is not None:
+        total_players_text = str(metadata["total_players"]).strip()
+        if not INT_TOKEN_RE.match(total_players_text):
+            raise ValueError(f"Invalid total_players value: {metadata['total_players']!r}")
+        total_players = int(total_players_text)
+        if total_players < len(players):
+            raise ValueError(
+                f"total_players={total_players} is smaller than the {len(players)} listed PLAYERS records."
+            )
 
     if not round_numbers:
         inferred_round_numbers = _infer_rounds_from_game_order(games)
@@ -534,6 +544,7 @@ def _parse_report_sections(lines: list[str]) -> dict[str, Any]:
         "warnings": warnings,
         "start_date": start_date,
         "finish_date": finish_date,
+        "total_players": total_players,
         "round_count": round_count,
     }
 

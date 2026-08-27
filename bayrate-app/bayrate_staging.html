@@ -470,6 +470,53 @@ SPDX-License-Identifier: GPL-3.0-or-later
       gap: 8px;
     }
 
+    .reconciliation-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .reconciliation-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1040px;
+      background: #fff;
+      font-size: 0.86rem;
+    }
+
+    .reconciliation-table th,
+    .reconciliation-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .reconciliation-table th:first-child,
+    .reconciliation-table td:first-child {
+      text-align: left;
+    }
+
+    .reconciliation-table th {
+      background: #f5f7f8;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .reconciliation-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .points-negative {
+      color: var(--danger);
+      font-weight: 800;
+    }
+
+    .points-positive {
+      color: var(--ready);
+      font-weight: 800;
+    }
+
     .preview-title {
       display: flex;
       justify-content: space-between;
@@ -1930,6 +1977,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
         storeBayratePayload(payload);
         state.stagedSummary = payload.summary;
         state.commitState = payload.commit_state || null;
+        state.commitPreview = state.commitState && state.commitState.commit_plan
+          ? state.commitState.commit_plan
+          : null;
         els.previewStatus.textContent = `Loaded RunID ${runId}`;
         renderPreview(payload);
       } catch (error) {
@@ -2346,6 +2396,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       if (!plan) return "";
       const gameRange = plan.game_id_range || {};
       const ratingRange = plan.rating_id_range || {};
+      const gameIds = plan.game_id_reconciliation || {};
       const executed = Boolean(plan.executed);
       return `
         <section class="preview-card">
@@ -2365,6 +2416,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
             ${metric("Rating Inserts", plan.rating_insert_count || 0)}
             ${metric("Cascade Events", (plan.production_cascade_tournament_codes || []).length)}
           </div>
+          <div class="metrics">
+            ${metric("Game IDs Retained", gameIds.retained_game_count || 0)}
+            ${metric("New Game IDs", gameIds.new_game_count || 0)}
+            ${metric("Retired Game IDs", gameIds.retired_game_count || 0)}
+            ${metric("Retired SGF Links", gameIds.retired_sgf_game_count || 0)}
+          </div>
           <div class="message-list">
             <div class="message">
               <strong>Affected ratings</strong>
@@ -2383,11 +2440,102 @@ SPDX-License-Identifier: GPL-3.0-or-later
               <div>${escapeHtml((plan.plan_hash || "").slice(0, 16))}</div>
             </div>
             ${executed ? '<div class="message ready">Production tables were written for this RunID.</div>' : ""}
+            ${plan.reward_automation_suppressed ? '<div class="message review">This is a rerun. Automatic played-game, total-games, and State Championship awards are suppressed; use the reconciliation report for adjustments.</div>' : ""}
             ${plan.requires_sgf_acknowledgement ? '<div class="message review">Existing SGF-linked production game rows require explicit acknowledgement before commit.</div>' : ""}
             ${(plan.warnings || []).map((warning) => `<div class="message review">${escapeHtml(warning)}</div>`).join("")}
           </div>
+          ${renderRewardReconciliation(plan.reward_reconciliation)}
         </section>
       `;
+    }
+
+    function renderRewardReconciliation(report) {
+      if (!report || report.required === false) return "";
+      const chapters = report.chapters || [];
+      return `
+        <div class="preview-title">
+          <div>
+            <div class="source-title">Chapter Rewards Reconciliation</div>
+            <div class="source-meta">Calculated comparison only; this commit does not adjust Chapter Rewards.</div>
+          </div>
+          <button type="button" class="secondary" data-action="download-reconciliation">Download CSV</button>
+        </div>
+        <div class="metrics">
+          ${metric("Old Points", formatPoints(report.old_total_points || 0))}
+          ${metric("New Points", formatPoints(report.new_total_points || 0))}
+          ${metric("Point Change", formatSignedPoints(report.point_difference || 0))}
+          ${metric("Chapters", chapters.length)}
+        </div>
+        ${chapters.length ? `
+          <div class="reconciliation-table-wrap">
+            <table class="reconciliation-table">
+              <thead>
+                <tr>
+                  <th>Chapter</th>
+                  <th>Old played games</th>
+                  <th>Old total games</th>
+                  <th>Old state championship</th>
+                  <th>Old total</th>
+                  <th>New played games</th>
+                  <th>New total games</th>
+                  <th>New state championship</th>
+                  <th>New total</th>
+                  <th>Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${chapters.map((chapter) => `
+                  <tr>
+                    <td><strong>${escapeHtml(chapter.chapter_code || chapter.chapter_id)}</strong>${chapter.chapter_name ? ` — ${escapeHtml(chapter.chapter_name)}` : ""}</td>
+                    <td>${formatPoints(chapter.old_played_game_points)}</td>
+                    <td>${formatPoints(chapter.old_total_games_points)}</td>
+                    <td>${formatPoints(chapter.old_state_championship_points)}</td>
+                    <td>${formatPoints(chapter.old_total_points)}</td>
+                    <td>${formatPoints(chapter.new_played_game_points)}</td>
+                    <td>${formatPoints(chapter.new_total_games_points)}</td>
+                    <td>${formatPoints(chapter.new_state_championship_points)}</td>
+                    <td>${formatPoints(chapter.new_total_points)}</td>
+                    <td class="${Number(chapter.point_difference) < 0 ? "points-negative" : Number(chapter.point_difference) > 0 ? "points-positive" : ""}">${formatSignedPoints(chapter.point_difference)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        ` : '<div class="message ready">Neither version calculates Chapter Rewards points for the affected tournament(s).</div>'}
+        ${(report.notes || []).map((note) => `<div class="source-meta">${escapeHtml(note)}</div>`).join("")}
+      `;
+    }
+
+    function formatPoints(value) {
+      return Number(value || 0).toLocaleString("en-US");
+    }
+
+    function formatSignedPoints(value) {
+      const number = Number(value || 0);
+      return `${number > 0 ? "+" : ""}${number.toLocaleString("en-US")}`;
+    }
+
+    function downloadRewardReconciliation() {
+      const report = state.commitPreview && state.commitPreview.reward_reconciliation;
+      if (!report) return;
+      const columns = [
+        "chapter_id", "chapter_code", "chapter_name",
+        "old_played_game_participation_count", "old_played_game_points", "old_total_games_points", "old_state_championship_points", "old_total_points",
+        "new_played_game_participation_count", "new_played_game_points", "new_total_games_points", "new_state_championship_points", "new_total_points",
+        "point_difference",
+      ];
+      const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const rows = [columns, ...(report.chapters || []).map((chapter) => columns.map((column) => chapter[column]))];
+      const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `bayrate-run-${report.run_id}-chapter-rewards-reconciliation.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
     }
 
     function formatMetric(value) {
@@ -2508,6 +2656,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       if (button.dataset.action === "replay-run") replayRun();
       if (button.dataset.action === "commit-preview") previewCommit();
       if (button.dataset.action === "commit-run") commitRun();
+      if (button.dataset.action === "download-reconciliation") downloadRewardReconciliation();
       if (button.dataset.action === "approve-duplicate") {
         approveDuplicate(Number(button.dataset.ordinal), button.dataset.code || "");
       }

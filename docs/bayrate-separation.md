@@ -20,7 +20,8 @@ Included responsibilities:
 - Report preview, duplicate checks, and staging.
 - Staged tournament review and host/reward metadata.
 - Staged run load and replay.
-- Production commit preview and commit.
+- Production commit preview and commit with explicit physical-game matching for reruns.
+- Chapter Rewards old/new reconciliation reporting plus durable rerun suppression for played-game, host total-games, and State Championship automation; reward adjustments remain outside BayRate.
 
 Excluded responsibilities:
 
@@ -40,6 +41,7 @@ Run `.\scripts\prepare-bayrate-deploy.ps1` from the repo root and publish from t
 - `core.py`
 - `report_parser.py`
 - `replay_staged_run.py`
+- `reward_reconciliation.py`
 - `snapshot_refresh.py`
 - `sql_adapter.py`
 - `stage_reports.py`

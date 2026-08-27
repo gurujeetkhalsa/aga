@@ -2,6 +2,9 @@
 -- SPDX-FileCopyrightText: 2026 American Go Association
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
+IF OBJECT_ID(N'ratings.bayrate_reward_reconciliations', N'U') IS NOT NULL
+    DROP TABLE [ratings].[bayrate_reward_reconciliations];
+
 IF OBJECT_ID(N'ratings.bayrate_staged_ratings', N'U') IS NOT NULL
     DROP TABLE [ratings].[bayrate_staged_ratings];
 

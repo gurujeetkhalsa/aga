@@ -28,6 +28,50 @@ class RatingsReportParserTest(unittest.TestCase):
         self.assertEqual(payload["game_rows"][0]["Result"], "W")
         self.assertEqual(payload["game_rows"][1]["Round"], "2")
 
+    def test_explicit_total_players_preserves_unlisted_zero_game_roster(self) -> None:
+        """A reconstructed report can retain the source roster total."""
+        report = """TOURNEY Reconstructed Sample
+start=2026-01-01
+finish=2026-01-01
+location=New York, NY
+rules=AGA
+total_players=531
+
+PLAYERS (2)
+1001 Alice Example 1D
+1002 Bob Example 1D
+
+GAMES (1)
+1001 1002 W 0 7
+END
+"""
+
+        payload = parse_report_to_rows(report)
+
+        self.assertEqual(payload["tournament_row"]["Total_Players"], 531)
+        self.assertEqual(len(payload["players"]), 2)
+
+    def test_explicit_total_players_cannot_be_smaller_than_listed_roster(self) -> None:
+        """Reject an explicit total that contradicts the listed players."""
+        report = """TOURNEY Invalid Reconstructed Sample
+start=2026-01-01
+finish=2026-01-01
+location=New York, NY
+rules=AGA
+total_players=1
+
+PLAYERS (2)
+1001 Alice Example 1D
+1002 Bob Example 1D
+
+GAMES (1)
+1001 1002 W 0 7
+END
+"""
+
+        with self.assertRaisesRegex(ValueError, "smaller than the 2 listed PLAYERS"):
+            parse_report_to_rows(report)
+
     def test_parse_multiple_reports_and_export_combined_csvs(self) -> None:
         """Verify that parse multiple reports and export combined csvs."""
         reports = [

@@ -28,8 +28,9 @@ BEGIN
     IF OBJECT_ID(N'rewards.transactions', N'U') IS NULL
        OR OBJECT_ID(N'rewards.point_lots', N'U') IS NULL
        OR OBJECT_ID(N'rewards.reward_runs', N'U') IS NULL
+       OR OBJECT_ID(N'ratings.bayrate_reward_reconciliations', N'U') IS NULL
     BEGIN
-        THROW 52700, N'Rewards tournament award tables do not exist. Apply rewards/sql/chapter_rewards_schema.sql first.', 1;
+        THROW 52700, N'Rewards tournament or BayRate reconciliation tables do not exist. Apply rewards/sql/chapter_rewards_schema.sql and bayrate/sql/bayrate_staging_schema.sql first.', 1;
     END;
 
     IF OBJECT_ID(N'ratings.tournaments', N'U') IS NULL
@@ -185,19 +186,51 @@ BEGIN
         CONCAT(CONVERT(nvarchar(32), scored.[Host_ChapterID]), N':', scored.[Reward_Event_Key], N':points:', CONVERT(nvarchar(32), scored.[Host_Award_Points])) AS [Host_Source_Key],
         CONCAT(CONVERT(nvarchar(32), scored.[Host_ChapterID]), N':', scored.[Reward_Event_Key], N':points:', CONVERT(nvarchar(32), scored.[State_Championship_Points])) AS [State_Source_Key],
         COALESCE(host_existing.[Existing_Points], 0) AS [Host_Existing_Points],
+        COALESCE(suppression.[New_Total_Games_Points], 0) AS [Host_Reconciliation_Baseline_Points],
+        CASE
+            WHEN COALESCE(suppression.[New_Total_Games_Points], 0) > COALESCE(host_existing.[Existing_Points], 0)
+                THEN COALESCE(suppression.[New_Total_Games_Points], 0)
+            ELSE COALESCE(host_existing.[Existing_Points], 0)
+        END AS [Host_Effective_Existing_Points],
         host_current.[TransactionID] AS [Host_Current_TransactionID],
         CASE
-            WHEN scored.[Host_Award_Points] > COALESCE(host_existing.[Existing_Points], 0)
+            WHEN scored.[Host_Award_Points] >
+                 CASE
+                     WHEN COALESCE(suppression.[New_Total_Games_Points], 0) > COALESCE(host_existing.[Existing_Points], 0)
+                         THEN COALESCE(suppression.[New_Total_Games_Points], 0)
+                     ELSE COALESCE(host_existing.[Existing_Points], 0)
+                 END
              AND host_current.[TransactionID] IS NULL
-                THEN scored.[Host_Award_Points] - COALESCE(host_existing.[Existing_Points], 0)
+                THEN scored.[Host_Award_Points] -
+                     CASE
+                         WHEN COALESCE(suppression.[New_Total_Games_Points], 0) > COALESCE(host_existing.[Existing_Points], 0)
+                             THEN COALESCE(suppression.[New_Total_Games_Points], 0)
+                         ELSE COALESCE(host_existing.[Existing_Points], 0)
+                     END
             ELSE 0
         END AS [Host_New_Points],
         COALESCE(state_existing.[Existing_Points], 0) AS [State_Existing_Points],
+        COALESCE(suppression.[New_State_Championship_Points], 0) AS [State_Reconciliation_Baseline_Points],
+        CASE
+            WHEN COALESCE(suppression.[New_State_Championship_Points], 0) > COALESCE(state_existing.[Existing_Points], 0)
+                THEN COALESCE(suppression.[New_State_Championship_Points], 0)
+            ELSE COALESCE(state_existing.[Existing_Points], 0)
+        END AS [State_Effective_Existing_Points],
         state_current.[TransactionID] AS [State_Current_TransactionID],
         CASE
-            WHEN scored.[State_Championship_Points] > COALESCE(state_existing.[Existing_Points], 0)
+            WHEN scored.[State_Championship_Points] >
+                 CASE
+                     WHEN COALESCE(suppression.[New_State_Championship_Points], 0) > COALESCE(state_existing.[Existing_Points], 0)
+                         THEN COALESCE(suppression.[New_State_Championship_Points], 0)
+                     ELSE COALESCE(state_existing.[Existing_Points], 0)
+                 END
              AND state_current.[TransactionID] IS NULL
-                THEN scored.[State_Championship_Points] - COALESCE(state_existing.[Existing_Points], 0)
+                THEN scored.[State_Championship_Points] -
+                     CASE
+                         WHEN COALESCE(suppression.[New_State_Championship_Points], 0) > COALESCE(state_existing.[Existing_Points], 0)
+                             THEN COALESCE(suppression.[New_State_Championship_Points], 0)
+                         ELSE COALESCE(state_existing.[Existing_Points], 0)
+                     END
             ELSE 0
         END AS [State_New_Points]
     INTO #TournamentAwardGroups
@@ -241,7 +274,25 @@ BEGIN
           AND t.[Transaction_Type] = N'earn'
           AND t.[ChapterID] = scored.[Host_ChapterID]
         ORDER BY t.[TransactionID]
-    ) AS state_current;
+    ) AS state_current
+    OUTER APPLY
+    (
+        SELECT TOP 1
+            parsed_group.[New_Total_Games_Points],
+            parsed_group.[New_State_Championship_Points]
+        FROM [ratings].[bayrate_reward_reconciliations] AS reconciliations
+        CROSS APPLY OPENJSON(reconciliations.[ReconciliationJson], N'$.event_groups')
+        WITH
+        (
+            [Host_ChapterID] int N'$.chapter_id',
+            [Reward_Event_Key] nvarchar(256) N'$.reward_event_key',
+            [New_Total_Games_Points] int N'$.new_total_games_points',
+            [New_State_Championship_Points] int N'$.new_state_championship_points'
+        ) AS parsed_group
+        WHERE parsed_group.[Host_ChapterID] = scored.[Host_ChapterID]
+          AND parsed_group.[Reward_Event_Key] = scored.[Reward_Event_Key]
+        ORDER BY reconciliations.[RunID] DESC
+    ) AS suppression;
 
     DECLARE @MissingHostChapterCount int =
     (
@@ -428,7 +479,7 @@ BEGIN
             [Rated_Game_Count],
             [Is_State_Championship],
             [Host_Award_Points] AS [Desired_Points],
-            [Host_Existing_Points] AS [Existing_Points],
+            [Host_Effective_Existing_Points] AS [Existing_Points],
             [Host_New_Points] AS [New_Points]
         FROM #TournamentAwardGroups
         WHERE [Host_New_Points] > 0
@@ -448,7 +499,7 @@ BEGIN
             [Rated_Game_Count],
             [Is_State_Championship],
             [State_Championship_Points] AS [Desired_Points],
-            [State_Existing_Points] AS [Existing_Points],
+            [State_Effective_Existing_Points] AS [Existing_Points],
             [State_New_Points] AS [New_Points]
         FROM #TournamentAwardGroups
         WHERE [State_New_Points] > 0

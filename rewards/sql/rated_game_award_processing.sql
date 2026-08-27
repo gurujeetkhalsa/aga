@@ -27,8 +27,9 @@ BEGIN
        OR OBJECT_ID(N'rewards.chapter_daily_snapshot', N'U') IS NULL
        OR OBJECT_ID(N'rewards.transactions', N'U') IS NULL
        OR OBJECT_ID(N'rewards.point_lots', N'U') IS NULL
+       OR OBJECT_ID(N'ratings.bayrate_reward_reconciliations', N'U') IS NULL
     BEGIN
-        THROW 52400, N'Rewards rated-game award tables do not exist. Apply rewards/sql/chapter_rewards_schema.sql first.', 1;
+        THROW 52400, N'Rewards rated-game or BayRate reconciliation tables do not exist. Apply rewards/sql/chapter_rewards_schema.sql and bayrate/sql/bayrate_staging_schema.sql first.', 1;
     END;
 
     SET @GameDateFrom = COALESCE(@GameDateFrom, CAST(SYSUTCDATETIME() AS date));
@@ -49,7 +50,15 @@ BEGIN
         DROP TABLE #RatedGameAwards;
     END;
 
-    ;WITH [game_participants] AS
+    ;WITH [rerun_tournament_codes] AS
+    (
+        SELECT DISTINCT
+            NULLIF(LTRIM(RTRIM(codes.[value])), N'') AS [Tournament_Code]
+        FROM [ratings].[bayrate_reward_reconciliations] AS reconciliations
+        CROSS APPLY OPENJSON(reconciliations.[ReconciliationJson], N'$.rerun_tournament_codes') AS codes
+        WHERE NULLIF(LTRIM(RTRIM(codes.[value])), N'') IS NOT NULL
+    ),
+    [game_participants] AS
     (
         SELECT
             g.[Game_ID],
@@ -69,6 +78,12 @@ BEGIN
           AND COALESCE(g.[Exclude], 0) = 0
           AND g.[Pin_Player_1] IS NOT NULL
           AND g.[Pin_Player_1] < @MaxMemberAGAID
+          AND NOT EXISTS
+          (
+              SELECT 1
+              FROM [rerun_tournament_codes] AS reruns
+              WHERE reruns.[Tournament_Code] = g.[Tournament_Code]
+          )
         UNION ALL
         SELECT
             g.[Game_ID],
@@ -88,6 +103,12 @@ BEGIN
           AND COALESCE(g.[Exclude], 0) = 0
           AND g.[Pin_Player_2] IS NOT NULL
           AND g.[Pin_Player_2] < @MaxMemberAGAID
+          AND NOT EXISTS
+          (
+              SELECT 1
+              FROM [rerun_tournament_codes] AS reruns
+              WHERE reruns.[Tournament_Code] = g.[Tournament_Code]
+          )
     ),
     [award_candidates] AS
     (

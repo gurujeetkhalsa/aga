@@ -370,6 +370,8 @@ def _bayrate_commit_state(adapter: object, run_id: int | str) -> dict:
     rows = adapter.query_rows(
         """
 SELECT
+    (SELECT CASE WHEN ISJSON([SummaryJson]) = 1 THEN [SummaryJson] ELSE N'{}' END
+     FROM [ratings].[bayrate_runs] WHERE [RunID] = ?) AS [AuditSummaryJson],
     (SELECT JSON_VALUE(
         CASE WHEN ISJSON([SummaryJson]) = 1 THEN [SummaryJson] ELSE N'{}' END,
         N'$.commit_status'
@@ -383,9 +385,13 @@ SELECT
     (SELECT COUNT(*) FROM [ratings].[bayrate_staged_games] WHERE [RunID] = ?) AS [StagedGameCount],
     (SELECT COUNT(*) FROM [ratings].[bayrate_staged_games] WHERE [RunID] = ? AND [Game_ID] IS NOT NULL) AS [PlannedGameCount]
 """,
-        (run_id, run_id, run_id, run_id, run_id, run_id),
+        (run_id, run_id, run_id, run_id, run_id, run_id, run_id),
     )
     row = rows[0] if rows else {}
+    try:
+        audit_summary = json.loads(str(row.get("AuditSummaryJson") or "{}"))
+    except (TypeError, json.JSONDecodeError):
+        audit_summary = {}
     audit_commit_status = str(row.get("AuditCommitStatus") or "").strip()
     superseded_by_run_id = row.get("SupersededByRunID")
     staged_rating_count = int(row.get("StagedRatingCount") or 0)
@@ -416,7 +422,7 @@ SELECT
         state = "replayed_uncommitted"
     else:
         state = "needs_replay"
-    return {
+    result = {
         "state": state,
         "committed": committed,
         "audit_commit_status": audit_commit_status or None,
@@ -427,6 +433,10 @@ SELECT
         "staged_game_count": staged_game_count,
         "planned_game_count": planned_game_count,
     }
+    if audit_commit_status in {"committed", "superseded"} and audit_summary.get("reward_reconciliation"):
+        audit_summary["executed"] = True
+        result["commit_plan"] = audit_summary
+    return result
 
 
 def _bayrate_replay_response(artifact: dict) -> dict:

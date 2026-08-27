@@ -4,6 +4,7 @@ import unittest
 from contextlib import redirect_stderr
 from datetime import date
 from io import StringIO
+from pathlib import Path
 
 from rewards import rated_game_awards
 
@@ -70,6 +71,15 @@ class RatedGameAwardsTest(unittest.TestCase):
         self.assertEqual(result.new_award_count, 2)
         self.assertEqual(result.point_total, 1500)
         self.assertEqual(adapter.statements, [])
+
+    def test_sql_excludes_bayrate_rerun_tournament_codes(self):
+        """Rerun games remain manual and cannot create new automatic participation awards."""
+        sql_path = Path(rated_game_awards.__file__).parent / "sql" / "rated_game_award_processing.sql"
+        sql = sql_path.read_text(encoding="utf-8")
+
+        self.assertIn("bayrate_reward_reconciliations", sql)
+        self.assertIn("$.rerun_tournament_codes", sql)
+        self.assertEqual(sql.count("FROM [rerun_tournament_codes] AS reruns"), 2)
 
     def test_write_executes_award_batch_and_reads_summary(self):
         """Verify that write executes award batch and reads summary."""

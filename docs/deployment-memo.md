@@ -289,6 +289,8 @@ This means mailbox parser changes should be deployed to `clubexpress-mail-app`, 
 
 ## Chapter Rewards SQL
 
+Apply `bayrate/sql/bayrate_staging_schema.sql` first so the durable BayRate rerun reconciliation table exists, then apply the two reward processors below before deploying the BayRate app. This ordering prevents a committed rerun from being processed by older reward procedures.
+
 Apply these SQL files to the AGA Azure SQL database before relying on the automated rewards timers:
 
 - `rewards/sql/chapter_rewards_schema.sql`
@@ -314,7 +316,7 @@ Apply this SQL before deploying the BayRate host-chapter review UI:
 
 - `bayrate/sql/bayrate_staging_schema.sql`
 
-The current BayRate flow requires a host chapter before a staged tournament can be marked `ready_for_rating` or committed to production ratings tables. Split sections of one hosted event, such as open and handicap sections, should share the same `Reward_Event_Key` so Chapter Rewards can total their rated games together. If a section or combined group is a State Championship, set `Reward_Is_State_Championship`; the Chapter Rewards tournament processor awards the sponsoring chapter `200,000` points once for that grouped reward event.
+The current BayRate flow requires a host chapter before a staged tournament can be marked `ready_for_rating` or committed to production ratings tables. Split sections of one hosted event, such as open and handicap sections, should share the same `Reward_Event_Key` so Chapter Rewards can total their rated games together. If a section or combined group is a State Championship, set `Reward_Is_State_Championship`; the Chapter Rewards tournament processor awards the sponsoring chapter `200,000` points once for that grouped reward event. A BayRate rerun persists a reconciliation and suppresses automatic played-game, host total-games, and State Championship differences; cascaded ratings-only events do not create reward activity.
 
 ## Legacy note
 

@@ -550,3 +550,21 @@ BEGIN
     CREATE INDEX [IX_bayrate_staged_ratings_Player]
         ON [ratings].[bayrate_staged_ratings] ([RunID], [Pin_Player], [Event_Ordinal]);
 END;
+
+IF OBJECT_ID(N'ratings.bayrate_reward_reconciliations', N'U') IS NULL
+BEGIN
+    CREATE TABLE [ratings].[bayrate_reward_reconciliations]
+    (
+        [RunID] int NOT NULL,
+        [ReconciliationJson] nvarchar(max) NOT NULL,
+        [Created_At] datetime2(0) NOT NULL
+            CONSTRAINT [DF_bayrate_reward_reconciliations_Created_At] DEFAULT SYSUTCDATETIME(),
+        [Created_By] nvarchar(256) NULL,
+        [Created_Principal_Id] nvarchar(128) NULL,
+        CONSTRAINT [PK_bayrate_reward_reconciliations] PRIMARY KEY CLUSTERED ([RunID]),
+        CONSTRAINT [FK_bayrate_reward_reconciliations_RunID]
+            FOREIGN KEY ([RunID]) REFERENCES [ratings].[bayrate_runs] ([RunID]),
+        CONSTRAINT [CK_bayrate_reward_reconciliations_Json]
+            CHECK (ISJSON([ReconciliationJson]) = 1)
+    );
+END;

@@ -9,6 +9,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, TextIO
 
+from bayrate.reward_reconciliation import build_reward_reconciliation
 from bayrate.sql_adapter import SqlAdapter, SqlStatement, get_sql_connection_string
 from bayrate.stage_reports import StageSqlAdapter, _coerce_date, _coerce_int, _json_default, load_staged_run
 
@@ -191,6 +192,24 @@ SET
 WHERE [RunID] = ?
 """
 
+REWARD_RECONCILIATION_SCHEMA_GUARD_SQL = """
+IF OBJECT_ID(N'ratings.bayrate_reward_reconciliations', N'U') IS NULL
+BEGIN
+    THROW 51023, N'BayRate reward reconciliation schema is missing. Apply bayrate/sql/bayrate_staging_schema.sql before committing a rerun.', 1;
+END;
+"""
+
+INSERT_REWARD_RECONCILIATION_SQL = """
+INSERT INTO [ratings].[bayrate_reward_reconciliations]
+(
+    [RunID],
+    [ReconciliationJson],
+    [Created_By],
+    [Created_Principal_Id]
+)
+VALUES (?, ?, ?, ?)
+"""
+
 PREVIOUS_COMMITTED_RUNS_SQL_TEMPLATE = """
 SELECT DISTINCT r.[RunID]
 FROM [ratings].[bayrate_runs] AS r
@@ -358,6 +377,7 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
     production_game_rows = load_production_games_for_codes(adapter, staged_tournament_codes)
     production_rating_summaries = load_production_rating_summaries(adapter, affected_rating_codes)
     production_tournament_rows = load_production_tournaments_for_codes(adapter, staged_tournament_codes)
+    rerun_tournament_codes = _ordered_unique(row.get("Tournament_Code") for row in production_tournament_rows)
     max_ids = load_production_max_ids(adapter)
     superseded_run_ids = load_previous_committed_run_ids(
         adapter,
@@ -366,20 +386,41 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         game_codes=staged_tournament_codes,
     )
 
-    planned_games = plan_game_ids(staged_games, production_game_rows, int(max_ids.get("MaxGameID") or 0))
+    planned_games, game_id_reconciliation = plan_game_ids(
+        staged_games,
+        production_game_rows,
+        int(max_ids.get("MaxGameID") or 0),
+        replacement_codes=staged_tournament_codes,
+    )
     planned_ratings = plan_rating_ids(staged_ratings, production_rating_summaries, int(max_ids.get("MaxRatingID") or 0))
+    reward_reconciliation = build_reward_reconciliation(
+        adapter,
+        run_id=run_id_int,
+        staged_tournaments=staged_tournaments,
+        staged_games=planned_games,
+        production_tournaments=production_tournament_rows,
+        production_games=production_game_rows,
+        reconciliation_tournament_codes=rerun_tournament_codes,
+    )
     warnings = build_commit_warnings(
         staged_tournament_codes=staged_tournament_codes,
         production_cascade_codes=production_cascade_codes,
         production_tournament_rows=production_tournament_rows,
-        production_game_rows=production_game_rows,
+        game_id_reconciliation=game_id_reconciliation,
+        reward_reconciliation=reward_reconciliation,
     )
     if superseded_run_ids:
         warnings.append(
             "Previously committed BayRate run(s) will be marked superseded: "
             + ", ".join(str(run_id) for run_id in superseded_run_ids)
         )
-    requires_sgf_acknowledgement = any(row.get("Sgf_Code") for row in production_game_rows)
+    if rerun_tournament_codes:
+        warnings.append(
+            "Automatic played-game, total-games, and State Championship awards will be suppressed for rerun "
+            "tournament(s); use the persisted reconciliation report for reward adjustments: "
+            + ", ".join(rerun_tournament_codes)
+        )
+    requires_sgf_acknowledgement = bool(game_id_reconciliation.get("retired_sgf_game_count"))
 
     production_write_count = (
         len(staged_tournaments)
@@ -387,6 +428,7 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         + len(planned_ratings)
         + (1 if affected_rating_codes else 0)
         + (1 if staged_tournament_codes else 0)
+        + (1 if rerun_tournament_codes else 0)
     )
     return {
         "run_id": run_id_int,
@@ -396,6 +438,8 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         "staged_tournament_codes": staged_tournament_codes,
         "production_cascade_tournament_codes": production_cascade_codes,
         "existing_tournament_codes": _ordered_unique(row.get("Tournament_Code") for row in production_tournament_rows),
+        "rerun_tournament_codes": rerun_tournament_codes,
+        "reward_automation_suppressed": bool(rerun_tournament_codes),
         "delete_rating_tournament_codes": affected_rating_codes,
         "replace_game_tournament_codes": staged_tournament_codes,
         "superseded_run_ids": superseded_run_ids,
@@ -405,6 +449,8 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         "production_write_count": production_write_count,
         "requires_sgf_acknowledgement": requires_sgf_acknowledgement,
         "warnings": warnings,
+        "game_id_reconciliation": game_id_reconciliation,
+        "reward_reconciliation": reward_reconciliation,
         "staged_tournaments": staged_tournaments,
         "planned_games": planned_games,
         "planned_ratings": planned_ratings,
@@ -483,8 +529,19 @@ SELECT
     [Game_Date],
     [Round],
     [Pin_Player_1],
+    [Color_1],
+    [Rank_1],
     [Pin_Player_2],
-    [Sgf_Code]
+    [Color_2],
+    [Rank_2],
+    [Handicap],
+    [Komi],
+    [Result],
+    [Sgf_Code],
+    [Online],
+    [Exclude],
+    [Rated],
+    [Elab_Date]
 FROM [ratings].[games]
 WHERE [Tournament_Code] IN ({_placeholders(codes)})
 ORDER BY [Tournament_Code], [Game_Date], [Round], [Game_ID]
@@ -510,8 +567,14 @@ ORDER BY MIN([id]), [Tournament_Code]
     return adapter.query_rows(query, tuple(codes))
 
 
-def plan_game_ids(staged_games: list[dict[str, Any]], production_games: list[dict[str, Any]], max_game_id: int) -> list[dict[str, Any]]:
-    """Execute the plan game ids routine."""
+def plan_game_ids(
+    staged_games: list[dict[str, Any]],
+    production_games: list[dict[str, Any]],
+    max_game_id: int,
+    *,
+    replacement_codes: list[str] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Match physical games, retain their IDs, and allocate new IDs append-only."""
     production_by_code: dict[str, list[dict[str, Any]]] = {}
     for row in production_games:
         production_by_code.setdefault(str(row.get("Tournament_Code")), []).append(row)
@@ -523,22 +586,75 @@ def plan_game_ids(staged_games: list[dict[str, Any]], production_games: list[dic
 
     next_game_id = max_game_id + 1
     planned: list[dict[str, Any]] = []
-    for code in _ordered_unique(entry["game_row"].get("Tournament_Code") for entry in staged_games):
+    assignments: list[dict[str, Any]] = []
+    retired_games: list[dict[str, Any]] = []
+    codes = replacement_codes or _ordered_unique(entry["game_row"].get("Tournament_Code") for entry in staged_games)
+    for code in codes:
         staged_rows = sorted(staged_by_code.get(code, []), key=lambda entry: (entry["source_report_ordinal"], entry["source_game_ordinal"]))
-        existing_rows = production_by_code.get(code, [])
-        if existing_rows:
-            if len(existing_rows) != len(staged_rows):
-                raise ValueError(
-                    f"Tournament {code} already has {len(existing_rows)} production game rows, "
-                    f"but the staged run has {len(staged_rows)}. Commit needs an explicit game-ID replacement strategy."
-                )
-            planned_ids = [int(row["Game_ID"]) for row in existing_rows]
-        else:
-            planned_ids = list(range(next_game_id, next_game_id + len(staged_rows)))
-            next_game_id += len(staged_rows)
-        for entry, planned_id in zip(staged_rows, planned_ids):
-            planned.append({**entry, "planned_game_id": planned_id})
-    return planned
+        existing_rows = sorted(production_by_code.get(code, []), key=lambda row: int(row.get("Game_ID") or 0))
+        existing_by_identity: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+        staged_by_identity: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+        for row in existing_rows:
+            existing_by_identity.setdefault(_physical_game_identity(row), []).append(row)
+        for entry in staged_rows:
+            staged_by_identity.setdefault(_physical_game_identity(entry["game_row"]), []).append(entry)
+
+        ambiguous = [
+            identity
+            for identity, staged_matches in staged_by_identity.items()
+            if len(staged_matches) != 1 or len(existing_by_identity.get(identity) or []) > 1
+        ]
+        if ambiguous:
+            raise ValueError(
+                f"Tournament {code} has ambiguous duplicate games with the same date, round, and players. "
+                "Correct the round/game data before committing so production Game_IDs and SGFs can be matched safely."
+            )
+
+        matched_existing_ids: set[int] = set()
+        for entry in staged_rows:
+            identity = _physical_game_identity(entry["game_row"])
+            candidates = existing_by_identity.get(identity) or []
+            existing = candidates[0] if len(candidates) == 1 else None
+            if existing is not None:
+                planned_id = _require_int(existing.get("Game_ID"), "Game_ID")
+                matched_existing_ids.add(planned_id)
+                game_row = dict(entry["game_row"])
+                if existing.get("Sgf_Code"):
+                    game_row["Sgf_Code"] = existing.get("Sgf_Code")
+                planned_entry = {
+                    **entry,
+                    "game_row": game_row,
+                    "planned_game_id": planned_id,
+                    "game_id_match_status": "retained",
+                    "previous_game_id": planned_id,
+                }
+            else:
+                planned_id = next_game_id
+                next_game_id += 1
+                planned_entry = {
+                    **entry,
+                    "planned_game_id": planned_id,
+                    "game_id_match_status": "new",
+                    "previous_game_id": None,
+                }
+            planned.append(planned_entry)
+            assignments.append(_format_game_id_assignment(planned_entry))
+
+        for row in existing_rows:
+            game_id = _require_int(row.get("Game_ID"), "Game_ID")
+            if game_id not in matched_existing_ids:
+                retired_games.append(_format_retired_game(row))
+
+    reconciliation = {
+        "matching_rule": "tournament code + game date + round + unordered player pair",
+        "retained_game_count": sum(1 for row in assignments if row["match_status"] == "retained"),
+        "new_game_count": sum(1 for row in assignments if row["match_status"] == "new"),
+        "retired_game_count": len(retired_games),
+        "retired_sgf_game_count": sum(1 for row in retired_games if row.get("sgf_linked")),
+        "assignments": assignments,
+        "retired_games": retired_games,
+    }
+    return planned, reconciliation
 
 
 def plan_rating_ids(
@@ -562,7 +678,8 @@ def build_commit_warnings(
     staged_tournament_codes: list[str],
     production_cascade_codes: list[str],
     production_tournament_rows: list[dict[str, Any]],
-    production_game_rows: list[dict[str, Any]],
+    game_id_reconciliation: dict[str, Any],
+    reward_reconciliation: dict[str, Any],
 ) -> list[str]:
     """Build commit warnings."""
     warnings = []
@@ -572,9 +689,25 @@ def build_commit_warnings(
         warnings.append("Existing production tournament(s) will be updated/replaced: " + ", ".join(replacing_codes))
     if production_cascade_codes:
         warnings.append("Production cascade ratings will be replaced for: " + ", ".join(production_cascade_codes))
-    sgf_codes = [row for row in production_game_rows if row.get("Sgf_Code")]
-    if sgf_codes:
-        warnings.append(f"{len(sgf_codes)} existing production game row(s) have Sgf_Code values; replacement preserves Game_IDs but not SGF matching semantics.")
+    if game_id_reconciliation.get("new_game_count") or game_id_reconciliation.get("retired_game_count"):
+        warnings.append(
+            "Game-ID reconciliation will retain "
+            f"{game_id_reconciliation.get('retained_game_count', 0)} matched game(s), allocate "
+            f"{game_id_reconciliation.get('new_game_count', 0)} new ID(s), and retire "
+            f"{game_id_reconciliation.get('retired_game_count', 0)} old ID(s)."
+        )
+    if game_id_reconciliation.get("retired_sgf_game_count"):
+        warnings.append(
+            f"{game_id_reconciliation['retired_sgf_game_count']} retired production game row(s) have SGF links; "
+            "explicit acknowledgement is required."
+        )
+    if reward_reconciliation.get("old_total_points") != reward_reconciliation.get("new_total_points"):
+        warnings.append(
+            "Chapter Rewards reconciliation changes total calculated points from "
+            f"{reward_reconciliation.get('old_total_points', 0):,} to "
+            f"{reward_reconciliation.get('new_total_points', 0):,}; rewards are not adjusted by this commit."
+        )
+    warnings.extend(str(warning) for warning in reward_reconciliation.get("warnings") or [])
     return warnings
 
 
@@ -648,6 +781,19 @@ def build_commit_statements(
     superseded_run_ids = [int(run_id) for run_id in plan.get("superseded_run_ids") or []]
     if superseded_run_ids:
         statements.append(build_superseded_runs_statement(plan, superseded_run_ids))
+    if plan.get("rerun_tournament_codes"):
+        statements.append((REWARD_RECONCILIATION_SCHEMA_GUARD_SQL, ()))
+        statements.append(
+            (
+                INSERT_REWARD_RECONCILIATION_SQL,
+                (
+                    plan["run_id"],
+                    _json_dumps(plan.get("reward_reconciliation") or {}),
+                    operator_principal_name,
+                    operator_principal_id,
+                ),
+            )
+        )
     statements.append(
         (
             UPDATE_COMMIT_AUDIT_SQL,
@@ -767,6 +913,12 @@ def print_commit_plan(plan: dict[str, Any], output: TextIO) -> None:
     print(f"  Game inserts: {plan['game_insert_count']}", file=output)
     print(f"  Rating inserts: {plan['rating_insert_count']}", file=output)
     print(f"  Estimated production writes: {plan['production_write_count']}", file=output)
+    reconciliation = plan.get("reward_reconciliation") or {}
+    print(
+        "  Chapter Rewards reconciliation: "
+        f"{reconciliation.get('old_total_points', 0):,} old / {reconciliation.get('new_total_points', 0):,} new points",
+        file=output,
+    )
     for warning in plan.get("warnings") or []:
         print(f"  Warning: {warning}", file=output)
 
@@ -781,6 +933,8 @@ def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "staged_tournament_codes": plan.get("staged_tournament_codes") or [],
         "production_cascade_tournament_codes": plan.get("production_cascade_tournament_codes") or [],
         "existing_tournament_codes": plan.get("existing_tournament_codes") or [],
+        "rerun_tournament_codes": plan.get("rerun_tournament_codes") or [],
+        "reward_automation_suppressed": bool(plan.get("reward_automation_suppressed", False)),
         "delete_rating_tournament_codes": plan.get("delete_rating_tournament_codes") or [],
         "replace_game_tournament_codes": plan.get("replace_game_tournament_codes") or [],
         "superseded_run_ids": plan.get("superseded_run_ids") or [],
@@ -790,6 +944,8 @@ def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "production_write_count": plan.get("production_write_count", 0),
         "requires_sgf_acknowledgement": bool(plan.get("requires_sgf_acknowledgement", False)),
         "warnings": plan.get("warnings") or [],
+        "game_id_reconciliation": plan.get("game_id_reconciliation") or {},
+        "reward_reconciliation": plan.get("reward_reconciliation") or {},
         "game_id_range": _id_range(row["planned_game_id"] for row in plan.get("planned_games") or []),
         "rating_id_range": _id_range(row["planned_rating_row_id"] for row in plan.get("planned_ratings") or []),
     }
@@ -813,21 +969,59 @@ def _commit_audit_summary(
     """Commit audit summary."""
     printable = printable_commit_plan(plan)
     return {
+        **printable,
         "run_id": plan.get("run_id"),
+        "executed": True,
         "run_status": plan.get("status"),
         "commit_status": "committed",
         "committed_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "committed_by": operator_principal_name,
         "committed_principal_id": operator_principal_id,
         "commit_plan_hash": printable.get("plan_hash"),
-        "affected_tournament_codes": printable.get("affected_tournament_codes") or [],
-        "staged_tournament_codes": printable.get("staged_tournament_codes") or [],
-        "production_cascade_tournament_codes": printable.get("production_cascade_tournament_codes") or [],
-        "superseded_run_ids": printable.get("superseded_run_ids") or [],
-        "production_write_count": printable.get("production_write_count", 0),
-        "game_id_range": printable.get("game_id_range"),
-        "rating_id_range": printable.get("rating_id_range"),
-        "warnings": printable.get("warnings") or [],
+    }
+
+
+def _physical_game_identity(row: dict[str, Any]) -> tuple[Any, ...]:
+    """Return the stable identity of a physical tournament game."""
+    player_1 = _require_int(row.get("Pin_Player_1"), "Pin_Player_1")
+    player_2 = _require_int(row.get("Pin_Player_2"), "Pin_Player_2")
+    players = tuple(sorted((player_1, player_2)))
+    return (
+        _coerce_date(row.get("Game_Date")),
+        _optional_int(row.get("Round")),
+        players[0],
+        players[1],
+    )
+
+
+def _format_game_id_assignment(entry: dict[str, Any]) -> dict[str, Any]:
+    """Format one staged-to-production game-ID assignment for preview and hashing."""
+    row = entry["game_row"]
+    return {
+        "source_report_ordinal": entry.get("source_report_ordinal"),
+        "source_game_ordinal": entry.get("source_game_ordinal"),
+        "tournament_code": row.get("Tournament_Code"),
+        "game_date": row.get("Game_Date"),
+        "round": _optional_int(row.get("Round")),
+        "pin_player_1": _optional_int(row.get("Pin_Player_1")),
+        "pin_player_2": _optional_int(row.get("Pin_Player_2")),
+        "match_status": entry.get("game_id_match_status"),
+        "previous_game_id": entry.get("previous_game_id"),
+        "planned_game_id": entry.get("planned_game_id"),
+        "sgf_preserved": bool(row.get("Sgf_Code") and entry.get("game_id_match_status") == "retained"),
+    }
+
+
+def _format_retired_game(row: dict[str, Any]) -> dict[str, Any]:
+    """Format a production game whose ID will be retired."""
+    return {
+        "game_id": _require_int(row.get("Game_ID"), "Game_ID"),
+        "tournament_code": row.get("Tournament_Code"),
+        "game_date": row.get("Game_Date"),
+        "round": _optional_int(row.get("Round")),
+        "pin_player_1": _optional_int(row.get("Pin_Player_1")),
+        "pin_player_2": _optional_int(row.get("Pin_Player_2")),
+        "sgf_linked": bool(row.get("Sgf_Code")),
     }
 
 

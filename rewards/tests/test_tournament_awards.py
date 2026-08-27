@@ -81,6 +81,17 @@ class TournamentAwardsTest(unittest.TestCase):
 
         self.assertGreaterEqual(sql.count("WHEN UPPER(g.[Host_ChapterCode]) = N'AGA' THEN 0"), 2)
 
+    def test_sql_uses_rerun_baselines_for_host_and_state_awards(self):
+        """Rerun entitlements are held for reconciliation instead of automatically awarded."""
+        sql_path = Path(tournament_awards.__file__).parent / "sql" / "tournament_award_processing.sql"
+        sql = sql_path.read_text(encoding="utf-8")
+
+        self.assertIn("bayrate_reward_reconciliations", sql)
+        self.assertIn("$.new_total_games_points", sql)
+        self.assertIn("$.new_state_championship_points", sql)
+        self.assertIn("Host_Effective_Existing_Points", sql)
+        self.assertIn("State_Effective_Existing_Points", sql)
+
     def test_dry_run_returns_preview_without_writes(self):
         """Verify that dry run returns preview without writes."""
         adapter = FakeTournamentAwardAdapter()
