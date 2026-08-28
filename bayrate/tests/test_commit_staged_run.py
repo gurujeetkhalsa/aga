@@ -5,6 +5,7 @@
 import json
 import unittest
 from datetime import date
+from unittest.mock import patch
 
 from bayrate.commit_staged_run import build_commit_plan, build_commit_statements, commit_staged_run, printable_commit_plan
 from bayrate.reward_reconciliation import tournament_host_points
@@ -200,7 +201,8 @@ class CommitStagedRunTest(unittest.TestCase):
     """Represent commit staged run test."""
     def test_build_commit_plan_allocates_new_game_and_rating_ids(self) -> None:
         """Verify that build commit plan allocates new game and rating ids."""
-        plan = build_commit_plan(CommitAdapter(), 1)
+        with patch("bayrate.commit_staged_run.build_reward_reconciliation") as build_reconciliation:
+            plan = build_commit_plan(CommitAdapter(), 1)
 
         self.assertEqual(plan["run_id"], 1)
         self.assertEqual(plan["staged_tournament_codes"], ["new20260101"])
@@ -209,7 +211,9 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual(plan["rating_insert_count"], 2)
         self.assertEqual(plan["rerun_tournament_codes"], [])
         self.assertFalse(plan["reward_automation_suppressed"])
-        self.assertFalse(plan["reward_reconciliation"]["required"])
+        self.assertNotIn("reward_reconciliation", plan)
+        self.assertNotIn("reward_reconciliation", printable_commit_plan(plan))
+        build_reconciliation.assert_not_called()
         self.assertEqual([row["planned_game_id"] for row in plan["planned_games"]], [101])
         self.assertEqual([row["planned_rating_row_id"] for row in plan["planned_ratings"]], [201, 202])
 
@@ -253,6 +257,7 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual(plan["production_cascade_tournament_codes"], ["later20260102"])
         self.assertEqual(plan["rerun_tournament_codes"], [])
         self.assertFalse(plan["reward_automation_suppressed"])
+        self.assertNotIn("reward_reconciliation", plan)
 
     def test_build_commit_plan_marks_previous_committed_run_superseded(self) -> None:
         """Verify that build commit plan marks previous committed run superseded."""
@@ -356,7 +361,24 @@ class CommitStagedRunTest(unittest.TestCase):
 
     def test_commit_audit_persists_reconciliation_report(self) -> None:
         """Committed runs retain the approved report for later download and adjustment."""
-        plan = build_commit_plan(CommitAdapter(), 1)
+        plan = build_commit_plan(
+            CommitAdapter(
+                production_tournaments=[
+                    {
+                        "Tournament_Code": "new20260101",
+                        "Tournament_Descr": "New Test Tournament",
+                        "Tournament_Date": date(2026, 1, 1),
+                        "Host_ChapterID": 10,
+                        "Host_ChapterCode": "SEAG",
+                        "Host_ChapterName": "Seattle Go Center",
+                        "Reward_Event_Key": "new20260101",
+                        "Reward_Event_Name": "New Test Tournament",
+                        "Reward_Is_State_Championship": 1,
+                    }
+                ]
+            ),
+            1,
+        )
         statements = build_commit_statements(plan)
         audit_statement = next(statement for statement in statements if "[SummaryJson] = ?" in statement[0])
         audit = json.loads(audit_statement[1][0])
@@ -365,6 +387,15 @@ class CommitStagedRunTest(unittest.TestCase):
         self.assertEqual(audit["plan_hash"], printable_commit_plan(plan)["plan_hash"])
         self.assertEqual(audit["reward_reconciliation"]["report_type"], "chapter_rewards_reconciliation")
         self.assertIn("game_id_reconciliation", audit)
+
+    def test_commit_audit_omits_reconciliation_report_for_first_time_tournament(self) -> None:
+        """A first-time tournament has no old reward entitlement to reconcile."""
+        plan = build_commit_plan(CommitAdapter(), 1)
+        statements = build_commit_statements(plan)
+        audit_statement = next(statement for statement in statements if "[SummaryJson] = ?" in statement[0])
+        audit = json.loads(audit_statement[1][0])
+
+        self.assertNotIn("reward_reconciliation", audit)
 
     def test_printable_commit_plan_includes_stable_plan_hash(self) -> None:
         """Verify that printable commit plan includes stable plan hash."""

@@ -393,15 +393,17 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         replacement_codes=staged_tournament_codes,
     )
     planned_ratings = plan_rating_ids(staged_ratings, production_rating_summaries, int(max_ids.get("MaxRatingID") or 0))
-    reward_reconciliation = build_reward_reconciliation(
-        adapter,
-        run_id=run_id_int,
-        staged_tournaments=staged_tournaments,
-        staged_games=planned_games,
-        production_tournaments=production_tournament_rows,
-        production_games=production_game_rows,
-        reconciliation_tournament_codes=rerun_tournament_codes,
-    )
+    reward_reconciliation = None
+    if rerun_tournament_codes:
+        reward_reconciliation = build_reward_reconciliation(
+            adapter,
+            run_id=run_id_int,
+            staged_tournaments=staged_tournaments,
+            staged_games=planned_games,
+            production_tournaments=production_tournament_rows,
+            production_games=production_game_rows,
+            reconciliation_tournament_codes=rerun_tournament_codes,
+        )
     warnings = build_commit_warnings(
         staged_tournament_codes=staged_tournament_codes,
         production_cascade_codes=production_cascade_codes,
@@ -430,7 +432,7 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         + (1 if staged_tournament_codes else 0)
         + (1 if rerun_tournament_codes else 0)
     )
-    return {
+    plan = {
         "run_id": run_id_int,
         "executed": False,
         "status": payload.get("status"),
@@ -450,11 +452,13 @@ def build_commit_plan(adapter: StageSqlAdapter, run_id: int | str) -> dict[str, 
         "requires_sgf_acknowledgement": requires_sgf_acknowledgement,
         "warnings": warnings,
         "game_id_reconciliation": game_id_reconciliation,
-        "reward_reconciliation": reward_reconciliation,
         "staged_tournaments": staged_tournaments,
         "planned_games": planned_games,
         "planned_ratings": planned_ratings,
     }
+    if reward_reconciliation is not None:
+        plan["reward_reconciliation"] = reward_reconciliation
+    return plan
 
 
 def load_staged_rating_rows(adapter: StageSqlAdapter, run_id: int) -> list[dict[str, Any]]:
@@ -679,10 +683,11 @@ def build_commit_warnings(
     production_cascade_codes: list[str],
     production_tournament_rows: list[dict[str, Any]],
     game_id_reconciliation: dict[str, Any],
-    reward_reconciliation: dict[str, Any],
+    reward_reconciliation: dict[str, Any] | None,
 ) -> list[str]:
     """Build commit warnings."""
     warnings = []
+    reward_reconciliation = reward_reconciliation or {}
     existing_codes = {str(row.get("Tournament_Code")) for row in production_tournament_rows}
     replacing_codes = [code for code in staged_tournament_codes if code in existing_codes]
     if replacing_codes:
@@ -913,12 +918,13 @@ def print_commit_plan(plan: dict[str, Any], output: TextIO) -> None:
     print(f"  Game inserts: {plan['game_insert_count']}", file=output)
     print(f"  Rating inserts: {plan['rating_insert_count']}", file=output)
     print(f"  Estimated production writes: {plan['production_write_count']}", file=output)
-    reconciliation = plan.get("reward_reconciliation") or {}
-    print(
-        "  Chapter Rewards reconciliation: "
-        f"{reconciliation.get('old_total_points', 0):,} old / {reconciliation.get('new_total_points', 0):,} new points",
-        file=output,
-    )
+    reconciliation = plan.get("reward_reconciliation")
+    if reconciliation:
+        print(
+            "  Chapter Rewards reconciliation: "
+            f"{reconciliation.get('old_total_points', 0):,} old / {reconciliation.get('new_total_points', 0):,} new points",
+            file=output,
+        )
     for warning in plan.get("warnings") or []:
         print(f"  Warning: {warning}", file=output)
 
@@ -945,10 +951,11 @@ def printable_commit_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "requires_sgf_acknowledgement": bool(plan.get("requires_sgf_acknowledgement", False)),
         "warnings": plan.get("warnings") or [],
         "game_id_reconciliation": plan.get("game_id_reconciliation") or {},
-        "reward_reconciliation": plan.get("reward_reconciliation") or {},
         "game_id_range": _id_range(row["planned_game_id"] for row in plan.get("planned_games") or []),
         "rating_id_range": _id_range(row["planned_rating_row_id"] for row in plan.get("planned_ratings") or []),
     }
+    if plan.get("reward_reconciliation"):
+        result["reward_reconciliation"] = plan["reward_reconciliation"]
     fingerprint = dict(result)
     fingerprint.pop("executed", None)
     result["plan_hash"] = _commit_plan_hash(fingerprint)
