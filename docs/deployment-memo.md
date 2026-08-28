@@ -299,10 +299,13 @@ Apply these SQL files to the AGA Azure SQL database before relying on the automa
 - `rewards/sql/membership_award_processing.sql`
 - `rewards/sql/rated_game_award_processing.sql`
 - `rewards/sql/tournament_award_processing.sql`
+- `rewards/sql/bayrate_reconciliation_processing.sql`
 - `rewards/sql/opening_balance_import.sql`
 - `rewards/sql/point_expiration_processing.sql`
 - `rewards/sql/chapter_renewal_notice_processing.sql`
 - `rewards/sql/reporting_views.sql`
+
+For BayRate rerun adjustments, apply `chapter_rewards_schema.sql` before `bayrate_reconciliation_processing.sql`, then deploy both `chapter-rewards-admin-app/` and `chapter-rewards-display-app/`. The admin app provides the review/confirm workflow; the display app labels posted adjustments in chapter activity and point-lot history.
 
 ## Membership Import SQL
 

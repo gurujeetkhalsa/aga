@@ -855,6 +855,7 @@
           <div class="subtle" id="reportMeta">Loading balances</div>
         </div>
         <div class="top-actions">
+          <button id="reconciliationsBtn" type="button">Bayrate Reconciliations</button>
           <button id="refreshBtn" type="button">Refresh</button>
           <button id="exportBalancesBtn" type="button">Export CSV</button>
         </div>
@@ -1013,6 +1014,59 @@
       </form>
     </div>
 
+    <div class="modal-backdrop" id="reconciliationModal" hidden>
+      <section class="modal" aria-labelledby="reconciliationTitle">
+        <div class="modal-head">
+          <h2 class="modal-title" id="reconciliationTitle">Bayrate Reconciliation</h2>
+          <button id="closeReconciliationBtn" type="button">Close</button>
+        </div>
+        <div class="form-grid">
+          <div class="field wide">
+            <label for="reconciliationRun">Bayrate run</label>
+            <select id="reconciliationRun"></select>
+            <div class="fineprint" id="reconciliationRunMeta"></div>
+          </div>
+        </div>
+        <div id="reconciliationNotice"></div>
+        <div class="table-wrap" id="reconciliationTableWrap">
+          <table>
+            <colgroup>
+              <col style="width: 44%">
+              <col style="width: 14%">
+              <col style="width: 14%">
+              <col style="width: 14%">
+              <col style="width: 14%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Chapter</th>
+                <th class="num">Old points</th>
+                <th class="num">New points</th>
+                <th class="num">Change</th>
+                <th class="num">Available after</th>
+              </tr>
+            </thead>
+            <tbody id="reconciliationBody">
+              <tr><td colspan="5" class="empty">Select a run to preview</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="form-grid">
+          <label class="check wide">
+            <input id="reconciliationConfirm" type="checkbox">
+            I reviewed these chapter changes and approve applying them to Chapter Rewards
+          </label>
+        </div>
+        <div class="form-actions">
+          <span class="fineprint" id="reconciliationOperator"></span>
+          <div class="action-group">
+            <button id="previewReconciliationBtn" type="button">Preview</button>
+            <button id="applyReconciliationBtn" class="primary" type="button" disabled>Apply Reconciliation</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
     <div class="modal-backdrop" id="receiptModal" hidden>
       <form class="modal" id="receiptForm">
         <div class="modal-head">
@@ -1066,6 +1120,11 @@
       debitError: null,
       debitUploadWarning: null,
       debitBusy: false,
+      reconciliations: [],
+      reconciliationPreview: null,
+      reconciliationApplied: null,
+      reconciliationError: null,
+      reconciliationBusy: false,
       activeRedemption: null,
       receiptError: null,
       receiptBusy: false,
@@ -1075,6 +1134,7 @@
     const els = {
       app: document.getElementById("app"),
       reportMeta: document.getElementById("reportMeta"),
+      reconciliationsBtn: document.getElementById("reconciliationsBtn"),
       refreshBtn: document.getElementById("refreshBtn"),
       exportBalancesBtn: document.getElementById("exportBalancesBtn"),
       summaryAvailable: document.getElementById("summaryAvailable"),
@@ -1109,6 +1169,17 @@
       debitOperator: document.getElementById("debitOperator"),
       previewDebitBtn: document.getElementById("previewDebitBtn"),
       postDebitBtn: document.getElementById("postDebitBtn"),
+      reconciliationModal: document.getElementById("reconciliationModal"),
+      closeReconciliationBtn: document.getElementById("closeReconciliationBtn"),
+      reconciliationRun: document.getElementById("reconciliationRun"),
+      reconciliationRunMeta: document.getElementById("reconciliationRunMeta"),
+      reconciliationNotice: document.getElementById("reconciliationNotice"),
+      reconciliationTableWrap: document.getElementById("reconciliationTableWrap"),
+      reconciliationBody: document.getElementById("reconciliationBody"),
+      reconciliationConfirm: document.getElementById("reconciliationConfirm"),
+      reconciliationOperator: document.getElementById("reconciliationOperator"),
+      previewReconciliationBtn: document.getElementById("previewReconciliationBtn"),
+      applyReconciliationBtn: document.getElementById("applyReconciliationBtn"),
       receiptModal: document.getElementById("receiptModal"),
       receiptForm: document.getElementById("receiptForm"),
       closeReceiptBtn: document.getElementById("closeReceiptBtn"),
@@ -1508,6 +1579,176 @@
           </div>
         </div>
       `;
+    }
+
+    function selectedReconciliationSummary() {
+      const runId = Number(els.reconciliationRun.value || 0);
+      return state.reconciliations.find(row => Number(row.bayrate_run_id) === runId) || null;
+    }
+
+    function renderReconciliationRunOptions(preferredRunId = null) {
+      const previous = Number(preferredRunId || els.reconciliationRun.value || 0);
+      els.reconciliationRun.innerHTML = state.reconciliations.map(row => {
+        const scope = (row.scope_tournament_codes || []).join(", ") || "unknown tournament";
+        const status = labelize(row.application_status || "pending");
+        const change = signedPoints(row.point_difference);
+        return `<option value="${html(row.bayrate_run_id)}">Run ${html(row.bayrate_run_id)} - ${html(scope)} - ${html(change)} points - ${html(status)}</option>`;
+      }).join("");
+      const fallback = state.reconciliations[0] && Number(state.reconciliations[0].bayrate_run_id);
+      const selected = state.reconciliations.some(row => Number(row.bayrate_run_id) === previous) ? previous : fallback;
+      if (selected) els.reconciliationRun.value = String(selected);
+      els.reconciliationRun.disabled = !state.reconciliations.length || state.reconciliationBusy;
+    }
+
+    async function loadReconciliations(preferredRunId = null) {
+      const payload = await getJson(`${apiRoot}/admin/reconciliations`);
+      state.admin = payload.authorization || state.admin;
+      state.reconciliations = Array.isArray(payload.reconciliations) ? payload.reconciliations : [];
+      renderReconciliationRunOptions(preferredRunId);
+    }
+
+    async function openReconciliationModal() {
+      state.reconciliationPreview = null;
+      state.reconciliationApplied = null;
+      state.reconciliationError = null;
+      state.reconciliationBusy = true;
+      els.reconciliationConfirm.checked = false;
+      els.reconciliationModal.hidden = false;
+      els.reconciliationOperator.textContent = state.admin && state.admin.principal_name ? state.admin.principal_name : "";
+      renderReconciliationModal();
+      try {
+        await loadReconciliations();
+        if (state.reconciliations.length) await previewReconciliation();
+      } catch (error) {
+        state.reconciliationError = error.message || String(error);
+      } finally {
+        state.reconciliationBusy = false;
+        renderReconciliationRunOptions();
+        renderReconciliationModal();
+      }
+    }
+
+    function closeReconciliationModal() {
+      els.reconciliationModal.hidden = true;
+    }
+
+    async function previewReconciliation() {
+      const runId = Number(els.reconciliationRun.value || 0);
+      if (!runId) return;
+      state.reconciliationBusy = true;
+      state.reconciliationPreview = null;
+      state.reconciliationApplied = null;
+      state.reconciliationError = null;
+      els.reconciliationConfirm.checked = false;
+      renderReconciliationModal();
+      try {
+        const payload = await postJson(`${apiRoot}/admin/reconciliation-preview`, { bayrate_run_id: runId });
+        state.reconciliationPreview = payload.reconciliation || null;
+      } catch (error) {
+        state.reconciliationError = error.message || String(error);
+      } finally {
+        state.reconciliationBusy = false;
+        renderReconciliationRunOptions(runId);
+        renderReconciliationModal();
+      }
+    }
+
+    async function applyReconciliation() {
+      const runId = Number(els.reconciliationRun.value || 0);
+      if (!runId || !els.reconciliationConfirm.checked) return;
+      state.reconciliationBusy = true;
+      state.reconciliationApplied = null;
+      state.reconciliationError = null;
+      renderReconciliationModal();
+      try {
+        const payload = await postJson(`${apiRoot}/admin/reconciliation-apply`, {
+          bayrate_run_id: runId,
+          confirm_reconciliation: true
+        });
+        state.reconciliationApplied = payload.reconciliation || null;
+        state.reconciliationPreview = state.reconciliationApplied;
+        els.reconciliationConfirm.checked = false;
+        await loadReconciliations(runId);
+        await loadBalances({ keepSelection: true });
+      } catch (error) {
+        state.reconciliationError = error.message || String(error);
+      } finally {
+        state.reconciliationBusy = false;
+        renderReconciliationRunOptions(runId);
+        renderReconciliationModal();
+      }
+    }
+
+    function renderReconciliationModal() {
+      const summary = selectedReconciliationSummary();
+      const preview = state.reconciliationPreview;
+      const chapters = preview && Array.isArray(preview.chapters) ? preview.chapters : [];
+      const canApply = preview
+        && preview.can_apply
+        && !preview.already_applied
+        && preview.application_status === "pending"
+        && els.reconciliationConfirm.checked
+        && !state.reconciliationBusy;
+      els.previewReconciliationBtn.disabled = state.reconciliationBusy || !summary;
+      els.applyReconciliationBtn.disabled = !canApply;
+      els.reconciliationRun.disabled = state.reconciliationBusy || !state.reconciliations.length;
+
+      if (summary) {
+        const scope = (summary.scope_tournament_codes || []).join(", ") || "Unknown tournament";
+        const status = labelize(summary.application_status || "pending");
+        const applied = summary.applied_at ? ` - ${dateTime(summary.applied_at)}` : "";
+        els.reconciliationRunMeta.textContent = `${scope} - ${status}${applied}`;
+      } else {
+        els.reconciliationRunMeta.textContent = state.reconciliationBusy ? "Loading reconciliations" : "No reconciliations found";
+      }
+
+      if (state.reconciliationError) {
+        els.reconciliationNotice.innerHTML = `<div class="notice error">${html(state.reconciliationError)}</div>`;
+      } else if (state.reconciliationApplied) {
+        const result = state.reconciliationApplied;
+        const message = result.application_status === "no_changes"
+          ? `Run ${result.bayrate_run_id} reviewed. No Chapter Rewards transactions were needed.`
+          : `Run ${result.bayrate_run_id} reconciled with ${points(result.transaction_count)} transaction${Number(result.transaction_count) === 1 ? "" : "s"}.`;
+        els.reconciliationNotice.innerHTML = `<div class="notice success">${html(message)}</div>`;
+      } else if (state.reconciliationBusy) {
+        els.reconciliationNotice.innerHTML = `<div class="notice">Loading reconciliation</div>`;
+      } else if (preview) {
+        const warning = preview.insufficient_chapter_count
+          ? `<div class="notice warn">Cannot apply: ${points(preview.insufficient_chapter_count)} chapter${Number(preview.insufficient_chapter_count) === 1 ? "" : "s"} lack ${points(preview.shortfall_points)} available points.</div>`
+          : "";
+        const statusClass = preview.already_applied ? "notice success" : "notice";
+        const statusText = preview.already_applied
+          ? `Already ${labelize(preview.application_status)}${preview.applied_at ? ` on ${dateTime(preview.applied_at)}` : ""}.`
+          : `${points(preview.transaction_count)} chapter transaction${Number(preview.transaction_count) === 1 ? "" : "s"} will be posted.`;
+        els.reconciliationNotice.innerHTML = `
+          <div class="${statusClass}">
+            <div class="preview-grid">
+              <div class="preview-item"><div class="preview-label">Old total</div><div class="preview-value">${points((summary && summary.old_total_points) || 0)}</div></div>
+              <div class="preview-item"><div class="preview-label">New total</div><div class="preview-value">${points((summary && summary.new_total_points) || 0)}</div></div>
+              <div class="preview-item"><div class="preview-label">Net change</div><div class="preview-value">${signedPoints(preview.net_points)}</div></div>
+              <div class="preview-item"><div class="preview-label">Status</div><div class="preview-value">${html(statusText)}</div></div>
+            </div>
+          </div>${warning}`;
+      } else {
+        els.reconciliationNotice.innerHTML = "";
+      }
+
+      if (!chapters.length) {
+        els.reconciliationBody.innerHTML = `<tr><td colspan="5" class="empty">${preview ? "No chapters in this reconciliation" : "Select a run to preview"}</td></tr>`;
+        return;
+      }
+      els.reconciliationBody.innerHTML = chapters.map(chapter => {
+        const change = Number(chapter.point_difference || 0);
+        const changeClass = change > 0 ? "positive" : change < 0 ? "negative" : "";
+        const componentDetail = `Played ${points(chapter.old_played_game_points)} to ${points(chapter.new_played_game_points)}; total games ${points(chapter.old_total_games_points)} to ${points(chapter.new_total_games_points)}; State Championship ${points(chapter.old_state_championship_points)} to ${points(chapter.new_state_championship_points)}`;
+        return `<tr>
+          <td><strong>${html(chapter.chapter_code || "")}</strong> ${html(chapter.chapter_name || "")}<div class="fineprint">${html(componentDetail)}</div></td>
+          <td class="num">${points(chapter.old_total_points)}</td>
+          <td class="num">${points(chapter.new_total_points)}</td>
+          <td class="num ${changeClass}">${signedPoints(change)}</td>
+          <td class="num">${points(chapter.available_after_points)}</td>
+        </tr>`;
+      }).join("");
     }
 
     async function openReceiptModal(redemptionId) {
@@ -2213,6 +2454,7 @@
       downloadCsv(`chapter-rewards-${code}-activity.csv`, csv);
     }
 
+    els.reconciliationsBtn.addEventListener("click", openReconciliationModal);
     els.refreshBtn.addEventListener("click", () => loadBalances());
     els.exportBalancesBtn.addEventListener("click", exportBalances);
     els.searchInput.addEventListener("input", () => { handleChapterSearchInput(); });
@@ -2288,6 +2530,14 @@
       clearDebitPreview();
     });
     els.debitConfirm.addEventListener("change", renderDebitNotice);
+    els.closeReconciliationBtn.addEventListener("click", closeReconciliationModal);
+    els.reconciliationModal.addEventListener("click", event => {
+      if (event.target === els.reconciliationModal) closeReconciliationModal();
+    });
+    els.reconciliationRun.addEventListener("change", previewReconciliation);
+    els.previewReconciliationBtn.addEventListener("click", previewReconciliation);
+    els.applyReconciliationBtn.addEventListener("click", applyReconciliation);
+    els.reconciliationConfirm.addEventListener("change", renderReconciliationModal);
     els.closeReceiptBtn.addEventListener("click", closeReceiptModal);
     els.receiptModal.addEventListener("click", event => {
       if (event.target === els.receiptModal) closeReceiptModal();

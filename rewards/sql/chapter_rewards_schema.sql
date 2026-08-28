@@ -24,6 +24,9 @@ IF OBJECT_ID(N'rewards.point_lots', N'U') IS NOT NULL
 IF OBJECT_ID(N'rewards.lot_allocations', N'U') IS NOT NULL
     PRINT N'rewards.lot_allocations already exists.';
 
+IF OBJECT_ID(N'rewards.bayrate_reconciliation_applications', N'U') IS NOT NULL
+    PRINT N'rewards.bayrate_reconciliation_applications already exists.';
+
 IF OBJECT_ID(N'rewards.chapter_eligibility_periods', N'U') IS NOT NULL
     PRINT N'rewards.chapter_eligibility_periods already exists.';
 
@@ -215,6 +218,50 @@ BEGIN
         CONSTRAINT [UQ_lot_allocations_Debit_Lot] UNIQUE ([Debit_TransactionID], [LotID]),
         CONSTRAINT [CK_lot_allocations_Points_Allocated] CHECK ([Points_Allocated] > 0)
     );
+END;
+
+IF OBJECT_ID(N'rewards.bayrate_reconciliation_applications', N'U') IS NULL
+BEGIN
+    CREATE TABLE [rewards].[bayrate_reconciliation_applications]
+    (
+        [Bayrate_RunID] int NOT NULL,
+        [Reward_RunID] int NOT NULL,
+        [Application_Status] nvarchar(32) NOT NULL,
+        [Effective_Date] date NOT NULL,
+        [Applied_At] datetime2(0) NOT NULL CONSTRAINT [DF_bayrate_reconciliation_applications_Applied_At] DEFAULT SYSUTCDATETIME(),
+        [Applied_By] nvarchar(256) NULL,
+        [Applied_Principal_Id] nvarchar(128) NULL,
+        [Transaction_Count] int NOT NULL,
+        [Credit_Points] int NOT NULL,
+        [Debit_Points] int NOT NULL,
+        [Net_Points] int NOT NULL,
+        [SummaryJson] nvarchar(max) NOT NULL,
+        CONSTRAINT [PK_bayrate_reconciliation_applications] PRIMARY KEY CLUSTERED ([Bayrate_RunID]),
+        CONSTRAINT [UQ_bayrate_reconciliation_applications_Reward_RunID] UNIQUE ([Reward_RunID]),
+        CONSTRAINT [FK_bayrate_reconciliation_applications_Reward_RunID]
+            FOREIGN KEY ([Reward_RunID]) REFERENCES [rewards].[reward_runs] ([RunID]),
+        CONSTRAINT [CK_bayrate_reconciliation_applications_Status]
+            CHECK ([Application_Status] IN (N'applied', N'no_changes')),
+        CONSTRAINT [CK_bayrate_reconciliation_applications_Counts]
+            CHECK ([Transaction_Count] >= 0 AND [Credit_Points] >= 0 AND [Debit_Points] >= 0),
+        CONSTRAINT [CK_bayrate_reconciliation_applications_SummaryJson]
+            CHECK (ISJSON([SummaryJson]) = 1)
+    );
+END;
+
+IF OBJECT_ID(N'ratings.bayrate_runs', N'U') IS NOT NULL
+   AND OBJECT_ID(N'rewards.bayrate_reconciliation_applications', N'U') IS NOT NULL
+   AND NOT EXISTS
+   (
+       SELECT 1
+       FROM sys.foreign_keys
+       WHERE [name] = N'FK_bayrate_reconciliation_applications_Bayrate_RunID'
+         AND [parent_object_id] = OBJECT_ID(N'rewards.bayrate_reconciliation_applications')
+   )
+BEGIN
+    ALTER TABLE [rewards].[bayrate_reconciliation_applications]
+        ADD CONSTRAINT [FK_bayrate_reconciliation_applications_Bayrate_RunID]
+        FOREIGN KEY ([Bayrate_RunID]) REFERENCES [ratings].[bayrate_runs] ([RunID]);
 END;
 
 IF OBJECT_ID(N'rewards.membership_events', N'U') IS NOT NULL

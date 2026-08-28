@@ -290,6 +290,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            WHEN tx.[Source_Type] = N'bayrate_rerun_reconciliation' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
         CASE
@@ -301,6 +302,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            WHEN tx.[Source_Type] = N'bayrate_rerun_reconciliation' THEN N'Bayrate rerun reconciliation'
             ELSE N'Other'
         END AS [Source_Label],
         CASE
@@ -358,6 +360,8 @@ WITH [chapter_tx] AS
         WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
         WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expired unused points'
         WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+        WHEN tx.[Source_Type] = N'bayrate_rerun_reconciliation' THEN
+            CONCAT(N'Bayrate Run ', JSON_VALUE(tx.[MetadataJson], '$.bayrate_run_id'), N' reconciliation')
         ELSE REPLACE(tx.[Source_Type], N'_', N' ')
         END AS [Public_Detail]
     FROM [chapter_tx] AS tx
@@ -484,6 +488,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
         CASE
@@ -493,6 +498,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'Bayrate rerun reconciliation'
             ELSE N'Other'
         END AS [Source_Label]
     FROM [rewards].[v_point_lot_aging]
@@ -540,6 +546,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
         CASE
@@ -551,6 +558,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'Bayrate rerun reconciliation'
             ELSE N'Other'
         END AS [Source_Label],
         [Points_Delta]

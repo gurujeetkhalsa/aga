@@ -162,6 +162,17 @@ def _parse_rewards_chapter_code(req: func.HttpRequest) -> tuple[str | None, func
     return chapter_code, None
 
 
+def _bayrate_run_id_from_body(body: dict) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse and validate a Bayrate run identifier from an admin request."""
+    try:
+        run_id = int(str(body.get("bayrate_run_id") or "").strip())
+    except ValueError:
+        return None, rewards._rewards_manual_debit_error("bayrate_run_id must be a positive integer.")
+    if run_id <= 0:
+        return None, rewards._rewards_manual_debit_error("bayrate_run_id must be a positive integer.")
+    return run_id, None
+
+
 def _authorized_adapter(req: func.HttpRequest) -> tuple[SqlAdapter | None, dict | None, func.HttpResponse | None]:
     """Execute the authorized adapter routine."""
     adapter, error = _adapter_or_error()
@@ -310,6 +321,125 @@ def chapter_rewards_admin_options(req: func.HttpRequest) -> func.HttpResponse:
         )
     except Exception as exc:
         return rewards._rewards_manual_debit_error(f"Rewards admin options failed: {exc}", status_code=500)
+
+
+@app.function_name(name="ChapterRewardsAdminReconciliations")
+@app.route(route="chapter-rewards/admin/reconciliations", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def chapter_rewards_admin_reconciliations(req: func.HttpRequest) -> func.HttpResponse:
+    """List persisted Bayrate reward reconciliations and their application status."""
+    if req.method == "OPTIONS":
+        return _options_response()
+    started = perf_counter()
+    adapter, authorization, error = _authorized_adapter(req)
+    if error:
+        return error
+    try:
+        rows = adapter.query_rows(rewards.REWARDS_BAYRATE_RECONCILIATIONS_SQL)
+        return _json_response(
+            _with_debug(
+                {
+                    "ok": True,
+                    "authorization": authorization,
+                    "reconciliations": [
+                        rewards._rewards_bayrate_reconciliation_summary_payload(row) for row in rows
+                    ],
+                },
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return rewards._rewards_manual_debit_error(
+            f"Bayrate reconciliation list failed: {exc}", status_code=500
+        )
+
+
+@app.function_name(name="ChapterRewardsAdminReconciliationPreview")
+@app.route(route="chapter-rewards/admin/reconciliation-preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def chapter_rewards_admin_reconciliation_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Preview the ledger changes for one persisted Bayrate reconciliation."""
+    if req.method == "OPTIONS":
+        return _options_response()
+    started = perf_counter()
+    adapter, authorization, error = _authorized_adapter(req)
+    if error:
+        return error
+    body, body_error = _request_json(req)
+    if body_error:
+        return body_error
+    run_id, run_error = _bayrate_run_id_from_body(body)
+    if run_error:
+        return run_error
+    try:
+        rows = adapter.query_rows(
+            rewards.REWARDS_BAYRATE_RECONCILIATION_EXEC_SQL,
+            (run_id, True, authorization.get("principal_name"), authorization.get("principal_id")),
+        )
+        if not rows:
+            return rewards._rewards_manual_debit_error(
+                "Bayrate reconciliation preview did not return a result.", status_code=500
+            )
+        return _json_response(
+            _with_debug(
+                {
+                    "ok": True,
+                    "authorization": authorization,
+                    "reconciliation": rewards._rewards_bayrate_reconciliation_payload(rows[0]),
+                },
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return rewards._rewards_manual_debit_error(
+            f"Bayrate reconciliation preview failed: {exc}", status_code=500
+        )
+
+
+@app.function_name(name="ChapterRewardsAdminReconciliationApply")
+@app.route(route="chapter-rewards/admin/reconciliation-apply", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def chapter_rewards_admin_reconciliation_apply(req: func.HttpRequest) -> func.HttpResponse:
+    """Apply one confirmed Bayrate reconciliation exactly once."""
+    if req.method == "OPTIONS":
+        return _options_response()
+    started = perf_counter()
+    adapter, authorization, error = _authorized_adapter(req)
+    if error:
+        return error
+    body, body_error = _request_json(req)
+    if body_error:
+        return body_error
+    if body.get("confirm_reconciliation") is not True:
+        return rewards._rewards_manual_debit_error(
+            "confirm_reconciliation=true is required before applying a Bayrate reconciliation."
+        )
+    run_id, run_error = _bayrate_run_id_from_body(body)
+    if run_error:
+        return run_error
+    try:
+        rows = adapter.query_rows(
+            rewards.REWARDS_BAYRATE_RECONCILIATION_EXEC_SQL,
+            (run_id, False, authorization.get("principal_name"), authorization.get("principal_id")),
+        )
+        if not rows:
+            return rewards._rewards_manual_debit_error(
+                "Bayrate reconciliation application did not return a result.", status_code=500
+            )
+        return _json_response(
+            _with_debug(
+                {
+                    "ok": True,
+                    "authorization": authorization,
+                    "reconciliation": rewards._rewards_bayrate_reconciliation_payload(rows[0]),
+                },
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return rewards._rewards_manual_debit_error(
+            f"Bayrate reconciliation application failed: {exc}", status_code=500
+        )
 
 
 @app.function_name(name="ChapterRewardsAdminDebitPreview")

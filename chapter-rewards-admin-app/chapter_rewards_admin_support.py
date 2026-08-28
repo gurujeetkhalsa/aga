@@ -189,6 +189,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            WHEN tx.[Source_Type] = N'bayrate_rerun_reconciliation' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
         CASE
@@ -200,6 +201,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            WHEN tx.[Source_Type] = N'bayrate_rerun_reconciliation' THEN N'Bayrate rerun reconciliation'
             ELSE N'Other'
         END AS [Source_Label],
         CASE
@@ -257,6 +259,8 @@ WITH [chapter_tx] AS
         WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
         WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expired unused points'
         WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+        WHEN tx.[Source_Type] = N'bayrate_rerun_reconciliation' THEN
+            CONCAT(N'Bayrate Run ', JSON_VALUE(tx.[MetadataJson], '$.bayrate_run_id'), N' reconciliation')
         ELSE REPLACE(tx.[Source_Type], N'_', N' ')
         END AS [Public_Detail]
     FROM [chapter_tx] AS tx
@@ -383,6 +387,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
         CASE
@@ -392,6 +397,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'Bayrate rerun reconciliation'
             ELSE N'Other'
         END AS [Source_Label]
     FROM [rewards].[v_point_lot_aging]
@@ -439,6 +445,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
         CASE
@@ -450,6 +457,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
+            WHEN [Source_Type] = N'bayrate_rerun_reconciliation' THEN N'Bayrate rerun reconciliation'
             ELSE N'Other'
         END AS [Source_Label],
         [Points_Delta]
@@ -559,6 +567,58 @@ LEFT JOIN [rewards].[v_chapter_balances] AS balance
     ON balance.[ChapterID] = request.[ChapterID]
 WHERE request.[External_Request_ID] = ?
 ORDER BY request.[RedemptionID] DESC
+"""
+
+
+REWARDS_BAYRATE_RECONCILIATIONS_SQL = """
+SELECT TOP (100)
+    reconciliation.[RunID] AS [Bayrate_RunID],
+    reconciliation.[Created_At],
+    JSON_VALUE(
+        CASE WHEN ISJSON(run.[SummaryJson]) = 1 THEN run.[SummaryJson] ELSE N'{}' END,
+        N'$.commit_status'
+    ) AS [Bayrate_Commit_Status],
+    TRY_CONVERT(int, JSON_VALUE(reconciliation.[ReconciliationJson], N'$.old_total_points')) AS [Old_Total_Points],
+    TRY_CONVERT(int, JSON_VALUE(reconciliation.[ReconciliationJson], N'$.new_total_points')) AS [New_Total_Points],
+    TRY_CONVERT(int, JSON_VALUE(reconciliation.[ReconciliationJson], N'$.point_difference')) AS [Point_Difference],
+    chapter_count.[Chapter_Count],
+    JSON_QUERY(reconciliation.[ReconciliationJson], N'$.scope_tournament_codes') AS [Scope_Tournament_Codes_Json],
+    application.[Reward_RunID],
+    COALESCE(application.[Application_Status], N'pending') AS [Application_Status],
+    application.[Effective_Date],
+    application.[Applied_At],
+    application.[Applied_By],
+    application.[Transaction_Count],
+    application.[Credit_Points],
+    application.[Debit_Points],
+    application.[Net_Points]
+FROM [ratings].[bayrate_reward_reconciliations] AS reconciliation
+INNER JOIN [ratings].[bayrate_runs] AS run
+    ON run.[RunID] = reconciliation.[RunID]
+OUTER APPLY
+(
+    SELECT COUNT(*) AS [Chapter_Count]
+    FROM OPENJSON(reconciliation.[ReconciliationJson], N'$.chapters')
+) AS chapter_count
+LEFT JOIN [rewards].[bayrate_reconciliation_applications] AS application
+    ON application.[Bayrate_RunID] = reconciliation.[RunID]
+WHERE application.[Bayrate_RunID] IS NOT NULL
+   OR JSON_VALUE(
+        CASE WHEN ISJSON(run.[SummaryJson]) = 1 THEN run.[SummaryJson] ELSE N'{}' END,
+        N'$.commit_status'
+      ) = N'committed'
+ORDER BY
+    CASE WHEN application.[Bayrate_RunID] IS NULL THEN 0 ELSE 1 END,
+    reconciliation.[RunID] DESC
+"""
+
+
+REWARDS_BAYRATE_RECONCILIATION_EXEC_SQL = """
+EXEC [rewards].[sp_apply_bayrate_reward_reconciliation]
+    @BayrateRunID = ?,
+    @DryRun = ?,
+    @AppliedByPrincipalName = ?,
+    @AppliedByPrincipalId = ?
 """
 
 
@@ -896,6 +956,87 @@ def _rewards_manual_debit_payload(row: dict) -> dict:
         "already_posted_count": _rewards_int(row.get("AlreadyPostedCount")),
         "new_post_count": _rewards_int(row.get("NewPostCount")),
         "latest_snapshot_date": json_safe_value(row.get("Latest_Snapshot_Date")),
+    }
+
+
+def _rewards_json_list(value) -> list:
+    """Return a JSON array value as a Python list."""
+    if isinstance(value, list):
+        return value
+    if value is None:
+        return []
+    try:
+        parsed = json.loads(str(value))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def _rewards_bayrate_reconciliation_summary_payload(row: dict) -> dict:
+    """Serialize one persisted Bayrate reconciliation for the admin queue."""
+    return {
+        "bayrate_run_id": _rewards_optional_int(row.get("Bayrate_Run_ID") or row.get("Bayrate_RunID")),
+        "created_at": json_safe_value(row.get("Created_At")),
+        "bayrate_commit_status": _rewards_text(row.get("Bayrate_Commit_Status")),
+        "old_total_points": _rewards_int(row.get("Old_Total_Points")),
+        "new_total_points": _rewards_int(row.get("New_Total_Points")),
+        "point_difference": _rewards_int(row.get("Point_Difference")),
+        "chapter_count": _rewards_int(row.get("Chapter_Count")),
+        "scope_tournament_codes": _rewards_json_list(row.get("Scope_Tournament_Codes_Json")),
+        "reward_run_id": _rewards_optional_int(row.get("Reward_RunID")),
+        "application_status": _rewards_text(row.get("Application_Status")) or "pending",
+        "effective_date": json_safe_value(row.get("Effective_Date")),
+        "applied_at": json_safe_value(row.get("Applied_At")),
+        "applied_by": _rewards_text(row.get("Applied_By")),
+        "transaction_count": _rewards_int(row.get("Transaction_Count")),
+        "credit_points": _rewards_int(row.get("Credit_Points")),
+        "debit_points": _rewards_int(row.get("Debit_Points")),
+        "net_points": _rewards_int(row.get("Net_Points")),
+    }
+
+
+def _rewards_bayrate_reconciliation_payload(row: dict) -> dict:
+    """Serialize a Bayrate reconciliation preview or application result."""
+    chapters = []
+    for raw in _rewards_json_list(row.get("ChaptersJson")):
+        if not isinstance(raw, dict):
+            continue
+        chapters.append(
+            {
+                "chapter_id": _rewards_optional_int(raw.get("chapter_id")),
+                "chapter_code": _rewards_text(raw.get("chapter_code")),
+                "chapter_name": _rewards_text(raw.get("chapter_name")),
+                "old_played_game_points": _rewards_int(raw.get("old_played_game_points")),
+                "new_played_game_points": _rewards_int(raw.get("new_played_game_points")),
+                "old_total_games_points": _rewards_int(raw.get("old_total_games_points")),
+                "new_total_games_points": _rewards_int(raw.get("new_total_games_points")),
+                "old_state_championship_points": _rewards_int(raw.get("old_state_championship_points")),
+                "new_state_championship_points": _rewards_int(raw.get("new_state_championship_points")),
+                "old_total_points": _rewards_int(raw.get("old_total_points")),
+                "new_total_points": _rewards_int(raw.get("new_total_points")),
+                "point_difference": _rewards_int(raw.get("point_difference")),
+                "available_before_points": _rewards_int(raw.get("available_before_points")),
+                "available_after_points": _rewards_int(raw.get("available_after_points")),
+                "shortfall_points": _rewards_int(raw.get("shortfall_points")),
+            }
+        )
+    return {
+        "bayrate_run_id": _rewards_optional_int(row.get("Bayrate_Run_ID") or row.get("Bayrate_RunID")),
+        "reward_run_id": _rewards_optional_int(row.get("Reward_Run_ID") or row.get("Reward_RunID")),
+        "dry_run": bool(row.get("Dry_Run")),
+        "already_applied": bool(row.get("Already_Applied")),
+        "can_apply": bool(row.get("Can_Apply")),
+        "application_status": _rewards_text(row.get("Application_Status")) or "pending",
+        "effective_date": json_safe_value(row.get("Effective_Date")),
+        "applied_at": json_safe_value(row.get("Applied_At")),
+        "applied_by": _rewards_text(row.get("Applied_By")),
+        "transaction_count": _rewards_int(row.get("Transaction_Count")),
+        "credit_points": _rewards_int(row.get("Credit_Points")),
+        "debit_points": _rewards_int(row.get("Debit_Points")),
+        "net_points": _rewards_int(row.get("Net_Points")),
+        "insufficient_chapter_count": _rewards_int(row.get("Insufficient_Chapter_Count")),
+        "shortfall_points": _rewards_int(row.get("Shortfall_Points")),
+        "chapters": chapters,
     }
 
 

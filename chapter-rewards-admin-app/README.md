@@ -9,6 +9,7 @@ It includes:
 - Admin page at `/api/chapter-rewards/admin`.
 - Authorized read APIs used by the admin page.
 - Manual debit preview and post workflows.
+- Bayrate rerun reconciliation review, preview, and confirmed application.
 - Redemption detail, notes, receipt upload, receipt removal, and receipt file viewing.
 
 It intentionally excludes:
@@ -24,3 +25,5 @@ Official standalone admin URL:
 https://aga-chapter-rewards-admin.azurewebsites.net/api/chapter-rewards/admin
 
 Authorization uses the existing `rewards_redemptions` permission in `ratings.admin_permissions`.
+
+Bayrate reconciliations are applied manually from the admin page. The operator previews the persisted old/new chapter totals, confirms the changes, and applies the difference exactly once per Bayrate run. Positive differences create normal two-year point lots; negative differences consume unexpired lots in expiration order. A zero-difference reconciliation is recorded as reviewed without creating a transaction.
