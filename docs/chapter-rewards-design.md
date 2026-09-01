@@ -22,6 +22,7 @@ Opening balance import CLI: `py -3 -m rewards.opening_balances C:\path\to\balanc
 Point expiration procedure: `rewards.sp_process_point_expirations`.
 Point expiration CLI: `py -3 -m rewards.expirations --date YYYY-MM-DD --dry-run`.
 Legacy redemption procedure: `rewards.sp_import_legacy_redemptions`.
+Chapter transfer procedure: `rewards.sp_post_chapter_transfer`.
 Legacy rated-game gap procedure: `rewards.sp_process_legacy_gap_rated_game_awards`.
 Legacy membership gap procedure: `rewards.sp_import_legacy_gap_membership_awards`.
 Legacy tournament gap procedure: `rewards.sp_import_legacy_gap_tournament_awards`.
@@ -328,6 +329,7 @@ Current implementation:
 - `rewards.sp_import_legacy_redemptions` loads redemptions that happened after the `2026-02-08` source balance report and on or before the `2026-05-02` ledger start. These rows keep their actual redemption request date as `effective_date`/`valuation_date`, are metadata-tagged `legacy_gap`, and allocate against opening-balance lots.
 - `rewards.sp_import_legacy_redemptions_with_adjustments` can also create tagged `legacy_dues_credit_adjustment` lots when a chapter-dues credit exceeds the available opening-balance lot. These adjustments are for non-cash dues credits only and should not be used for reimbursement redemptions.
 - Legacy redemption payment modes distinguish chapter dues credits (`dues_credit`, no cash payment) from promotion reimbursements (`reimbursement`).
+- Authorized rewards admins can preview and post chapter-to-chapter transfers. `rewards.sp_post_chapter_transfer` consumes the source chapter's unexpired lots FIFO, creates `transfer_out` and `transfer_in` ledger entries atomically, and creates destination lots with the original earned and expiration dates. External transfer IDs make retries idempotent, and `rewards.chapter_transfers` retains the administrative audit record.
 - ClubExpress emails with subject `Membership Renewal Emails` are parsed as chapter renewal notices. Rows where `Type = Chapter` use the `Member` column as the `ChapterID`; if the chapter has at least `35,000` unexpired available points on the notice date, `rewards.sp_process_chapter_renewal_notices` creates a posted `chapter_renewal` / `dues_credit` redemption and a `redeem` transaction.
 - Automatic chapter renewal debits consume available point lots FIFO by earned date. Rows that cannot be mapped or have fewer than `35,000` available points do not debit the chapter.
 - Every automatic chapter renewal decision is recorded in `rewards.chapter_renewal_notice_results`. If `CHAPTER_RENEWAL_NOTICE_EMAIL_TO` is configured on `aga-clubexpress-mail`, the mailbox processor sends a summary email showing debited, already-debited, insufficient-point, and unmapped chapters.
@@ -342,7 +344,6 @@ Current implementation:
 
 The following features should be implemented on top of the same transaction, point lot, and allocation model:
 
-- Chapter-to-chapter point transfers that preserve original lot earned dates.
 - Redemption requests, receipt handling, review, approval, and reimbursement.
 - Manual adjustments and reversals with required notes.
 - Public balance reporting and admin audit views.
@@ -351,4 +352,3 @@ The following features should be implemented on top of the same transaction, poi
 
 - Where should chapter dues/current status be sourced from?
 - What should the redemption request and receipt review workflow look like?
-- Should transfers preserve the original lot expiration dates exactly or create fresh receiving lots with carried expiration metadata?

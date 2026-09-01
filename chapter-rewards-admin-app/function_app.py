@@ -379,6 +379,86 @@ def chapter_rewards_admin_debit_post(req: func.HttpRequest) -> func.HttpResponse
         return rewards._rewards_manual_debit_error(f"Manual debit post failed: {exc}", status_code=500)
 
 
+@app.function_name(name="ChapterRewardsAdminTransferPreview")
+@app.route(route="chapter-rewards/admin/transfer-preview", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def chapter_rewards_admin_transfer_preview(req: func.HttpRequest) -> func.HttpResponse:
+    """Preview an atomic chapter-to-chapter point transfer."""
+    if req.method == "OPTIONS":
+        return _options_response()
+    started = perf_counter()
+    adapter, authorization, error = _authorized_adapter(req)
+    if error:
+        return error
+    body, body_error = _request_json(req)
+    if body_error:
+        return body_error
+    request, request_error = rewards._rewards_chapter_transfer_request_from_body(
+        body,
+        authorization,
+        generate_transfer_id=False,
+    )
+    if request_error:
+        return request_error
+    try:
+        rows = adapter.query_rows(
+            rewards.REWARDS_CHAPTER_TRANSFER_SQL,
+            rewards._rewards_chapter_transfer_params(request, dry_run=True),
+        )
+        if not rows:
+            return rewards._rewards_manual_debit_error("Chapter transfer preview did not return a result.", status_code=500)
+        preview = rewards._rewards_chapter_transfer_payload(rows[0])
+        return _json_response(
+            _with_debug(
+                {"ok": True, "authorization": authorization, "preview": preview},
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return rewards._rewards_manual_debit_error(f"Chapter transfer preview failed: {exc}", status_code=500)
+
+
+@app.function_name(name="ChapterRewardsAdminTransferPost")
+@app.route(route="chapter-rewards/admin/transfer", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
+def chapter_rewards_admin_transfer_post(req: func.HttpRequest) -> func.HttpResponse:
+    """Post an atomic chapter-to-chapter point transfer."""
+    if req.method == "OPTIONS":
+        return _options_response()
+    started = perf_counter()
+    adapter, authorization, error = _authorized_adapter(req)
+    if error:
+        return error
+    body, body_error = _request_json(req)
+    if body_error:
+        return body_error
+    if body.get("confirm_transfer") is not True:
+        return rewards._rewards_manual_debit_error("confirm_transfer=true is required before posting a chapter transfer.")
+    request, request_error = rewards._rewards_chapter_transfer_request_from_body(
+        body,
+        authorization,
+        generate_transfer_id=True,
+    )
+    if request_error:
+        return request_error
+    try:
+        adapter.execute_statements(
+            [(rewards.REWARDS_CHAPTER_TRANSFER_SQL, rewards._rewards_chapter_transfer_params(request, dry_run=False))]
+        )
+        rows = adapter.query_rows(rewards.REWARDS_CHAPTER_TRANSFER_LOOKUP_SQL, (request["external_transfer_id"],))
+        if not rows:
+            return rewards._rewards_manual_debit_error("Chapter transfer posted but could not be reloaded.", status_code=500)
+        transfer = rewards._rewards_chapter_transfer_payload(rows[0])
+        return _json_response(
+            _with_debug(
+                {"ok": True, "authorization": authorization, "transfer": transfer},
+                data_source="sql_live",
+                elapsed_ms=round((perf_counter() - started) * 1000, 1),
+            )
+        )
+    except Exception as exc:
+        return rewards._rewards_manual_debit_error(f"Chapter transfer post failed: {exc}", status_code=500)
+
+
 @app.function_name(name="ChapterRewardsAdminRedemption")
 @app.route(route="chapter-rewards/admin/redemption", methods=["GET", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 def chapter_rewards_admin_redemption(req: func.HttpRequest) -> func.HttpResponse:

@@ -186,6 +186,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'tournament_host' THEN N'tournament_host'
             WHEN tx.[Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN tx.[Source_Type] = N'redemption' THEN N'redemption'
+            WHEN tx.[Source_Type] = N'chapter_transfer' THEN N'transfer'
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
@@ -197,6 +198,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'tournament_host' THEN N'Tournament host'
             WHEN tx.[Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN tx.[Source_Type] = N'redemption' THEN N'Redemption'
+            WHEN tx.[Source_Type] = N'chapter_transfer' THEN N'Chapter transfer'
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
@@ -248,6 +250,19 @@ WITH [chapter_tx] AS
                 REPLACE(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.redemption_category'), N''), N'other'), N'_', N' '),
                 N', ',
                 REPLACE(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.payment_mode'), N''), N'other'), N'_', N' '),
+                CASE
+                    WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.description'), N'') IS NOT NULL
+                        THEN CONCAT(N' - ', JSON_VALUE(tx.[MetadataJson], '$.description'))
+                    ELSE N''
+                END
+            )
+        WHEN tx.[Source_Type] = N'chapter_transfer' THEN
+            CONCAT(
+                CASE tx.[Transaction_Type]
+                    WHEN N'transfer_out' THEN CONCAT(N'Transfer to ', COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.to_chapter_code'), N''), N'another chapter'))
+                    WHEN N'transfer_in' THEN CONCAT(N'Transfer from ', COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.from_chapter_code'), N''), N'another chapter'))
+                    ELSE N'Chapter transfer'
+                END,
                 CASE
                     WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.description'), N'') IS NOT NULL
                         THEN CONCAT(N' - ', JSON_VALUE(tx.[MetadataJson], '$.description'))
@@ -382,6 +397,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'tournament_host'
             WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'transfer'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
@@ -391,6 +407,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'Tournament host'
             WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'Chapter transfer'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
             ELSE N'Other'
         END AS [Source_Label]
@@ -436,6 +453,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'tournament_host'
             WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN [Source_Type] = N'redemption' THEN N'redemption'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'transfer'
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
@@ -447,6 +465,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'Tournament host'
             WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN [Source_Type] = N'redemption' THEN N'Redemption'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'Chapter transfer'
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
@@ -562,9 +581,75 @@ ORDER BY request.[RedemptionID] DESC
 """
 
 
+REWARDS_CHAPTER_TRANSFER_SQL = """
+EXEC [rewards].[sp_post_chapter_transfer]
+    @FromChapterID = ?,
+    @FromChapterCode = ?,
+    @ToChapterID = ?,
+    @ToChapterCode = ?,
+    @TransferDate = ?,
+    @Points = ?,
+    @Description = ?,
+    @ExternalTransferID = ?,
+    @Notes = ?,
+    @SourcePayloadJson = ?,
+    @DryRun = ?,
+    @RunType = N'manual',
+    @PostedByPrincipalName = ?,
+    @PostedByPrincipalId = ?
+"""
+
+
+REWARDS_CHAPTER_TRANSFER_LOOKUP_SQL = """
+SELECT TOP 1
+    transfer.[TransferID],
+    transfer.[External_Transfer_ID],
+    transfer.[From_ChapterID],
+    transfer.[From_Chapter_Code],
+    transfer.[From_Chapter_Name],
+    transfer.[To_ChapterID],
+    transfer.[To_Chapter_Code],
+    transfer.[To_Chapter_Name],
+    transfer.[Transfer_Date],
+    transfer.[Points],
+    transfer.[Description],
+    transfer.[Notes],
+    transfer.[Status],
+    transfer.[RunID],
+    transfer.[Out_TransactionID],
+    transfer.[Posted_At],
+    transfer.[Posted_By_Principal_Name],
+    COALESCE(from_balance.[Available_Points], 0) AS [From_Available_After_Points],
+    COALESCE(to_balance.[Available_Points], 0) AS [To_Available_After_Points],
+    COALESCE(inbound.[In_Transaction_Count], 0) AS [In_Transaction_Count],
+    COALESCE(inbound.[Transferred_Lot_Count], 0) AS [Transferred_Lot_Count]
+FROM [rewards].[chapter_transfers] AS transfer
+LEFT JOIN [rewards].[v_chapter_balances] AS from_balance
+    ON from_balance.[ChapterID] = transfer.[From_ChapterID]
+LEFT JOIN [rewards].[v_chapter_balances] AS to_balance
+    ON to_balance.[ChapterID] = transfer.[To_ChapterID]
+OUTER APPLY
+(
+    SELECT
+        COUNT(DISTINCT tx.[TransactionID]) AS [In_Transaction_Count],
+        COUNT(DISTINCT lot.[LotID]) AS [Transferred_Lot_Count]
+    FROM [rewards].[transactions] AS tx
+    LEFT JOIN [rewards].[point_lots] AS lot
+        ON lot.[Earn_TransactionID] = tx.[TransactionID]
+    WHERE tx.[RunID] = transfer.[RunID]
+      AND tx.[ChapterID] = transfer.[To_ChapterID]
+      AND tx.[Source_Type] = N'chapter_transfer'
+      AND tx.[Transaction_Type] = N'transfer_in'
+) AS inbound
+WHERE transfer.[External_Transfer_ID] = ?
+ORDER BY transfer.[TransferID] DESC
+"""
+
+
 REWARDS_REDEMPTION_CATEGORIES = {"chapter_renewal", "go_promotion", "other"}
 REWARDS_PAYMENT_MODES = {"dues_credit", "reimbursement", "other"}
 REWARDS_MAX_MANUAL_DEBIT_POINTS = 100_000_000
+REWARDS_MAX_CHAPTER_TRANSFER_POINTS = 100_000_000
 REWARDS_RECEIPT_CONTAINER = (os.environ.get("REWARDS_RECEIPT_CONTAINER") or "").strip() or "chapter-rewards-receipts"
 REWARDS_MAX_RECEIPT_BYTES = int(os.environ.get("REWARDS_MAX_RECEIPT_BYTES") or str(8 * 1024 * 1024))
 REWARDS_MAX_RECEIPT_FILES = int(os.environ.get("REWARDS_MAX_RECEIPT_FILES") or "5")
@@ -899,6 +984,41 @@ def _rewards_manual_debit_payload(row: dict) -> dict:
     }
 
 
+def _rewards_chapter_transfer_payload(row: dict) -> dict:
+    """Return one chapter transfer preview or posted-transfer payload."""
+    return {
+        "run_id": _rewards_optional_int(row.get("RunID")),
+        "dry_run": bool(row.get("DryRun")),
+        "transfer_id": _rewards_optional_int(row.get("TransferID")),
+        "external_transfer_id": _rewards_text(row.get("External_Transfer_ID")),
+        "from_chapter_id": _rewards_optional_int(row.get("From_ChapterID")),
+        "from_chapter_code": _rewards_text(row.get("From_Chapter_Code")),
+        "from_chapter_name": _rewards_text(row.get("From_Chapter_Name")),
+        "to_chapter_id": _rewards_optional_int(row.get("To_ChapterID")),
+        "to_chapter_code": _rewards_text(row.get("To_Chapter_Code")),
+        "to_chapter_name": _rewards_text(row.get("To_Chapter_Name")),
+        "transfer_date": json_safe_value(row.get("Transfer_Date")),
+        "points": _rewards_int(row.get("Points")),
+        "description": _rewards_text(row.get("Description")),
+        "notes": _rewards_text(row.get("Notes")),
+        "status": _rewards_text(row.get("Status")),
+        "out_transaction_id": _rewards_optional_int(row.get("Out_TransactionID")),
+        "posted_at": json_safe_value(row.get("Posted_At")),
+        "posted_by_principal_name": _rewards_text(row.get("Posted_By_Principal_Name")),
+        "from_available_points": _rewards_int(row.get("From_Available_Points")),
+        "from_available_after_points": _rewards_int(row.get("From_Available_After_Points")),
+        "to_available_points": _rewards_int(row.get("To_Available_Points")),
+        "to_available_after_points": _rewards_int(row.get("To_Available_After_Points")),
+        "available_lot_count": _rewards_int(row.get("Available_Lot_Count")),
+        "insufficient_balance_count": _rewards_int(row.get("InsufficientBalanceCount")),
+        "shortfall_points": _rewards_int(row.get("Shortfall_Points")),
+        "already_posted_count": _rewards_int(row.get("AlreadyPostedCount")),
+        "new_post_count": _rewards_int(row.get("NewPostCount")),
+        "transferred_lot_count": _rewards_int(row.get("Transferred_Lot_Count")),
+        "in_transaction_count": _rewards_int(row.get("In_Transaction_Count")),
+    }
+
+
 def _rewards_summary_payload(chapters: list[dict]) -> dict:
     """Execute the rewards summary payload routine."""
     available_points = sum(chapter["available_points"] for chapter in chapters)
@@ -1038,6 +1158,130 @@ def _rewards_manual_debit_params(request: dict, *, dry_run: bool) -> tuple:
         request["description"],
         request["receipt_reference"],
         request["external_request_id"],
+        request["notes"],
+        request["source_payload_json"],
+        bool(dry_run),
+        request["principal_name"],
+        request["principal_id"],
+    )
+
+
+def _optional_positive_chapter_id(body: dict, *keys: str) -> tuple[int | None, func.HttpResponse | None]:
+    """Parse an optional positive chapter ID from the first present body key."""
+    raw_value = None
+    for key in keys:
+        if body.get(key) not in (None, ""):
+            raw_value = body.get(key)
+            break
+    if raw_value in (None, ""):
+        return None, None
+    try:
+        chapter_id = int(str(raw_value).strip())
+    except ValueError:
+        return None, _rewards_manual_debit_error(f"{keys[0]} must be an integer.")
+    if chapter_id <= 0:
+        return None, _rewards_manual_debit_error(f"{keys[0]} must be positive.")
+    return chapter_id, None
+
+
+def _rewards_chapter_transfer_request_from_body(
+    body: dict,
+    authorization: dict,
+    *,
+    generate_transfer_id: bool,
+) -> tuple[dict | None, func.HttpResponse | None]:
+    """Validate an admin chapter-transfer request body."""
+    from_chapter_id, error = _optional_positive_chapter_id(body, "from_chapter_id", "fromChapterId")
+    if error:
+        return None, error
+    to_chapter_id, error = _optional_positive_chapter_id(body, "to_chapter_id", "toChapterId")
+    if error:
+        return None, error
+
+    from_chapter_code, error_text = _clean_rewards_body_text(body, "from_chapter_code", max_length=64)
+    if error_text:
+        return None, _rewards_manual_debit_error(error_text)
+    to_chapter_code, error_text = _clean_rewards_body_text(body, "to_chapter_code", max_length=64)
+    if error_text:
+        return None, _rewards_manual_debit_error(error_text)
+
+    if from_chapter_id is None and not from_chapter_code:
+        return None, _rewards_manual_debit_error("Select a source chapter before previewing or posting a transfer.")
+    if to_chapter_id is None and not to_chapter_code:
+        return None, _rewards_manual_debit_error("Select a destination chapter before previewing or posting a transfer.")
+    if from_chapter_id is not None and from_chapter_id == to_chapter_id:
+        return None, _rewards_manual_debit_error("The source and destination chapters must be different.")
+    if from_chapter_code and to_chapter_code and from_chapter_code.upper() == to_chapter_code.upper():
+        return None, _rewards_manual_debit_error("The source and destination chapters must be different.")
+
+    raw_transfer_date = str(body.get("transfer_date") or body.get("transferDate") or date.today().isoformat()).strip()
+    try:
+        transfer_date = date.fromisoformat(raw_transfer_date[:10])
+    except ValueError:
+        return None, _rewards_manual_debit_error("transfer_date must use YYYY-MM-DD format.")
+
+    try:
+        points = int(str(body.get("points") or "").replace(",", "").strip())
+    except ValueError:
+        return None, _rewards_manual_debit_error("points must be a positive integer.")
+    if points <= 0:
+        return None, _rewards_manual_debit_error("points must be a positive integer.")
+    if points > REWARDS_MAX_CHAPTER_TRANSFER_POINTS:
+        return None, _rewards_manual_debit_error(f"points must be {REWARDS_MAX_CHAPTER_TRANSFER_POINTS:,} or less.")
+
+    description, error_text = _clean_rewards_body_text(body, "description", max_length=512, required=True)
+    if error_text:
+        return None, _rewards_manual_debit_error(error_text)
+    notes, error_text = _clean_rewards_body_text(body, "notes", max_length=4000)
+    if error_text:
+        return None, _rewards_manual_debit_error(error_text)
+    external_transfer_id, error_text = _clean_rewards_body_text(body, "external_transfer_id", max_length=64)
+    if error_text:
+        return None, _rewards_manual_debit_error(error_text)
+    if external_transfer_id is None and generate_transfer_id:
+        external_transfer_id = f"transfer-{datetime.now(timezone.utc):%Y%m%d}-{uuid.uuid4().hex[:12]}"
+
+    source_payload = {
+        "entry_source": "rewards_admin_transfer_form",
+        "from_chapter_id": from_chapter_id,
+        "from_chapter_code": from_chapter_code,
+        "to_chapter_id": to_chapter_id,
+        "to_chapter_code": to_chapter_code,
+        "transfer_date": transfer_date.isoformat(),
+        "points": points,
+        "description": description,
+        "notes": notes,
+        "entered_by_principal_name": authorization.get("principal_name"),
+        "entered_by_principal_id": authorization.get("principal_id"),
+    }
+
+    return {
+        "from_chapter_id": from_chapter_id,
+        "from_chapter_code": from_chapter_code,
+        "to_chapter_id": to_chapter_id,
+        "to_chapter_code": to_chapter_code,
+        "transfer_date": transfer_date,
+        "points": points,
+        "description": description,
+        "external_transfer_id": external_transfer_id,
+        "notes": notes,
+        "source_payload_json": json.dumps(source_payload, sort_keys=True),
+        "principal_name": authorization.get("principal_name"),
+        "principal_id": authorization.get("principal_id"),
+    }, None
+
+
+def _rewards_chapter_transfer_params(request: dict, *, dry_run: bool) -> tuple:
+    """Build stored-procedure parameters for a chapter transfer."""
+    return (
+        request["from_chapter_id"],
+        request["from_chapter_code"],
+        request["to_chapter_id"],
+        request["to_chapter_code"],
+        request["transfer_date"],
+        request["points"],
+        request["description"],
+        request["external_transfer_id"],
         request["notes"],
         request["source_payload_json"],
         bool(dry_run),

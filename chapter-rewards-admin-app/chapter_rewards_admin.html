@@ -855,6 +855,8 @@
           <div class="subtle" id="reportMeta">Loading balances</div>
         </div>
         <div class="top-actions">
+          <button id="openDebitBtn" type="button">Manual Debit</button>
+          <button id="openTransferBtn" type="button">Transfer Points</button>
           <button id="refreshBtn" type="button">Refresh</button>
           <button id="exportBalancesBtn" type="button">Export CSV</button>
         </div>
@@ -1013,6 +1015,57 @@
       </form>
     </div>
 
+    <div class="modal-backdrop" id="transferModal" hidden>
+      <form class="modal" id="transferForm">
+        <div class="modal-head">
+          <h2 class="modal-title">Chapter Point Transfer</h2>
+          <button id="closeTransferBtn" type="button">Close</button>
+        </div>
+        <div class="form-grid">
+          <div class="field wide">
+            <label for="transferFromChapter">From Chapter</label>
+            <select id="transferFromChapter" required></select>
+          </div>
+          <div class="field wide">
+            <label for="transferToChapter">To Chapter</label>
+            <select id="transferToChapter" required></select>
+          </div>
+          <div class="field">
+            <label for="transferDate">Transfer Date</label>
+            <input id="transferDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="transferPoints">Points</label>
+            <input id="transferPoints" type="number" min="1" step="1" inputmode="numeric" required>
+          </div>
+          <div class="field wide">
+            <label for="transferDescription">Description</label>
+            <input id="transferDescription" type="text" maxlength="512" required>
+          </div>
+          <div class="field">
+            <label for="transferRequestId">Transfer ID</label>
+            <input id="transferRequestId" type="text" maxlength="64">
+          </div>
+          <div class="field wide">
+            <label for="transferNotes">Notes</label>
+            <textarea id="transferNotes" maxlength="4000"></textarea>
+          </div>
+          <label class="check wide">
+            <input id="transferConfirm" type="checkbox">
+            Approved for posting
+          </label>
+        </div>
+        <div id="transferNotice"></div>
+        <div class="form-actions">
+          <span class="fineprint" id="transferOperator"></span>
+          <div class="action-group">
+            <button id="previewTransferBtn" type="button">Preview</button>
+            <button id="postTransferBtn" class="primary" type="submit" disabled>Post Transfer</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
     <div class="modal-backdrop" id="receiptModal" hidden>
       <form class="modal" id="receiptForm">
         <div class="modal-head">
@@ -1066,6 +1119,10 @@
       debitError: null,
       debitUploadWarning: null,
       debitBusy: false,
+      transferPreview: null,
+      transferPosted: null,
+      transferError: null,
+      transferBusy: false,
       activeRedemption: null,
       receiptError: null,
       receiptBusy: false,
@@ -1075,6 +1132,8 @@
     const els = {
       app: document.getElementById("app"),
       reportMeta: document.getElementById("reportMeta"),
+      openDebitBtn: document.getElementById("openDebitBtn"),
+      openTransferBtn: document.getElementById("openTransferBtn"),
       refreshBtn: document.getElementById("refreshBtn"),
       exportBalancesBtn: document.getElementById("exportBalancesBtn"),
       summaryAvailable: document.getElementById("summaryAvailable"),
@@ -1109,6 +1168,21 @@
       debitOperator: document.getElementById("debitOperator"),
       previewDebitBtn: document.getElementById("previewDebitBtn"),
       postDebitBtn: document.getElementById("postDebitBtn"),
+      transferModal: document.getElementById("transferModal"),
+      transferForm: document.getElementById("transferForm"),
+      closeTransferBtn: document.getElementById("closeTransferBtn"),
+      transferFromChapter: document.getElementById("transferFromChapter"),
+      transferToChapter: document.getElementById("transferToChapter"),
+      transferDate: document.getElementById("transferDate"),
+      transferPoints: document.getElementById("transferPoints"),
+      transferDescription: document.getElementById("transferDescription"),
+      transferRequestId: document.getElementById("transferRequestId"),
+      transferNotes: document.getElementById("transferNotes"),
+      transferConfirm: document.getElementById("transferConfirm"),
+      transferNotice: document.getElementById("transferNotice"),
+      transferOperator: document.getElementById("transferOperator"),
+      previewTransferBtn: document.getElementById("previewTransferBtn"),
+      postTransferBtn: document.getElementById("postTransferBtn"),
       receiptModal: document.getElementById("receiptModal"),
       receiptForm: document.getElementById("receiptForm"),
       closeReceiptBtn: document.getElementById("closeReceiptBtn"),
@@ -1306,12 +1380,20 @@
         chapter_name: row.chapter_name,
         available_points: row.available_points
       }));
-      els.debitChapter.innerHTML = chapters.map(chapter => {
+      const options = chapters.map(chapter => {
         const label = `${chapter.chapter_code || ""} - ${chapter.chapter_name || ""} (${points(chapter.available_points)} pts)`;
         return `<option value="${html(chapter.chapter_code)}" data-chapter-id="${html(chapter.chapter_id || "")}">${html(label)}</option>`;
       }).join("");
+      els.debitChapter.innerHTML = options;
+      els.transferFromChapter.innerHTML = options;
+      els.transferToChapter.innerHTML = options;
       if (state.selectedCode) {
         els.debitChapter.value = state.selectedCode;
+        els.transferFromChapter.value = state.selectedCode;
+      }
+      if (els.transferToChapter.value === els.transferFromChapter.value) {
+        const different = chapters.find(chapter => chapter.chapter_code !== els.transferFromChapter.value);
+        if (different) els.transferToChapter.value = different.chapter_code;
       }
     }
 
@@ -1337,6 +1419,7 @@
 
     async function openDebitModal() {
       resetDebitForm();
+      closeTransferModal();
       els.debitModal.hidden = false;
       els.debitOperator.textContent = state.admin && state.admin.principal_name ? state.admin.principal_name : "";
       if (!state.adminChapters.length) {
@@ -1508,6 +1591,165 @@
           </div>
         </div>
       `;
+    }
+
+
+    function resetTransferForm() {
+      state.transferPreview = null;
+      state.transferPosted = null;
+      state.transferError = null;
+      state.transferBusy = false;
+      els.transferDate.value = todayInputValue();
+      els.transferPoints.value = "";
+      els.transferDescription.value = "";
+      els.transferRequestId.value = "";
+      els.transferNotes.value = "";
+      els.transferConfirm.checked = false;
+      renderDebitChapterOptions();
+      renderTransferNotice();
+    }
+
+    async function openTransferModal() {
+      resetTransferForm();
+      closeDebitModal();
+      els.transferModal.hidden = false;
+      els.transferOperator.textContent = state.admin && state.admin.principal_name ? state.admin.principal_name : "";
+      if (!state.adminChapters.length) {
+        try {
+          await loadAdminOptions();
+        } catch (error) {
+          state.transferError = error.message || String(error);
+          renderTransferNotice();
+          return;
+        }
+      }
+      window.setTimeout(() => els.transferFromChapter.focus(), 0);
+    }
+
+    function closeTransferModal() {
+      els.transferModal.hidden = true;
+    }
+
+    function clearTransferPreview() {
+      state.transferPreview = null;
+      state.transferPosted = null;
+      state.transferError = null;
+      renderTransferNotice();
+    }
+
+    function selectedChapterFormValue(select) {
+      const selected = select.selectedOptions[0];
+      return {
+        chapter_id: selected && selected.dataset.chapterId ? Number(selected.dataset.chapterId) : null,
+        chapter_code: select.value
+      };
+    }
+
+    function readTransferForm() {
+      const fromChapter = selectedChapterFormValue(els.transferFromChapter);
+      const toChapter = selectedChapterFormValue(els.transferToChapter);
+      return {
+        from_chapter_id: fromChapter.chapter_id,
+        from_chapter_code: fromChapter.chapter_code,
+        to_chapter_id: toChapter.chapter_id,
+        to_chapter_code: toChapter.chapter_code,
+        transfer_date: els.transferDate.value,
+        points: els.transferPoints.value,
+        description: els.transferDescription.value,
+        external_transfer_id: els.transferRequestId.value,
+        notes: els.transferNotes.value
+      };
+    }
+
+    async function previewTransfer() {
+      state.transferBusy = true;
+      state.transferError = null;
+      state.transferPosted = null;
+      renderTransferNotice();
+      try {
+        const payload = await postJson(`${apiRoot}/admin/transfer-preview`, readTransferForm());
+        state.transferPreview = payload.preview || null;
+      } catch (error) {
+        state.transferError = error.message || String(error);
+      } finally {
+        state.transferBusy = false;
+        renderTransferNotice();
+      }
+    }
+
+    async function postTransfer() {
+      state.transferBusy = true;
+      state.transferError = null;
+      renderTransferNotice();
+      try {
+        const body = { ...readTransferForm(), confirm_transfer: true };
+        const payload = await postJson(`${apiRoot}/admin/transfer`, body);
+        state.transferPosted = payload.transfer || null;
+        state.transferPreview = null;
+        els.transferRequestId.value = state.transferPosted && state.transferPosted.external_transfer_id || els.transferRequestId.value;
+        await loadBalances({ keepSelection: true });
+        const code = state.transferPosted && state.transferPosted.from_chapter_code;
+        if (code) await selectChapter(code);
+      } catch (error) {
+        state.transferError = error.message || String(error);
+      } finally {
+        state.transferBusy = false;
+        renderTransferNotice();
+      }
+    }
+
+    function renderTransferNotice() {
+      els.previewTransferBtn.disabled = state.transferBusy;
+      const canPost = state.transferPreview
+        && !state.transferPreview.insufficient_balance_count
+        && !state.transferPreview.already_posted_count
+        && els.transferConfirm.checked
+        && !state.transferBusy;
+      els.postTransferBtn.disabled = !canPost;
+
+      if (state.transferError) {
+        els.transferNotice.innerHTML = `<div class="notice error">${html(state.transferError)}</div>`;
+        return;
+      }
+      if (state.transferPosted) {
+        els.transferNotice.innerHTML = `
+          <div class="notice success">
+            Transferred ${points(state.transferPosted.points)} points from ${html(state.transferPosted.from_chapter_code)} to ${html(state.transferPosted.to_chapter_code)}.
+            Transfer ${html(state.transferPosted.external_transfer_id || state.transferPosted.transfer_id || "")}.
+          </div>`;
+        return;
+      }
+      if (!state.transferPreview) {
+        els.transferNotice.innerHTML = "";
+        return;
+      }
+      const preview = state.transferPreview;
+      const className = preview.insufficient_balance_count ? "notice warn" : "notice";
+      const sourceResult = preview.insufficient_balance_count
+        ? `Short ${points(preview.shortfall_points)} points`
+        : `${points(preview.from_available_after_points)} remaining`;
+      els.transferNotice.innerHTML = `
+        <div class="${className}">
+          <div class="preview-grid">
+            <div class="preview-item">
+              <div class="preview-label">From</div>
+              <div class="preview-value">${html(preview.from_chapter_code)}</div>
+            </div>
+            <div class="preview-item">
+              <div class="preview-label">To</div>
+              <div class="preview-value">${html(preview.to_chapter_code)}</div>
+            </div>
+            <div class="preview-item">
+              <div class="preview-label">Transfer</div>
+              <div class="preview-value">${points(preview.points)}</div>
+            </div>
+            <div class="preview-item">
+              <div class="preview-label">Source Result</div>
+              <div class="preview-value">${html(sourceResult)}</div>
+            </div>
+          </div>
+          <div class="fineprint">Destination after transfer: ${points(preview.to_available_after_points)} points. Original lot earned and expiration dates will be preserved.</div>
+        </div>`;
     }
 
     async function openReceiptModal(redemptionId) {
@@ -2213,6 +2455,8 @@
       downloadCsv(`chapter-rewards-${code}-activity.csv`, csv);
     }
 
+    els.openDebitBtn.addEventListener("click", openDebitModal);
+    els.openTransferBtn.addEventListener("click", openTransferModal);
     els.refreshBtn.addEventListener("click", () => loadBalances());
     els.exportBalancesBtn.addEventListener("click", exportBalances);
     els.searchInput.addEventListener("input", () => { handleChapterSearchInput(); });
@@ -2288,6 +2532,32 @@
       clearDebitPreview();
     });
     els.debitConfirm.addEventListener("change", renderDebitNotice);
+    els.closeTransferBtn.addEventListener("click", closeTransferModal);
+    els.transferModal.addEventListener("click", event => {
+      if (event.target === els.transferModal) closeTransferModal();
+    });
+    els.previewTransferBtn.addEventListener("click", previewTransfer);
+    els.transferForm.addEventListener("submit", event => {
+      event.preventDefault();
+      postTransfer();
+    });
+    [
+      els.transferFromChapter,
+      els.transferToChapter,
+      els.transferDate,
+      els.transferPoints,
+      els.transferDescription,
+      els.transferRequestId,
+      els.transferNotes
+    ].forEach(input => input.addEventListener("input", clearTransferPreview));
+    els.transferFromChapter.addEventListener("change", () => {
+      if (els.transferFromChapter.value === els.transferToChapter.value) {
+        const different = Array.from(els.transferToChapter.options).find(option => option.value !== els.transferFromChapter.value);
+        if (different) els.transferToChapter.value = different.value;
+      }
+      clearTransferPreview();
+    });
+    els.transferConfirm.addEventListener("change", renderTransferNotice);
     els.closeReceiptBtn.addEventListener("click", closeReceiptModal);
     els.receiptModal.addEventListener("click", event => {
       if (event.target === els.receiptModal) closeReceiptModal();

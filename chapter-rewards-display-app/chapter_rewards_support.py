@@ -287,6 +287,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'tournament_host' THEN N'tournament_host'
             WHEN tx.[Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN tx.[Source_Type] = N'redemption' THEN N'redemption'
+            WHEN tx.[Source_Type] = N'chapter_transfer' THEN N'transfer'
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
@@ -298,6 +299,7 @@ WITH [chapter_tx] AS
             WHEN tx.[Source_Type] = N'tournament_host' THEN N'Tournament host'
             WHEN tx.[Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN tx.[Source_Type] = N'redemption' THEN N'Redemption'
+            WHEN tx.[Source_Type] = N'chapter_transfer' THEN N'Chapter transfer'
             WHEN tx.[Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN tx.[Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN tx.[Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
@@ -349,6 +351,19 @@ WITH [chapter_tx] AS
                 REPLACE(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.redemption_category'), N''), N'other'), N'_', N' '),
                 N', ',
                 REPLACE(COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.payment_mode'), N''), N'other'), N'_', N' '),
+                CASE
+                    WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.description'), N'') IS NOT NULL
+                        THEN CONCAT(N' - ', JSON_VALUE(tx.[MetadataJson], '$.description'))
+                    ELSE N''
+                END
+            )
+        WHEN tx.[Source_Type] = N'chapter_transfer' THEN
+            CONCAT(
+                CASE tx.[Transaction_Type]
+                    WHEN N'transfer_out' THEN CONCAT(N'Transfer to ', COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.to_chapter_code'), N''), N'another chapter'))
+                    WHEN N'transfer_in' THEN CONCAT(N'Transfer from ', COALESCE(NULLIF(JSON_VALUE(tx.[MetadataJson], '$.from_chapter_code'), N''), N'another chapter'))
+                    ELSE N'Chapter transfer'
+                END,
                 CASE
                     WHEN NULLIF(JSON_VALUE(tx.[MetadataJson], '$.description'), N'') IS NOT NULL
                         THEN CONCAT(N' - ', JSON_VALUE(tx.[MetadataJson], '$.description'))
@@ -483,6 +498,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'tournament_host'
             WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'transfer'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
             ELSE N'other'
         END AS [Source_Category],
@@ -492,6 +508,7 @@ WITH [public_lots] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'Tournament host'
             WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'Chapter transfer'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
             ELSE N'Other'
         END AS [Source_Label]
@@ -537,6 +554,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'tournament_host'
             WHEN [Source_Type] = N'state_championship' THEN N'state_championship'
             WHEN [Source_Type] = N'redemption' THEN N'redemption'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'transfer'
             WHEN [Source_Type] = N'opening_balance' THEN N'opening_balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'adjustment'
@@ -548,6 +566,7 @@ WITH [public_tx] AS
             WHEN [Source_Type] = N'tournament_host' THEN N'Tournament host'
             WHEN [Source_Type] = N'state_championship' THEN N'State Championship'
             WHEN [Source_Type] = N'redemption' THEN N'Redemption'
+            WHEN [Source_Type] = N'chapter_transfer' THEN N'Chapter transfer'
             WHEN [Source_Type] = N'opening_balance' THEN N'Opening balance'
             WHEN [Source_Type] = N'point_expiration' THEN N'Expiration'
             WHEN [Source_Type] = N'legacy_dues_credit_adjustment' THEN N'Dues credit adjustment'
