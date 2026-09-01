@@ -12,6 +12,7 @@ from urllib.parse import quote, urlsplit
 import azure.functions as func
 
 import ratings_explorer_support as explorer
+from bayrate_redirect import standalone_bayrate_url
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -1280,16 +1281,12 @@ def ratings_explorer_mobile_page(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="ratings-explorer/bayrate", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def bayrate_staging_page(req: func.HttpRequest) -> func.HttpResponse:
     """Handle the BayRateStagingPage Azure Function endpoint."""
-    adapter, error = _bayrate_adapter_or_error()
-    if error:
-        return error
-    _, auth_error = _bayrate_authorization_response(req, adapter, html=True)
-    if auth_error:
-        return auth_error
+    headers = explorer.response_headers("text/plain; charset=utf-8")
+    headers["Location"] = standalone_bayrate_url()
     return func.HttpResponse(
-        explorer.load_ratings_explorer_html("", "bayrate_staging.html"),
-        status_code=200,
-        headers=explorer.response_headers("text/html; charset=utf-8"),
+        "BayRate has moved to its standalone application.",
+        status_code=302,
+        headers=headers,
     )
 
 

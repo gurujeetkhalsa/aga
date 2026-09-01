@@ -2014,7 +2014,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
         }
       }
       state.busy = true;
-      els.previewStatus.textContent = "Committing to production...";
+      els.previewStatus.textContent = "Committing to production; Ratings Explorer refresh will be requested next...";
       render();
       try {
         const response = await fetch(`${API_BASE}/api/bayrate/commit`, {
@@ -2034,15 +2034,22 @@ SPDX-License-Identifier: GPL-3.0-or-later
         state.commitState = payload.commit_state || { state: "committed", committed: true };
         renderPreview(state.previewPayload);
         if (payload.snapshot_refresh && payload.snapshot_refresh.queued) {
-          els.previewStatus.textContent = "Production commit complete; Ratings Explorer refresh queued";
+          const requestedAt = payload.snapshot_refresh.requested_at
+            ? ` at ${escapeHtml(payload.snapshot_refresh.requested_at)}`
+            : "";
+          els.previewStatus.textContent = "Production commit complete; Ratings Explorer refresh invoked";
+          els.previewOutput.insertAdjacentHTML(
+            "afterbegin",
+            `<div class="message ready"><span class="warning-title">Ratings Explorer refresh invoked</span>BayRate requested a new snapshot${requestedAt}. The snapshot worker will publish it shortly.</div>`,
+          );
         } else {
           els.previewStatus.textContent = "Production commit complete; Ratings Explorer refresh needs attention";
           const refreshError = payload.snapshot_refresh && payload.snapshot_refresh.error
             ? payload.snapshot_refresh.error
-            : "The Ratings Explorer snapshot refresh was not queued.";
+            : "The Ratings Explorer snapshot refresh was not invoked.";
           els.previewOutput.insertAdjacentHTML(
             "afterbegin",
-            `<div class="message review"><span class="warning-title">Snapshot refresh warning</span> ${escapeHtml(refreshError)}</div>`,
+            `<div class="message review"><span class="warning-title">Snapshot refresh warning</span>${escapeHtml(refreshError)}</div>`,
           );
         }
       } catch (error) {

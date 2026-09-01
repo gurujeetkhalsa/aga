@@ -45,8 +45,9 @@ Deployment notes:
   suppression marker. Played-game, sponsoring-chapter total-games, and State Championship
   differences remain for later adjustment from the report; cascaded ratings-only events are unaffected.
 - Set `RATINGS_EXPLORER_SNAPSHOT_REFRESH_KEY` to the function key for the Ratings Explorer
-  `snapshot-refresh` endpoint. After a successful production commit, BayRate queues a snapshot
-  refresh and reports the queue result without misreporting an already-completed commit as failed.
+  `snapshot-refresh` endpoint. After a successful production commit, BayRate invokes a snapshot
+  refresh and displays whether the request was accepted without misreporting an already-completed
+  commit as failed.
 - `RATINGS_EXPLORER_SNAPSHOT_REFRESH_URL` may override the default standalone Ratings Explorer
   endpoint when needed.
 

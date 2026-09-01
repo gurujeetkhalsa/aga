@@ -11,7 +11,10 @@ This app contains:
 - snapshot refresh and status endpoints
 - snapshot timer jobs
 - SGF bulk upload helper scripts and viewer assets
-- BayRate staging/replay endpoints when the sibling `bayrate/` package is included in the deployment package
+- legacy BayRate APIs when the sibling `bayrate/` package is included in the deployment package
+
+The legacy BayRate page at `/api/ratings-explorer/bayrate` redirects to the standalone
+operator app at `https://aga-bayrate.azurewebsites.net/api/bayrate`.
 
 Current migration source:
 
