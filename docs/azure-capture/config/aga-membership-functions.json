@@ -1,0 +1,372 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "platform": {
+      "enabled": false
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:31:41.563077+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": null,
+    "type": "userassignedidentity",
+    "userAssignedIdentityResourceId": "/subscriptions/4dcce4a0-c902-4012-91fe-6dbbddfd6fb7/resourceGroups/aga-data-platform/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aga-membership-functions-uami"
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "AGALookup",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "AGALookup",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "AGALookup",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "AGALookup"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "GenerateTDListA",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "GenerateTDListA",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "GenerateTDListA",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "GenerateTDListA"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "GenerateTDListB",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "GenerateTDListB",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "GenerateTDListB",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "GenerateTDListB"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "GenerateTDListN",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "GenerateTDListN",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "GenerateTDListN",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "GenerateTDListN"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "FUNCTION",
+            "direction": "IN",
+            "methods": [
+              "POST"
+            ],
+            "name": "req",
+            "route": "import_memchap",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "import_memchap",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "import_memchap",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "import_memchap"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "lookup-members",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "LookupMembers",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "LookupMembers",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "LookupMembers"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "tda",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "TDListShortA",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "TDListShortA",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "TDListShortA"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "tdb",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "TDListShortB",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "TDListShortB",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "TDListShortB"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "tdn",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "TDListShortN",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "TDListShortN",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "TDListShortN"
+    }
+  ],
+  "identity": {
+    "type": "UserAssigned",
+    "userAssignedIdentities": {
+      "/subscriptions/4dcce4a0-c902-4012-91fe-6dbbddfd6fb7/resourcegroups/aga-data-platform/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aga-membership-functions-uami": {
+        "clientId": "2efab501-62a5-46a1-9997-a10b33c484c0",
+        "principalId": "473c9580-3670-48bd-a173-cc088ad1ab19"
+      }
+    }
+  },
+  "settings": {
+    "APPLICATIONINSIGHTS_AUTHENTICATION_STRING": "ClientId=2efab501-62a5-46a1-9997-a10b33c484c0;Authorization=AAD",
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureFunctionsWebHost__hostid": "aga-membership-funcs",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "CLUBEXPRESS_ARCHIVE_CONTAINER": "clubexpress-archive",
+    "CLUBEXPRESS_MAILBOX_BATCH_SIZE": "10",
+    "CLUBEXPRESS_MAILBOX_ENABLED": "false",
+    "CLUBEXPRESS_MAILBOX_FOLDER": "Inbox",
+    "CLUBEXPRESS_PROCESSED_CATEGORY": "ProcessedByFunction",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "GOOGLE_WORKSPACE_CLIENT_ID": "<supplied securely>",
+    "GOOGLE_WORKSPACE_CLIENT_SECRET": "<supplied securely>",
+    "GOOGLE_WORKSPACE_MAILBOX": "<supplied securely>",
+    "GOOGLE_WORKSPACE_QUERY": "in:inbox -label:ProcessedByFunction (subject:\"New Member Signup - Payment\" OR subject:\"American Go Association - Member Renewal\" OR subject:\"American Go E - Journal\" OR subject:\"Weekly American Go E - Journal\" OR has:attachment)",
+    "GOOGLE_WORKSPACE_REFRESH_TOKEN": "<supplied securely>",
+    "SQL_CONNECTION_STRING": "<supplied securely>",
+    "TDLIST_REDIRECT_URL_A": "https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/generatetdlista",
+    "TDLIST_REDIRECT_URL_B": "https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/generatetdlistb",
+    "TDLIST_REDIRECT_URL_N": "https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/generatetdlistn"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": {
+      "allowedOrigins": [
+        "https://portal.azure.com"
+      ],
+      "supportCredentials": false
+    },
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": false,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+# Captured source evidence must retain exact deployment/local snapshot bytes.
+azure-baseline/** -text
+interim-source/** -text
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.woff -text
+*.woff2 -text

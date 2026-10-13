@@ -1,0 +1,8 @@
+azure-functions
+azure-storage-blob
+beautifulsoup4==4.15.0
+trafilatura==2.2.0
+lxml_html_clean==0.4.5
+tzdata
+spacy==3.8.16
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl

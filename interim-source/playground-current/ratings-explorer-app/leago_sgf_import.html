@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SGF Import</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #eef3f1;
+      --ink: #18212f;
+      --muted: #5d6878;
+      --line: #d7dde5;
+      --accent: #1f6f8b;
+      --accent-strong: #174f66;
+      --good: #176c43;
+      --warn: #9a5b00;
+      --bad: #ad2e2e;
+      --shadow: 0 1px 2px rgba(24, 33, 47, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.4;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .identity {
+      margin-top: 2px;
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    main {
+      width: min(1360px, 100%);
+      margin: 0 auto;
+      padding: 18px 24px 32px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: minmax(160px, 220px) minmax(260px, 1fr) minmax(220px, 320px);
+      gap: 14px;
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid rgba(31, 111, 139, 0.22);
+      border-color: var(--accent);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 600;
+      min-height: 40px;
+    }
+
+    .checkbox-row input {
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    button,
+    .link-button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      min-height: 40px;
+      padding: 9px 13px;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.danger {
+      border-color: var(--bad);
+      color: #fff;
+      background: var(--bad);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .status-line {
+      min-height: 28px;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .status-line.error {
+      color: var(--bad);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(112px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 70px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .metric .value {
+      margin-top: 4px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .value.good {
+      color: var(--good);
+    }
+
+    .value.warn {
+      color: var(--warn);
+    }
+
+    .value.bad {
+      color: var(--bad);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      font-size: 0.9rem;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f0f3f6;
+      color: #344052;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.ready,
+    .pill.applied {
+      color: var(--good);
+      border-color: rgba(23, 108, 67, 0.28);
+      background: #edf8f1;
+    }
+
+    .pill.skipped {
+      color: var(--warn);
+      border-color: rgba(154, 91, 0, 0.26);
+      background: #fff7e8;
+    }
+
+    .pill.error {
+      color: var(--bad);
+      border-color: rgba(173, 46, 46, 0.28);
+      background: #fff0f0;
+    }
+
+    .hash {
+      overflow-wrap: anywhere;
+      font-family: Consolas, "Courier New", monospace;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    @media (max-width: 920px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        padding: 14px;
+      }
+
+      .form-grid,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      button,
+      .link-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>SGF Import</h1>
+      <div class="identity" id="identity"></div>
+    </div>
+    <nav class="top-actions" aria-label="Navigation">
+      <a class="link-button" href="/api/ratings-explorer">Ratings Explorer</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel" aria-label="Import inputs">
+      <div class="status-line" id="status-line">Ready</div>
+      <form id="import-form">
+        <div class="form-grid">
+          <label>
+            Source Type
+            <select id="source-type">
+              <option value="event">Event</option>
+              <option value="tournament" selected>Tournament</option>
+              <option value="archive">Archive ZIP</option>
+            </select>
+          </label>
+          <label id="references-field">
+            Leago References
+            <textarea id="references" spellcheck="false" placeholder="event: sqrnsfk&#10;tournament: xartddomnk"></textarea>
+          </label>
+          <label id="bearer-token-field">
+            Bearer Token
+            <input id="bearer-token" type="password" autocomplete="off" />
+          </label>
+          <label id="archive-file-field" hidden>
+            Ratings Explorer Archive ZIP
+            <input id="archive-file" type="file" accept=".zip,application/zip" />
+          </label>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <label id="allow-aga-keys-field">
+            Additional AGA Keys
+            <input id="allow-aga-keys" type="text" autocomplete="off" />
+          </label>
+          <label class="checkbox-row">
+            <input id="replace-existing" type="checkbox" />
+            Replace existing SGF links
+          </label>
+          <label class="checkbox-row">
+            <input id="confirm-apply" type="checkbox" />
+            Confirm apply
+          </label>
+        </div>
+        <div class="actions">
+          <button type="button" id="preview-button" class="primary">Preview</button>
+          <button type="button" id="apply-button" class="danger" disabled>Apply Upload</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" aria-label="Summary">
+      <div class="summary-grid">
+        <div class="metric"><div class="label">Tournaments</div><div class="value" id="metric-tournaments">0</div></div>
+        <div class="metric"><div class="label">SGFs</div><div class="value" id="metric-sgfs">0</div></div>
+        <div class="metric"><div class="label">Ready</div><div class="value good" id="metric-ready">0</div></div>
+        <div class="metric"><div class="label">Applied</div><div class="value good" id="metric-applied">0</div></div>
+        <div class="metric"><div class="label">Skipped</div><div class="value warn" id="metric-skipped">0</div></div>
+        <div class="metric"><div class="label">Errors</div><div class="value bad" id="metric-errors">0</div></div>
+      </div>
+      <div class="hash" id="plan-hash" style="margin-top:12px"></div>
+    </section>
+
+    <section class="panel" aria-label="Results">
+      <div class="table-wrap" id="results-wrap">
+        <div class="empty">No preview yet.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "__RATINGS_EXPLORER_API_BASE__";
+    const state = {
+      preview: null,
+      busy: false,
+    };
+
+    const els = {
+      form: document.getElementById("import-form"),
+      sourceType: document.getElementById("source-type"),
+      references: document.getElementById("references"),
+      referencesField: document.getElementById("references-field"),
+      bearerToken: document.getElementById("bearer-token"),
+      bearerTokenField: document.getElementById("bearer-token-field"),
+      archiveFile: document.getElementById("archive-file"),
+      archiveFileField: document.getElementById("archive-file-field"),
+      allowAgaKeys: document.getElementById("allow-aga-keys"),
+      allowAgaKeysField: document.getElementById("allow-aga-keys-field"),
+      replaceExisting: document.getElementById("replace-existing"),
+      confirmApply: document.getElementById("confirm-apply"),
+      previewButton: document.getElementById("preview-button"),
+      applyButton: document.getElementById("apply-button"),
+      statusLine: document.getElementById("status-line"),
+      identity: document.getElementById("identity"),
+      planHash: document.getElementById("plan-hash"),
+      resultsWrap: document.getElementById("results-wrap"),
+      tournaments: document.getElementById("metric-tournaments"),
+      sgfs: document.getElementById("metric-sgfs"),
+      ready: document.getElementById("metric-ready"),
+      applied: document.getElementById("metric-applied"),
+      skipped: document.getElementById("metric-skipped"),
+      errors: document.getElementById("metric-errors"),
+    };
+
+    function apiUrl(path) {
+      return `${API_BASE}/api/ratings-explorer/sgf-import${path}`;
+    }
+
+    function fileToBase64(file) {
+      return file.arrayBuffer().then((buffer) => {
+        const bytes = new Uint8Array(buffer);
+        const chunkSize = 0x8000;
+        let binary = "";
+        for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+          binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+        }
+        return btoa(binary);
+      });
+    }
+
+    async function readForm() {
+      const body = {
+        source_type: els.sourceType.value,
+        references: els.references.value,
+        bearer_token: els.bearerToken.value,
+        replace_existing: els.replaceExisting.checked,
+        allow_aga_keys: els.allowAgaKeys.value,
+      };
+      if (body.source_type === "archive") {
+        const file = els.archiveFile.files && els.archiveFile.files[0];
+        if (!file) throw new Error("Choose a Ratings Explorer archive ZIP first.");
+        if (!file.name.toLowerCase().endsWith(".zip")) throw new Error("Archive filename must end in .zip.");
+        if (file.size > 25 * 1024 * 1024) throw new Error("Archive ZIP must be 25 MB or smaller.");
+        body.archive_name = file.name;
+        body.archive_base64 = await fileToBase64(file);
+      }
+      return body;
+    }
+
+    function updateSourceFields() {
+      const archiveMode = els.sourceType.value === "archive";
+      els.referencesField.hidden = archiveMode;
+      els.bearerTokenField.hidden = archiveMode;
+      els.allowAgaKeysField.hidden = archiveMode;
+      els.archiveFileField.hidden = !archiveMode;
+    }
+
+    async function postJson(path, body) {
+      const response = await fetch(apiUrl(path), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const text = await response.text();
+      let payload;
+      try {
+        payload = text ? JSON.parse(text) : {};
+      } catch (_error) {
+        payload = { ok: false, error: text || `Request failed with ${response.status}.` };
+      }
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.error || `Request failed with ${response.status}.`);
+      }
+      return payload;
+    }
+
+    function setBusy(busy) {
+      state.busy = busy;
+      els.previewButton.disabled = busy;
+      updateApplyButton();
+    }
+
+    function setStatus(message, isError = false) {
+      els.statusLine.textContent = message;
+      els.statusLine.classList.toggle("error", isError);
+    }
+
+    function updateIdentity(payload) {
+      const principal = payload && payload.authorization && payload.authorization.principal_name;
+      els.identity.textContent = principal ? principal : "";
+    }
+
+    function updateApplyButton() {
+      const summary = (state.preview && state.preview.summary) || {};
+      const hasReady = Number(summary.ready || 0) > 0;
+      const hasErrors = Number(summary.error || 0) > 0;
+      els.applyButton.disabled = state.busy || !state.preview || !hasReady || hasErrors || !els.confirmApply.checked;
+    }
+
+    function updateSummary(payload) {
+      const summary = (payload && payload.summary) || {};
+      const download = (payload && payload.download) || {};
+      els.tournaments.textContent = Number(download.tournaments || 0);
+      els.sgfs.textContent = Number(download.sgfs || 0);
+      els.ready.textContent = Number(summary.ready || 0);
+      els.applied.textContent = Number(summary.applied || 0);
+      els.skipped.textContent = Number(summary.skipped || 0);
+      els.errors.textContent = Number(summary.error || 0) + Number(download.errors || 0);
+      els.planHash.textContent = payload && payload.plan_hash ? `Plan hash ${payload.plan_hash}` : "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderResults(payload) {
+      const rows = (payload && payload.results) || [];
+      if (!rows.length) {
+        els.resultsWrap.innerHTML = `<div class="empty">No rows.</div>`;
+        return;
+      }
+      els.resultsWrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Action</th>
+              <th>Game</th>
+              <th>Tournament</th>
+              <th>Date</th>
+              <th>Round</th>
+              <th>Existing SGF</th>
+              <th>New SGF</th>
+              <th>SGF File</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr>
+                <td><span class="pill ${escapeHtml(row.status)}">${escapeHtml(row.status)}</span></td>
+                <td>${escapeHtml(row.action)}</td>
+                <td>${escapeHtml(row.game_id)}</td>
+                <td>${escapeHtml(row.tournament_code)}</td>
+                <td>${escapeHtml(row.game_date)}</td>
+                <td>${escapeHtml(row.round)}</td>
+                <td>${escapeHtml(row.existing_sgf_code)}</td>
+                <td>${escapeHtml(row.new_sgf_code)}</td>
+                <td>${escapeHtml(row.sgf_file)}</td>
+                <td>${escapeHtml(row.message)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function runPreview() {
+      setBusy(true);
+      setStatus("Preview running");
+      try {
+        const payload = await postJson("/preview", await readForm());
+        state.preview = payload;
+        updateIdentity(payload);
+        updateSummary(payload);
+        renderResults(payload);
+        const ready = Number((payload.summary && payload.summary.ready) || 0);
+        const errors = Number((payload.summary && payload.summary.error) || 0);
+        setStatus(errors ? `Preview found ${errors} error row(s)` : `Preview ready: ${ready} row(s)`);
+      } catch (error) {
+        state.preview = null;
+        updateSummary(null);
+        renderResults(null);
+        setStatus(error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function runApply() {
+      if (!state.preview || !state.preview.plan_hash) return;
+      setBusy(true);
+      setStatus("Apply running");
+      try {
+        const payload = await postJson("/apply", {
+          ...await readForm(),
+          plan_hash: state.preview.plan_hash,
+          confirm_apply: true,
+        });
+        state.preview = payload;
+        updateIdentity(payload);
+        updateSummary(payload);
+        renderResults(payload);
+        const applied = Number((payload.summary && payload.summary.applied) || 0);
+        const refresh = payload.snapshot_refresh;
+        setStatus(refresh && refresh.queued ? `Applied ${applied} row(s); snapshot refresh queued` : `Applied ${applied} row(s)`);
+      } catch (error) {
+        setStatus(error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    els.previewButton.addEventListener("click", runPreview);
+    els.applyButton.addEventListener("click", runApply);
+    els.confirmApply.addEventListener("change", updateApplyButton);
+    els.references.addEventListener("input", () => {
+      state.preview = null;
+      updateApplyButton();
+    });
+    els.sourceType.addEventListener("change", () => {
+      state.preview = null;
+      updateSourceFields();
+      updateApplyButton();
+    });
+    els.replaceExisting.addEventListener("change", () => {
+      state.preview = null;
+      updateApplyButton();
+    });
+    els.archiveFile.addEventListener("change", () => {
+      state.preview = null;
+      updateApplyButton();
+    });
+    updateSourceFields();
+  </script>
+</body>
+</html>

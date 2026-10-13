@@ -1,0 +1,380 @@
+[
+  {
+    "app": "aga-bayrate",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 18,
+    "reachableApplicationModules": [
+      "bayrate/auth.py",
+      "bayrate/commit_staged_run.py",
+      "bayrate/core.py",
+      "bayrate/replay_staged_run.py",
+      "bayrate/report_parser.py",
+      "bayrate/reward_reconciliation.py",
+      "bayrate/snapshot_refresh.py",
+      "bayrate/sql_adapter.py",
+      "bayrate/stage_reports.py",
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 18
+  },
+  {
+    "app": "aga-chapter-finder-update",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 10,
+    "reachableApplicationModules": [
+      "admin_auth.py",
+      "chapter_finder_update_support.py",
+      "function_app.py",
+      "sql_adapter.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 10
+  },
+  {
+    "app": "aga-chapter-rewards-admin",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 10,
+    "reachableApplicationModules": [
+      "admin_auth.py",
+      "chapter_rewards_admin_support.py",
+      "function_app.py",
+      "sql_adapter.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 10
+  },
+  {
+    "app": "aga-chapter-rewards-automation",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "pyodbc"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 6,
+    "reachableApplicationModules": [
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 6
+  },
+  {
+    "app": "aga-chapter-rewards-display",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 7,
+    "reachableApplicationModules": [
+      "chapter_rewards_support.py",
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 7
+  },
+  {
+    "app": "aga-clubexpress-mail",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds",
+      "spacy"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 16,
+    "reachableApplicationModules": [
+      "clubexpress_csv_parsers.py",
+      "clubexpress_parsers.py",
+      "clubexpress_staged_processor.py",
+      "clubexpress_staging.py",
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 16
+  },
+  {
+    "app": "aga-clubexpress-sso-probe",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 5,
+    "reachableApplicationModules": [
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 5
+  },
+  {
+    "app": "aga-events",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "PIL",
+      "azure",
+      "pyodbc",
+      "qrcode"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 43,
+    "reachableApplicationModules": [
+      "event_domain.py",
+      "function_app.py",
+      "sql_repository.py",
+      "workshop_domain.py",
+      "workshop_messages.py",
+      "workshop_providers.py",
+      "workshop_qr.py",
+      "workshop_repository.py",
+      "workshop_worker.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 43
+  },
+  {
+    "app": "aga-membership-functions",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds",
+      "spacy"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 6,
+    "reachableApplicationModules": [
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 6
+  },
+  {
+    "app": "aga-membership-functions3",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 13,
+    "reachableApplicationModules": [
+      "function_app.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 13
+  },
+  {
+    "app": "aga-news-archive-viewer",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 30,
+    "reachableApplicationModules": [
+      "external_go_news_sources.py",
+      "function_app.py",
+      "news_archive_external_sync.py",
+      "news_archive_player_context_sync.py",
+      "news_archive_public_sync.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 30
+  },
+  {
+    "app": "aga-ratings-explorer",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 45,
+    "reachableApplicationModules": [
+      "bayrate/auth.py",
+      "bayrate/commit_staged_run.py",
+      "bayrate/core.py",
+      "bayrate/merge_member_ratings.py",
+      "bayrate/replay_staged_run.py",
+      "bayrate/report_parser.py",
+      "bayrate/sql_adapter.py",
+      "bayrate/stage_reports.py",
+      "bayrate_redirect.py",
+      "bulk_upload_sgf_csv.py",
+      "function_app.py",
+      "leago_sgf_import/archive_workflow.py",
+      "leago_sgf_import/build_leago_sgf_manifest.py",
+      "leago_sgf_import/download_leago_aga_sgfs.py",
+      "leago_sgf_import/workflow.py",
+      "ratings_explorer_support.py",
+      "wgo_embedded_assets.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 45
+  },
+  {
+    "app": "aga-ratings-explorer-display",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 14,
+    "reachableApplicationModules": [
+      "function_app.py",
+      "ratings_explorer_display_support.py",
+      "wgo_embedded_assets.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 14
+  },
+  {
+    "app": "aga-ratings-explorer-sgf-20260407t2105",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 37,
+    "reachableApplicationModules": [
+      "bayrate/auth.py",
+      "bayrate/commit_staged_run.py",
+      "bayrate/core.py",
+      "bayrate/merge_member_ratings.py",
+      "bayrate/replay_staged_run.py",
+      "bayrate/report_parser.py",
+      "bayrate/sql_adapter.py",
+      "bayrate/stage_reports.py",
+      "bulk_upload_sgf_csv.py",
+      "function_app.py",
+      "leago_sgf_import/build_leago_sgf_manifest.py",
+      "leago_sgf_import/download_leago_aga_sgfs.py",
+      "leago_sgf_import/workflow.py",
+      "ratings_explorer_support.py",
+      "wgo_embedded_assets.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 37
+  },
+  {
+    "app": "aga-ratings-sgf-upload",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "certifi",
+      "pyodbc",
+      "pytds"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 9,
+    "reachableApplicationModules": [
+      "auth.py",
+      "function_app.py",
+      "importer.py",
+      "storage.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 9
+  },
+  {
+    "app": "go-weiqi-baduk-news-index",
+    "hashMismatches": [],
+    "missingRequiredFiles": [],
+    "syntaxErrors": [],
+    "externalImports": [
+      "azure",
+      "bs4",
+      "spacy",
+      "trafilatura"
+    ],
+    "importsNeedingReview": [],
+    "sourceFiles": 16,
+    "reachableApplicationModules": [
+      "additional_sources.py",
+      "archive_discovery.py",
+      "function_app.py",
+      "history_backfill.py",
+      "index_core.py",
+      "legacy_sources.py",
+      "name_index.py",
+      "national_sources.py",
+      "source_discovery.py",
+      "tournament_index.py",
+      "translation_budget.py",
+      "translation_pacing.py"
+    ],
+    "packageCrcCheck": null,
+    "packagedFiles": 16
+  }
+]

@@ -1,0 +1,1487 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "globalValidation": {
+      "unauthenticatedClientAction": "AllowAnonymous"
+    },
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "clientId": "319512c6-9f28-46e1-be91-f22d7189f928",
+          "clientSecretSettingName": "WEBSITE_AUTH_CLIENT_SECRET",
+          "openIdIssuer": "https://sts.windows.net/5f1a8692-caac-4040-9a1b-858e98f03e4b/"
+        },
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-ratings-explorer.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "google": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-ratings-explorer.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "legacyMicrosoftAccount": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-ratings-explorer.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      }
+    },
+    "login": {
+      "preserveUrlFragmentsForLogins": false,
+      "routes": {
+        "logoutEndpoint": "/.auth/logout"
+      },
+      "tokenStore": {
+        "enabled": true
+      }
+    },
+    "platform": {
+      "enabled": true,
+      "runtimeVersion": "~1"
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:31:44.037380+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "storageaccountconnectionstring",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/member-merge",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateMemberMerge",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateMemberMerge",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateMemberMerge"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/member-merge-preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateMemberMergePreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateMemberMergePreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateMemberMergePreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/metadata-options",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateMetadataOptions",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateMetadataOptions",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateMetadataOptions"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/commit",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingCommit",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingCommit",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingCommit"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/commit-preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingCommitPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingCommitPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingCommitPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/replay",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingReplay",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingReplay",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingReplay"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/review",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingReview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingReview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingReview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/run",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingRun",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingRun",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingRun"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/bayrate/stage",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingWrite",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingWrite",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingWrite"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/reports/chapters/data",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterDirectoryReportData",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterDirectoryReportData",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterDirectoryReportData"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/reports/chapters",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterDirectoryReportPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterDirectoryReportPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterDirectoryReportPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/go-services",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "GoServicesDirectoryPrototypePage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "GoServicesDirectoryPrototypePage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "GoServicesDirectoryPrototypePage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/assets/{*asset_path}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerAsset",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerAsset",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerAsset"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/filter-options",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerFilterOptions",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerFilterOptions",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerFilterOptions"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/game-sgf",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerGameSgf",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerGameSgf",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerGameSgf"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/game-sgf-viewer",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerGameSgfViewer",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerGameSgfViewer",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerGameSgfViewer"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/mobile",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerMobilePage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerMobilePage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerMobilePage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 15 6 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "RatingsExplorerNightlySnapshot",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerNightlySnapshot",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerNightlySnapshot"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "RatingsExplorerPendingSnapshotRefresh",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPendingSnapshotRefresh",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPendingSnapshotRefresh"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/player",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerPlayer",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPlayer",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPlayer"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/player-context",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerPlayerContext",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPlayerContext",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPlayerContext"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/player-history.svg",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerPlayerHistorySvg",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPlayerHistorySvg",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPlayerHistorySvg"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/players",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerPlayers",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPlayers",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPlayers"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/players-startup",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerPlayersStartup",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerPlayersStartup",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerPlayersStartup"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/sgf-import/apply",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerSgfImportApply",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerSgfImportApply",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerSgfImportApply"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/sgf-import",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerSgfImportPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerSgfImportPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerSgfImportPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/sgf-import/preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerSgfImportPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerSgfImportPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerSgfImportPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "FUNCTION",
+            "direction": "IN",
+            "methods": [
+              "POST"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/snapshot-refresh",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerSnapshotRefresh",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerSnapshotRefresh",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerSnapshotRefresh"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/snapshot-status",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerSnapshotStatus",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerSnapshotStatus",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerSnapshotStatus"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/snapshot-warm",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerSnapshotWarm",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerSnapshotWarm",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerSnapshotWarm"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/tournament",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerTournament",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerTournament",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerTournament"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/tournaments",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RatingsExplorerTournaments",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RatingsExplorerTournaments",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RatingsExplorerTournaments"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/debit",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminDebitPost",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminDebitPost",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminDebitPost"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/debit-preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminDebitPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminDebitPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminDebitPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/me",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminMe",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminMe",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminMe"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/options",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminOptions",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminOptions",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminOptions"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/receipt-delete",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminReceiptDelete",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminReceiptDelete",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminReceiptDelete"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/receipts/{receipt_id}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminReceiptFile",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminReceiptFile",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminReceiptFile"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/receipt-upload",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminReceiptUpload",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminReceiptUpload",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminReceiptUpload"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/redemption",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminRedemption",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminRedemption",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminRedemption"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin/redemption-notes",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminRedemptionNotes",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminRedemptionNotes",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminRedemptionNotes"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/admin",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsAdminReportPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsAdminReportPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsAdminReportPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/balances",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsPublicBalances",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsPublicBalances",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsPublicBalances"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards/chapter",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsPublicChapter",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsPublicChapter",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsPublicChapter"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "ratings-explorer/rewards",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "RewardsPublicReportPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "RewardsPublicReportPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "RewardsPublicReportPage"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "BAYRATE_TRUST_EASY_AUTH": "true",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

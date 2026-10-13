@@ -1,0 +1,52 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-08-10T22:10:27.4031958Z",
+    "Id": "21dce26a-bdab-4027-af48-154f741cfe79",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:16:37.067894+00:00",
+  "etag": "\"0x8DEF72C0B2496EB\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "DEPLOYED_BASELINE.md": "c6ec2aca032f3bd95dcddca5d21b8e787f810f59d4690f0c6a45eab42bef86ef",
+    "README.md": "189a2eeb0516ec98cc22251a8c5b8e7fc11db9cc43dc5258a12180918ac54dd8",
+    "assets/wgo/wgo.min.js": "9fd8702c2150a83d740ceee80b22bf5fe1ac6733ce3e5e45cdb5dd577a146f3f",
+    "assets/wgo/wgo.player.css": "0d5892721a9066114d731fb9104e76a23f6296872e3a73ac8bc2232f13e00ef0",
+    "assets/wgo/wgo.player.min.js": "9f9da53809843970d042b7bd84e960bd012406c338f2166eaa505c695df3b114",
+    "assets/wgo/wood1.jpg": "56f0e5d38fa42716a5fee54c4e410aa21ff677fe2adf19cf6de088ee72844301",
+    "function_app.py": "8edde9dff356415c6cb4c1839a2102be29da9258b423775da050daa14be19e03",
+    "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+    "oryx-manifest.toml": "7b6346eb8bdc5cb7af5da2ec0be706c61e41fdc637e9ebd96ce8c3eeeb80229c",
+    "ratings_explorer.html": "356ad6b63dde772fbe5ab73b85834ca9c0d2cb53e29b67d72a79fb9f4819b8d9",
+    "ratings_explorer_display_support.py": "500eb72701a7dd810f8337d5b1d3938f4f1a2b0605729f259a41a5c08004c030",
+    "ratings_explorer_mobile.html": "f68ea997897afe5c41d6981fe859e3b3ae29f13fb2c5f03a094aa54d945f57b2",
+    "requirements.txt": "ef608e44a66936e7392b55d6551aa682cd5219d51e67c873fb778e4536c5fa74",
+    "wgo_embedded_assets.py": "4eb7beed89eec84283bfd8aca51c9e6f2879465b9e115916fd0882973eaaa36b"
+  },
+  "hostname": "aga-ratings-explorer-display.azurewebsites.net",
+  "lastModified": "2026-08-10 22:09:27+00:00",
+  "name": "aga-ratings-explorer-display",
+  "packageBytes": 10741920,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaratingsexplorerdisplay-8238950/released-package.zip",
+  "packageSha256": "16abc67950b046138b650a68ea04b8e52830e0beebbee85aa9649017cadd635c",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "8edde9dff356415c6cb4c1839a2102be29da9258b423775da050daa14be19e03",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

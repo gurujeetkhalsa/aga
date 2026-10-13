@@ -1,0 +1,9 @@
+[
+  {
+    "fulltext_catalog_id": 5,
+    "is_accent_sensitivity_on": true,
+    "is_default": true,
+    "name": "clubexpress_news_archive_search",
+    "owner_name": "dbo"
+  }
+]

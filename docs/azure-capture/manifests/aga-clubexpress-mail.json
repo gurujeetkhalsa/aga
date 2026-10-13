@@ -1,0 +1,54 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-06-29T21:18:48.1040786Z",
+    "Id": "3f671e98-3732-4098-969e-02b2acff93fb",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:11:00.753667+00:00",
+  "etag": "\"0x8DED623DE053D30\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "f25d86a483c9e7e03eedaf481445a005a22457ff748f26f503a01f3b72273014",
+    "clubexpress_csv_parsers.py": "812308f63f889c4b2bbfd2f9ee9eab853a0941d4401c10b59664291963fdedc0",
+    "clubexpress_parsers.py": "ff52e6aa986cc53149dbca9448749003a7d99dd329b606f7045766307a394dce",
+    "clubexpress_replay.py": "b866983b8ce5886bf8a742ff6ee722dc0719cc8ad40b8336700935c2623db0aa",
+    "clubexpress_staged_processor.py": "471bbf77f34614b3a8933df8b487289796ca7b47f4a64411d9e4f2835c588432",
+    "clubexpress_staging.py": "edd5f608f160e9619bd18416459d64a70a5777a03b4191aff5678f4dbdf39060",
+    "function_app.py": "aaefd490bb805e94301cc38ad462969ba37b9b06af14c37fd14c3eccf76621a0",
+    "host.json": "fac28cd35d536a67ff49d191a09e12f7103e832bc8243f2b74efaeb63b806aa5",
+    "oryx-manifest.toml": "12683b86373d0314831d714f75a34e40e9c6767beace61f84a1fe7529fedbf9d",
+    "requirements.txt": "e03161c7e466de4cac01a25f1f8addac68d5290794b8ba35dcf6ecaa27642ae8",
+    "sql/clubexpress_parsed_event_staging.sql": "7dc95b796f193e0805e09ace188457e4c2fb764935b857205190dc99913c8053",
+    "tests/test_clubexpress_csv_parsers.py": "2a7ac94711674874c415ce9299c7129b8e3353f914504e88c98040d9886d8bee",
+    "tests/test_clubexpress_parsers.py": "9adeff67f67fddfa8fe6a29f3777ee6c41a665143ed8395bcff5efd464687230",
+    "tests/test_clubexpress_replay.py": "80406b14305908ff2e4998be8c34635ff4f141d34de9731371929846dd2faabb",
+    "tests/test_clubexpress_staging.py": "02198558c25f0656b76dc658793eb8640399b4f4ee55de920b742c89afd34fad",
+    "tests/test_journal_parser.py": "705720a9a6ab860570456cdd317cfd4409248c209d5e161fbe17cfa536a584ef"
+  },
+  "hostname": "aga-clubexpress-mail.azurewebsites.net",
+  "lastModified": "2026-06-29 21:17:47+00:00",
+  "name": "aga-clubexpress-mail",
+  "packageBytes": 114292161,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaclubexpressmail-8387802/released-package.zip",
+  "packageSha256": "ee22678a3bdababf45b81fbd71dc9f450ba98f891aa3b4387ca3449340bf881c",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "aaefd490bb805e94301cc38ad462969ba37b9b06af14c37fd14c3eccf76621a0",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

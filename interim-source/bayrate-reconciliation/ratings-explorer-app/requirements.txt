@@ -1,0 +1,8 @@
+# Copyright 2026, American Go Association, All rights reserved
+
+azure-functions
+azure-storage-blob
+certifi
+python-tds
+pyodbc
+pyOpenSSL

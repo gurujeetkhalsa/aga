@@ -1,0 +1,5 @@
+azure-functions
+certifi
+python-tds
+pyodbc
+pyOpenSSL

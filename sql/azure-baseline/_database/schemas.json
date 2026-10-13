@@ -1,0 +1,127 @@
+[
+  {
+    "name": "INFORMATION_SCHEMA",
+    "owner_name": "INFORMATION_SCHEMA",
+    "schema_id": 3
+  },
+  {
+    "name": "analytics",
+    "owner_name": "dbo",
+    "schema_id": 7
+  },
+  {
+    "name": "api",
+    "owner_name": "dbo",
+    "schema_id": 10
+  },
+  {
+    "name": "clubexpress",
+    "owner_name": "dbo",
+    "schema_id": 14
+  },
+  {
+    "name": "competition",
+    "owner_name": "dbo",
+    "schema_id": 11
+  },
+  {
+    "name": "db_accessadmin",
+    "owner_name": "db_accessadmin",
+    "schema_id": 16385
+  },
+  {
+    "name": "db_backupoperator",
+    "owner_name": "db_backupoperator",
+    "schema_id": 16389
+  },
+  {
+    "name": "db_datareader",
+    "owner_name": "db_datareader",
+    "schema_id": 16390
+  },
+  {
+    "name": "db_datawriter",
+    "owner_name": "db_datawriter",
+    "schema_id": 16391
+  },
+  {
+    "name": "db_ddladmin",
+    "owner_name": "db_ddladmin",
+    "schema_id": 16387
+  },
+  {
+    "name": "db_denydatareader",
+    "owner_name": "db_denydatareader",
+    "schema_id": 16392
+  },
+  {
+    "name": "db_denydatawriter",
+    "owner_name": "db_denydatawriter",
+    "schema_id": 16393
+  },
+  {
+    "name": "db_owner",
+    "owner_name": "db_owner",
+    "schema_id": 16384
+  },
+  {
+    "name": "db_securityadmin",
+    "owner_name": "db_securityadmin",
+    "schema_id": 16386
+  },
+  {
+    "name": "dbo",
+    "owner_name": "dbo",
+    "schema_id": 1
+  },
+  {
+    "name": "dbrepl_meta",
+    "owner_name": "dbo",
+    "schema_id": 16
+  },
+  {
+    "name": "events",
+    "owner_name": "dbo",
+    "schema_id": 15
+  },
+  {
+    "name": "guest",
+    "owner_name": "guest",
+    "schema_id": 2
+  },
+  {
+    "name": "integration",
+    "owner_name": "dbo",
+    "schema_id": 8
+  },
+  {
+    "name": "membership",
+    "owner_name": "dbo",
+    "schema_id": 5
+  },
+  {
+    "name": "ratings",
+    "owner_name": "dbo",
+    "schema_id": 12
+  },
+  {
+    "name": "ratingsync",
+    "owner_name": "dbo",
+    "schema_id": 9
+  },
+  {
+    "name": "rewards",
+    "owner_name": "dbo",
+    "schema_id": 13
+  },
+  {
+    "name": "staging",
+    "owner_name": "dbo",
+    "schema_id": 6
+  },
+  {
+    "name": "sys",
+    "owner_name": "sys",
+    "schema_id": 4
+  }
+]

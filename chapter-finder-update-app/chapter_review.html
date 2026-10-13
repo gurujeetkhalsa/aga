@@ -1,0 +1,416 @@
+<!doctype html>
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter Update Review</title>
+  <style>
+    :root {
+      --page: #f2f4f7;
+      --surface: #fff;
+      --surface-soft: #f8fafb;
+      --border: #d5dce5;
+      --border-strong: #aeb8c5;
+      --text: #18212c;
+      --muted: #5f6c7b;
+      --blue: #1f5b99;
+      --blue-soft: #eaf2fb;
+      --green: #1f7448;
+      --green-soft: #eaf6ef;
+      --amber: #926000;
+      --amber-soft: #fff4d8;
+      --red: #b42318;
+      --red-soft: #fff0ee;
+      --focus: #1769c2;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--page);
+      color-scheme: light;
+      line-height: 1.4;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body { background: var(--page); }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    button:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .topbar-inner {
+      max-width: 1480px;
+      margin: 0 auto;
+      min-height: 66px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    h1 { margin: 0; font-size: 21px; letter-spacing: 0; }
+    .identity { color: var(--muted); font-size: 13px; text-align: right; }
+    .toolbar {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .segments { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 5px; overflow: hidden; background: var(--surface); }
+    .segments button {
+      min-height: 34px;
+      border: 0;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 6px 12px;
+    }
+    .segments button:first-child { border-left: 0; }
+    .segments button[aria-pressed="true"] { background: var(--blue); color: #fff; }
+    .button {
+      min-height: 36px;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 7px 12px;
+      font-weight: 700;
+    }
+    .button:hover { color: var(--blue); border-color: var(--blue); }
+    .button.primary { color: #fff; background: var(--blue); border-color: var(--blue); }
+    .button.approve { color: #fff; background: var(--green); border-color: var(--green); }
+    .button.reject { color: var(--red); border-color: #d08d86; }
+    .status { color: var(--muted); font-size: 13px; min-height: 20px; }
+    .status.error { color: var(--red); font-weight: 650; }
+    .workspace {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 0 18px 22px;
+      display: grid;
+      grid-template-columns: minmax(290px, 380px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .pane { border: 1px solid var(--border); border-radius: 6px; background: var(--surface); overflow: hidden; min-width: 0; }
+    .pane-header { min-height: 46px; padding: 11px 14px; border-bottom: 1px solid var(--border); background: var(--surface-soft); display: flex; justify-content: space-between; align-items: center; }
+    .pane-header h2 { margin: 0; font-size: 15px; letter-spacing: 0; }
+    .count { color: var(--muted); font-size: 12px; }
+    .request-list { max-height: calc(100vh - 158px); overflow-y: auto; }
+    .request-item {
+      width: 100%;
+      display: block;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      padding: 12px 14px;
+    }
+    .request-item:hover { background: var(--surface-soft); }
+    .request-item.selected { background: var(--blue-soft); box-shadow: inset 4px 0 0 var(--blue); }
+    .request-title { font-weight: 730; overflow-wrap: anywhere; }
+    .request-meta { margin-top: 4px; color: var(--muted); font-size: 12px; display: flex; gap: 8px; justify-content: space-between; }
+    .state { display: inline-flex; align-items: center; min-height: 23px; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 750; white-space: nowrap; }
+    .state.submitted, .state.needs_review { color: var(--amber); background: var(--amber-soft); }
+    .state.pending_push, .state.pushing { color: var(--blue); background: var(--blue-soft); }
+    .state.pushed, .state.verified { color: var(--green); background: var(--green-soft); }
+    .state.rejected, .state.failed { color: var(--red); background: var(--red-soft); }
+    .detail-empty { padding: 54px 20px; text-align: center; color: var(--muted); }
+    .detail { display: none; }
+    .detail-top { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+    .detail-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .detail h2 { margin: 0; font-size: 19px; letter-spacing: 0; }
+    .detail-sub { margin-top: 5px; color: var(--muted); font-size: 13px; }
+    .detail-section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+    .detail-section h3 { margin: 0 0 10px; font-size: 14px; }
+    .metadata { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 16px; }
+    .meta-label { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 750; letter-spacing: .04em; }
+    .meta-value { margin-top: 2px; font-size: 13px; overflow-wrap: anywhere; }
+    .diff-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .diff-table th, .diff-table td { border-bottom: 1px solid var(--border); padding: 9px 10px; text-align: left; vertical-align: top; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .diff-table th { background: var(--surface-soft); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .diff-table th:first-child { width: 20%; }
+    .diff-table tr:last-child td { border-bottom: 0; }
+    textarea { width: 100%; min-height: 82px; border: 1px solid var(--border-strong); border-radius: 5px; padding: 8px 10px; resize: vertical; }
+    .review-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 10px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 860px) {
+      .workspace { grid-template-columns: minmax(0, 1fr); }
+      .request-list { max-height: 360px; }
+      .metadata { grid-template-columns: minmax(0, 1fr); }
+      .topbar-inner { align-items: flex-start; }
+      .identity { text-align: left; }
+    }
+    @media (max-width: 560px) {
+      .topbar-inner, .toolbar, .workspace { padding-left: 12px; padding-right: 12px; }
+      .topbar-inner { flex-direction: column; }
+      .segments { width: 100%; }
+      .segments button { flex: 1; padding-left: 7px; padding-right: 7px; }
+      .diff-table, .diff-table tbody, .diff-table tr, .diff-table td { display: block; width: 100%; }
+      .diff-table thead { display: none; }
+      .diff-table td { border-bottom: 0; }
+      .diff-table td::before { content: attr(data-label); display: block; color: var(--muted); font-size: 10px; font-weight: 750; text-transform: uppercase; margin-bottom: 2px; }
+      .diff-table tr { border-bottom: 1px solid var(--border); padding: 6px 0; }
+      .review-actions { flex-direction: column-reverse; }
+      .review-actions .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>Chapter Update Review</h1>
+      <div class="identity" id="identity">Checking access...</div>
+    </div>
+  </header>
+  <div class="toolbar">
+    <div class="segments" aria-label="Request status filter">
+      <button type="button" data-filter="review" aria-pressed="true">Review</button>
+      <button type="button" data-filter="push" aria-pressed="false">Push</button>
+      <button type="button" data-filter="complete" aria-pressed="false">Complete</button>
+      <button type="button" data-filter="all" aria-pressed="false">All</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span class="status" id="status" role="status" aria-live="polite"></span>
+      <button class="button" type="button" id="refresh">Refresh</button>
+    </div>
+  </div>
+
+  <main class="workspace">
+    <section class="pane">
+      <div class="pane-header"><h2>Requests</h2><span class="count" id="request-count">0</span></div>
+      <div class="request-list" id="request-list"></div>
+    </section>
+
+    <section class="pane">
+      <div class="detail-empty" id="detail-empty">Select a chapter update request.</div>
+      <article class="detail" id="detail">
+        <div class="detail-top">
+          <div class="detail-title-row">
+            <div><h2 id="detail-title"></h2><div class="detail-sub" id="detail-sub"></div></div>
+            <span class="state" id="detail-state"></span>
+          </div>
+        </div>
+        <section class="detail-section">
+          <div class="metadata" id="metadata"></div>
+        </section>
+        <section class="detail-section" style="padding:0">
+          <table class="diff-table">
+            <thead><tr><th>Field</th><th>Current</th><th>Proposed</th></tr></thead>
+            <tbody id="diff-body"></tbody>
+          </table>
+        </section>
+        <section class="detail-section" id="review-section">
+          <h3>Review</h3>
+          <textarea id="review-notes" maxlength="4000" placeholder="Review notes"></textarea>
+          <div class="review-actions">
+            <button class="button reject" type="button" id="reject">Reject</button>
+            <button class="button approve" type="button" id="approve">Approve for ClubExpress</button>
+          </div>
+        </section>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const state = { requests: [], filter: "review", selectedId: null, reviewer: null };
+      const basePath = window.location.pathname.replace(/\/$/, "");
+      const status = document.getElementById("status");
+
+      function setStatus(message, error = false) {
+        status.textContent = message || "";
+        status.className = `status${error ? " error" : ""}`;
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(`${basePath}${path}`, {
+          ...options,
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          cache: "no-store"
+        });
+        const body = await response.json().catch(() => ({ error: "The server returned an invalid response." }));
+        if (!response.ok) throw new Error(body.error || "The request failed.");
+        return body;
+      }
+
+      function stateLabel(value) {
+        return String(value || "unknown").replaceAll("_", " ");
+      }
+
+      function formatDate(value) {
+        if (!value) return "";
+        const date = new Date(value.endsWith?.("Z") ? value : `${value}Z`);
+        return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+      }
+
+      function visibleRequests() {
+        const groups = {
+          review: ["submitted", "needs_review"],
+          push: ["approved", "pending_push", "pushing", "failed"],
+          complete: ["pushed", "verified", "rejected", "cancelled"]
+        };
+        return state.filter === "all" ? state.requests : state.requests.filter(item => groups[state.filter].includes(item.Status));
+      }
+
+      function renderList() {
+        const host = document.getElementById("request-list");
+        host.replaceChildren();
+        const requests = visibleRequests();
+        document.getElementById("request-count").textContent = String(requests.length);
+        for (const item of requests) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `request-item${state.selectedId === item.Chapter_Finder_Update_Request_ID ? " selected" : ""}`;
+          const title = document.createElement("div");
+          title.className = "request-title";
+          title.textContent = item.Chapter_Name_At_Submission;
+          const meta = document.createElement("div");
+          meta.className = "request-meta";
+          const who = document.createElement("span");
+          who.textContent = item.Submitted_By_Name || "Unknown submitter";
+          const badge = document.createElement("span");
+          badge.className = `state ${item.Status}`;
+          badge.textContent = stateLabel(item.Status);
+          meta.append(who, badge);
+          const date = document.createElement("div");
+          date.className = "request-meta";
+          date.textContent = formatDate(item.Created_At);
+          button.append(title, meta, date);
+          button.addEventListener("click", () => selectRequest(item.Chapter_Finder_Update_Request_ID));
+          host.append(button);
+        }
+        if (!requests.length) {
+          const empty = document.createElement("div");
+          empty.className = "detail-empty";
+          empty.textContent = "No requests in this view.";
+          host.append(empty);
+        }
+      }
+
+      function addMeta(host, label, value) {
+        const cell = document.createElement("div");
+        const heading = document.createElement("div");
+        heading.className = "meta-label";
+        heading.textContent = label;
+        const body = document.createElement("div");
+        body.className = "meta-value";
+        body.textContent = value || "Not provided";
+        cell.append(heading, body);
+        host.append(cell);
+      }
+
+      async function selectRequest(requestId) {
+        state.selectedId = requestId;
+        renderList();
+        setStatus("Loading request...");
+        try {
+          const body = await api(`/request?request_id=${encodeURIComponent(requestId)}`);
+          const item = body.request;
+          document.getElementById("detail-empty").hidden = true;
+          document.getElementById("detail").style.display = "block";
+          document.getElementById("detail-title").textContent = item.Chapter_Name_At_Submission;
+          document.getElementById("detail-sub").textContent = `Request ${item.Chapter_Finder_Update_Request_ID} · ${formatDate(item.Created_At)}`;
+          const badge = document.getElementById("detail-state");
+          badge.className = `state ${item.Status}`;
+          badge.textContent = stateLabel(item.Status);
+          const metadata = document.getElementById("metadata");
+          metadata.replaceChildren();
+          addMeta(metadata, "Submitted by", item.Submitted_By_Name);
+          addMeta(metadata, "Email", item.Submitted_By_Email);
+          addMeta(metadata, "Chapter role", item.Submitted_By_Role);
+          addMeta(metadata, "Changes", String(item.Changed_Field_Count));
+          addMeta(metadata, "Push status", stateLabel(item.Push_Status));
+          addMeta(metadata, "Notes", item.Submitter_Notes);
+          const diffBody = document.getElementById("diff-body");
+          diffBody.replaceChildren();
+          for (const field of body.fields) {
+            const row = document.createElement("tr");
+            for (const [label, value] of [
+              ["Field", field.Field_Name.replaceAll("_", " ")],
+              ["Current", field.Current_Value || ""],
+              ["Proposed", field.Proposed_Value || ""]
+            ]) {
+              const cell = document.createElement("td");
+              cell.dataset.label = label;
+              cell.textContent = value;
+              row.append(cell);
+            }
+            diffBody.append(row);
+          }
+          document.getElementById("review-notes").value = item.Review_Notes || "";
+          document.getElementById("review-section").hidden = !["submitted", "needs_review", "approved"].includes(item.Status);
+          setStatus("");
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function loadRequests(preserveSelection = true) {
+        setStatus("Loading requests...");
+        try {
+          const body = await api("/requests?limit=200");
+          state.requests = body.requests || [];
+          state.reviewer = body.reviewer;
+          document.getElementById("identity").textContent = body.reviewer.display_name || body.reviewer.principal_name;
+          renderList();
+          const visible = visibleRequests();
+          const stillVisible = preserveSelection && visible.some(item => item.Chapter_Finder_Update_Request_ID === state.selectedId);
+          if (!stillVisible) state.selectedId = visible[0]?.Chapter_Finder_Update_Request_ID || null;
+          if (state.selectedId) await selectRequest(state.selectedId);
+          else {
+            document.getElementById("detail").style.display = "none";
+            document.getElementById("detail-empty").hidden = false;
+            setStatus("");
+          }
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      }
+
+      async function review(action) {
+        if (!state.selectedId) return;
+        const button = document.getElementById(action);
+        button.disabled = true;
+        setStatus(action === "approve" ? "Approving request..." : "Rejecting request...");
+        try {
+          await api(`/${action}`, {
+            method: "POST",
+            body: JSON.stringify({
+              request_id: state.selectedId,
+              review_notes: document.getElementById("review-notes").value
+            })
+          });
+          await loadRequests(false);
+        } catch (error) {
+          setStatus(error.message, true);
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      document.querySelectorAll(".segments button").forEach(button => {
+        button.addEventListener("click", () => {
+          state.filter = button.dataset.filter;
+          document.querySelectorAll(".segments button").forEach(candidate => candidate.setAttribute("aria-pressed", String(candidate === button)));
+          state.selectedId = null;
+          renderList();
+          const first = visibleRequests()[0];
+          if (first) selectRequest(first.Chapter_Finder_Update_Request_ID);
+          else {
+            document.getElementById("detail").style.display = "none";
+            document.getElementById("detail-empty").hidden = false;
+          }
+        });
+      });
+      document.getElementById("refresh").addEventListener("click", () => loadRequests());
+      document.getElementById("approve").addEventListener("click", () => review("approve"));
+      document.getElementById("reject").addEventListener("click", () => review("reject"));
+      loadRequests(false);
+    })();
+  </script>
+</body>
+</html>

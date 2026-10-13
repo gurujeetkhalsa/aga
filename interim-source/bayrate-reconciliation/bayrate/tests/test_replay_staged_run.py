@@ -1,0 +1,370 @@
+# SPDX-FileCopyrightText: 2010 Philip Waldron
+# SPDX-FileCopyrightText: 2026 American Go Association
+# SPDX-License-Identifier: GPL-3.0-or-later
+import unittest
+from datetime import date
+from pathlib import Path
+
+from bayrate.replay_staged_run import build_staged_replay_input, run_staged_replay
+from bayrate.stage_reports import apply_tournament_review_decision, build_staging_payload
+
+
+FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_PROCESSING_DATE = date(2026, 1, 15)
+HOST_METADATA = {
+    "host_chapter_id": 10,
+    "host_chapter_code": "SEAG",
+    "host_chapter_name": "Seattle Go Center",
+    "reward_event_key": "sample-event",
+    "reward_event_name": "Sample Event",
+}
+
+
+class DuplicateCandidateAdapter:
+    """Represent duplicate candidate adapter."""
+    def query_rows(self, query, params=()):
+        """Query rows."""
+        if "FROM [membership].[members]" in query:
+            return [{"AGAID": player_id, "ExpirationDate": date(2099, 1, 1)} for player_id in params]
+        if "FROM [ratings].[ratings] AS r" in query and "ROW_NUMBER() OVER" in query:
+            return []
+        return [
+            {
+                "Tournament_Code": "OLD-SAMPLE-1",
+                "Tournament_Descr": "Migration Sample One Open",
+                "Tournament_Date": date(2026, 1, 1),
+                "City": "New York",
+                "State_Code": "NY",
+                "Country_Code": "US",
+                "Game_ID": 501,
+                "Game_Date": date(2026, 1, 1),
+                "Round": 1,
+                "Pin_Player_1": 1001,
+                "Pin_Player_2": 1002,
+                "Handicap": 0,
+                "Komi": 7,
+                "Result": "W",
+            },
+            {
+                "Tournament_Code": "OLD-SAMPLE-1",
+                "Tournament_Descr": "Migration Sample One Open",
+                "Tournament_Date": date(2026, 1, 1),
+                "City": "New York",
+                "State_Code": "NY",
+                "Country_Code": "US",
+                "Game_ID": 502,
+                "Game_Date": date(2026, 1, 1),
+                "Round": 2,
+                "Pin_Player_1": 1002,
+                "Pin_Player_2": 1003,
+                "Handicap": 0,
+                "Komi": 7,
+                "Result": "B",
+            },
+        ]
+
+    def execute_statements(self, statements):
+        """Execute statements."""
+        raise AssertionError("Duplicate candidate test adapter should not write SQL.")
+
+
+class NoDuplicateCandidateAdapter:
+    """Represent no duplicate candidate adapter."""
+    def query_rows(self, query, params=()):
+        """Query rows."""
+        if "FROM [membership].[members]" in query:
+            return [{"AGAID": player_id, "ExpirationDate": date(2099, 1, 1)} for player_id in params]
+        return []
+
+    def execute_statements(self, statements):
+        """Execute statements."""
+        raise AssertionError("No-duplicate candidate test adapter should not write SQL.")
+
+
+class ReplayAdapter:
+    """Represent replay adapter."""
+    def __init__(self) -> None:
+        """Initialize the replay adapter instance."""
+        self.queries = []
+        self.statements = []
+
+    def query_rows(self, query, params=()):
+        """Query rows."""
+        self.queries.append((query, tuple(params)))
+        if "WHERE t.[Tournament_Code] = ?" in query:
+            return self._event_summary(params[0])
+        if "WHERE t.[Tournament_Date] >= ?" in query:
+            return [
+                *self._event_summary("PREV-SAME-DAY"),
+                *self._event_summary("OLD-SAMPLE-1"),
+                *self._event_summary("LATER-SAME-DAY"),
+            ]
+        if "ROW_NUMBER() OVER" in query and "r.[Elab_Date] < ?" in query:
+            return [
+                {
+                    "Pin_Player": 1001,
+                    "Rating": 1.2,
+                    "Sigma": 0.4,
+                    "Elab_Date": date(2025, 12, 15),
+                    "id": 8900,
+                },
+                {
+                    "Pin_Player": 1002,
+                    "Rating": 1.1,
+                    "Sigma": 0.5,
+                    "Elab_Date": date(2025, 12, 15),
+                    "id": 8901,
+                },
+                {
+                    "Pin_Player": 1003,
+                    "Rating": 2.2,
+                    "Sigma": 0.4,
+                    "Elab_Date": date(2025, 12, 15),
+                    "id": 8902,
+                },
+            ]
+        if "FROM [ratings].[games] AS g" in query:
+            if params[0] == "LATER-SAME-DAY":
+                return [
+                    {
+                        "Game_ID": 7001,
+                        "Tournament_Code": "LATER-SAME-DAY",
+                        "Game_Date": date(2026, 1, 1),
+                        "Round": 1,
+                        "Pin_Player_1": 1001,
+                        "Color_1": "B",
+                        "Rank_1": "1d",
+                        "Pin_Player_2": 1004,
+                        "Color_2": "W",
+                        "Rank_2": "1d",
+                        "Handicap": 0,
+                        "Komi": 7,
+                        "Result": "W",
+                        "Sgf_Code": None,
+                        "Online": 0,
+                        "Exclude": 0,
+                        "Rated": 1,
+                        "Elab_Date": date(2026, 1, 1),
+                    }
+                ]
+            return []
+        return []
+
+    def execute_statements(self, statements):
+        """Execute statements."""
+        self.statements.extend(list(statements))
+
+    def _event_summary(self, code):
+        """Execute the event summary routine."""
+        summaries = {
+            "OLD-SAMPLE-1": {
+                "Tournament_Code": "OLD-SAMPLE-1",
+                "Tournament_Descr": "Migration Sample One Open",
+                "Tournament_Date": date(2026, 1, 1),
+                "GameCount": 2,
+                "FirstGameID": 501,
+                "FirstRatingRowID": 9001,
+                "LastRatingRowID": 9003,
+                "RatingRowCount": 3,
+            },
+            "PREV-SAME-DAY": {
+                "Tournament_Code": "PREV-SAME-DAY",
+                "Tournament_Descr": "Previous Same Day",
+                "Tournament_Date": date(2026, 1, 1),
+                "GameCount": 1,
+                "FirstGameID": 401,
+                "FirstRatingRowID": 8901,
+                "LastRatingRowID": 8902,
+                "RatingRowCount": 2,
+            },
+            "LATER-SAME-DAY": {
+                "Tournament_Code": "LATER-SAME-DAY",
+                "Tournament_Descr": "Later Same Day",
+                "Tournament_Date": date(2026, 1, 1),
+                "GameCount": 1,
+                "FirstGameID": 7001,
+                "FirstRatingRowID": 9010,
+                "LastRatingRowID": 9011,
+                "RatingRowCount": 2,
+            },
+        }
+        return [summaries[code]] if code in summaries else []
+
+
+def needs_review_payload():
+    """Execute the needs review payload routine."""
+    return build_staging_payload(
+        [
+            (
+                "report_compact_one.txt",
+                (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"),
+            )
+        ],
+        adapter=DuplicateCandidateAdapter(),
+        run_id=777,
+        today=FIXTURE_PROCESSING_DATE,
+    )
+
+
+def ready_new_tournament_payload():
+    """Execute the ready new tournament payload routine."""
+    return build_staging_payload(
+        [
+            (
+                "report_compact_one.txt",
+                (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"),
+            )
+        ],
+        adapter=NoDuplicateCandidateAdapter(),
+        run_id=778,
+        report_metadata=[HOST_METADATA],
+        today=FIXTURE_PROCESSING_DATE,
+    )
+
+
+def stale_needs_review_payload():
+    """Execute the stale needs review payload routine."""
+    return build_staging_payload(
+        [
+            (
+                "report_compact_one.txt",
+                (FIXTURE_DIR / "report_compact_one.txt").read_text(encoding="utf-8"),
+            )
+        ],
+        adapter=NoDuplicateCandidateAdapter(),
+        run_id=779,
+        report_metadata=[HOST_METADATA],
+        today=date(2026, 2, 15),
+    )
+
+
+class ReplayStagedRunTest(unittest.TestCase):
+    """Represent replay staged run test."""
+    def test_replay_input_treats_same_day_production_as_predecessors_for_new_event(self) -> None:
+        """Verify that replay input treats same day production as predecessors for new event."""
+        payload = ready_new_tournament_payload()
+        adapter = ReplayAdapter()
+
+        replay_input = build_staged_replay_input(adapter, payload=payload)
+        plan = replay_input["plan"]
+        staged_code = payload["staged_tournaments"][0]["tournament_row"]["Tournament_Code"]
+
+        self.assertEqual(plan["anchor"]["tournament_code"], staged_code)
+        self.assertIsNone(plan["anchor"]["first_rating_row_id"])
+        self.assertEqual([event["tournament_code"] for event in plan["events"]], [staged_code])
+        self.assertEqual(plan["staged_event_count"], 1)
+        self.assertEqual(plan["production_cascade_event_count"], 0)
+        self.assertEqual(
+            plan["starter"]["same_day_predecessor_tournament_codes"],
+            ["PREV-SAME-DAY", "OLD-SAMPLE-1", "LATER-SAME-DAY"],
+        )
+        self.assertEqual([game.tournament_code for game in replay_input["games"]], [staged_code, staged_code])
+
+    def test_replay_input_replaces_duplicate_and_adds_later_same_day_cascade(self) -> None:
+        """Verify that replay input replaces duplicate and adds later same day cascade."""
+        payload = needs_review_payload()
+        adapter = ReplayAdapter()
+
+        replay_input = build_staged_replay_input(adapter, payload=payload)
+        plan = replay_input["plan"]
+
+        self.assertEqual(plan["anchor"]["tournament_code"], "OLD-SAMPLE-1")
+        self.assertEqual(plan["anchor"]["first_rating_row_id"], 9001)
+        self.assertEqual(
+            [event["tournament_code"] for event in plan["events"]],
+            ["OLD-SAMPLE-1", "LATER-SAME-DAY"],
+        )
+        self.assertEqual(plan["staged_event_count"], 1)
+        self.assertEqual(plan["production_cascade_event_count"], 1)
+        self.assertEqual(plan["game_count"], 3)
+        self.assertIn("duplicate candidate OLD-SAMPLE-1", plan["warnings"][0])
+        self.assertEqual(plan["starter"]["same_day_predecessor_tournament_codes"], ["PREV-SAME-DAY"])
+        self.assertIn("same-day predecessors: PREV-SAME-DAY", plan["starter"]["source"])
+        self.assertEqual([game.tournament_code for game in replay_input["games"]], ["OLD-SAMPLE-1", "OLD-SAMPLE-1", "LATER-SAME-DAY"])
+
+    def test_replay_rejects_unapproved_stale_tournament_report(self) -> None:
+        """Verify that replay rejects unapproved stale tournament report."""
+        payload = stale_needs_review_payload()
+
+        with self.assertRaisesRegex(ValueError, "stale tournament report"):
+            build_staged_replay_input(ReplayAdapter(), payload=payload)
+
+    def test_replay_allows_stale_tournament_report_after_operator_approval(self) -> None:
+        """Verify that replay allows stale tournament report after operator approval."""
+        payload = stale_needs_review_payload()
+        apply_tournament_review_decision(
+            payload,
+            1,
+            mark_ready=True,
+            operator_note="Old report date approved.",
+        )
+
+        replay_input = build_staged_replay_input(ReplayAdapter(), payload=payload)
+
+        self.assertEqual(replay_input["plan"]["staged_run_status"], "ready_for_rating")
+        self.assertEqual(replay_input["plan"]["staged_event_count"], 1)
+
+    def test_run_staged_replay_writes_artifact_without_sql_writes(self) -> None:
+        """Verify that run staged replay writes artifact without sql writes."""
+        payload = needs_review_payload()
+        adapter = ReplayAdapter()
+        output_path = Path(__file__).parent / "tmp_replay_artifact.json"
+        try:
+            artifact = run_staged_replay(adapter, payload=payload, output_path=output_path)
+
+            self.assertTrue(output_path.exists())
+            self.assertEqual(adapter.statements, [])
+            self.assertEqual(artifact["plan"]["production_write_count"], 0)
+            self.assertEqual(artifact["plan"]["staged_rating_count"], 0)
+            self.assertEqual(artifact["bayrate_result"]["event_count"], 2)
+        finally:
+            if output_path.exists():
+                output_path.unlink()
+
+    def test_run_staged_replay_can_stage_rating_rows(self) -> None:
+        """Verify that run staged replay can stage rating rows."""
+        payload = needs_review_payload()
+        adapter = ReplayAdapter()
+
+        artifact = run_staged_replay(
+            adapter,
+            payload=payload,
+            write_artifact=False,
+            persist_staged_ratings=True,
+        )
+
+        staged_rating_count = artifact["plan"]["staged_rating_count"]
+        self.assertGreater(staged_rating_count, 0)
+        self.assertEqual(artifact["plan"]["production_write_count"], 0)
+        self.assertEqual(artifact["plan"]["staging_write_count"], staged_rating_count)
+        self.assertEqual(artifact["staged_rating_summary"]["rating_count"], staged_rating_count)
+        self.assertEqual(len(adapter.statements), staged_rating_count + 1)
+        self.assertIn("DELETE FROM [ratings].[bayrate_staged_ratings]", adapter.statements[0][0])
+        self.assertTrue(
+            all("INSERT INTO [ratings].[bayrate_staged_ratings]" in statement[0] for statement in adapter.statements[1:])
+        )
+
+    def test_replay_rejects_validation_failed_payload(self) -> None:
+        """Verify that replay rejects validation failed payload."""
+        report = """TOURNEY Decimal Rank Suffix Sample
+start=2026-03-01
+finish=2026-03-01
+location=Seattle, WA
+rules=AGA
+
+PLAYERS (2)
+3001 Decimal Suffix One 1.5D
+3002 Numeric Two 2D
+
+GAMES (1)
+3001 3002 W 0 7
+END
+"""
+        payload = build_staging_payload([("bad.txt", report)], adapter=DuplicateCandidateAdapter(), today=date(2026, 3, 10))
+
+        with self.assertRaisesRegex(ValueError, "validation_failed"):
+            build_staged_replay_input(ReplayAdapter(), payload=payload)
+
+
+if __name__ == "__main__":
+    unittest.main()

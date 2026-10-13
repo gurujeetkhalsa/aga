@@ -1,0 +1,35 @@
+# Copyright 2026, American Go Association, All rights reserved
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Azure Functions local/runtime artifacts
+.python_packages/
+local.settings.json
+bin/
+obj/
+*.log
+
+# Node/build artifacts
+node_modules/
+dist/
+
+# Editor/system
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Data and generated artifacts
+*.zip
+*.results.json
+data/
+_deploy/
+bayrate/output/
+research/bayrate_sigma/output/
+research/bayrate_sigma/tests/tmp*/
+bayrate/tests/tmp*/
+

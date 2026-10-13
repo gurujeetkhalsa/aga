@@ -1,0 +1,1355 @@
+{
+  "capturedAt": "2026-10-13T17:23:34.510952+00:00",
+  "catalogCounts": {
+    "checks": 107,
+    "computed": 0,
+    "data_spaces": 2,
+    "defaults": 242,
+    "dependencies": 371,
+    "external_tables": 0,
+    "foreign_key_columns": 80,
+    "foreign_keys": 79,
+    "fulltext_catalogs": 1,
+    "fulltext_columns": 3,
+    "fulltext_indexes": 1,
+    "fulltext_stoplists": 0,
+    "fulltext_stopwords": 0,
+    "identity": 134,
+    "index_columns": 510,
+    "indexes": 207,
+    "keys": 113,
+    "parameters": 338,
+    "partition_functions": 0,
+    "partition_parameters": 0,
+    "partition_ranges": 0,
+    "partition_schemes": 0,
+    "partitions": 207,
+    "permissions": 311,
+    "principals": 12,
+    "role_members": 3,
+    "schemas": 25,
+    "security_policies": 0,
+    "security_predicates": 0,
+    "sequences": 1,
+    "synonyms": 0,
+    "table_types": 0,
+    "triggers": 8,
+    "types": 0,
+    "xml_indexes": 0
+  },
+  "database": "aga-membership",
+  "method": "live sys catalog SELECTs; no application rows",
+  "objects": [
+    {
+      "classification": "application",
+      "name": "sp_lookup_members",
+      "path": "api/sp_lookup_members.sql",
+      "schema": "api",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "v_current_ratings",
+      "path": "api/v_current_ratings.sql",
+      "schema": "api",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_member_lookup",
+      "path": "api/v_member_lookup.sql",
+      "schema": "api",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_administrator_assignment_versions",
+      "path": "clubexpress/chapter_finder_administrator_assignment_versions.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_administrator_assignments",
+      "path": "clubexpress/chapter_finder_administrator_assignments.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_administrator_sync_runs",
+      "path": "clubexpress/chapter_finder_administrator_sync_runs.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_entries",
+      "path": "clubexpress/chapter_finder_entries.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_entry_versions",
+      "path": "clubexpress/chapter_finder_entry_versions.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_sync_runs",
+      "path": "clubexpress/chapter_finder_sync_runs.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_update_access_links",
+      "path": "clubexpress/chapter_finder_update_access_links.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_update_push_attempts",
+      "path": "clubexpress/chapter_finder_update_push_attempts.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_update_request_fields",
+      "path": "clubexpress/chapter_finder_update_request_fields.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_finder_update_requests",
+      "path": "clubexpress/chapter_finder_update_requests.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "external_news_source_items",
+      "path": "clubexpress/external_news_source_items.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "external_news_translation_cache",
+      "path": "clubexpress/external_news_translation_cache.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "news_archive_runs",
+      "path": "clubexpress/news_archive_runs.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "news_article_assets",
+      "path": "clubexpress/news_article_assets.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "news_article_links",
+      "path": "clubexpress/news_article_links.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "news_article_snapshots",
+      "path": "clubexpress/news_article_snapshots.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "news_articles",
+      "path": "clubexpress/news_articles.sql",
+      "schema": "clubexpress",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "sp_approve_chapter_finder_update_request",
+      "path": "clubexpress/sp_approve_chapter_finder_update_request.sql",
+      "schema": "clubexpress",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_complete_chapter_finder_update_push_attempt",
+      "path": "clubexpress/sp_complete_chapter_finder_update_push_attempt.sql",
+      "schema": "clubexpress",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_reject_chapter_finder_update_request",
+      "path": "clubexpress/sp_reject_chapter_finder_update_request.sql",
+      "schema": "clubexpress",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_start_chapter_finder_update_push_attempt",
+      "path": "clubexpress/sp_start_chapter_finder_update_push_attempt.sql",
+      "schema": "clubexpress",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "v_chapter_finder_update_portal_review",
+      "path": "clubexpress/v_chapter_finder_update_portal_review.sql",
+      "schema": "clubexpress",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_chapter_finder_update_push_queue",
+      "path": "clubexpress/v_chapter_finder_update_push_queue.sql",
+      "schema": "clubexpress",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_chapter_finder_update_review",
+      "path": "clubexpress/v_chapter_finder_update_review.sql",
+      "schema": "clubexpress",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_news_article_latest_snapshots",
+      "path": "clubexpress/v_news_article_latest_snapshots.sql",
+      "schema": "clubexpress",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "game_duplicate_review",
+      "path": "competition/game_duplicate_review.sql",
+      "schema": "competition",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "games_clean",
+      "path": "competition/games_clean.sql",
+      "schema": "competition",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "sp_mark_obvious_duplicate_review",
+      "path": "competition/sp_mark_obvious_duplicate_review.sql",
+      "schema": "competition",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_refresh_clean_competition",
+      "path": "competition/sp_refresh_clean_competition.sql",
+      "schema": "competition",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_refresh_duplicate_review",
+      "path": "competition/sp_refresh_duplicate_review.sql",
+      "schema": "competition",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_refresh_game_duplicate_review",
+      "path": "competition/sp_refresh_game_duplicate_review.sql",
+      "schema": "competition",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_refresh_tournament_duplicate_review",
+      "path": "competition/sp_refresh_tournament_duplicate_review.sql",
+      "schema": "competition",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "tournament_duplicate_review",
+      "path": "competition/tournament_duplicate_review.sql",
+      "schema": "competition",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "tournaments_clean",
+      "path": "competition/tournaments_clean.sql",
+      "schema": "competition",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "vw_rated_games_analysis",
+      "path": "competition/vw_rated_games_analysis.sql",
+      "schema": "competition",
+      "type": "V"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "fn_diagramobjects",
+      "path": "dbo/fn_diagramobjects.sql",
+      "schema": "dbo",
+      "type": "FN"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_alterdiagram",
+      "path": "dbo/sp_alterdiagram.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_creatediagram",
+      "path": "dbo/sp_creatediagram.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_dropdiagram",
+      "path": "dbo/sp_dropdiagram.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_helpdiagramdefinition",
+      "path": "dbo/sp_helpdiagramdefinition.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_helpdiagrams",
+      "path": "dbo/sp_helpdiagrams.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_renamediagram",
+      "path": "dbo/sp_renamediagram.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sp_upgraddiagrams",
+      "path": "dbo/sp_upgraddiagrams.sql",
+      "schema": "dbo",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "sysdiagrams",
+      "path": "dbo/sysdiagrams.sql",
+      "schema": "dbo",
+      "type": "U"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "ensure_capture",
+      "path": "dbrepl_meta/ensure_capture.sql",
+      "schema": "dbrepl_meta",
+      "type": "P"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "generations",
+      "path": "dbrepl_meta/generations.sql",
+      "schema": "dbrepl_meta",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "audit_log",
+      "path": "events/audit_log.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "email_outbox",
+      "path": "events/email_outbox.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "event_occurrences",
+      "path": "events/event_occurrences.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "event_versions",
+      "path": "events/event_versions.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "events",
+      "path": "events/events.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "organizer_memberships",
+      "path": "events/organizer_memberships.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "organizers",
+      "path": "events/organizers.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "registration_contacts",
+      "path": "events/registration_contacts.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "registration_occurrences",
+      "path": "events/registration_occurrences.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "registrations",
+      "path": "events/registrations.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "rehearsal_clocks",
+      "path": "events/rehearsal_clocks.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "workshop_meetings",
+      "path": "events/workshop_meetings.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "workshop_settings",
+      "path": "events/workshop_settings.sql",
+      "schema": "events",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "clubexpress_email_log",
+      "path": "integration/clubexpress_email_log.sql",
+      "schema": "integration",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "journal_article_member_match",
+      "path": "integration/journal_article_member_match.sql",
+      "schema": "integration",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "journal_review_member_match",
+      "path": "integration/journal_review_member_match.sql",
+      "schema": "integration",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "news_archive_article_member_match",
+      "path": "integration/news_archive_article_member_match.sql",
+      "schema": "integration",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "categories",
+      "path": "membership/categories.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_membership_history",
+      "path": "membership/chapter_membership_history.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapters",
+      "path": "membership/chapters.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "clubexpress_parsed_event_attempts",
+      "path": "membership/clubexpress_parsed_event_attempts.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "clubexpress_parsed_events",
+      "path": "membership/clubexpress_parsed_events.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "member_categories",
+      "path": "membership/member_categories.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "members",
+      "path": "membership/members.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "membership_events",
+      "path": "membership/membership_events.sql",
+      "schema": "membership",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "sp_find_invalid_youth_members",
+      "path": "membership/sp_find_invalid_youth_members.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_chapters",
+      "path": "membership/sp_import_chapters.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_member_categories",
+      "path": "membership/sp_import_member_categories.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_memchap",
+      "path": "membership/sp_import_memchap.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_log_clubexpress_email",
+      "path": "membership/sp_log_clubexpress_email.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_journal_news_email",
+      "path": "membership/sp_process_journal_news_email.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_membership_renewal",
+      "path": "membership/sp_process_membership_renewal.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_new_member_email",
+      "path": "membership/sp_process_new_member_email.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_record_clubexpress_parsed_event",
+      "path": "membership/sp_record_clubexpress_parsed_event.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_update_clubexpress_parsed_event_status",
+      "path": "membership/sp_update_clubexpress_parsed_event_status.sql",
+      "schema": "membership",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "admin_permissions",
+      "path": "ratings/admin_permissions.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_admins",
+      "path": "ratings/bayrate_admins.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_reward_reconciliations",
+      "path": "ratings/bayrate_reward_reconciliations.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_run_id_seq",
+      "path": "ratings/bayrate_run_id_seq.sql",
+      "schema": "ratings",
+      "type": "SO"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_runs",
+      "path": "ratings/bayrate_runs.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_staged_games",
+      "path": "ratings/bayrate_staged_games.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_staged_ratings",
+      "path": "ratings/bayrate_staged_ratings.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_staged_tournaments",
+      "path": "ratings/bayrate_staged_tournaments.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_1234103437",
+      "path": "ratings/dbrepl_dirty_1234103437.sql",
+      "schema": "ratings",
+      "type": "TR"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_1250103494",
+      "path": "ratings/dbrepl_dirty_1250103494.sql",
+      "schema": "ratings",
+      "type": "TR"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_1266103551",
+      "path": "ratings/dbrepl_dirty_1266103551.sql",
+      "schema": "ratings",
+      "type": "TR"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_1854629650",
+      "path": "ratings/dbrepl_dirty_1854629650.sql",
+      "schema": "ratings",
+      "type": "TR"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_1870629707",
+      "path": "ratings/dbrepl_dirty_1870629707.sql",
+      "schema": "ratings",
+      "type": "TR"
+    },
+    {
+      "classification": "application",
+      "name": "games",
+      "path": "ratings/games.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "GameSgfStateBackup",
+      "path": "ratings/GameSgfStateBackup.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "newgames03252026",
+      "path": "ratings/newgames03252026.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "newtournaments03252026",
+      "path": "ratings/newtournaments03252026.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "ratings",
+      "path": "ratings/ratings.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "RestoreGamesSgfState",
+      "path": "ratings/RestoreGamesSgfState.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "SaveGamesSgfState",
+      "path": "ratings/SaveGamesSgfState.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_complete_run",
+      "path": "ratings/sp_bayrate_complete_run.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_fail_run",
+      "path": "ratings/sp_bayrate_fail_run.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_get_checkpoint_before_event",
+      "path": "ratings/sp_bayrate_get_checkpoint_before_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_get_cutover_control",
+      "path": "ratings/sp_bayrate_get_cutover_control.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_get_replay_boundary",
+      "path": "ratings/sp_bayrate_get_replay_boundary.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_get_snapshot_seed_before_event",
+      "path": "ratings/sp_bayrate_get_snapshot_seed_before_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_mark_dirty_from_event",
+      "path": "ratings/sp_bayrate_mark_dirty_from_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_mark_dirty_from_tournament",
+      "path": "ratings/sp_bayrate_mark_dirty_from_tournament.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_mark_event_computed",
+      "path": "ratings/sp_bayrate_mark_event_computed.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_purge_from_event",
+      "path": "ratings/sp_bayrate_purge_from_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_refresh_event_index",
+      "path": "ratings/sp_bayrate_refresh_event_index.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_set_cutover_control",
+      "path": "ratings/sp_bayrate_set_cutover_control.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_bayrate_start_run",
+      "path": "ratings/sp_bayrate_start_run.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_grant_admin_permission",
+      "path": "ratings/sp_grant_admin_permission.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_complete_run",
+      "path": "ratings/sp_legacy_bayrate_complete_run.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_fail_run",
+      "path": "ratings/sp_legacy_bayrate_fail_run.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_get_checkpoint_before_event",
+      "path": "ratings/sp_legacy_bayrate_get_checkpoint_before_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_get_replay_boundary",
+      "path": "ratings/sp_legacy_bayrate_get_replay_boundary.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_mark_dirty_from_event",
+      "path": "ratings/sp_legacy_bayrate_mark_dirty_from_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_mark_dirty_from_tournament",
+      "path": "ratings/sp_legacy_bayrate_mark_dirty_from_tournament.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_mark_event_computed",
+      "path": "ratings/sp_legacy_bayrate_mark_event_computed.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_purge_from_event",
+      "path": "ratings/sp_legacy_bayrate_purge_from_event.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_refresh_event_index",
+      "path": "ratings/sp_legacy_bayrate_refresh_event_index.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_legacy_bayrate_start_run",
+      "path": "ratings/sp_legacy_bayrate_start_run.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_revoke_admin_permission",
+      "path": "ratings/sp_revoke_admin_permission.sql",
+      "schema": "ratings",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "tournaments",
+      "path": "ratings/tournaments.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "vw_bayrate_games_source",
+      "path": "ratings/vw_bayrate_games_source.sql",
+      "schema": "ratings",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "vw_bayrate_snapshots_source",
+      "path": "ratings/vw_bayrate_snapshots_source.sql",
+      "schema": "ratings",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "vw_legacy_bayrate_games_source",
+      "path": "ratings/vw_legacy_bayrate_games_source.sql",
+      "schema": "ratings",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "vw_legacy_bayrate_snapshots_source",
+      "path": "ratings/vw_legacy_bayrate_snapshots_source.sql",
+      "schema": "ratings",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_control",
+      "path": "ratings/zz_20260325_bayrate_control.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_event_game_results",
+      "path": "ratings/zz_20260325_bayrate_event_game_results.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_event_index",
+      "path": "ratings/zz_20260325_bayrate_event_index.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_event_player_ratings",
+      "path": "ratings/zz_20260325_bayrate_event_player_ratings.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_player_checkpoint",
+      "path": "ratings/zz_20260325_bayrate_player_checkpoint.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_run_metrics",
+      "path": "ratings/zz_20260325_bayrate_run_metrics.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "zz_20260325_bayrate_runs",
+      "path": "ratings/zz_20260325_bayrate_runs.sql",
+      "schema": "ratings",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "bayrate_reconciliation_applications",
+      "path": "rewards/bayrate_reconciliation_applications.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_daily_snapshot",
+      "path": "rewards/chapter_daily_snapshot.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_eligibility_periods",
+      "path": "rewards/chapter_eligibility_periods.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_renewal_notice_results",
+      "path": "rewards/chapter_renewal_notice_results.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "chapter_transfers",
+      "path": "rewards/chapter_transfers.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "lot_allocations",
+      "path": "rewards/lot_allocations.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "member_daily_snapshot",
+      "path": "rewards/member_daily_snapshot.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "membership_events",
+      "path": "rewards/membership_events.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "point_lots",
+      "path": "rewards/point_lots.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "redemption_receipts",
+      "path": "rewards/redemption_receipts.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "redemption_requests",
+      "path": "rewards/redemption_requests.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "reward_runs",
+      "path": "rewards/reward_runs.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "sp_add_redemption_receipt",
+      "path": "rewards/sp_add_redemption_receipt.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_apply_bayrate_reward_reconciliation",
+      "path": "rewards/sp_apply_bayrate_reward_reconciliation.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_backfill_chapter_renewal_confirmations",
+      "path": "rewards/sp_backfill_chapter_renewal_confirmations.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_create_daily_snapshot",
+      "path": "rewards/sp_create_daily_snapshot.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_delete_redemption_receipt",
+      "path": "rewards/sp_delete_redemption_receipt.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_get_pending_chapter_renewals",
+      "path": "rewards/sp_get_pending_chapter_renewals.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_legacy_gap_membership_awards",
+      "path": "rewards/sp_import_legacy_gap_membership_awards.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_legacy_gap_tournament_awards",
+      "path": "rewards/sp_import_legacy_gap_tournament_awards.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_legacy_redemptions",
+      "path": "rewards/sp_import_legacy_redemptions.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_legacy_redemptions_with_adjustments",
+      "path": "rewards/sp_import_legacy_redemptions_with_adjustments.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_import_opening_balances",
+      "path": "rewards/sp_import_opening_balances.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_post_chapter_transfer",
+      "path": "rewards/sp_post_chapter_transfer.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_post_manual_redemption",
+      "path": "rewards/sp_post_manual_redemption.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_chapter_renewal_notices",
+      "path": "rewards/sp_process_chapter_renewal_notices.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_legacy_gap_rated_game_awards",
+      "path": "rewards/sp_process_legacy_gap_rated_game_awards.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_membership_awards",
+      "path": "rewards/sp_process_membership_awards.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_point_expirations",
+      "path": "rewards/sp_process_point_expirations.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_rated_game_awards",
+      "path": "rewards/sp_process_rated_game_awards.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_process_tournament_awards",
+      "path": "rewards/sp_process_tournament_awards.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_record_chapter_renewal_confirmation",
+      "path": "rewards/sp_record_chapter_renewal_confirmation.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_record_membership_event",
+      "path": "rewards/sp_record_membership_event.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "sp_update_redemption_notes",
+      "path": "rewards/sp_update_redemption_notes.sql",
+      "schema": "rewards",
+      "type": "P"
+    },
+    {
+      "classification": "application",
+      "name": "transactions",
+      "path": "rewards/transactions.sql",
+      "schema": "rewards",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "v_chapter_balances",
+      "path": "rewards/v_chapter_balances.sql",
+      "schema": "rewards",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_chapter_transaction_history",
+      "path": "rewards/v_chapter_transaction_history.sql",
+      "schema": "rewards",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_membership_event_audit",
+      "path": "rewards/v_membership_event_audit.sql",
+      "schema": "rewards",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_point_lot_aging",
+      "path": "rewards/v_point_lot_aging.sql",
+      "schema": "rewards",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "v_reward_run_history",
+      "path": "rewards/v_reward_run_history.sql",
+      "schema": "rewards",
+      "type": "V"
+    },
+    {
+      "classification": "application",
+      "name": "chapters",
+      "path": "staging/chapters.sql",
+      "schema": "staging",
+      "type": "U"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_1202103323",
+      "path": "staging/dbrepl_dirty_1202103323.sql",
+      "schema": "staging",
+      "type": "TR"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_18099105",
+      "path": "staging/dbrepl_dirty_18099105.sql",
+      "schema": "staging",
+      "type": "TR"
+    },
+    {
+      "classification": "tooling/replication",
+      "name": "dbrepl_dirty_887674210",
+      "path": "staging/dbrepl_dirty_887674210.sql",
+      "schema": "staging",
+      "type": "TR"
+    },
+    {
+      "classification": "application",
+      "name": "member_categories",
+      "path": "staging/member_categories.sql",
+      "schema": "staging",
+      "type": "U"
+    },
+    {
+      "classification": "application",
+      "name": "memchap",
+      "path": "staging/memchap.sql",
+      "schema": "staging",
+      "type": "U"
+    }
+  ],
+  "status": "exported",
+  "unavailableDefinitions": []
+}

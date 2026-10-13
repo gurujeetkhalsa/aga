@@ -1,0 +1,421 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "platform": {
+      "enabled": false
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:31:53.767053+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/static/default-card-image",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveDefaultCardImage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveDefaultCardImage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveDefaultCardImage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/static/digest-card-image",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveDigestCardImage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveDigestCardImage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveDigestCardImage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 35 10 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "NewsArchiveExternalSyncTimer",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveExternalSyncTimer",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveExternalSyncTimer"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/home-cards",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveHomeCards",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveHomeCards",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveHomeCards"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 30 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "NewsArchivePlayerContextSyncTimer",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchivePlayerContextSyncTimer",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchivePlayerContextSyncTimer"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 20 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "NewsArchivePublicSyncTimer",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchivePublicSyncTimer",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchivePublicSyncTimer"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/article/{snapshot_id}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveViewerArticle",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveViewerArticle",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveViewerArticle"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/article/{snapshot_id}/email-html",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveViewerArticleEmailHtml",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveViewerArticleEmailHtml",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveViewerArticleEmailHtml"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/articles",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveViewerArticles",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveViewerArticles",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveViewerArticles"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/asset/{asset_id}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveViewerAsset",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveViewerAsset",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveViewerAsset"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive/health",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveViewerHealth",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveViewerHealth",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveViewerHealth"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "news-archive",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "NewsArchiveViewerPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "NewsArchiveViewerPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "NewsArchiveViewerPage"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "AZURE_TRANSLATOR_KEY": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "DIAGNOSTICS_AZUREBLOBRETENTIONINDAYS": "3",
+    "NEWS_ARCHIVE_CONTAINER": "clubexpress-news-archive",
+    "NEWS_ARCHIVE_EXTERNAL_DIGEST_LOOKBACK_DAYS": "3",
+    "NEWS_ARCHIVE_EXTERNAL_TRANSLATE_WITH_AZURE": "true",
+    "NEWS_ARCHIVE_EXTERNAL_TRANSLATION_CACHE_ENABLED": "true",
+    "NEWS_ARCHIVE_EXTERNAL_TRANSLATION_RATE_LIMIT_CHARS_PER_MINUTE": "20000",
+    "NEWS_ARCHIVE_EXTERNAL_TRANSLATION_RETRY_COUNT": "1",
+    "NEWS_ARCHIVE_EXTERNAL_TRANSLATION_RETRY_SECONDS": "65",
+    "NEWS_ARCHIVE_HOME_CARDS_VIEWER_URL": "https://usgo.org/content.aspx?page_id=22&club_id=454497&module_id=795897&actr=4",
+    "NEWS_ARCHIVE_HOME_CARD_COUNT": "70",
+    "NEWS_ARCHIVE_PUBLIC_ONLY": "true",
+    "NEWS_ARCHIVE_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "NEWS_ARCHIVE_VIEWER_PAGE_SIZE": "7",
+    "NEWS_ARCHIVE_VIEWER_TOP": "200",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

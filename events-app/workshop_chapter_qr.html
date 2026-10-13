@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your chapter’s workshop QR code</title>
+  <style>
+    :root{color-scheme:light;--red:#a71920;--ink:#20201f;--muted:#625e57;--line:#d9d3c8}*{box-sizing:border-box}body{margin:0;background:#f4f0e7;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:720px;margin:40px auto;padding:0 20px 40px}.brand{color:#781116;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}h1{font-size:clamp(27px,5vw,36px);line-height:1.2;margin:12px 0}h2{font-size:20px;margin:0 0 8px}.intro{color:var(--muted);max-width:570px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:24px}label{display:block;font-weight:700;margin-bottom:8px}input{display:block;width:100%;padding:13px;border:1px solid #938d83;border-radius:8px;background:white;font:inherit}input:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-offset:3px}.help{font-size:14px;color:var(--muted);margin:8px 0 0}.preview{display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:center;margin-top:24px}.preview img{display:block;width:100%;height:auto}.actions{display:flex;flex-direction:column;align-items:stretch;gap:10px}.button{display:inline-block;border:1px solid var(--red);border-radius:8px;padding:11px 16px;background:var(--red);color:white;text-align:center;text-decoration:none;font:inherit;font-weight:700;cursor:pointer}.secondary{background:white;color:var(--red)}a{color:var(--red)}#status{margin:14px 0 0}ol{padding-left:24px}li{padding-left:4px;margin:8px 0}[hidden]{display:none!important}@media(max-width:570px){main{margin-top:24px}.panel{padding:18px}.preview{grid-template-columns:1fr;gap:16px}.preview img{max-width:300px;margin:auto}}
+  </style>
+</head>
+<body>
+<main>
+  <p class="brand">American Go Association</p>
+  <h1>Your chapter’s workshop QR code</h1>
+  <p class="intro">Invite people to the free, one-hour online beginners workshop. Choose your chapter to get a QR code that tracks registrations from your invitations.</p>
+  <section class="panel" aria-label="Choose your chapter">
+    <label for="chapter-search">Chapter name or short code</label>
+    <input id="chapter-search" type="search" list="chapter-options" placeholder="For example, National Go Center or NGOC" autocomplete="off" aria-describedby="chapter-help" disabled>
+    <datalist id="chapter-options"></datalist>
+    <p class="help" id="chapter-help">Start typing and select your chapter from the suggestions.</p>
+    <p id="status" role="status" aria-live="polite">Loading chapters…</p>
+    <button id="retry" class="button secondary" hidden type="button">Try again</button>
+    <section id="selection" hidden aria-label="Your chapter QR code">
+      <div class="preview">
+        <img id="qr-preview" width="1200" height="1200" alt="">
+        <div>
+          <h2 id="chapter-name"></h2>
+          <p class="help">Free Beginners Online Workshop<br>Learn Go in an hour</p>
+          <div class="actions" style="margin-top:16px">
+            <a id="download-png" class="button" download>Download QR image</a>
+            <a id="download-svg" class="button secondary" download>Download for print (SVG)</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section aria-label="How to use your QR code">
+    <h2 style="margin-top:28px">Ready to share in three steps</h2>
+    <ol>
+      <li>Find and select your chapter above.</li>
+      <li>Download your QR image.</li>
+      <li>Add it to chapter emails, mailings, newsletters, or flyers.</li>
+    </ol>
+    <p class="help">Reuse the same image for future invitations to this workshop. Everyone reaches the same registration page, and registrations through your code are recorded as referrals from your chapter.</p>
+  </section>
+  <noscript><p>Enable JavaScript to choose your chapter and download its QR code.</p></noscript>
+</main>
+<script>
+  const input=document.getElementById('chapter-search'),options=document.getElementById('chapter-options');
+  const status=document.getElementById('status'),selection=document.getElementById('selection'),retry=document.getElementById('retry');
+  const base=location.pathname.replace(/\/chapter-qr\/?$/,'');
+  const label=row=>`${row.chapter_name} (${row.chapter_code})`;
+  const normalize=value=>String(value||'').trim().toLocaleLowerCase();
+  let chapters=[];
+  async function loadChapters(){
+    input.disabled=true;retry.hidden=true;selection.hidden=true;status.textContent='Loading chapters…';
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+    try{
+      const response=await fetch('/api/workshop-chapters',{signal:controller.signal});
+      if(!response.ok)throw new Error();
+      const body=await response.json();
+      if(!body.ok||!Array.isArray(body.chapters))throw new Error();
+      chapters=body.chapters;
+      options.replaceChildren(...chapters.map(row=>{const option=document.createElement('option');option.value=label(row);return option}));
+      input.disabled=false;
+      status.textContent=chapters.length?'':'No active chapters are currently available.';
+      chooseChapter();
+    }catch{status.textContent='We couldn’t load the chapter list. Please try again.';retry.hidden=false}
+    finally{clearTimeout(timer)}
+  }
+  function chooseChapter(){
+    selection.hidden=true;
+    const value=normalize(input.value);
+    const matches=chapters.filter(row=>[label(row),row.chapter_code,row.chapter_name].some(text=>normalize(text)===value));
+    if(matches.length!==1){if(value)status.textContent='Select your chapter from the suggestions to see its QR code.';else if(chapters.length)status.textContent='';return}
+    const row=matches[0],query=`?ref=${encodeURIComponent(row.chapter_id)}`,card=`${base}/workshop-qr`;
+    const png=`${card}/png${query}`,svg=`${card}/svg${query}`;
+    document.getElementById('chapter-name').textContent=label(row);
+    const image=document.getElementById('qr-preview');
+    image.alt=`Workshop QR code for ${label(row)}`;
+    image.onload=()=>{if(!selection.hidden)status.textContent=`Your QR code for ${label(row)} is ready.`};
+    image.onerror=()=>{if(!selection.hidden)status.textContent='The QR preview couldn’t load. Select your chapter again to retry.'};
+    image.src=png;
+    document.getElementById('download-png').href=png;
+    document.getElementById('download-png').download=`workshop-${row.chapter_code}-qr.png`;
+    document.getElementById('download-svg').href=svg;
+    document.getElementById('download-svg').download=`workshop-${row.chapter_code}-qr.svg`;
+    selection.hidden=false;status.textContent=`Preparing your QR code for ${label(row)}…`;
+  }
+  input.addEventListener('input',chooseChapter);input.addEventListener('change',chooseChapter);
+  retry.addEventListener('click',loadChapters);loadChapters();
+</script>
+</body>
+</html>

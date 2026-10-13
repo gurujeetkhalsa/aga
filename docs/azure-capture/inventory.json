@@ -1,0 +1,2313 @@
+{
+  "apps": [
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-09-01T13:40:00.2550128Z",
+        "Id": "495b20ff-ea9b-44e9-92ef-eb95292bc1fc",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:10:03.455374+00:00",
+      "etag": "\"0x8DF082E6108F9B9\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "d20b017cadf37498d531c6a8d5fca357862c4d99bb0b734745b0137881a2477e",
+        "bayrate/COPYING": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b",
+        "bayrate/NOTICE.md": "3648136c227504a94ba38a9a2c7b5f87187d154a3f95c8394f9e092f9e9354eb",
+        "bayrate/__init__.py": "fb29ae817b00333956e85870971355afbe5f7316e30fb5fd60454bd0764d878e",
+        "bayrate/auth.py": "9ef929c420cff2891f6e548f7958ddfb45625daddf796bfa4ab3e7b7307c4762",
+        "bayrate/commit_staged_run.py": "965562a8e4049a893ccf54e1add289c7d8d9c1e74d19418f5d3e4d135f506414",
+        "bayrate/core.py": "335a9eacd8597a005fb2ba966f96d25af89e7de1b0cf8f7062c6cccc856c524d",
+        "bayrate/replay_staged_run.py": "31fab75bb2babae63768413533cce9b047625c02b2e12c0cd5f79e1832bb82a6",
+        "bayrate/report_parser.py": "7f967f8cac0aea89deec876913d83bab14ed71e13aae236ba2dc9dfaaa8bc666",
+        "bayrate/reward_reconciliation.py": "bbd006627865225fc45ce563c6db9e7fdf4397547a0647ea61dca9a5754343f8",
+        "bayrate/snapshot_refresh.py": "b2600ad49a40972ac95faec980e616dca50d13ff2ee21f7ec25086b593a28629",
+        "bayrate/sql_adapter.py": "0784ba2ec54396850204e6201df2693a1003e86c604a4583e94443c23ae351c6",
+        "bayrate/stage_reports.py": "10c5c42205e0f90d4ea126cfce3047d7f5db69924a6b4f0468f7887ef3e8e6b1",
+        "bayrate_staging.html": "bd405af6a90b1e7c9f49775d884b53495cbe9d331d5f602490374c21ff81b6be",
+        "function_app.py": "c1a668769115ac2c7559e162fa2dc7afa3473b3462d58f62cdcfa047be64193a",
+        "host.json": "ec2996d80cdea271254a7fdfd6921053595cc8438ec197b32a3f320558ba9394",
+        "oryx-manifest.toml": "6da70f4e0f40e91ae6d7a24100f5bee7faa047550ca95dae1e6481115becdb50",
+        "requirements.txt": "c185fd675cae11b124c4f4909f672eaae228cdc960a58a111f85d66c95500a13"
+      },
+      "hostname": "aga-bayrate.azurewebsites.net",
+      "lastModified": "2026-09-01 13:38:59+00:00",
+      "name": "aga-bayrate",
+      "packageBytes": 7771270,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agabayrate-4644553/released-package.zip",
+      "packageSha256": "4b786bb0a273334764016caaf5d2f5449a88f2fc247ce1bbb65ef975dcd0ec9d",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "c1a668769115ac2c7559e162fa2dc7afa3473b3462d58f62cdcfa047be64193a",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-07-10T18:05:20.4169854Z",
+        "Id": "545c7178-9055-4866-9ac2-d8a1881f2649",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:10:19.376779+00:00",
+      "etag": "\"0x8DEDEADAA5D3C43\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "a53ac2da698e23fac603832e8bf33d7885a052aa7e3f6806dbf396114e4849b3",
+        "admin_auth.py": "45470bff7793fc8151357dde7f2d66279d56aa389d6245aa80a1ea9b0eb58021",
+        "chapter_finder_update_support.py": "c323b48333aa7849887dbe4870304b8d092c4bb1db427245888ae6d77799d49c",
+        "chapter_review.html": "066ffee7766d077c6a41cf5d96dd9ce73f7cbe9c42793788a02f783498bf8a92",
+        "chapter_update.html": "df9bdba9ec4a77c6f8613b8ec6f5f31c3b18fc7570d379f5dbbb974e456b6a26",
+        "function_app.py": "6dd75f96bc8e02034cf153f30fde5309a33860e8f52a1374f4f39538b1d78fad",
+        "host.json": "057778a146ab00423220241a6cb36ab4967a36fb619a95c7a655a7491cb7a63e",
+        "oryx-manifest.toml": "a3654db4e1303e933541f0782cc6731501875991c6685d22f7e0bc036154d29f",
+        "requirements.txt": "c6c0d9251a279b1b71a8bb49f88038a5cf74efa8fa2d1b98d143214b898e1fac",
+        "sql_adapter.py": "bd93ef82e4b1ca70de3e39cc139e10f9faa676a15a940c83c0719e5f1cdafd3d"
+      },
+      "hostname": "aga-chapter-finder-update.azurewebsites.net",
+      "lastModified": "2026-07-10 18:04:20+00:00",
+      "name": "aga-chapter-finder-update",
+      "packageBytes": 1864688,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterfinderupdate-8306138/released-package.zip",
+      "packageSha256": "6d02a1cb46bc426b7e9e396caceddf67549df6e73cccdbd4c7bb70abd440cae6",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "6dd75f96bc8e02034cf153f30fde5309a33860e8f52a1374f4f39538b1d78fad",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-09-01T13:05:10.2790041Z",
+        "Id": "4ab47af6-6637-410d-9d45-cd43ff519431",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:10:27.001426+00:00",
+      "etag": "\"0x8DF08298346B957\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "425282b030bca7bdea7eec89676a841dab812e421cb143b05de47ac661481acd",
+        "admin_auth.py": "347a59284d4b078a34b585e75e8aff14e368765294f5caa0eb3f4227d09524e6",
+        "chapter_rewards_admin.html": "c987177ca21d4ee43407ef864a83b6c281d076653d9aba2c7987fb5c281fd279",
+        "chapter_rewards_admin_support.py": "8456c9372de53d874edaed49bc8f89382eee22ebfa6268d3c526775eb5c6821a",
+        "function_app.py": "fdb033ca8563294c42923f8b2ee709e7d1b6130724ec6a02bd3d3c08422bc54a",
+        "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+        "oryx-manifest.toml": "d77456c83dbf61911e38b53858ee4eba371945add89823671690f5a9d0d20841",
+        "requirements.txt": "6cf58ac9362d9eb34228ae0db0ca3a05842e2d17b1c8fa4a19784b92c44b78e5",
+        "sql_adapter.py": "26008ecd4bbe5dddef4f4a470033b96e6cae77b245a5de28f19c2c2c85775abd",
+        "tests/test_transfer_support.py": "53415c88e609419b13aec35d4e6997000183e4cf49c10b6474694c592f29d10e"
+      },
+      "hostname": "aga-chapter-rewards-admin.azurewebsites.net",
+      "lastModified": "2026-09-01 13:04:09+00:00",
+      "name": "aga-chapter-rewards-admin",
+      "packageBytes": 11552354,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterrewardsadmin-6000233/released-package.zip",
+      "packageSha256": "7fe58260ff7c1c2b3b5f99f940d7a397152fe4a73c5c113fe43e7c1f0723680d",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "fdb033ca8563294c42923f8b2ee709e7d1b6130724ec6a02bd3d3c08422bc54a",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-06-26T17:36:21.443945Z",
+        "Id": "9b2469db-072e-4cbd-996e-e0243bda913b",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:10:43.086398+00:00",
+      "etag": "\"0x8DED3A94C0C1A04\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "29d4d9332178efb3926f2a666a6f6f95c463b1ec3cc7e080b2436fc3204f1454",
+        "function_app.py": "2126987c69d8ccaa2797e23ddfde576cab7dedc8b7e5f52d00a369890ecc49d5",
+        "host.json": "13afb1d31f4e36fd52c51479aaff6b088cfb01d95aa42ffbd2d58ca1d24784f4",
+        "oryx-manifest.toml": "130a965892de922c06e4feecb9375856ea51b8b064d64f08195fade337b51dc9",
+        "requirements.txt": "285faddd0bfce28b20b1efbc18eed711d8391e16b85fd754315905b320a317bc",
+        "tests/test_automation_params.py": "574117b5d8fa0d391e7171bf44356cdf34b2298381e3783481108bff3d831b87"
+      },
+      "hostname": "aga-chapter-rewards-automation.azurewebsites.net",
+      "lastModified": "2026-06-26 17:35:21+00:00",
+      "name": "aga-chapter-rewards-automation",
+      "packageBytes": 1423868,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterrewardsautomation-4113466/released-package.zip",
+      "packageSha256": "3b92c41675b8da5217771487513c072f12161234e4b16293dc7e73f47d908b92",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "2126987c69d8ccaa2797e23ddfde576cab7dedc8b7e5f52d00a369890ecc49d5",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-09-01T13:07:43.5872154Z",
+        "Id": "8db9f00a-8174-4f08-b36f-121708404357",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:10:50.538422+00:00",
+      "etag": "\"0x8DF0829DEBBAE8A\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "6168470232b79d87d689f793021e0c33c887da97091dc69d38e0b041f5a25499",
+        "chapter_rewards.html": "399c9a929f041d562ce0e772be2f4a7bf41bf6a3b021598f429e18cc332604d0",
+        "chapter_rewards_support.py": "12a196c57ad08dfbf45003e38cb80bb468ac4cc7d55dddcfad0c8271b67c3bc3",
+        "function_app.py": "a3345e0be62e8f6c3bd8c558c05cf9b83dd716c2955fd38bd4b8591da3763d6d",
+        "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+        "oryx-manifest.toml": "992d88981e41c2673b9203c91dd7403a43056b8fa5d6a5634fce2b14c8730be8",
+        "requirements.txt": "c6c0d9251a279b1b71a8bb49f88038a5cf74efa8fa2d1b98d143214b898e1fac"
+      },
+      "hostname": "aga-chapter-rewards-display.azurewebsites.net",
+      "lastModified": "2026-09-01 13:06:43+00:00",
+      "name": "aga-chapter-rewards-display",
+      "packageBytes": 1878294,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterrewardsdisplay-5880534/released-package.zip",
+      "packageSha256": "f69b8237d6364bc819f570ade8f7b5ddaed6f545ef892c5789d4766316c20fd0",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "a3345e0be62e8f6c3bd8c558c05cf9b83dd716c2955fd38bd4b8591da3763d6d",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-06-29T21:18:48.1040786Z",
+        "Id": "3f671e98-3732-4098-969e-02b2acff93fb",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:11:00.753667+00:00",
+      "etag": "\"0x8DED623DE053D30\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "f25d86a483c9e7e03eedaf481445a005a22457ff748f26f503a01f3b72273014",
+        "clubexpress_csv_parsers.py": "812308f63f889c4b2bbfd2f9ee9eab853a0941d4401c10b59664291963fdedc0",
+        "clubexpress_parsers.py": "ff52e6aa986cc53149dbca9448749003a7d99dd329b606f7045766307a394dce",
+        "clubexpress_replay.py": "b866983b8ce5886bf8a742ff6ee722dc0719cc8ad40b8336700935c2623db0aa",
+        "clubexpress_staged_processor.py": "471bbf77f34614b3a8933df8b487289796ca7b47f4a64411d9e4f2835c588432",
+        "clubexpress_staging.py": "edd5f608f160e9619bd18416459d64a70a5777a03b4191aff5678f4dbdf39060",
+        "function_app.py": "aaefd490bb805e94301cc38ad462969ba37b9b06af14c37fd14c3eccf76621a0",
+        "host.json": "fac28cd35d536a67ff49d191a09e12f7103e832bc8243f2b74efaeb63b806aa5",
+        "oryx-manifest.toml": "12683b86373d0314831d714f75a34e40e9c6767beace61f84a1fe7529fedbf9d",
+        "requirements.txt": "e03161c7e466de4cac01a25f1f8addac68d5290794b8ba35dcf6ecaa27642ae8",
+        "sql/clubexpress_parsed_event_staging.sql": "7dc95b796f193e0805e09ace188457e4c2fb764935b857205190dc99913c8053",
+        "tests/test_clubexpress_csv_parsers.py": "2a7ac94711674874c415ce9299c7129b8e3353f914504e88c98040d9886d8bee",
+        "tests/test_clubexpress_parsers.py": "9adeff67f67fddfa8fe6a29f3777ee6c41a665143ed8395bcff5efd464687230",
+        "tests/test_clubexpress_replay.py": "80406b14305908ff2e4998be8c34635ff4f141d34de9731371929846dd2faabb",
+        "tests/test_clubexpress_staging.py": "02198558c25f0656b76dc658793eb8640399b4f4ee55de920b742c89afd34fad",
+        "tests/test_journal_parser.py": "705720a9a6ab860570456cdd317cfd4409248c209d5e161fbe17cfa536a584ef"
+      },
+      "hostname": "aga-clubexpress-mail.azurewebsites.net",
+      "lastModified": "2026-06-29 21:17:47+00:00",
+      "name": "aga-clubexpress-mail",
+      "packageBytes": 114292161,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaclubexpressmail-8387802/released-package.zip",
+      "packageSha256": "ee22678a3bdababf45b81fbd71dc9f450ba98f891aa3b4387ca3449340bf881c",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "aaefd490bb805e94301cc38ad462969ba37b9b06af14c37fd14c3eccf76621a0",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-06-14T02:01:57.6441621Z",
+        "Id": "1c4e6a4d-a8ff-4991-962e-2ebeb0406338",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:12:48.357629+00:00",
+      "etag": "\"0x8DEC9B8C67BEFB6\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "a61bb4d04408b168cfc2f866e30c91e2ca23a10fed4081594d55b2ed53f526df",
+        "function_app.py": "17b818353f96da16a7373fc44d1c614735cdd3d7c63c25f7cccf73af5aa76624",
+        "host.json": "13afb1d31f4e36fd52c51479aaff6b088cfb01d95aa42ffbd2d58ca1d24784f4",
+        "oryx-manifest.toml": "4e14b7b645a667558b51c3bc8b9018f73bba3c558ef4cf7dde396062d3db2316",
+        "requirements.txt": "8761cbf5a62357a3b34c4f474fe6e2e3885e7be3ffd35d438ccce528d841c276"
+      },
+      "hostname": "aga-clubexpress-sso-probe.azurewebsites.net",
+      "lastModified": "2026-06-14 02:00:57+00:00",
+      "name": "aga-clubexpress-sso-probe",
+      "packageBytes": 9813520,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaclubexpressssoprobe-9551475/released-package.zip",
+      "packageSha256": "cbea1dbc360351ff25547522cc2862f276398e7a8ec60c7819f9dbd92d609a12",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "17b818353f96da16a7373fc44d1c614735cdd3d7c63c25f7cccf73af5aa76624",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-10-06T20:31:43.7466898Z",
+        "Id": "ebd010be-1844-4876-9c5b-36913cf679b0",
+        "RemoteBuild": false,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "https://agafunc0522.blob.core.windows.net/app-package-agaevents-7822871/workshop-statistics-20261006/released-package.zip"
+      },
+      "capturedAt": "2026-10-13T17:13:04.132693+00:00",
+      "etag": "\"0x8DF23E8B1F55C7F\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        ".funcignore": "7b7f7cffac1149a7c79b7128b8490539a30b94e41e8d38ff5729c0b0da339cce",
+        "OPERATIONS.md": "e6cbaf5218a3df2d030e5f7670c36b2bc6667b6267ec9fa5b0f8e210b8467a55",
+        "README.md": "1033b3f97800412f246a3f983317ab240bbbb6c1484d5d08d3073f5fea6eef6d",
+        "VERIFICATION.md": "b270902299e5c47614f82fa9a24f12be3d85921360c4dcf6eb1e207b38d8bb14",
+        "auth/app-roles.json": "35b5d3264194c7bc0726bf90fac2983c39c6be58fe7e560dab6879a7d902209a",
+        "auth/authsettings.json": "f0cb56455e8072c7367ea2384b3cf4baf32da0eef5bf2a9eeae4008d7b09f56a",
+        "build_package.py": "b570542b48847c34c28c44dc6b05ed8260fb6999977a9231f97636c39da9eb98",
+        "downloads/free-beginners-workshop-qr.png": "a3171bd9ab0a14e33836b9cdc30d5110d7255ac6a44adfc98d694a491d8224cf",
+        "downloads/free-beginners-workshop-qr.svg": "de8f21385d3fc1675ab67c3444155fded6e2d6cb5a055076a26fdcfa51251870",
+        "event_domain.py": "564d647f9a2a606a9ad792392c886ac011cf3e0a2403aa959fca91962d3b6ad6",
+        "event_manage.html": "245673a19c9612d03665ec267dbdceb2994d922005a54b344edca8377ebc91f2",
+        "event_registration.html": "0a5b25e3de1895057af27cb8ab1c8554cc31f9900fdc4d95010861a20a47020c",
+        "function_app.py": "2cd541ceea09043a61398836cb14b40d7738a99226c7f5174fb3ccecc930f08c",
+        "host.json": "08244b2fc7cf9dc95051f15d0d8aec8756412ceba95b71818f05c023eb5ffbd5",
+        "oryx-manifest.toml": "186813b2b6cf0a84e84d84f8c3963d9d2afb6d6553a97fa3d05bfe472095f869",
+        "requirements.txt": "6ef441acfefe1b2a4b47350c6a72bfd4736108bf76c5c6936c3ef17e58ea8e85",
+        "sql/001_repeating_event_foundation.sql": "91e1ea7317e7bdc297d1d088b24440614c42a6f2d18f193cb97a31d311c3ca82",
+        "sql/002_beginner_online_workshop_seed.sql": "1fec9244292ba32b03ae55b48adefa00e8c5567ba3693a50916db14e10c452a4",
+        "sql/003_workshop_editor_and_contact_location.sql": "06380acde4dcbf809a7f2ac3506a7ea230768a5bc0fc6f7c881e5aeecbc8c95c",
+        "sql/004_workshop_operations.sql": "4002a3073b20729e846b7c6d3d83030275b82d9a71d9cb6eb13ba04926089f17",
+        "sql/005_registrant_ogs_handle.sql": "30f9ee5034f99cf6cfeaf4261b2d843c34cee38e35eadec5cf49613399b1e485",
+        "sql/006_workshop_test_mode.sql": "41d2453fd411abc11abd3573888ae6291fb1a3d348140630a6f10c8c42d7eaa8",
+        "sql/007_rehearsal_clock.sql": "d1578c72961d7a444cd098adf23fcd50c5756b0126f012b5be8c99225c3c2373",
+        "sql/008_registration_chapter_referral.sql": "5c87d63dc8c67e5722d3c2d2fe438e99a71f6de4c9dbbbdcda8038ffe572d698",
+        "sql_repository.py": "e3af5664bdde8ffdf0cd65f43773b30e32abfaa21b93077854991f04ff5a232a",
+        "tests/browser_admin.cjs": "fbab3fd65a1885669500bcfc23679990e3fcf86a855c34fb53cc7596221de32f",
+        "tests/browser_qr.cjs": "f993c89288a2134f8af76d35a1526d71cde06f77667bace6c59bbe6ce24f81d9",
+        "tests/browser_registration.cjs": "aacc454ef930dafc53e10e86949bb8b0bd6b4473b13f55125def547297cb5156",
+        "tests/browser_waitlist.cjs": "adb3aa9887fc6a9c735598a4ca53261eac5c24032fedcb065d11dd3dd79bdc41",
+        "tests/test_event_domain.py": "16a149337f61be7cadbc29ed482f60073ac874ad8eaa612c915ed5e1c633da1e",
+        "tests/test_qr.py": "a7a42bcd16545c4bc888e19b3d64f2579ffc65cc416382ffb06f62e246157010",
+        "tests/test_sql_workshop.py": "1d5b41c7a027fa0f3896255d217a55d8cf6ecc4dd96321c953bf75d6e4340558",
+        "tests/test_workshop.py": "d0351c4958919da5a5a6a15a0ab3758e9548648716f5c07d784df789da4bcd11",
+        "workshop_admin.js": "e30988dc234bb9f77377dc149c57669cc064a9faace61f238d50e230c1a97314",
+        "workshop_chapter_qr.html": "c5578885db0613b98c602387f326c0e8da18720bb218e614257f1f12fa8e6736",
+        "workshop_domain.py": "c9ad9bd9297aa2d6757e4cd3f98bd32e5d75ba45f47083222ed67d8468310208",
+        "workshop_messages.py": "b8f38081a0f98ebbfdc3b20e569dd894ab266ba9975e7096dcecf2491c8b9c2a",
+        "workshop_providers.py": "87eecc675389ec577c32ec86f800962a92bc4b40e43213c05b0652e2cf9d227b",
+        "workshop_qr.py": "1bf094667c739e3748c5dbc4cb0234d0e6a59a6be97c7593aa9d6fe16753d8ee",
+        "workshop_qr_page.html": "818cb759941efac21a8fc6de6ce3b6b16770295990560301089998ba4e82ee67",
+        "workshop_qr_share.js": "1bebaa43e905b6c4b23e0fee9fd27e17f6adab1385f7d41b95d685d753334c73",
+        "workshop_repository.py": "dbf51dba433795bd243b8e23f34170526531e43ae0823448a8d100f3bee93825",
+        "workshop_worker.py": "0f4c057a1693f5ccfafd74361c72dde32abd90c23c4e7fc486799e58c1eeaef3"
+      },
+      "hostname": "aga-events.azurewebsites.net",
+      "lastModified": "2026-10-06 20:30:43+00:00",
+      "name": "aga-events",
+      "packageBytes": 9959897,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaevents-7822871/released-package.zip",
+      "packageSha256": "bff80da9fdd316d83e55f2f41cb7b623cc7c14f1929f0b0bc0f27917b45605cb",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.11"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "2cd541ceea09043a61398836cb14b40d7738a99226c7f5174fb3ccecc930f08c",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-06-28T17:39:12.5945971Z",
+        "Id": "f582528a-1b08-4e04-a67d-fbdc10f9f75e",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:13:20.138725+00:00",
+      "etag": "\"0x8DED53C065DE736\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "d0a00efd2e896b5b057243649f70b87ea4838a1f10366bd4c957d3f6a34bbd35",
+        "function_app.py": "b1a4a86fd5d51f223fc87233ae25ef780c881a606bccd772a3f62933813b10eb",
+        "host.json": "fac28cd35d536a67ff49d191a09e12f7103e832bc8243f2b74efaeb63b806aa5",
+        "oryx-manifest.toml": "f5a412055c7f3d8a1eba677763451a6cfb733fef3b27bbd9ef1e316458b073a6",
+        "requirements.txt": "325d94dd1d2c6821fecc08ad8633c17b11296d80381d2534f36755e9d315b54e",
+        "sql/chapter_import.sql": "d1cf2239c40b3f8f6d9273c646de4f9d0f2c22569f8b763829df7596289715f7"
+      },
+      "hostname": "aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net",
+      "lastModified": "2026-06-28 17:38:11+00:00",
+      "name": "aga-membership-functions",
+      "packageBytes": 114233813,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-aga-membership-functions-6cf36d2/released-package.zip",
+      "packageSha256": "aceeeb18f5bc92ed9a63e392132c020e6c15652f7a266486abefb58508138119",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "b1a4a86fd5d51f223fc87233ae25ef780c881a606bccd772a3f62933813b10eb",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "archiveFormat": "squashfs",
+      "capturedAt": "2026-10-13T17:15:24.682695+00:00",
+      "etag": "\"0x8DE88312E5AD581\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        },
+        {
+          "path": "legacy_bayrate_baseline_10.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_perf_base20.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_perf_trigger20.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_recent_benchmark.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_recent_performance_sweep.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_recent_sweep.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_sigmafloor06_10.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_smoke.json",
+          "reason": "generated rating experiment output; production data excluded"
+        },
+        {
+          "path": "legacy_bayrate_smoke_one.json",
+          "reason": "generated rating experiment output; production data excluded"
+        }
+      ],
+      "files": {
+        "__init__.py": "79fd83cfa4c8f04026d267140a1ca4c8197961feb6d6fb616ba7bdf8971c6b9c",
+        "export_legacy_event_ratings.py": "8672a414575b457487468f747e7360a7506e11fe8cc75933d49426bb23653643",
+        "extract_legacy_player_history.py": "ba95d7bc950ba337e374c731b31ea92240037010f73b4af40785d47d1b68d426",
+        "extract_legacy_player_history_from_table.py": "b8c53f783f563c01468f6bb93c06ec66b78b4d8edd5f089ab606f6deb6329226",
+        "function_app.py": "52b08cd53c19b0e68dfdcf63b7a196264676c5d76079906e1e9d6b7354086a7b",
+        "host.json": "c59959b38cd380c8ed87e5798a4f65b9b5e7143d8198b9257e456bb68007634e",
+        "legacy_bayrate.py": "b4dabafdeca015e39c3ea9bf6a05cc01e532c4c3983f1966a4e08c5e5457f075",
+        "oryx-manifest.toml": "e00410f186dad22fe3eaca570f160d50147aee7f86be46e1680c157c22573067",
+        "plot_legacy_player_history.py": "138a73b0d11d50d21acf21268e6f241aca5090d053bdd25521c8464a94bfb484",
+        "requirements.txt": "4f509a7479ca1630bfe6add63917d16b8abf40112a3fdbf1f11e77bd427eea42",
+        "run_legacy_bayrate.py": "61906c26809968706579faca9c07f38acb4c03683ad3121d055e3173712455dd",
+        "sweep_legacy_bayrate.py": "91dec190b19c2bd31aa90373f40a03ceeb0e6bfae53f409d95d0ada61bb34ca9",
+        "sweep_legacy_bayrate_performance.py": "108635ef4a4b18320c508789df2a117ee61b17f9a6354058f6c9450854804909"
+      },
+      "hostname": "aga-membership-functions3.azurewebsites.net",
+      "lastModified": "2026-03-22 16:36:34+00:00",
+      "name": "aga-membership-functions3",
+      "packageBytes": 15388672,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/scm-releases/scm-latest-aga-membership-functions3.zip",
+      "packageSha256": "217f5480e2b9bec79a70ddc69121d6d6e8dde494a7b0b5d6101224a45614dc0a",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "linuxFxVersion": "Python|3.11"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "52b08cd53c19b0e68dfdcf63b7a196264676c5d76079906e1e9d6b7354086a7b",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered current SCM SquashFS; runtime entry verified"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-08-14T02:08:22.2952401Z",
+        "Id": "d2525e98-da19-45da-8d0f-9359094efb27",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:15:43.951873+00:00",
+      "etag": "\"0x8DEF9A8C6CCBF4F\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "e47312affc04ad1385104bca49bd5d9217787b4cb49d0751b112d70bcd070591",
+        "assets/aga-news-card-default-1200x675.jpg": "54846ecb456dab1df5366759de2292c3e2969721206c6cba3a76dfe0817b4d46",
+        "assets/aga-news-card-default-v2-1200x675.jpg": "0ca38986a150d1c7357e1c18daefc5b3c039ad2d401dac55b2668f051bd83b37",
+        "assets/aga-news-card-default-v2.png": "eef27c4bdc163f40789d9af71023b17ed5ce4a86664de1585653273fd89d4bb0",
+        "assets/aga-news-card-default.png": "a79ff5ed514a3a108359c9501979ba3e15a1f6ed255cf5c7eb997bc1a6c2029c",
+        "assets/international-go-news-digest-card-1200x675.jpg": "8e6f9ad8471f6eea3b9027f64e360ce1982388e3c2e979a3988e4cb553ece010",
+        "assets/international-go-news-digest-card-v2-1200x675.jpg": "7f40a2d66625a349770324ce3badcc86f6c3142a6a5374933a476f50e698e396",
+        "assets/international-go-news-digest-card-v2.png": "2be89b6ed69fabdd12821967fcc90c556f15a58a0f6dfbd1a211e17d1887c18d",
+        "assets/international-go-news-digest-card-v3-1200x675.jpg": "f2e03219ee855cc0d202d70d0a33648d8c97f867edafd69c0885c218c76eca6f",
+        "assets/international-go-news-digest-card-v3.png": "7f1b034e8b917d2cba8fad532d08c05f49d370c1de1678543243709e4dfedcbc",
+        "assets/international-go-news-digest-card-v4-1200x675.jpg": "498502f2658db4bad4e310c2ed8bd578204508af4d4db919a6da1b4316f92ce1",
+        "assets/international-go-news-digest-card-v4.png": "d042ebde1ef3956c5c31ebe609811b711081073bfdc37cc95f3f9f6c912b38be",
+        "assets/international-go-news-digest-card-v5-1200x675.jpg": "92a96b64ccbe75cb181fbdbf9aec8c5a89100b3b9d691e86f1439a258d109724",
+        "assets/international-go-news-digest-card-v5.png": "996f95ef693e90fa1f78cd76bec5486e61cd0fda7a56aa700a7a4a25538b961d",
+        "assets/international-go-news-digest-card-v6-1200x675.jpg": "b20befd0288e58ad4e07eb60e7bb9b83ee53ad5136dcf3d13aa939624d7a65c4",
+        "assets/international-go-news-digest-card-v6.png": "c5f3bfab784a7d18882b35cc733f14afd59f780167ab4027b9437b5059e16204",
+        "assets/international-go-news-digest-card-v7-1200x675.jpg": "587057f42b84a70a2eaf21e22c0aad07fefac9e931e281cb00ad924ec10597b5",
+        "assets/international-go-news-digest-card-v7.png": "0b0791531d4a2c998a268a28a4559398783f426496df56c19539d0053a91e212",
+        "assets/international-go-news-digest-card.png": "6811c00737f94b59d0f51b8edff3817ad3b9a5a4fb67d846a6e0df02cc309e15",
+        "external_go_news_sources.py": "d68899907b2177e2a0e613f2773bfcd26e441217e3a461a94c8f4cd3b4788a17",
+        "function_app.py": "0994886c729c693a8b09d209692e1c3eb7e1f803af146f1c524e2638e1fd9c97",
+        "host.json": "13afb1d31f4e36fd52c51479aaff6b088cfb01d95aa42ffbd2d58ca1d24784f4",
+        "news_archive_external_sync.py": "8aedfbb5908d52a5ce1f5e1500db58945734643bf3bafa13e7c7367d7d839ba1",
+        "news_archive_player_context_sync.py": "f7bb0a52e105032c0819058700d0be00a4f5fa6a9403d71c3e8a6dfe734abea5",
+        "news_archive_public_sync.py": "20f7043ce07c00145624d9e77a1b772c1fa3637280b47f2cfc233682c3bd0b16",
+        "oryx-manifest.toml": "77dd56c7febac1774f9fc2c4e52ab2861787669c6385a623ffe3d6714be7e4e4",
+        "requirements.txt": "c8ea93e17fd231bac000b6d487298f87a31768601d1723342ee33012be45df6b",
+        "sql/backfill_article_thumbnails_from_captured_images.sql": "dbb2de49221e3254106da7065e9f3674171a5a6fadbe4dfdc76d863179fd3602",
+        "sql/external_news_source_item_ledger.sql": "2b1dd00d7d005ee43360b173e81079c32e19b11ae4ad5765bb704ad71c4738b1",
+        "sql/news_archive_article_member_match.sql": "f2255c59ad19a7ada15b4a14885e65c98b1cddf74a1a1467ac976b7670a057bb"
+      },
+      "hostname": "aga-news-archive-viewer.azurewebsites.net",
+      "lastModified": "2026-08-14 02:07:21+00:00",
+      "name": "aga-news-archive-viewer",
+      "packageBytes": 27165353,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-aganewsarchiveviewer-5060998/released-package.zip",
+      "packageSha256": "c264479298719b9996356a36166886a66255702633e0e66d2cbd1dd48b6250e5",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.11"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "0994886c729c693a8b09d209692e1c3eb7e1f803af146f1c524e2638e1fd9c97",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-08-10T22:10:27.4031958Z",
+        "Id": "21dce26a-bdab-4027-af48-154f741cfe79",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:16:37.067894+00:00",
+      "etag": "\"0x8DEF72C0B2496EB\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "DEPLOYED_BASELINE.md": "c6ec2aca032f3bd95dcddca5d21b8e787f810f59d4690f0c6a45eab42bef86ef",
+        "README.md": "189a2eeb0516ec98cc22251a8c5b8e7fc11db9cc43dc5258a12180918ac54dd8",
+        "assets/wgo/wgo.min.js": "9fd8702c2150a83d740ceee80b22bf5fe1ac6733ce3e5e45cdb5dd577a146f3f",
+        "assets/wgo/wgo.player.css": "0d5892721a9066114d731fb9104e76a23f6296872e3a73ac8bc2232f13e00ef0",
+        "assets/wgo/wgo.player.min.js": "9f9da53809843970d042b7bd84e960bd012406c338f2166eaa505c695df3b114",
+        "assets/wgo/wood1.jpg": "56f0e5d38fa42716a5fee54c4e410aa21ff677fe2adf19cf6de088ee72844301",
+        "function_app.py": "8edde9dff356415c6cb4c1839a2102be29da9258b423775da050daa14be19e03",
+        "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+        "oryx-manifest.toml": "7b6346eb8bdc5cb7af5da2ec0be706c61e41fdc637e9ebd96ce8c3eeeb80229c",
+        "ratings_explorer.html": "356ad6b63dde772fbe5ab73b85834ca9c0d2cb53e29b67d72a79fb9f4819b8d9",
+        "ratings_explorer_display_support.py": "500eb72701a7dd810f8337d5b1d3938f4f1a2b0605729f259a41a5c08004c030",
+        "ratings_explorer_mobile.html": "f68ea997897afe5c41d6981fe859e3b3ae29f13fb2c5f03a094aa54d945f57b2",
+        "requirements.txt": "ef608e44a66936e7392b55d6551aa682cd5219d51e67c873fb778e4536c5fa74",
+        "wgo_embedded_assets.py": "4eb7beed89eec84283bfd8aca51c9e6f2879465b9e115916fd0882973eaaa36b"
+      },
+      "hostname": "aga-ratings-explorer-display.azurewebsites.net",
+      "lastModified": "2026-08-10 22:09:27+00:00",
+      "name": "aga-ratings-explorer-display",
+      "packageBytes": 10741920,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaratingsexplorerdisplay-8238950/released-package.zip",
+      "packageSha256": "16abc67950b046138b650a68ea04b8e52830e0beebbee85aa9649017cadd635c",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "8edde9dff356415c6cb4c1839a2102be29da9258b423775da050daa14be19e03",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-05-22T20:27:39.8673374Z",
+        "Id": "d8c8d5b6-4031-4988-89f0-8fc378d90d7a",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:16:54.317725+00:00",
+      "etag": "\"0x8DEB8406E056DF1\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "3cd7ebc2abaad87d7523b4db4f1d9b5ab077522de718a902ac08141fa3970940",
+        "assets/wgo/wgo.min.js": "9fd8702c2150a83d740ceee80b22bf5fe1ac6733ce3e5e45cdb5dd577a146f3f",
+        "assets/wgo/wgo.player.css": "0d5892721a9066114d731fb9104e76a23f6296872e3a73ac8bc2232f13e00ef0",
+        "assets/wgo/wgo.player.min.js": "9f9da53809843970d042b7bd84e960bd012406c338f2166eaa505c695df3b114",
+        "assets/wgo/wood1.jpg": "56f0e5d38fa42716a5fee54c4e410aa21ff677fe2adf19cf6de088ee72844301",
+        "bayrate/COPYING": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b",
+        "bayrate/README.md": "ca3562f5a21c696cf7e820ac25bf2433ffca62cee4d7de0038e907640819e48b",
+        "bayrate/__init__.py": "301dd72bdd02e30d87d922329a99929dfbb527de702a06add32425cb3ec5c68c",
+        "bayrate/auth.py": "82ac664d8fff5603c8cee5538fd39b00ab3147b2a236e9ceb122688da16a010c",
+        "bayrate/commit_staged_run.py": "09a38564b0042bc7cbcf4f89c91d6061bcdc62cc1d4c3becbe5ee5fe65cc957a",
+        "bayrate/compare_replay_to_production.py": "b1a3c0c4469ff01f91fe7996548a0e7d3f21e06da2059a39ecaadeb2a6668edd",
+        "bayrate/core.py": "abd818d6c21401576489d3a4a4727df8c15fe933100303d723a01e03ca801b73",
+        "bayrate/merge_member_ratings.py": "28a2832b7f3898c18d31c94c4e75aa745e7b49b7f74b8cf69203691f6fa8cf47",
+        "bayrate/operator.py": "984958dc7e8a3002de9b04172077fc96b1ee2b968204bd6c835d8d911a66d1a4",
+        "bayrate/replay_staged_run.py": "4a93e635dfe3ee730107c7595d31a118fd425a09e661ca2c8aa6175d76e95241",
+        "bayrate/report_parser.py": "429b5e5ad2a1bc39df3f64d1a2ca9cb024b7051b18bdefcc5b01915787a37d88",
+        "bayrate/run_bayrate.py": "451b93accd7a3762f67f444f01e25b055b51e6ba7aa22f75b0553f3c4f65301b",
+        "bayrate/sql_adapter.py": "106e60b156d394e3bd434c4ea4f8499b1dec6af6188c892e96345425ebc37aac",
+        "bayrate/stage_reports.py": "0147a4f3a7e7654b390f14ecd08a861363daaf92936c8ee3901e8460a5f5f93f",
+        "bayrate_staging.html": "60c10dcde834c207b9a57420231d42b01c87bf284008781345ad7d9c9c603f1a",
+        "bulk_upload_sgf_csv.py": "8fd1cf68569db5863dd9cf326939333c4cb9223ddc206ffe2a6f9d2f818e229c",
+        "clubexpress_sgf_popup_test.html": "3f3f529b5a99e6f8fa807cd0a8bfdee759acaa4e364874fc4df5620fd94f7d34",
+        "function_app.py": "ad3fb5d5a6e383d3696f8b17429c39e4a4eabdad6ac478d8b140d125b6ed2f08",
+        "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+        "leago_sgf_import.html": "f09f5f0706d15ebf4981a640803991b8ffb39ad919a4e706554eeb355942d8a8",
+        "leago_sgf_import/README.md": "c99a599073105088f04525d7fda46fe6f2eb90eaa8d98e5b8f4754b675f6d282",
+        "leago_sgf_import/__init__.py": "12c51d43fea72cf58a580ee2e42e6cf899842a1c945b20ef27c5336dc8cd362a",
+        "leago_sgf_import/build_leago_sgf_manifest.py": "25eb3eeed745bfcb24410eb7f7856a9cbdf06989bb30ca6166c744c46265fd4b",
+        "leago_sgf_import/download_leago_aga_sgfs.py": "548dfd868de28bc5f4e15a26cb416ad272a79b004800dd429f3bae59171b2538",
+        "leago_sgf_import/workflow.py": "38f0aac055dab197a4b01eb5c0c70bd25ed07638399689fb3ccf2750b537ada1",
+        "oryx-manifest.toml": "9ebef9ffcc024216dcfac6f37f8a590300fbfe0773c4776381e079ffd62b074d",
+        "ratings_explorer.html": "6fb88084471ee49e78ef8cddf171cf60963274424e4a0162355c05537c211fec",
+        "ratings_explorer_mobile.html": "81f06b78193c4081bcb865ff9e9614fc709e7e939f26d6bf837e7815561a8ae2",
+        "ratings_explorer_support.py": "af337919b6715e6645972d4767f0ba15989272ebfe6d063d7cb9c2a72468e58d",
+        "requirements.txt": "a939651bc62a0fd62a543877a21873a8a417fb97b04a0d4feecb2e8a42a904c8",
+        "rewards_report.html": "27ad5ad54fa53771add7f95e5a9bda796746b6001e9973f5652efffd59641840",
+        "wgo_embedded_assets.py": "4eb7beed89eec84283bfd8aca51c9e6f2879465b9e115916fd0882973eaaa36b"
+      },
+      "hostname": "aga-ratings-explorer-sgf-20260407t2105.azurewebsites.net",
+      "lastModified": "2026-05-22 20:26:39+00:00",
+      "name": "aga-ratings-explorer-sgf-20260407t2105",
+      "packageBytes": 11929177,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaratingsexplorersgf20260407t21-0706146/released-package.zip",
+      "packageSha256": "427d28c74dfb7bc19dcfb7a59e53c40e4be8094bdbbaed922ea9ba5c0e8e80ca",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "ad3fb5d5a6e383d3696f8b17429c39e4a4eabdad6ac478d8b140d125b6ed2f08",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-09-01T13:42:46.0095901Z",
+        "Id": "04ed47c4-386d-4c9b-914a-002c6007e499",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:16:16.439312+00:00",
+      "etag": "\"0x8DF082EC3CB8D3F\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "README.md": "c6f3b867528e8044d18143dbd926ac0e676cf5e3f26dd0cf001c4daa26548483",
+        "assets/wgo/wgo.min.js": "9fd8702c2150a83d740ceee80b22bf5fe1ac6733ce3e5e45cdb5dd577a146f3f",
+        "assets/wgo/wgo.player.css": "0d5892721a9066114d731fb9104e76a23f6296872e3a73ac8bc2232f13e00ef0",
+        "assets/wgo/wgo.player.min.js": "9f9da53809843970d042b7bd84e960bd012406c338f2166eaa505c695df3b114",
+        "assets/wgo/wood1.jpg": "56f0e5d38fa42716a5fee54c4e410aa21ff677fe2adf19cf6de088ee72844301",
+        "bayrate/COPYING": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b",
+        "bayrate/NOTICE.md": "15c571ffa578e9aff05380ab5021c211417251248f0de2c413c63700d54af1ef",
+        "bayrate/README.md": "8973e776ab80741feb747dcfcf7d1d45b526af7ffa168d42518f8aa95655ddd0",
+        "bayrate/__init__.py": "f8d9ed30d6a3dd8988d790bf9c4c1e0245697a7a73697382d5c693edf26c4a10",
+        "bayrate/auth.py": "5e2e53e4ff9994ee12a924f28245fe7398bcaa0ccc696a3d0b94617396e08b56",
+        "bayrate/commit_staged_run.py": "59efe4d5e47d094bfb5469a181c7a093fa14a0e0f10f3966ed5f91ab1f710750",
+        "bayrate/compare_replay_to_production.py": "9c9903b294bb71c44816d18cb94c7bc19b0f8b80c8c7eab03a02974df1330015",
+        "bayrate/core.py": "d5391f681151087b12c34997cb3977e9a7182349a9628d3f346d72737e61c9b9",
+        "bayrate/merge_member_ratings.py": "28a2832b7f3898c18d31c94c4e75aa745e7b49b7f74b8cf69203691f6fa8cf47",
+        "bayrate/operator.py": "c2846c0d24a8f5cbde80198b419ae905ca34afdfe5f1c7ea5f14f86371e289d4",
+        "bayrate/replay_staged_run.py": "5dc319fb6f30c7f1f41bf461f666414601d5cd01f378168981b907da55792970",
+        "bayrate/report_parser.py": "87d24167f1825202426f359aea3fd857268062ac8df8b1aa733387e61ffa2f68",
+        "bayrate/run_bayrate.py": "518d24bf42976fea9ac622bf99754067670e7324b20f23721db1612cce61ae34",
+        "bayrate/snapshot_refresh.py": "ff546a9caacdf2d9430c37716b1d6d89ff9073bd6321bfb771ebb86c1a4bfe07",
+        "bayrate/sql_adapter.py": "6a5f44c307ac8274b0d689216fbffda1880aa21dc700ca873cc63063f9122db6",
+        "bayrate/stage_reports.py": "c385659a900f2e63cb90852f2e38f5d984b1b4af0e5ae2ccf6d06b689a556315",
+        "bayrate_redirect.py": "3853bf3cdaaca4b8712aee30b60e55a11f19bc75addb3747a5a2cb6dedc8c0d6",
+        "bayrate_staging.html": "60c10dcde834c207b9a57420231d42b01c87bf284008781345ad7d9c9c603f1a",
+        "bulk_upload_sgf_csv.py": "d5203ea6f5386b288ca65a08d985b1402d307767cba0118e18b9f1661c44bafa",
+        "chapter_directory_report.html": "7889416edfb693e8fc11e8de76a740054d966aa1d610ff297ba22d6f4cf5c38f",
+        "clubexpress_sgf_popup_test.html": "3f3f529b5a99e6f8fa807cd0a8bfdee759acaa4e364874fc4df5620fd94f7d34",
+        "function_app.py": "bd2fe53a7464e3438a19b15f0a74504af13dac157a057d1045cb329a88ec16da",
+        "go_services_directory_prototype.html": "62297f71c8da3667d549b9fafe2713d1b75e9a544dfdcf74544865fd16aa12af",
+        "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+        "leago_sgf_import.html": "26fdd400057263e74fa85e4b212865a2b1416be241f637b67d017d4155e74df5",
+        "leago_sgf_import/README.md": "572b3278ddf6b425a14d0bec969aa430c2c36ccc5badc2e85826962bc9c37ea1",
+        "leago_sgf_import/__init__.py": "12c51d43fea72cf58a580ee2e42e6cf899842a1c945b20ef27c5336dc8cd362a",
+        "leago_sgf_import/archive_workflow.py": "ee1be16d925b13ecd1a1402ff288790f67cd24667ad7d78a8ee4fd392b1ad242",
+        "leago_sgf_import/build_leago_sgf_manifest.py": "25eb3eeed745bfcb24410eb7f7856a9cbdf06989bb30ca6166c744c46265fd4b",
+        "leago_sgf_import/download_leago_aga_sgfs.py": "548dfd868de28bc5f4e15a26cb416ad272a79b004800dd429f3bae59171b2538",
+        "leago_sgf_import/test_archive_workflow.py": "1799766c5d99288bf8fc71d35811fab42eac63a94f5e64e403b6d61bb650d573",
+        "leago_sgf_import/workflow.py": "38f0aac055dab197a4b01eb5c0c70bd25ed07638399689fb3ccf2750b537ada1",
+        "oryx-manifest.toml": "0ed6cd51d1ef9fc26d8fe07f0d46462e6a71bc38180efbd61c0e228c65beeca7",
+        "ratings_explorer.html": "1625a0a5df0a7942d4a7e051536bea7fd217fdd4c158d1c2c4abb700386928ee",
+        "ratings_explorer_mobile.html": "a14bd46958f04e2194b2af84ff6b94a9b0a7cc88ed293dc84d56717bdc23b75e",
+        "ratings_explorer_support.py": "e6800a67306fc7415915e387393755033af44f1a0dd4c5e0dc5def276e68b0eb",
+        "requirements.txt": "59d02955feb7c3709f2a79b8dfc58a46e2e8164d1fbc53e48031ae5b75c439f8",
+        "rewards_report.html": "29d86de5c7b26c146ca6880f961a8328fc4aa78d9301d0b0e856f04a6998a722",
+        "tests/test_bayrate_redirect.py": "3cf91b8f4c1b2e59c5abcd8482ea24765e92fb3ca828ab65379270fac0ea9eb3",
+        "wgo_embedded_assets.py": "4eb7beed89eec84283bfd8aca51c9e6f2879465b9e115916fd0882973eaaa36b"
+      },
+      "hostname": "aga-ratings-explorer.azurewebsites.net",
+      "lastModified": "2026-09-01 13:41:45+00:00",
+      "name": "aga-ratings-explorer",
+      "packageBytes": 12034174,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaratingsexplorer-6134254/released-package.zip",
+      "packageSha256": "112c33d7d5e403fabf7c70a9685bb642a4a0a58fcfc45cc8ca49cfc106b081e5",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "bd2fe53a7464e3438a19b15f0a74504af13dac157a057d1045cb329a88ec16da",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-08-07T16:50:30.2446369Z",
+        "Id": "de00ea32-993a-4a8e-bc86-cd5b14df311c",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:17:12.636637+00:00",
+      "etag": "\"0x8DEF4A3D9815740\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        ".funcignore": "31dc0e8047edadb3711cac180e2e7621ad322c3151f7499e52510a804dfa16ee",
+        "auth.py": "b90d75acdedd02987b4ad51f5207e913260387fd5cb8bf2464a69990e0f6cc6f",
+        "function_app.py": "cc2914beed9ea709954d9644590c964ae2d5577ebc7d50c6a399c2751ae78f18",
+        "host.json": "c8a6f4e0fc4814bf71ac094112fd3faf0efc75e004cf66de17a24a472a8594c0",
+        "importer.py": "a5c9d6c8658554d1e3b1ba36a368d48c368dc40e26f268db529dd3b6a455a0b9",
+        "oryx-manifest.toml": "6aa51b099df88d38b1ed292eaa434571a760fcbeccaea283bbacb3b12ca532d1",
+        "requirements.txt": "23328fc78ddc594d0d4835d525e9a066aa31486de423348a5d3cc117254fd7df",
+        "sgf_upload.html": "94b6616d6f5717aafa547331d49fe4e76bcc11070e95e7017cff4b504679b7b1",
+        "storage.py": "e861fc20494c2cc2a1dbbc763c55315d56f0bfd9381d5e92cd0f14b0f9eae169"
+      },
+      "hostname": "aga-ratings-sgf-upload.azurewebsites.net",
+      "lastModified": "2026-08-07 16:49:29+00:00",
+      "name": "aga-ratings-sgf-upload",
+      "packageBytes": 11580010,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaratingssgfupload-0967613/released-package.zip",
+      "packageSha256": "f3e74443971408e25878dc2aa515be66a5b28fab8e30824b524f8f13e6be9cea",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.13"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "cc2914beed9ea709954d9644590c964ae2d5577ebc7d50c6a399c2751ae78f18",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    },
+    {
+      "activeDeployment": {
+        "Complete": true,
+        "EndTime": "2026-09-28T19:59:18.7731484Z",
+        "Id": "17b155c7-e361-4605-91c5-bdd80d0ad374",
+        "RemoteBuild": true,
+        "Status": 4,
+        "UploadedPackageName": "released-package.zip",
+        "sourcePackage": "b''"
+      },
+      "capturedAt": "2026-10-13T17:17:38.401701+00:00",
+      "etag": "\"0x8DF1D9AD6ABB8C7\"",
+      "excluded": [
+        {
+          "path": ".ostype",
+          "reason": "not source allowlist; review if required asset"
+        }
+      ],
+      "files": {
+        "additional_sources.py": "6e44d6164e26ab02b0ecc0da4dc725e8b8862f5fa5ddaa91f34e33377fd93368",
+        "archive_discovery.py": "7680629a282e193af32017f9ea78a02f5a0661e1a2dc8b6aa17cae45940c09f3",
+        "function_app.py": "b506dc057673b5826971abb6435c4c171c6f696db82c8f6c362931bf5ce6a079",
+        "history_backfill.py": "63c4b8d54b36ca9775a0f597e5071a22c36723bcced207208a2a20c6bdbca75a",
+        "host.json": "23d61a86f5a1e8bba22c75300878de758681d5d81260489eb35bc286639d6e56",
+        "index.html": "7882a347fc8292b9781834edefd01a0db5a5daf2445f6bb3ff3a54f095539306",
+        "index_core.py": "23574d2e69044b1cb3a8b4df1693a54642463655765be081bbfd56d222e1252b",
+        "legacy_sources.py": "a575c98da88c1b15e0e346f097d3e599d2dd38ab4c0a86a74cca72c99393a6db",
+        "name_index.py": "b4a82dff580634bd0755dedbb3b07018d170978673059d975137a40dca27a64f",
+        "national_sources.py": "a7615b6fbe8c639e5bdc5b2a05b90ae34e14f705075283e384aa14106a22f592",
+        "oryx-manifest.toml": "c4c2773c0ddaabf0610938108869551b1d54f9a4b4d043154ba5ae6b0ca6f16a",
+        "requirements.txt": "bb0fd98f745f92a72f41b95e2981c4799f105ee26cdbb08b558d2c88fee37678",
+        "source_discovery.py": "f5d6d5a8bb8bfade1c4546ffe21dd9c1c9bdca19618f47325747fd4acc18b40d",
+        "tournament_index.py": "e923e0a618836bda23073a11c5a4a454d655183a21add38fc7a46d0d53b1de26",
+        "translation_budget.py": "c809e294c6d673e71a4e8e68042b33694abcc0e602b78080b4d2d226ad17117e",
+        "translation_pacing.py": "4b3adc6b600d1775f1e99133a5edf185578683663b173fd018af6c958445147b"
+      },
+      "hostname": "go-weiqi-baduk-news-index.azurewebsites.net",
+      "lastModified": "2026-09-28 19:58:17+00:00",
+      "name": "go-weiqi-baduk-news-index",
+      "packageBytes": 137634960,
+      "packageLocation": "https://agafunc0522.blob.core.windows.net/go-news-index-deployment/released-package.zip",
+      "packageSha256": "54ff2e136b39c88b3da3bf325b250380d6968ef1a3a06b065c252a30bebc17a9",
+      "resourceGroup": "aga-data-platform",
+      "runtime": {
+        "name": "python",
+        "version": "3.11"
+      },
+      "runtimeEntryMatches": true,
+      "runtimeEntrySha256": "b506dc057673b5826971abb6435c4c171c6f696db82c8f6c362931bf5ce6a079",
+      "runtimeVfsStatus": 200,
+      "secret_review_required": [],
+      "state": "Running",
+      "status": "recovered active deployment"
+    }
+  ],
+  "finishedAt": "2026-10-13T17:20:02.317523+00:00",
+  "sqlExports": [
+    {
+      "capturedAt": "2026-10-13T17:23:34.510952+00:00",
+      "catalogCounts": {
+        "checks": 107,
+        "computed": 0,
+        "data_spaces": 2,
+        "defaults": 242,
+        "dependencies": 371,
+        "external_tables": 0,
+        "foreign_key_columns": 80,
+        "foreign_keys": 79,
+        "fulltext_catalogs": 1,
+        "fulltext_columns": 3,
+        "fulltext_indexes": 1,
+        "fulltext_stoplists": 0,
+        "fulltext_stopwords": 0,
+        "identity": 134,
+        "index_columns": 510,
+        "indexes": 207,
+        "keys": 113,
+        "parameters": 338,
+        "partition_functions": 0,
+        "partition_parameters": 0,
+        "partition_ranges": 0,
+        "partition_schemes": 0,
+        "partitions": 207,
+        "permissions": 311,
+        "principals": 12,
+        "role_members": 3,
+        "schemas": 25,
+        "security_policies": 0,
+        "security_predicates": 0,
+        "sequences": 1,
+        "synonyms": 0,
+        "table_types": 0,
+        "triggers": 8,
+        "types": 0,
+        "xml_indexes": 0
+      },
+      "database": "aga-membership",
+      "method": "live sys catalog SELECTs; no application rows",
+      "objects": [
+        {
+          "classification": "application",
+          "name": "sp_lookup_members",
+          "path": "api/sp_lookup_members.sql",
+          "schema": "api",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "v_current_ratings",
+          "path": "api/v_current_ratings.sql",
+          "schema": "api",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_member_lookup",
+          "path": "api/v_member_lookup.sql",
+          "schema": "api",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_administrator_assignment_versions",
+          "path": "clubexpress/chapter_finder_administrator_assignment_versions.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_administrator_assignments",
+          "path": "clubexpress/chapter_finder_administrator_assignments.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_administrator_sync_runs",
+          "path": "clubexpress/chapter_finder_administrator_sync_runs.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_entries",
+          "path": "clubexpress/chapter_finder_entries.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_entry_versions",
+          "path": "clubexpress/chapter_finder_entry_versions.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_sync_runs",
+          "path": "clubexpress/chapter_finder_sync_runs.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_update_access_links",
+          "path": "clubexpress/chapter_finder_update_access_links.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_update_push_attempts",
+          "path": "clubexpress/chapter_finder_update_push_attempts.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_update_request_fields",
+          "path": "clubexpress/chapter_finder_update_request_fields.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_finder_update_requests",
+          "path": "clubexpress/chapter_finder_update_requests.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "external_news_source_items",
+          "path": "clubexpress/external_news_source_items.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "external_news_translation_cache",
+          "path": "clubexpress/external_news_translation_cache.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "news_archive_runs",
+          "path": "clubexpress/news_archive_runs.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "news_article_assets",
+          "path": "clubexpress/news_article_assets.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "news_article_links",
+          "path": "clubexpress/news_article_links.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "news_article_snapshots",
+          "path": "clubexpress/news_article_snapshots.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "news_articles",
+          "path": "clubexpress/news_articles.sql",
+          "schema": "clubexpress",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "sp_approve_chapter_finder_update_request",
+          "path": "clubexpress/sp_approve_chapter_finder_update_request.sql",
+          "schema": "clubexpress",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_complete_chapter_finder_update_push_attempt",
+          "path": "clubexpress/sp_complete_chapter_finder_update_push_attempt.sql",
+          "schema": "clubexpress",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_reject_chapter_finder_update_request",
+          "path": "clubexpress/sp_reject_chapter_finder_update_request.sql",
+          "schema": "clubexpress",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_start_chapter_finder_update_push_attempt",
+          "path": "clubexpress/sp_start_chapter_finder_update_push_attempt.sql",
+          "schema": "clubexpress",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "v_chapter_finder_update_portal_review",
+          "path": "clubexpress/v_chapter_finder_update_portal_review.sql",
+          "schema": "clubexpress",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_chapter_finder_update_push_queue",
+          "path": "clubexpress/v_chapter_finder_update_push_queue.sql",
+          "schema": "clubexpress",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_chapter_finder_update_review",
+          "path": "clubexpress/v_chapter_finder_update_review.sql",
+          "schema": "clubexpress",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_news_article_latest_snapshots",
+          "path": "clubexpress/v_news_article_latest_snapshots.sql",
+          "schema": "clubexpress",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "game_duplicate_review",
+          "path": "competition/game_duplicate_review.sql",
+          "schema": "competition",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "games_clean",
+          "path": "competition/games_clean.sql",
+          "schema": "competition",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "sp_mark_obvious_duplicate_review",
+          "path": "competition/sp_mark_obvious_duplicate_review.sql",
+          "schema": "competition",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_refresh_clean_competition",
+          "path": "competition/sp_refresh_clean_competition.sql",
+          "schema": "competition",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_refresh_duplicate_review",
+          "path": "competition/sp_refresh_duplicate_review.sql",
+          "schema": "competition",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_refresh_game_duplicate_review",
+          "path": "competition/sp_refresh_game_duplicate_review.sql",
+          "schema": "competition",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_refresh_tournament_duplicate_review",
+          "path": "competition/sp_refresh_tournament_duplicate_review.sql",
+          "schema": "competition",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "tournament_duplicate_review",
+          "path": "competition/tournament_duplicate_review.sql",
+          "schema": "competition",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "tournaments_clean",
+          "path": "competition/tournaments_clean.sql",
+          "schema": "competition",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "vw_rated_games_analysis",
+          "path": "competition/vw_rated_games_analysis.sql",
+          "schema": "competition",
+          "type": "V"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "fn_diagramobjects",
+          "path": "dbo/fn_diagramobjects.sql",
+          "schema": "dbo",
+          "type": "FN"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_alterdiagram",
+          "path": "dbo/sp_alterdiagram.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_creatediagram",
+          "path": "dbo/sp_creatediagram.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_dropdiagram",
+          "path": "dbo/sp_dropdiagram.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_helpdiagramdefinition",
+          "path": "dbo/sp_helpdiagramdefinition.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_helpdiagrams",
+          "path": "dbo/sp_helpdiagrams.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_renamediagram",
+          "path": "dbo/sp_renamediagram.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sp_upgraddiagrams",
+          "path": "dbo/sp_upgraddiagrams.sql",
+          "schema": "dbo",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "sysdiagrams",
+          "path": "dbo/sysdiagrams.sql",
+          "schema": "dbo",
+          "type": "U"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "ensure_capture",
+          "path": "dbrepl_meta/ensure_capture.sql",
+          "schema": "dbrepl_meta",
+          "type": "P"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "generations",
+          "path": "dbrepl_meta/generations.sql",
+          "schema": "dbrepl_meta",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "audit_log",
+          "path": "events/audit_log.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "email_outbox",
+          "path": "events/email_outbox.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "event_occurrences",
+          "path": "events/event_occurrences.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "event_versions",
+          "path": "events/event_versions.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "events",
+          "path": "events/events.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "organizer_memberships",
+          "path": "events/organizer_memberships.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "organizers",
+          "path": "events/organizers.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "registration_contacts",
+          "path": "events/registration_contacts.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "registration_occurrences",
+          "path": "events/registration_occurrences.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "registrations",
+          "path": "events/registrations.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "rehearsal_clocks",
+          "path": "events/rehearsal_clocks.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "workshop_meetings",
+          "path": "events/workshop_meetings.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "workshop_settings",
+          "path": "events/workshop_settings.sql",
+          "schema": "events",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "clubexpress_email_log",
+          "path": "integration/clubexpress_email_log.sql",
+          "schema": "integration",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "journal_article_member_match",
+          "path": "integration/journal_article_member_match.sql",
+          "schema": "integration",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "journal_review_member_match",
+          "path": "integration/journal_review_member_match.sql",
+          "schema": "integration",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "news_archive_article_member_match",
+          "path": "integration/news_archive_article_member_match.sql",
+          "schema": "integration",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "categories",
+          "path": "membership/categories.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_membership_history",
+          "path": "membership/chapter_membership_history.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapters",
+          "path": "membership/chapters.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "clubexpress_parsed_event_attempts",
+          "path": "membership/clubexpress_parsed_event_attempts.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "clubexpress_parsed_events",
+          "path": "membership/clubexpress_parsed_events.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "member_categories",
+          "path": "membership/member_categories.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "members",
+          "path": "membership/members.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "membership_events",
+          "path": "membership/membership_events.sql",
+          "schema": "membership",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "sp_find_invalid_youth_members",
+          "path": "membership/sp_find_invalid_youth_members.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_chapters",
+          "path": "membership/sp_import_chapters.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_member_categories",
+          "path": "membership/sp_import_member_categories.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_memchap",
+          "path": "membership/sp_import_memchap.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_log_clubexpress_email",
+          "path": "membership/sp_log_clubexpress_email.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_journal_news_email",
+          "path": "membership/sp_process_journal_news_email.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_membership_renewal",
+          "path": "membership/sp_process_membership_renewal.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_new_member_email",
+          "path": "membership/sp_process_new_member_email.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_record_clubexpress_parsed_event",
+          "path": "membership/sp_record_clubexpress_parsed_event.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_update_clubexpress_parsed_event_status",
+          "path": "membership/sp_update_clubexpress_parsed_event_status.sql",
+          "schema": "membership",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "admin_permissions",
+          "path": "ratings/admin_permissions.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_admins",
+          "path": "ratings/bayrate_admins.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_reward_reconciliations",
+          "path": "ratings/bayrate_reward_reconciliations.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_run_id_seq",
+          "path": "ratings/bayrate_run_id_seq.sql",
+          "schema": "ratings",
+          "type": "SO"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_runs",
+          "path": "ratings/bayrate_runs.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_staged_games",
+          "path": "ratings/bayrate_staged_games.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_staged_ratings",
+          "path": "ratings/bayrate_staged_ratings.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_staged_tournaments",
+          "path": "ratings/bayrate_staged_tournaments.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_1234103437",
+          "path": "ratings/dbrepl_dirty_1234103437.sql",
+          "schema": "ratings",
+          "type": "TR"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_1250103494",
+          "path": "ratings/dbrepl_dirty_1250103494.sql",
+          "schema": "ratings",
+          "type": "TR"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_1266103551",
+          "path": "ratings/dbrepl_dirty_1266103551.sql",
+          "schema": "ratings",
+          "type": "TR"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_1854629650",
+          "path": "ratings/dbrepl_dirty_1854629650.sql",
+          "schema": "ratings",
+          "type": "TR"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_1870629707",
+          "path": "ratings/dbrepl_dirty_1870629707.sql",
+          "schema": "ratings",
+          "type": "TR"
+        },
+        {
+          "classification": "application",
+          "name": "games",
+          "path": "ratings/games.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "GameSgfStateBackup",
+          "path": "ratings/GameSgfStateBackup.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "newgames03252026",
+          "path": "ratings/newgames03252026.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "newtournaments03252026",
+          "path": "ratings/newtournaments03252026.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "ratings",
+          "path": "ratings/ratings.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "RestoreGamesSgfState",
+          "path": "ratings/RestoreGamesSgfState.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "SaveGamesSgfState",
+          "path": "ratings/SaveGamesSgfState.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_complete_run",
+          "path": "ratings/sp_bayrate_complete_run.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_fail_run",
+          "path": "ratings/sp_bayrate_fail_run.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_get_checkpoint_before_event",
+          "path": "ratings/sp_bayrate_get_checkpoint_before_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_get_cutover_control",
+          "path": "ratings/sp_bayrate_get_cutover_control.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_get_replay_boundary",
+          "path": "ratings/sp_bayrate_get_replay_boundary.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_get_snapshot_seed_before_event",
+          "path": "ratings/sp_bayrate_get_snapshot_seed_before_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_mark_dirty_from_event",
+          "path": "ratings/sp_bayrate_mark_dirty_from_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_mark_dirty_from_tournament",
+          "path": "ratings/sp_bayrate_mark_dirty_from_tournament.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_mark_event_computed",
+          "path": "ratings/sp_bayrate_mark_event_computed.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_purge_from_event",
+          "path": "ratings/sp_bayrate_purge_from_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_refresh_event_index",
+          "path": "ratings/sp_bayrate_refresh_event_index.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_set_cutover_control",
+          "path": "ratings/sp_bayrate_set_cutover_control.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_bayrate_start_run",
+          "path": "ratings/sp_bayrate_start_run.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_grant_admin_permission",
+          "path": "ratings/sp_grant_admin_permission.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_complete_run",
+          "path": "ratings/sp_legacy_bayrate_complete_run.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_fail_run",
+          "path": "ratings/sp_legacy_bayrate_fail_run.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_get_checkpoint_before_event",
+          "path": "ratings/sp_legacy_bayrate_get_checkpoint_before_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_get_replay_boundary",
+          "path": "ratings/sp_legacy_bayrate_get_replay_boundary.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_mark_dirty_from_event",
+          "path": "ratings/sp_legacy_bayrate_mark_dirty_from_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_mark_dirty_from_tournament",
+          "path": "ratings/sp_legacy_bayrate_mark_dirty_from_tournament.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_mark_event_computed",
+          "path": "ratings/sp_legacy_bayrate_mark_event_computed.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_purge_from_event",
+          "path": "ratings/sp_legacy_bayrate_purge_from_event.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_refresh_event_index",
+          "path": "ratings/sp_legacy_bayrate_refresh_event_index.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_legacy_bayrate_start_run",
+          "path": "ratings/sp_legacy_bayrate_start_run.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_revoke_admin_permission",
+          "path": "ratings/sp_revoke_admin_permission.sql",
+          "schema": "ratings",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "tournaments",
+          "path": "ratings/tournaments.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "vw_bayrate_games_source",
+          "path": "ratings/vw_bayrate_games_source.sql",
+          "schema": "ratings",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "vw_bayrate_snapshots_source",
+          "path": "ratings/vw_bayrate_snapshots_source.sql",
+          "schema": "ratings",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "vw_legacy_bayrate_games_source",
+          "path": "ratings/vw_legacy_bayrate_games_source.sql",
+          "schema": "ratings",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "vw_legacy_bayrate_snapshots_source",
+          "path": "ratings/vw_legacy_bayrate_snapshots_source.sql",
+          "schema": "ratings",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_control",
+          "path": "ratings/zz_20260325_bayrate_control.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_event_game_results",
+          "path": "ratings/zz_20260325_bayrate_event_game_results.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_event_index",
+          "path": "ratings/zz_20260325_bayrate_event_index.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_event_player_ratings",
+          "path": "ratings/zz_20260325_bayrate_event_player_ratings.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_player_checkpoint",
+          "path": "ratings/zz_20260325_bayrate_player_checkpoint.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_run_metrics",
+          "path": "ratings/zz_20260325_bayrate_run_metrics.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "zz_20260325_bayrate_runs",
+          "path": "ratings/zz_20260325_bayrate_runs.sql",
+          "schema": "ratings",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "bayrate_reconciliation_applications",
+          "path": "rewards/bayrate_reconciliation_applications.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_daily_snapshot",
+          "path": "rewards/chapter_daily_snapshot.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_eligibility_periods",
+          "path": "rewards/chapter_eligibility_periods.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_renewal_notice_results",
+          "path": "rewards/chapter_renewal_notice_results.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "chapter_transfers",
+          "path": "rewards/chapter_transfers.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "lot_allocations",
+          "path": "rewards/lot_allocations.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "member_daily_snapshot",
+          "path": "rewards/member_daily_snapshot.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "membership_events",
+          "path": "rewards/membership_events.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "point_lots",
+          "path": "rewards/point_lots.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "redemption_receipts",
+          "path": "rewards/redemption_receipts.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "redemption_requests",
+          "path": "rewards/redemption_requests.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "reward_runs",
+          "path": "rewards/reward_runs.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "sp_add_redemption_receipt",
+          "path": "rewards/sp_add_redemption_receipt.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_apply_bayrate_reward_reconciliation",
+          "path": "rewards/sp_apply_bayrate_reward_reconciliation.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_backfill_chapter_renewal_confirmations",
+          "path": "rewards/sp_backfill_chapter_renewal_confirmations.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_create_daily_snapshot",
+          "path": "rewards/sp_create_daily_snapshot.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_delete_redemption_receipt",
+          "path": "rewards/sp_delete_redemption_receipt.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_get_pending_chapter_renewals",
+          "path": "rewards/sp_get_pending_chapter_renewals.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_legacy_gap_membership_awards",
+          "path": "rewards/sp_import_legacy_gap_membership_awards.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_legacy_gap_tournament_awards",
+          "path": "rewards/sp_import_legacy_gap_tournament_awards.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_legacy_redemptions",
+          "path": "rewards/sp_import_legacy_redemptions.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_legacy_redemptions_with_adjustments",
+          "path": "rewards/sp_import_legacy_redemptions_with_adjustments.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_import_opening_balances",
+          "path": "rewards/sp_import_opening_balances.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_post_chapter_transfer",
+          "path": "rewards/sp_post_chapter_transfer.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_post_manual_redemption",
+          "path": "rewards/sp_post_manual_redemption.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_chapter_renewal_notices",
+          "path": "rewards/sp_process_chapter_renewal_notices.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_legacy_gap_rated_game_awards",
+          "path": "rewards/sp_process_legacy_gap_rated_game_awards.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_membership_awards",
+          "path": "rewards/sp_process_membership_awards.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_point_expirations",
+          "path": "rewards/sp_process_point_expirations.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_rated_game_awards",
+          "path": "rewards/sp_process_rated_game_awards.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_process_tournament_awards",
+          "path": "rewards/sp_process_tournament_awards.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_record_chapter_renewal_confirmation",
+          "path": "rewards/sp_record_chapter_renewal_confirmation.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_record_membership_event",
+          "path": "rewards/sp_record_membership_event.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "sp_update_redemption_notes",
+          "path": "rewards/sp_update_redemption_notes.sql",
+          "schema": "rewards",
+          "type": "P"
+        },
+        {
+          "classification": "application",
+          "name": "transactions",
+          "path": "rewards/transactions.sql",
+          "schema": "rewards",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "v_chapter_balances",
+          "path": "rewards/v_chapter_balances.sql",
+          "schema": "rewards",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_chapter_transaction_history",
+          "path": "rewards/v_chapter_transaction_history.sql",
+          "schema": "rewards",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_membership_event_audit",
+          "path": "rewards/v_membership_event_audit.sql",
+          "schema": "rewards",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_point_lot_aging",
+          "path": "rewards/v_point_lot_aging.sql",
+          "schema": "rewards",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "v_reward_run_history",
+          "path": "rewards/v_reward_run_history.sql",
+          "schema": "rewards",
+          "type": "V"
+        },
+        {
+          "classification": "application",
+          "name": "chapters",
+          "path": "staging/chapters.sql",
+          "schema": "staging",
+          "type": "U"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_1202103323",
+          "path": "staging/dbrepl_dirty_1202103323.sql",
+          "schema": "staging",
+          "type": "TR"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_18099105",
+          "path": "staging/dbrepl_dirty_18099105.sql",
+          "schema": "staging",
+          "type": "TR"
+        },
+        {
+          "classification": "tooling/replication",
+          "name": "dbrepl_dirty_887674210",
+          "path": "staging/dbrepl_dirty_887674210.sql",
+          "schema": "staging",
+          "type": "TR"
+        },
+        {
+          "classification": "application",
+          "name": "member_categories",
+          "path": "staging/member_categories.sql",
+          "schema": "staging",
+          "type": "U"
+        },
+        {
+          "classification": "application",
+          "name": "memchap",
+          "path": "staging/memchap.sql",
+          "schema": "staging",
+          "type": "U"
+        }
+      ],
+      "status": "exported",
+      "unavailableDefinitions": []
+    }
+  ],
+  "sqlServers": [
+    {
+      "databases": [
+        {
+          "name": "aga-membership",
+          "status": "Online"
+        },
+        {
+          "name": "master",
+          "status": "Online"
+        },
+        {
+          "name": "aga-membership-pre-bayrate-rerun-20260827-224520",
+          "status": "Paused"
+        }
+      ],
+      "host": "aga-sql-server.database.windows.net",
+      "name": "aga-sql-server",
+      "resourceGroup": "aga-data-platform"
+    }
+  ],
+  "startedAt": "2026-10-13T17:10:03.455329+00:00",
+  "storageAccounts": [
+    {
+      "kind": "StorageV2",
+      "name": "agafunc0522",
+      "resourceGroup": "aga-data-platform"
+    }
+  ],
+  "subscription": "4dcce4a0-c902-4012-91fe-6dbbddfd6fb7",
+  "tenant": "5f1a8692-caac-4040-9a1b-858e98f03e4b"
+}

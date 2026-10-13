@@ -1,0 +1,43 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-06-14T02:01:57.6441621Z",
+    "Id": "1c4e6a4d-a8ff-4991-962e-2ebeb0406338",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:12:48.357629+00:00",
+  "etag": "\"0x8DEC9B8C67BEFB6\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "a61bb4d04408b168cfc2f866e30c91e2ca23a10fed4081594d55b2ed53f526df",
+    "function_app.py": "17b818353f96da16a7373fc44d1c614735cdd3d7c63c25f7cccf73af5aa76624",
+    "host.json": "13afb1d31f4e36fd52c51479aaff6b088cfb01d95aa42ffbd2d58ca1d24784f4",
+    "oryx-manifest.toml": "4e14b7b645a667558b51c3bc8b9018f73bba3c558ef4cf7dde396062d3db2316",
+    "requirements.txt": "8761cbf5a62357a3b34c4f474fe6e2e3885e7be3ffd35d438ccce528d841c276"
+  },
+  "hostname": "aga-clubexpress-sso-probe.azurewebsites.net",
+  "lastModified": "2026-06-14 02:00:57+00:00",
+  "name": "aga-clubexpress-sso-probe",
+  "packageBytes": 9813520,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaclubexpressssoprobe-9551475/released-package.zip",
+  "packageSha256": "cbea1dbc360351ff25547522cc2862f276398e7a8ec60c7819f9dbd92d609a12",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "17b818353f96da16a7373fc44d1c614735cdd3d7c63c25f7cccf73af5aa76624",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

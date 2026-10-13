@@ -1,0 +1,421 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "platform": {
+      "enabled": false
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:31:56.122646+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 10 5 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "create_rewards_daily_snapshot",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "create_rewards_daily_snapshot",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "create_rewards_daily_snapshot"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "poll_clubexpress_mailbox",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "poll_clubexpress_mailbox",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "poll_clubexpress_mailbox"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 20 5 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_rewards_membership_awards",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_rewards_membership_awards",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_rewards_membership_awards"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 40 5 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_rewards_point_expirations",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_rewards_point_expirations",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_rewards_point_expirations"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 30 5 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_rewards_rated_game_awards",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_rewards_rated_game_awards",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_rewards_rated_game_awards"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 35 5 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_rewards_tournament_awards",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_rewards_tournament_awards",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_rewards_tournament_awards"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_chapter_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_chapter_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_chapter_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_chapter_renewal_notice_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_chapter_renewal_notice_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_chapter_renewal_notice_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_journal_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_journal_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_journal_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_member_category_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_member_category_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_member_category_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_memchap_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_memchap_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_memchap_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_new_member_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_new_member_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_new_member_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 */5 * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "process_staged_renewal_events",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "process_staged_renewal_events",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "process_staged_renewal_events"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 50 5 * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "send_pending_chapter_renewals_email",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "send_pending_chapter_renewals_email",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "send_pending_chapter_renewals_email"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureFunctionsWebHost__hostid": "aga-clubexpress-mail",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "CHAPTER_RENEWAL_NOTICE_EMAIL_TO": "<supplied securely>",
+    "CHAPTER_RENEWAL_PENDING_EMAIL_TO": "<supplied securely>",
+    "CLUBEXPRESS_ARCHIVE_CONTAINER": "clubexpress-archive",
+    "CLUBEXPRESS_MAILBOX_BATCH_SIZE": "10",
+    "CLUBEXPRESS_MAILBOX_ENABLED": "true",
+    "CLUBEXPRESS_MAILBOX_FOLDER": "Inbox",
+    "CLUBEXPRESS_PARSED_EVENT_STAGING_ENABLED": "true",
+    "CLUBEXPRESS_PROCESSED_CATEGORY": "ProcessedByFunction",
+    "CLUBEXPRESS_STAGED_CHAPTER_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_CHAPTER_PROCESSOR_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_CHAPTER_RENEWAL_NOTICE_PROCESSOR_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_JOURNAL_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_JOURNAL_PROCESSOR_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_MEMBER_CATEGORIES_PROCESSOR_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_MEMCHAP_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_MEMCHAP_PROCESSOR_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_NEW_MEMBER_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_NEW_MEMBER_PROCESSOR_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_RENEWAL_CONSUMPTION_ENABLED": "true",
+    "CLUBEXPRESS_STAGED_RENEWAL_PROCESSOR_ENABLED": "true",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "GOOGLE_WORKSPACE_CLIENT_ID": "<supplied securely>",
+    "GOOGLE_WORKSPACE_CLIENT_SECRET": "<supplied securely>",
+    "GOOGLE_WORKSPACE_MAILBOX": "<supplied securely>",
+    "GOOGLE_WORKSPACE_QUERY": "in:inbox -label:ProcessedByFunction ((subject:\"New Member Signup - Payment\" OR subject:\"American Go Association - Member Renewal\" OR subject:\"American Go E - Journal\" OR subject:\"Weekly American Go E - Journal\" OR has:attachment) OR (subject:\"Membership Renewal Emails\" after:2026/5/4))",
+    "GOOGLE_WORKSPACE_REFRESH_TOKEN": "<supplied securely>",
+    "PENDING_CHAPTER_RENEWALS_EMAIL_ENABLED": "false",
+    "REWARDS_EXPIRATIONS_ENABLED": "false",
+    "REWARDS_MEMBERSHIP_AWARDS_ENABLED": "false",
+    "REWARDS_RATED_GAME_AWARDS_ENABLED": "false",
+    "REWARDS_SNAPSHOT_ENABLED": "false",
+    "REWARDS_TOURNAMENT_AWARDS_ENABLED": "false",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

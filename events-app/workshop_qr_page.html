@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free Beginners Go Workshop — QR card</title>
+  <meta name="description" content="Learn Go in an hour. Download or share this invitation to a free online beginners workshop.">
+  <link rel="canonical" href="__CARD_URL__">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Free Beginners Go Workshop">
+  <meta property="og:description" content="Learn Go in an hour. Open the QR card to register, download or share.">
+  <meta property="og:url" content="__CARD_URL__">
+  <meta property="og:image" content="__PNG_URL__">
+  <style>
+    :root{color-scheme:light;--red:#a71920;--dark:#781116;--line:#d9d3c8}*{box-sizing:border-box}body{margin:0;background:#f4f0e7;color:#20201f;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}main{width:min(360px,calc(100% - 24px));margin:22px auto;padding-bottom:20px}.brand{color:var(--dark);font-size:12px;font-weight:800;letter-spacing:.08em;text-align:center;margin:0 0 16px;text-transform:uppercase}.qr-card{background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 28px #3b302412}.qr-image{display:block}.qr-image img{display:block;width:100%;height:auto}.qr-tools{display:flex;justify-content:space-between;align-items:center;padding:6px 10px 10px}.qr-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;padding:12px;border:0;border-radius:10px;background:transparent;color:var(--red);cursor:pointer}.qr-icon:hover{background:#f6e8e8}.qr-icon:disabled{opacity:.55;cursor:wait}.qr-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:-3px}.register{display:block;padding:13px 16px;margin:18px 0 12px;border-radius:10px;background:var(--red);color:white;text-align:center;text-decoration:none;font-weight:750}.register:hover{background:var(--dark)}.hint{margin:0;text-align:center;font-size:14px;color:#69645c}#qr-share-status{margin:14px 0;font-size:14px}#qr-share-link{display:block;width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit}[hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <main aria-label="Free Beginners Go Workshop QR card">
+    <p class="brand">American Go Association</p>
+    <p class="hint">__CHAPTER_LABEL__</p>
+    <div class="qr-card">
+      <a class="qr-image" href="__REGISTRATION_URL__" aria-label="See upcoming workshops and register">
+        <img src="__PNG_URL__" width="360" height="360" alt="Free Beginners Online Workshop. Learn Go in an hour — scan or tap to register.">
+      </a>
+      <div class="qr-tools">
+        <a id="qr-download-png" class="qr-icon" href="__PNG_URL__" download="free-beginners-workshop-qr.png" aria-label="Download PNG" title="Download QR image">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
+        </a>
+        <button id="qr-share" class="qr-icon" type="button" data-share-url="__CARD_URL__" aria-label="Share QR card" title="Share QR card" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M7 11H4v10h16V11h-3"/></svg>
+        </button>
+      </div>
+    </div>
+    <a class="register" href="__REGISTRATION_URL__">See workshops &amp; register</a>
+    <p class="hint">Share this card with a friend.</p>
+    <p id="qr-share-status" role="status" aria-live="polite"></p>
+    <input id="qr-share-link" type="url" readonly hidden aria-label="QR card link to copy">
+    <noscript><p>To share this card, copy its address from your browser.</p></noscript>
+  </main>
+  <script src="/events-assets/workshop-qr-share.js"></script>
+</body>
+</html>

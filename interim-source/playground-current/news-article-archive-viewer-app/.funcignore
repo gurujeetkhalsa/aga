@@ -1,0 +1,8 @@
+# Copyright 2026, American Go Association, All rights reserved
+
+local.settings.json
+__pycache__/
+*.pyc
+*.log
+.python_packages/
+tests/

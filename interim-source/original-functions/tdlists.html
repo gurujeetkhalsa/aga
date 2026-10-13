@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TDLists</title>
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --panel: #fffdf8;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #d6d3d1;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.10), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.10), transparent 28%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(31, 41, 55, 0.10);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(31, 41, 55, 0.08);
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      line-height: 1.1;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 24px 0 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      min-width: 140px;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: white;
+      background: var(--accent);
+      cursor: pointer;
+      transition: background 120ms ease, transform 120ms ease;
+    }
+
+    button:hover {
+      background: var(--accent-strong);
+      transform: translateY(-1px);
+    }
+
+    .status {
+      margin: 0 0 14px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      min-height: 1.3em;
+    }
+
+    .viewer {
+      width: 100%;
+      min-height: 70vh;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+    }
+
+    iframe {
+      width: 100%;
+      min-height: 70vh;
+      border: 0;
+      border-radius: 14px;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>TDLists</h1>
+      <p>Select a list to load its current output below.</p>
+
+      <div class="buttons">
+        <button type="button" data-url="https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/tda">TDLISTA</button>
+        <button type="button" data-url="https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/tdb">TDLISTB</button>
+        <button type="button" data-url="https://aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net/api/tdn">TDLISTN</button>
+      </div>
+
+      <div id="status" class="status">Choose a TDList.</div>
+
+      <div class="viewer">
+        <iframe id="tdlist-frame" title="TDList output"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const status = document.getElementById("status");
+    const frame = document.getElementById("tdlist-frame");
+    const buttons = document.querySelectorAll("button[data-url]");
+
+    function loadList(label, url) {
+      status.textContent = `Loading ${label}...`;
+      frame.src = url;
+      frame.onload = () => {
+        status.textContent = `${label} loaded.`;
+      };
+    }
+
+    for (const button of buttons) {
+      button.addEventListener("click", () => {
+        loadList(button.textContent.trim(), button.dataset.url);
+      });
+    }
+  </script>
+</body>
+</html>

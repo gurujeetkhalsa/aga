@@ -1,0 +1,397 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "globalValidation": {
+      "unauthenticatedClientAction": "AllowAnonymous"
+    },
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "clientId": "319512c6-9f28-46e1-be91-f22d7189f928",
+          "clientSecretSettingName": "WEBSITE_AUTH_CLIENT_SECRET",
+          "openIdIssuer": "https://sts.windows.net/5f1a8692-caac-4040-9a1b-858e98f03e4b/"
+        },
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-bayrate.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "google": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-bayrate.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "legacyMicrosoftAccount": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-bayrate.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      }
+    },
+    "login": {
+      "preserveUrlFragmentsForLogins": false,
+      "routes": {
+        "logoutEndpoint": "/.auth/logout"
+      },
+      "tokenStore": {
+        "enabled": true
+      }
+    },
+    "platform": {
+      "enabled": true,
+      "runtimeVersion": "~1"
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:32:05.337350+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/metadata-options",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateMetadataOptions",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateMetadataOptions",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateMetadataOptions"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/commit",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingCommit",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingCommit",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingCommit"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/commit-preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingCommitPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingCommitPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingCommitPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "bayrate",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/replay",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingReplay",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingReplay",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingReplay"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/review",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingReview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingReview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingReview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/run",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingRun",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingRun",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingRun"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "bayrate/stage",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "BayRateStagingWrite",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "BayRateStagingWrite",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "BayRateStagingWrite"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "BAYRATE_TRUST_EASY_AUTH": "true",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "RATINGS_EXPLORER_SNAPSHOT_REFRESH_KEY": "<supplied securely>",
+    "RATINGS_EXPLORER_SNAPSHOT_REFRESH_URL": "https://aga-ratings-explorer-display.azurewebsites.net/api/ratings-explorer/snapshot-refresh",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

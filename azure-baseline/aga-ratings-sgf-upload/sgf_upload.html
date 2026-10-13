@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AGA Ratings SGF Upload</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    body { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; color: #172033; }
+    h1 { margin-bottom: .25rem; }
+    .muted { color: #596579; }
+    .panel { border: 1px solid #ccd3df; border-radius: 10px; padding: 1rem; margin: 1rem 0; }
+    label { display: block; margin: .75rem 0; }
+    input[type=file] { display: block; margin-top: .35rem; }
+    button { padding: .6rem 1rem; border: 0; border-radius: 7px; background: #1558d6; color: white; cursor: pointer; margin-right: .5rem; }
+    button[disabled] { opacity: .45; cursor: not-allowed; }
+    button.danger { background: #9b1c1c; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f5f7fa; padding: .8rem; border-radius: 7px; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { padding: .4rem; border-bottom: 1px solid #e2e6ed; text-align: left; vertical-align: top; }
+    .error { color: #9b1c1c; }
+    .ready, .applied { color: #136c38; }
+    .skipped { color: #855e00; }
+  </style>
+</head>
+<body>
+  <h1>Ratings Explorer SGF Upload</h1>
+  <p class="muted">Upload a validated archive containing <code>ratings-explorer-manifest.csv</code> and its SGF files. This tool does not contact Leago.</p>
+
+  <section class="panel">
+    <div id="identity" class="muted">Checking authorization…</div>
+    <label>Archive ZIP
+      <input id="archive" type="file" accept=".zip,application/zip">
+    </label>
+    <label><input id="replace" type="checkbox"> Allow replacement only for manifest rows whose <code>Replace_Existing</code> is true</label>
+    <button id="preview" disabled>Preview</button>
+    <button id="apply" class="danger" disabled>Upload ready SGFs</button>
+  </section>
+
+  <section class="panel">
+    <strong>Status</strong>
+    <pre id="status">Choose an archive to begin.</pre>
+  </section>
+
+  <section id="resultsPanel" class="panel" hidden>
+    <strong>Games</strong>
+    <div style="overflow:auto"><table>
+      <thead><tr><th>Row</th><th>Game</th><th>Round</th><th>Status</th><th>Action</th><th>SGF file</th><th>Message</th></tr></thead>
+      <tbody id="results"></tbody>
+    </table></div>
+  </section>
+
+  <script>
+    const api = location.pathname.replace(/\/$/, '');
+    const archiveInput = document.querySelector('#archive');
+    const replaceInput = document.querySelector('#replace');
+    const previewButton = document.querySelector('#preview');
+    const applyButton = document.querySelector('#apply');
+    const statusBox = document.querySelector('#status');
+    const resultsPanel = document.querySelector('#resultsPanel');
+    const resultsBody = document.querySelector('#results');
+    let archiveBase64 = '';
+    let planHash = '';
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function setBusy(busy) {
+      previewButton.disabled = busy || !archiveBase64;
+      applyButton.disabled = busy || !planHash;
+    }
+    function render(payload) {
+      const summary = payload.summary || {};
+      statusBox.className = payload.ok ? '' : 'error';
+      statusBox.textContent = payload.ok
+        ? `${payload.mode}: ${Object.entries(summary).map(([k,v]) => `${k} ${v}`).join(', ')}\nArchive: ${payload.archive?.name || ''}\nPlan: ${payload.plan_hash || ''}`
+        : (payload.error || 'Request failed.');
+      const rows = payload.results || [];
+      resultsPanel.hidden = rows.length === 0;
+      resultsBody.innerHTML = rows.map(row => `<tr>
+        <td>${escapeHtml(row.row_number)}</td><td>${escapeHtml(row.game_id)}</td><td>${escapeHtml(row.round)}</td>
+        <td class="${escapeHtml(row.status)}">${escapeHtml(row.status)}</td><td>${escapeHtml(row.action)}</td>
+        <td>${escapeHtml(row.sgf_file)}</td><td>${escapeHtml(row.message)}</td></tr>`).join('');
+    }
+    async function call(path, extra = {}) {
+      setBusy(true);
+      try {
+        const response = await fetch(`${api}/${path}`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            archive_name: archiveInput.files[0]?.name || 'sgf-archive.zip',
+            archive_base64: archiveBase64,
+            replace_existing: replaceInput.checked,
+            ...extra
+          })
+        });
+        const payload = await response.json();
+        render(payload);
+        if (!response.ok || !payload.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+        return payload;
+      } finally { setBusy(false); }
+    }
+    archiveInput.addEventListener('change', async () => {
+      planHash = '';
+      archiveBase64 = '';
+      const file = archiveInput.files[0];
+      if (!file) return setBusy(false);
+      if (file.size > 25 * 1024 * 1024) return render({ok:false,error:'Archive must be 25 MB or smaller.'});
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
+      archiveBase64 = btoa(binary);
+      statusBox.textContent = `Ready to preview ${file.name} (${file.size.toLocaleString()} bytes).`;
+      setBusy(false);
+    });
+    replaceInput.addEventListener('change', () => { planHash = ''; setBusy(false); });
+    previewButton.addEventListener('click', async () => {
+      try { const payload = await call('preview'); planHash = payload.plan_hash; }
+      catch (error) { if (!statusBox.classList.contains('error')) render({ok:false,error:error.message}); }
+      finally { setBusy(false); }
+    });
+    applyButton.addEventListener('click', async () => {
+      if (!confirm('Upload every ready SGF in this preview and update its Ratings Explorer game record?')) return;
+      try { const payload = await call('apply', {plan_hash: planHash, confirm_apply: true}); planHash = ''; render(payload); }
+      catch (error) { if (!statusBox.classList.contains('error')) render({ok:false,error:error.message}); }
+      finally { setBusy(false); }
+    });
+    fetch(`${api}/me`).then(r => r.json()).then(payload => {
+      document.querySelector('#identity').textContent = payload.ok
+        ? `Authorized as ${payload.authorization.principal_name} (${payload.authorization.permission_code})`
+        : (payload.error || 'Not authorized.');
+    });
+  </script>
+</body>
+</html>

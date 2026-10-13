@@ -1,0 +1,68 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-08-14T02:08:22.2952401Z",
+    "Id": "d2525e98-da19-45da-8d0f-9359094efb27",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:15:43.951873+00:00",
+  "etag": "\"0x8DEF9A8C6CCBF4F\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "e47312affc04ad1385104bca49bd5d9217787b4cb49d0751b112d70bcd070591",
+    "assets/aga-news-card-default-1200x675.jpg": "54846ecb456dab1df5366759de2292c3e2969721206c6cba3a76dfe0817b4d46",
+    "assets/aga-news-card-default-v2-1200x675.jpg": "0ca38986a150d1c7357e1c18daefc5b3c039ad2d401dac55b2668f051bd83b37",
+    "assets/aga-news-card-default-v2.png": "eef27c4bdc163f40789d9af71023b17ed5ce4a86664de1585653273fd89d4bb0",
+    "assets/aga-news-card-default.png": "a79ff5ed514a3a108359c9501979ba3e15a1f6ed255cf5c7eb997bc1a6c2029c",
+    "assets/international-go-news-digest-card-1200x675.jpg": "8e6f9ad8471f6eea3b9027f64e360ce1982388e3c2e979a3988e4cb553ece010",
+    "assets/international-go-news-digest-card-v2-1200x675.jpg": "7f40a2d66625a349770324ce3badcc86f6c3142a6a5374933a476f50e698e396",
+    "assets/international-go-news-digest-card-v2.png": "2be89b6ed69fabdd12821967fcc90c556f15a58a0f6dfbd1a211e17d1887c18d",
+    "assets/international-go-news-digest-card-v3-1200x675.jpg": "f2e03219ee855cc0d202d70d0a33648d8c97f867edafd69c0885c218c76eca6f",
+    "assets/international-go-news-digest-card-v3.png": "7f1b034e8b917d2cba8fad532d08c05f49d370c1de1678543243709e4dfedcbc",
+    "assets/international-go-news-digest-card-v4-1200x675.jpg": "498502f2658db4bad4e310c2ed8bd578204508af4d4db919a6da1b4316f92ce1",
+    "assets/international-go-news-digest-card-v4.png": "d042ebde1ef3956c5c31ebe609811b711081073bfdc37cc95f3f9f6c912b38be",
+    "assets/international-go-news-digest-card-v5-1200x675.jpg": "92a96b64ccbe75cb181fbdbf9aec8c5a89100b3b9d691e86f1439a258d109724",
+    "assets/international-go-news-digest-card-v5.png": "996f95ef693e90fa1f78cd76bec5486e61cd0fda7a56aa700a7a4a25538b961d",
+    "assets/international-go-news-digest-card-v6-1200x675.jpg": "b20befd0288e58ad4e07eb60e7bb9b83ee53ad5136dcf3d13aa939624d7a65c4",
+    "assets/international-go-news-digest-card-v6.png": "c5f3bfab784a7d18882b35cc733f14afd59f780167ab4027b9437b5059e16204",
+    "assets/international-go-news-digest-card-v7-1200x675.jpg": "587057f42b84a70a2eaf21e22c0aad07fefac9e931e281cb00ad924ec10597b5",
+    "assets/international-go-news-digest-card-v7.png": "0b0791531d4a2c998a268a28a4559398783f426496df56c19539d0053a91e212",
+    "assets/international-go-news-digest-card.png": "6811c00737f94b59d0f51b8edff3817ad3b9a5a4fb67d846a6e0df02cc309e15",
+    "external_go_news_sources.py": "d68899907b2177e2a0e613f2773bfcd26e441217e3a461a94c8f4cd3b4788a17",
+    "function_app.py": "0994886c729c693a8b09d209692e1c3eb7e1f803af146f1c524e2638e1fd9c97",
+    "host.json": "13afb1d31f4e36fd52c51479aaff6b088cfb01d95aa42ffbd2d58ca1d24784f4",
+    "news_archive_external_sync.py": "8aedfbb5908d52a5ce1f5e1500db58945734643bf3bafa13e7c7367d7d839ba1",
+    "news_archive_player_context_sync.py": "f7bb0a52e105032c0819058700d0be00a4f5fa6a9403d71c3e8a6dfe734abea5",
+    "news_archive_public_sync.py": "20f7043ce07c00145624d9e77a1b772c1fa3637280b47f2cfc233682c3bd0b16",
+    "oryx-manifest.toml": "77dd56c7febac1774f9fc2c4e52ab2861787669c6385a623ffe3d6714be7e4e4",
+    "requirements.txt": "c8ea93e17fd231bac000b6d487298f87a31768601d1723342ee33012be45df6b",
+    "sql/backfill_article_thumbnails_from_captured_images.sql": "dbb2de49221e3254106da7065e9f3674171a5a6fadbe4dfdc76d863179fd3602",
+    "sql/external_news_source_item_ledger.sql": "2b1dd00d7d005ee43360b173e81079c32e19b11ae4ad5765bb704ad71c4738b1",
+    "sql/news_archive_article_member_match.sql": "f2255c59ad19a7ada15b4a14885e65c98b1cddf74a1a1467ac976b7670a057bb"
+  },
+  "hostname": "aga-news-archive-viewer.azurewebsites.net",
+  "lastModified": "2026-08-14 02:07:21+00:00",
+  "name": "aga-news-archive-viewer",
+  "packageBytes": 27165353,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-aganewsarchiveviewer-5060998/released-package.zip",
+  "packageSha256": "c264479298719b9996356a36166886a66255702633e0e66d2cbd1dd48b6250e5",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.11"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "0994886c729c693a8b09d209692e1c3eb7e1f803af146f1c524e2638e1fd9c97",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

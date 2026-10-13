@@ -1,0 +1,5 @@
+.test-deps/
+__pycache__/
+local.settings.json
+test-results/
+*.zip

@@ -1,0 +1,268 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "platform": {
+      "enabled": false
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:31:58.461017+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "clubexpress-sso-probe/{probe_token}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "clubexpress_sso_probe",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "clubexpress_sso_probe",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "clubexpress_sso_probe"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "clubexpress-sso-probe-last/{probe_token}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "clubexpress_sso_probe_last",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "clubexpress_sso_probe_last",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "clubexpress_sso_probe_last"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "l/{probe_token}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "clubexpress_sso_probe_last_short",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "clubexpress_sso_probe_last_short",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "clubexpress_sso_probe_last_short"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "c/{probe_token}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "clubexpress_sso_probe_short",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "clubexpress_sso_probe_short",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "clubexpress_sso_probe_short"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "clubexpress-sso-probe-start/{probe_token}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "clubexpress_sso_probe_start",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "clubexpress_sso_probe_start",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "clubexpress_sso_probe_start"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "s/{probe_token}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "clubexpress_sso_probe_start_short",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "clubexpress_sso_probe_start_short",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "clubexpress_sso_probe_start_short"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "CLUBEXPRESS_CLUB_DOMAIN": "https://usgo.org",
+    "CLUBEXPRESS_OAUTH_CLIENT_ID": "<supplied securely>",
+    "CLUBEXPRESS_OAUTH_CLIENT_SECRET": "<supplied securely>",
+    "CLUBEXPRESS_SSO_REDIRECT_URI": "https://aga-clubexpress-sso-probe.azurewebsites.net/api/c/2fq2g3r8o2",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "SSO_PROBE_CAPTURE_LIMIT": "20",
+    "SSO_PROBE_MAX_CAPTURE_BYTES": "65536",
+    "SSO_PROBE_TOKEN": "<supplied securely>"
+  },
+  "sqlTargets": [],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

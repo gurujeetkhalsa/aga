@@ -1,0 +1,823 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "globalValidation": {
+      "unauthenticatedClientAction": "AllowAnonymous"
+    },
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "login": {
+          "loginParameters": [
+            "scope=openid profile email"
+          ]
+        },
+        "registration": {
+          "clientId": "cf20a3f1-6664-4bc6-9c4f-0a17473f96d3",
+          "clientSecretSettingName": "EVENTS_AUTH_CLIENT_SECRET",
+          "openIdIssuer": "https://login.microsoftonline.com/5f1a8692-caac-4040-9a1b-858e98f03e4b/v2.0"
+        },
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-events.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "google": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-events.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "legacyMicrosoftAccount": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-events.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      }
+    },
+    "login": {
+      "preserveUrlFragmentsForLogins": false,
+      "routes": {
+        "logoutEndpoint": "/.auth/logout"
+      },
+      "tokenStore": {
+        "enabled": true
+      }
+    },
+    "platform": {
+      "enabled": true,
+      "runtimeVersion": "~1"
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:32:09.611400+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "api/events/health",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsHealth",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsHealth",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsHealth"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsManageAddOccurrence",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsManageAddOccurrence",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsManageAddOccurrence"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsManageListOccurrences",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsManageListOccurrences",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsManageListOccurrences"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events/manage/{slug}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsManagePage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsManagePage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsManagePage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "PATCH"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences/{occurrence_id:int}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsManageUpdateOccurrence",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsManageUpdateOccurrence",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsManageUpdateOccurrence"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "api/events/{slug}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsPublicData",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsPublicData",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsPublicData"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events/{slug}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsPublicPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsPublicPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsPublicPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events/{slug}/qr.svg",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsQrCode",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsQrCode",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsQrCode"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST"
+            ],
+            "name": "req",
+            "route": "api/events/{slug}/registrations",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "EventsRegisterFree",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "EventsRegisterFree",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "EventsRegisterFree"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events-assets/workshop-admin.js",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopAdminScript",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopAdminScript",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopAdminScript"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "DELETE"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences/{occurrence_id:int}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopCancelDate",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopCancelDate",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopCancelDate"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events/{slug}/chapter-qr",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopChapterQrPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopChapterQrPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopChapterQrPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "PATCH"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/emails/{email_id:int}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopEmailReconcile",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopEmailReconcile",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopEmailReconcile"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "PUT",
+              "PATCH"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences/{occurrence_id:int}/meeting",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopMeeting",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopMeeting",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopMeeting"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 * * * * *",
+            "type": "timerTrigger",
+            "useMonitor": true
+          }
+        ],
+        "entryPoint": "WorkshopNotificationsTimer",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopNotificationsTimer",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopNotificationsTimer"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events/{slug}/workshop-qr",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopQrCard",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopQrCard",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopQrCard"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events/{slug}/workshop-qr/{format}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopQrDownload",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopQrDownload",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopQrDownload"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "events-assets/workshop-qr-share.js",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopQrShareScript",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopQrShareScript",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopQrShareScript"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "api/workshop-chapters",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopReferralChapters",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopReferralChapters",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopReferralChapters"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/statistics",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopRegistrationStatistics",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopRegistrationStatistics",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopRegistrationStatistics"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences/{occurrence_id:int}/rehearsal-clock",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopRehearsalClock",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopRehearsalClock",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopRehearsalClock"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences/{occurrence_id:int}/roster",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopRoster",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopRoster",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopRoster"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "PUT"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/settings",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopSettings",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopSettings",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopSettings"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "PATCH",
+              "DELETE"
+            ],
+            "name": "req",
+            "route": "api/events/manage/{event_id:int}/occurrences/{occurrence_id:int}/roster/{selection_id:int}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "WorkshopSignup",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "WorkshopSignup",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "WorkshopSignup"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "EVENTS_ALLOWED_SENDERS": "<supplied securely>",
+    "EVENTS_AUTH_CLIENT_SECRET": "<supplied securely>",
+    "EVENTS_EMAIL_ENABLED": "true",
+    "EVENTS_EMAIL_MODE": "live",
+    "EVENTS_EMAIL_MONITOR_BCC": "<supplied securely>",
+    "EVENTS_EMAIL_TEST_RECIPIENT": "<supplied securely>",
+    "EVENTS_PUBLIC_BASE_URL": "https://aga-events.azurewebsites.net",
+    "EVENTS_ZOOM_ACCOUNT_ID": "<supplied securely>",
+    "EVENTS_ZOOM_CLIENT_ID": "<supplied securely>",
+    "EVENTS_ZOOM_CLIENT_SECRET": "<supplied securely>",
+    "EVENTS_ZOOM_ENABLED": "true",
+    "GOOGLE_WORKSPACE_CLIENT_ID": "<supplied securely>",
+    "GOOGLE_WORKSPACE_CLIENT_SECRET": "<supplied securely>",
+    "GOOGLE_WORKSPACE_REFRESH_TOKEN": "<supplied securely>",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

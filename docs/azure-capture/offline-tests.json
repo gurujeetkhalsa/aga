@@ -1,0 +1,10 @@
+{
+  "workshopTestsRun": 42,
+  "failures": 3,
+  "errors": 0,
+  "skipped": 0,
+  "networkBlocked": true,
+  "sqlConnectBlocked": true,
+  "productionCredentialsRemoved": true,
+  "targetVersionSyntaxErrors": []
+}

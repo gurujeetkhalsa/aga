@@ -1,0 +1,122 @@
+[
+  {
+    "authentication_type_desc": "DATABASE",
+    "default_schema_name": "dbo",
+    "is_fixed_role": false,
+    "name": "robertqisql",
+    "owning_principal_id": null,
+    "principal_id": 6,
+    "type": "S",
+    "type_desc": "SQL_USER"
+  },
+  {
+    "authentication_type_desc": "EXTERNAL",
+    "default_schema_name": "dbo",
+    "is_fixed_role": false,
+    "name": "aga-dbrepl",
+    "owning_principal_id": null,
+    "principal_id": 7,
+    "type": "E",
+    "type_desc": "EXTERNAL_USER"
+  },
+  {
+    "authentication_type_desc": "EXTERNAL",
+    "default_schema_name": "dbo",
+    "is_fixed_role": false,
+    "name": "robert.qi@usgo.org",
+    "owning_principal_id": null,
+    "principal_id": 5,
+    "type": "E",
+    "type_desc": "EXTERNAL_USER"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_accessadmin",
+    "owning_principal_id": 1,
+    "principal_id": 16385,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_backupoperator",
+    "owning_principal_id": 1,
+    "principal_id": 16389,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_datareader",
+    "owning_principal_id": 1,
+    "principal_id": 16390,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_datawriter",
+    "owning_principal_id": 1,
+    "principal_id": 16391,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_ddladmin",
+    "owning_principal_id": 1,
+    "principal_id": 16387,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_denydatareader",
+    "owning_principal_id": 1,
+    "principal_id": 16392,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_denydatawriter",
+    "owning_principal_id": 1,
+    "principal_id": 16393,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_owner",
+    "owning_principal_id": 1,
+    "principal_id": 16384,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  },
+  {
+    "authentication_type_desc": "NONE",
+    "default_schema_name": null,
+    "is_fixed_role": true,
+    "name": "db_securityadmin",
+    "owning_principal_id": 1,
+    "principal_id": 16386,
+    "type": "R",
+    "type_desc": "DATABASE_ROLE"
+  }
+]

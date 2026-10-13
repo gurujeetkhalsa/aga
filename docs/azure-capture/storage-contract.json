@@ -1,0 +1,38 @@
+{
+  "account": "agafunc0522",
+  "containers": [
+    "app-package-aga-membership-functions-6cf36d2",
+    "app-package-agabayrate-4644553",
+    "app-package-agachapterfinderupdate-8306138",
+    "app-package-agachapterrewardsadmin-6000233",
+    "app-package-agachapterrewardsautomation-4113466",
+    "app-package-agachapterrewardsdisplay-5880534",
+    "app-package-agaclubexpressmail-8387802",
+    "app-package-agaclubexpressssoprobe-9551475",
+    "app-package-agaevents-7822871",
+    "app-package-agamembershipfunctions2-0456272",
+    "app-package-aganewsarchiveviewer-5060998",
+    "app-package-agaratingsexplorer-6134254",
+    "app-package-agaratingsexplorerdisplay-8238950",
+    "app-package-agaratingsexplorersgf20260407t21-0706146",
+    "app-package-agaratingssgfupload-0967613",
+    "azure-webjobs-hosts",
+    "azure-webjobs-secrets",
+    "chapter-rewards-receipts",
+    "clubexpress-archive",
+    "clubexpress-news-archive",
+    "clubexpress-sso-probe-captures",
+    "go-news-index",
+    "go-news-index-deployment",
+    "ratings-explorer",
+    "ratings-game-sgf",
+    "scm-releases"
+  ],
+  "contentsCaptured": false,
+  "queues": [
+    "go-news-index-jobs",
+    "go-news-index-jobs-poison",
+    "ratings-explorer-snapshot-refresh",
+    "ratings-explorer-snapshot-refresh-poison"
+  ]
+}

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGA Event Registration</title>
+  <style>
+    :root { --red:#a71920; --red-dark:#7d1217; --ink:#20201f; --muted:#68645d; --line:#ded9cf; --paper:#fffdf8; --wash:#f5f1e8; --green:#286a46; --amber:#986516; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--wash); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    a { color:var(--red-dark); }
+    .shell { width:min(860px,calc(100% - 28px)); margin:32px auto 64px; }
+    .brand { display:flex; gap:12px; align-items:center; margin-bottom:22px; color:var(--red-dark); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .stone { width:26px; height:26px; border-radius:50%; background:#111; box-shadow:inset -4px -4px 8px #0008,inset 4px 4px 7px #fff3; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 36px #3b302414; overflow:hidden; }
+    header { padding:32px 34px 24px; border-bottom:1px solid var(--line); }
+    h1 { margin:0 0 8px; font:800 clamp(30px,5vw,48px)/1.08 Georgia,serif; color:var(--red-dark); }
+    .description { margin:0; color:var(--muted); max-width:68ch; }
+    main { padding:28px 34px 34px; }
+    h2 { margin:0 0 8px; font-size:21px; }
+    .help { margin:0 0 20px; color:var(--muted); }
+    .occurrences { display:grid; grid-auto-rows:max-content; align-content:start; gap:12px; margin:18px 0 30px; padding:3px; overflow-y:auto; scrollbar-gutter:stable; }
+    .occurrences:focus-visible { outline:3px solid #a7192050; outline-offset:3px; }
+    .occurrences.selection-missing .occurrence { border-color:var(--red); }
+    .selection-error { margin:24px 0 0; border:1px solid var(--red); }
+    .selection-error a { display:inline-block; margin-top:6px; font-weight:700; }
+    .occurrence { position:relative; display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center; padding:17px; border:1px solid var(--line); border-radius:13px; background:white; cursor:pointer; }
+    .occurrence:has(input:checked) { border-color:var(--red); box-shadow:0 0 0 2px #a7192020; }
+    .occurrence:has(input:disabled) { opacity:.65; cursor:not-allowed; }
+    .occurrence input { width:20px; height:20px; accent-color:var(--red); }
+    .occurrence-title { font-weight:750; }
+    .occurrence-meta,.capacity { color:var(--muted); font-size:14px; }
+    .capacity { text-align:right; }
+    .availability { display:inline-block; margin-top:4px; font-weight:750; color:var(--green); }
+    .availability.waitlist { color:var(--amber); }
+    .fields { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .field.email { grid-column:1/-1; }
+    .field.wide { grid-column:1/-1; }
+    label.field span { display:block; margin-bottom:6px; font-weight:700; }
+    input[type=text],input[type=email] { width:100%; padding:12px 13px; border:1px solid #bdb6aa; border-radius:9px; background:white; font:inherit; }
+    input:focus { outline:3px solid #a7192025; border-color:var(--red); }
+    .actions { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-top:24px; }
+    button { border:0; border-radius:9px; padding:13px 20px; background:var(--red); color:white; font:750 16px inherit; cursor:pointer; }
+    button:hover { background:var(--red-dark); }
+    button:disabled { opacity:.55; cursor:wait; }
+    .share { font-size:14px; color:var(--muted); }
+    .notice { padding:15px 17px; border-radius:10px; margin:0 0 20px; background:#f6e8e8; color:#681117; }
+    .confirmation { padding:22px; border:1px solid #afd0bc; border-radius:13px; background:#edf8f1; }
+    .confirmation h2 { color:var(--green); }
+    .status-list { margin:12px 0 0; padding-left:22px; }
+    .loading { padding:50px; text-align:center; color:var(--muted); }
+    [hidden] { display:none !important; }
+    @media (max-width:640px) { .shell{margin-top:14px}.card{border-radius:12px}header,main{padding:22px 19px}.fields{grid-template-columns:1fr}.field.email{grid-column:auto}.occurrence{grid-template-columns:auto 1fr}.capacity{grid-column:2;text-align:left}.actions{align-items:stretch;flex-direction:column-reverse}button{width:100%} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="brand"><span class="stone" aria-hidden="true"></span> American Go Association Events</div>
+    <section class="card">
+      <div id="loading" class="loading">Loading upcoming events…</div>
+      <div id="content" hidden>
+        <header><h1 id="event-name"></h1><p id="event-description" class="description"></p></header>
+        <main>
+          <div id="error" class="notice" role="alert" hidden></div>
+          <form id="registration-form" novalidate>
+            <h2 id="occurrences-heading">Choose an upcoming event</h2>
+            <p id="selection-help" class="help"></p>
+            <div id="occurrences" class="occurrences" role="region" aria-labelledby="occurrences-heading" aria-describedby="selection-help" tabindex="0"></div>
+            <h2>Your contact information</h2>
+            <p class="help">Enter your first name, last name, and email. We’ll use your email for registration updates.</p>
+            <div class="fields">
+              <label class="field"><span>First name</span><input name="first_name" type="text" maxlength="100" autocomplete="given-name" required></label>
+              <label class="field"><span>Last name</span><input name="last_name" type="text" maxlength="100" autocomplete="family-name" required></label>
+              <label class="field email"><span>Email address</span><input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+              <label class="field"><span>City <small>(optional)</small></span><input name="city" type="text" maxlength="120" autocomplete="address-level2"></label>
+              <label class="field"><span>State or province <small>(optional)</small></span><input name="state_province" type="text" maxlength="120" autocomplete="address-level1"></label>
+              <label class="field"><span>Country <small>(optional)</small></span><input name="country" type="text" maxlength="100" autocomplete="country-name"></label>
+              <label class="field"><span>ZIP or postal code <small>(optional)</small></span><input name="postal_code" type="text" maxlength="32" autocomplete="postal-code"></label>
+            </div>
+            <div id="selection-error" class="notice selection-error" role="alert" tabindex="-1" hidden>
+              <div>Please select a workshop date before registering. Your contact information is still filled in.</div>
+              <a id="choose-date" href="#occurrences">Choose a workshop date</a>
+            </div>
+            <div class="actions">
+              <div class="share">This page is the permanent registration link. <a id="qr-link" href="qr.svg">View or download its QR code</a>.</div>
+              <button id="submit" type="submit">Register</button>
+            </div>
+          </form>
+          <section id="confirmation" class="confirmation" hidden aria-live="polite"></section>
+        </main>
+      </div>
+    </section>
+  </div>
+  <script>
+    const slug = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop());
+    const apiUrl = `/api/events/${encodeURIComponent(slug)}`;
+    const elements = Object.fromEntries(['loading','content','event-name','event-description','selection-help','occurrences','registration-form','error','selection-error','choose-date','submit','confirmation','qr-link'].map(id => [id,document.getElementById(id)]));
+    let eventData;
+    let submitting=false;
+
+    function registrationAction() {
+      const selected=[...elements.occurrences.querySelectorAll('input:checked')].map(input=>Number(input.value));
+      const choices=(eventData?.occurrences||[]).filter(item=>selected.length?selected.includes(item.occurrence_id):item.selectable);
+      if(choices.length&&choices.every(item=>item.availability==='waitlist')) return 'Join Waitlist';
+      if(selected.length&&choices.some(item=>item.availability==='waitlist')) return 'Register & Join Waitlist';
+      return 'Register';
+    }
+    function updateSubmitLabel() { if(!submitting) elements.submit.textContent=registrationAction(); }
+
+    function showError(message) { elements.error.textContent=message; elements.error.hidden=false; elements.error.scrollIntoView({behavior:'smooth',block:'center'}); }
+    function clearError() { elements.error.hidden=true; elements.error.textContent=''; }
+    function showSelectionError() {
+      elements['selection-error'].hidden=false;
+      elements.occurrences.classList.add('selection-missing');
+      elements.occurrences.querySelectorAll('input:not(:disabled)').forEach(input=>{
+        input.setAttribute('aria-invalid','true'); input.setAttribute('aria-describedby','selection-error');
+      });
+      elements['selection-error'].focus({preventScroll:true});
+      elements['selection-error'].scrollIntoView({block:'nearest'});
+    }
+    function clearSelectionError() {
+      elements['selection-error'].hidden=true;
+      elements.occurrences.classList.remove('selection-missing');
+      elements.occurrences.querySelectorAll('input').forEach(input=>{
+        input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby');
+      });
+    }
+    elements['choose-date'].addEventListener('click',event=>{
+      event.preventDefault();
+      const target=elements.occurrences.querySelector('input:not(:disabled)')||elements.occurrences;
+      target.focus({preventScroll:true}); target.scrollIntoView({block:'center'});
+    });
+    elements.occurrences.addEventListener('change',()=>{
+      if(elements.occurrences.querySelector('input:checked')) clearSelectionError();
+      updateSubmitLabel();
+    });
+    function pause(milliseconds) { return new Promise(resolve=>setTimeout(resolve,milliseconds)); }
+    async function fetchJsonWithRetry(url,options={},maxAttempts=3) {
+      let lastError;
+      for(let attempt=1;attempt<=maxAttempts;attempt++) {
+        try {
+          const response=await fetch(url,options);
+          let body;
+          try { body=await response.json(); } catch { body=null; }
+          if(response.ok&&body?.ok) return body;
+          const error=new Error(body?.error?.message||`The server returned ${response.status}.`);
+          error.retryable=[408,425,429,500,502,503,504].includes(response.status);
+          throw error;
+        } catch(error) {
+          lastError=error;
+          if(error.retryable===false||attempt===maxAttempts) break;
+          await pause(attempt*1000);
+        }
+      }
+      throw lastError||new Error('The server could not be reached.');
+    }
+    function showLoadFailure() {
+      const message=document.createElement('span'); message.textContent='We couldn’t connect to the event service. ';
+      const retry=document.createElement('button'); retry.type='button'; retry.textContent='Retry';
+      retry.addEventListener('click',()=>{elements.loading.textContent='Connecting to the event service…'; load();});
+      elements.loading.replaceChildren(message,retry);
+    }
+    function dateRangeText(startValue,endValue,timeZone) {
+      const start=new Date(startValue), end=new Date(endValue);
+      const date=new Intl.DateTimeFormat(undefined,{dateStyle:'full',timeZone}).format(start);
+      const timeFormatter=new Intl.DateTimeFormat(undefined,{timeStyle:'short',timeZone});
+      return `${date}, ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
+    }
+    function capacityText(item) {
+      if (item.capacity == null) return `${item.confirmed_count} registered · No capacity limit`;
+      if (item.remaining_capacity > 0) return `${item.confirmed_count} of ${item.capacity} registered · ${item.remaining_capacity} ${item.remaining_capacity===1?'spot':'spots'} left`;
+      return `${item.confirmed_count} of ${item.capacity} registered · ${item.waitlist_enabled?'Waitlist available':'Full'}`;
+    }
+    function renderOccurrence(item) {
+      const label=document.createElement('label'); label.className='occurrence';
+      const input=document.createElement('input'); input.type=eventData.selection_mode==='multiple'?'checkbox':'radio'; input.name='occurrence'; input.value=item.occurrence_id; input.disabled=!item.selectable;
+      const details=document.createElement('div');
+      const title=document.createElement('div'); title.className='occurrence-title'; title.textContent=item.title;
+      const meta=document.createElement('div'); meta.className='occurrence-meta'; meta.textContent=dateRangeText(item.starts_at_utc,item.ends_at_utc,eventData.time_zone)+(item.location_name?` · ${item.location_name}`:'');
+      details.append(title,meta);
+      const capacity=document.createElement('div'); capacity.className='capacity'; capacity.textContent=capacityText(item);
+      const status=document.createElement('div'); status.className=`availability ${item.availability}`; status.textContent=item.selection_disabled_reason||({available:'Available',waitlist:'',full:'Full'}[item.availability]); if(status.textContent) capacity.append(document.createElement('br'),status);
+      label.append(input,details,capacity); return label;
+    }
+    function sizeOccurrenceList() {
+      const rows=elements.occurrences.querySelectorAll('.occurrence');
+      const visibleCount=Math.max(1,Number(eventData?.public_occurrence_limit)||4);
+      if(rows.length<=visibleCount) { elements.occurrences.style.maxHeight=''; return; }
+      // Measure actual cards so wrapped titles and mobile layouts still show four complete dates.
+      const first=rows[0].getBoundingClientRect();
+      const last=rows[visibleCount-1].getBoundingClientRect();
+      const style=getComputedStyle(elements.occurrences);
+      const height=Math.ceil(last.bottom-first.top+parseFloat(style.paddingTop)+parseFloat(style.paddingBottom));
+      elements.occurrences.style.maxHeight=`${height}px`;
+    }
+    const occurrenceResizeObserver=new ResizeObserver(sizeOccurrenceList);
+    async function load() {
+      try {
+        const body=await fetchJsonWithRetry(apiUrl,{headers:{Accept:'application/json'}},3);
+        eventData=body.event; document.title=`${eventData.name} — Registration`; elements['event-name'].textContent=eventData.name; elements['event-description'].textContent=eventData.description||'';
+        elements['selection-help'].textContent=eventData.selection_mode==='multiple'?(eventData.max_occurrence_selections?`You may choose up to ${eventData.max_occurrence_selections} dates.`:'You may choose more than one date.'):'Choose one date. You can return to this same link for future dates.';
+        if(eventData.occurrences.length>(Number(eventData.public_occurrence_limit)||4)) elements['selection-help'].textContent+=' Scroll the list to see more upcoming dates.';
+        occurrenceResizeObserver.disconnect();
+        elements.occurrences.replaceChildren(...eventData.occurrences.map(renderOccurrence));
+        updateSubmitLabel();
+        if(!eventData.occurrences.length) { const empty=document.createElement('p'); empty.className='notice'; empty.textContent='There are no upcoming dates yet. Please check back soon.'; elements.occurrences.append(empty); elements.submit.disabled=true; }
+        const referral=new URLSearchParams(location.search).get('ref');
+        elements['qr-link'].href=`/events/${encodeURIComponent(slug)}/qr.svg`+(referral?'?ref='+encodeURIComponent(referral):''); elements.loading.hidden=true; elements.content.hidden=false;
+        elements.occurrences.scrollTop=0;
+        sizeOccurrenceList();
+        occurrenceResizeObserver.observe(elements.occurrences);
+        [...elements.occurrences.children].slice(0,Math.max(1,Number(eventData.public_occurrence_limit)||4)).forEach(row=>occurrenceResizeObserver.observe(row));
+      } catch(error) { showLoadFailure(); }
+    }
+    elements['registration-form'].addEventListener('submit',async event => {
+      event.preventDefault(); if(submitting) return; clearError();
+      const selected=[...document.querySelectorAll('input[name=occurrence]:checked')].map(input=>Number(input.value));
+      if(!selected.length) { showSelectionError(); return; }
+      clearSelectionError();
+      if(!event.currentTarget.reportValidity()) return;
+      const data=new FormData(event.currentTarget); const idempotencyKey=crypto.randomUUID();
+      const action=registrationAction(); submitting=true; elements.submit.disabled=true; elements.submit.textContent=action==='Join Waitlist'?'Joining waitlist…':action==='Register & Join Waitlist'?'Submitting…':'Registering…';
+      try {
+        const body=await fetchJsonWithRetry(`${apiUrl}/registrations`,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':idempotencyKey},body:JSON.stringify({occurrence_ids:selected,referral_chapter_id:new URLSearchParams(location.search).get('ref'),contact:{first_name:data.get('first_name'),last_name:data.get('last_name'),email:data.get('email'),city:data.get('city'),state_province:data.get('state_province'),country:data.get('country'),postal_code:data.get('postal_code')}})},3);
+        const result=body.registration; const heading=document.createElement('h2'); heading.textContent=result.status==='waitlisted'?'You’re on the waitlist':'Registration received';
+        const summary=document.createElement('p'); summary.textContent=result.status==='mixed'?'Some dates are confirmed and some are waitlisted.':'Your confirmation details are below.';
+        const list=document.createElement('ul'); list.className='status-list'; result.occurrences.forEach(item=>{const li=document.createElement('li'); li.textContent=`${item.title}: ${item.status==='confirmed'?'Confirmed':'Waitlisted'}`; list.append(li);});
+        const instructions=document.createElement('p'); instructions.textContent=result.status==='waitlisted'?'You’ll receive an email confirming your waitlist status with further instructions.':'You’ll receive a confirmation email with further instructions.';
+        const contact=document.createElement('p'); contact.append(document.createTextNode('If you don’t receive it, please email workshop instructor Milan at '));
+        const emailLink=document.createElement('a'); emailLink.href='mailto:milan.mladenovic@usgo.org'; emailLink.textContent='milan.mladenovic@usgo.org'; contact.append(emailLink,document.createTextNode('.'));
+        elements.confirmation.replaceChildren(heading,summary,list,instructions,contact); elements['registration-form'].hidden=true; elements.confirmation.hidden=false; elements.confirmation.scrollIntoView({behavior:'smooth',block:'start'});
+      } catch(error) { showError(error.message); submitting=false; elements.submit.disabled=false; updateSubmitLabel(); }
+    });
+    load();
+  </script>
+</body>
+</html>

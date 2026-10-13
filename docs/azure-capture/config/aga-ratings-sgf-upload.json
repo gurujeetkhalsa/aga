@@ -1,0 +1,366 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "clearInboundClaimsMapping": "false",
+    "globalValidation": {
+      "requireAuthentication": true,
+      "unauthenticatedClientAction": "AllowAnonymous"
+    },
+    "httpSettings": {
+      "forwardProxy": {
+        "convention": "NoProxy"
+      },
+      "requireHttps": true,
+      "routes": {
+        "apiPrefix": "/.auth"
+      }
+    },
+    "identityProviders": {
+      "apple": {
+        "enabled": true,
+        "login": {},
+        "registration": {}
+      },
+      "azureActiveDirectory": {
+        "enabled": true,
+        "login": {
+          "disableWWWAuthenticate": false
+        },
+        "registration": {
+          "clientId": "f952ca02-bcf4-46b9-a48d-a9a542ac2dac",
+          "clientSecretSettingName": "SGF_UPLOAD_AUTH_CLIENT_SECRET",
+          "openIdIssuer": "https://sts.windows.net/5f1a8692-caac-4040-9a1b-858e98f03e4b/"
+        },
+        "validation": {
+          "defaultAuthorizationPolicy": {
+            "allowedPrincipals": {}
+          },
+          "jwtClaimChecks": {}
+        }
+      },
+      "facebook": {
+        "enabled": true,
+        "login": {},
+        "registration": {}
+      },
+      "gitHub": {
+        "enabled": true,
+        "login": {},
+        "registration": {}
+      },
+      "google": {
+        "enabled": true,
+        "login": {},
+        "registration": {},
+        "validation": {}
+      },
+      "legacyMicrosoftAccount": {
+        "enabled": true,
+        "login": {},
+        "registration": {},
+        "validation": {}
+      },
+      "twitter": {
+        "enabled": true,
+        "registration": {}
+      }
+    },
+    "login": {
+      "allowedExternalRedirectUrls": [
+        "https://aga-ratings-sgf-upload.azurewebsites.net"
+      ],
+      "cookieExpiration": {
+        "convention": "FixedTime",
+        "timeToExpiration": "08:00:00"
+      },
+      "nonce": {
+        "nonceExpirationInterval": "00:05:00",
+        "validateNonce": true
+      },
+      "preserveUrlFragmentsForLogins": false,
+      "routes": {
+        "logoutEndpoint": "/.auth/logout"
+      },
+      "tokenStore": {
+        "azureBlobStorage": {},
+        "enabled": true,
+        "fileSystem": {},
+        "tokenRefreshExtensionHours": 72.0
+      }
+    },
+    "platform": {
+      "enabled": true,
+      "runtimeVersion": "~1"
+    },
+    "prmConfig": {
+      "disableMetadata": false,
+      "hideAuthorizationServers": false,
+      "resourceInfo": {
+        "documentationUri": {},
+        "name": {},
+        "policyUri": {},
+        "tosUri": {}
+      }
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:32:11.379592+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST"
+            ],
+            "name": "req",
+            "route": "sgf-upload/apply",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "SgfUploadApply",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "SgfUploadApply",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "SgfUploadApply"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "sgf-upload/health",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "SgfUploadHealth",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "SgfUploadHealth",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "SgfUploadHealth"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "sgf-upload/me",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "SgfUploadMe",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "SgfUploadMe",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "SgfUploadMe"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "sgf-upload",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "SgfUploadPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "SgfUploadPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "SgfUploadPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST"
+            ],
+            "name": "req",
+            "route": "sgf-upload/preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "SgfUploadPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "SgfUploadPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "SgfUploadPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "FUNCTION",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "sgf-upload/health/sql",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "SgfUploadSqlHealth",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "SgfUploadSqlHealth",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "SgfUploadSqlHealth"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "BAYRATE_TRUST_EASY_AUTH": "true",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "RATINGS_SGF_CONTAINER": "ratings-game-sgf",
+    "SGF_UPLOAD_AUTH_CLIENT_SECRET": "<supplied securely>",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": {
+      "allowedOrigins": [
+        "https://aga-ratings-sgf-upload.azurewebsites.net"
+      ],
+      "supportCredentials": false
+    },
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "platform": {
+      "enabled": false
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:32:13.275649+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "connection": "AzureWebJobsStorage",
+            "direction": "IN",
+            "name": "job",
+            "queueName": "go-news-index-jobs",
+            "type": "queueTrigger"
+          }
+        ],
+        "entryPoint": "collect_source",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "collect_source",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": true,
+      "name": "collect_source"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "connection": "AzureWebJobsStorage",
+            "direction": "OUT",
+            "name": "jobs",
+            "queueName": "go-news-index-jobs",
+            "type": "queue"
+          },
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 0 11 * * *",
+            "type": "timerTrigger"
+          }
+        ],
+        "entryPoint": "daily_collection",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "daily_collection",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": true,
+      "name": "daily_collection"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "connection": "AzureWebJobsStorage",
+            "direction": "OUT",
+            "name": "jobs",
+            "queueName": "go-news-index-jobs",
+            "type": "queue"
+          },
+          {
+            "direction": "IN",
+            "name": "timer",
+            "runOnStartup": false,
+            "schedule": "0 0 * * * *",
+            "type": "timerTrigger"
+          }
+        ],
+        "entryPoint": "daily_history",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "daily_history",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": true,
+      "name": "daily_history"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "name": "req",
+            "route": "news/names",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "names",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "names",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "names"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "name": "req",
+            "route": "news",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "news",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "news",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "news"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "name": "req",
+            "route": "news/search",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "search",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "search",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "search"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "name": "req",
+            "route": "news/status",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "status",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "status",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "status"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "name": "req",
+            "route": "news/tournaments",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "tournaments",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "tournaments",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "tournaments"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AZURE_TRANSLATOR_KEY": "<supplied securely>",
+    "AzureWebJobs.collect_source.Disabled": "true",
+    "AzureWebJobs.daily_collection.Disabled": "true",
+    "AzureWebJobs.daily_history.Disabled": "true",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "NEWS_BACKFILL_ITEM_LIMIT": "2",
+    "NEWS_INDEX_ITEM_LIMIT": "100",
+    "NEWS_TRANSLATION_BUDGET_ENABLED": "true",
+    "NEWS_TRANSLATION_CHARS_PER_MINUTE": "18000",
+    "NEWS_TRANSLATION_RESUME_AT": "2026-10-01T00:00:00Z",
+    "NEWS_TRANSLATION_SHARED_PACING": "true"
+  },
+  "sqlTargets": [],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

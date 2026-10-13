@@ -1,0 +1,56 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-09-01T13:40:00.2550128Z",
+    "Id": "495b20ff-ea9b-44e9-92ef-eb95292bc1fc",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:10:03.455374+00:00",
+  "etag": "\"0x8DF082E6108F9B9\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "d20b017cadf37498d531c6a8d5fca357862c4d99bb0b734745b0137881a2477e",
+    "bayrate/COPYING": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b",
+    "bayrate/NOTICE.md": "3648136c227504a94ba38a9a2c7b5f87187d154a3f95c8394f9e092f9e9354eb",
+    "bayrate/__init__.py": "fb29ae817b00333956e85870971355afbe5f7316e30fb5fd60454bd0764d878e",
+    "bayrate/auth.py": "9ef929c420cff2891f6e548f7958ddfb45625daddf796bfa4ab3e7b7307c4762",
+    "bayrate/commit_staged_run.py": "965562a8e4049a893ccf54e1add289c7d8d9c1e74d19418f5d3e4d135f506414",
+    "bayrate/core.py": "335a9eacd8597a005fb2ba966f96d25af89e7de1b0cf8f7062c6cccc856c524d",
+    "bayrate/replay_staged_run.py": "31fab75bb2babae63768413533cce9b047625c02b2e12c0cd5f79e1832bb82a6",
+    "bayrate/report_parser.py": "7f967f8cac0aea89deec876913d83bab14ed71e13aae236ba2dc9dfaaa8bc666",
+    "bayrate/reward_reconciliation.py": "bbd006627865225fc45ce563c6db9e7fdf4397547a0647ea61dca9a5754343f8",
+    "bayrate/snapshot_refresh.py": "b2600ad49a40972ac95faec980e616dca50d13ff2ee21f7ec25086b593a28629",
+    "bayrate/sql_adapter.py": "0784ba2ec54396850204e6201df2693a1003e86c604a4583e94443c23ae351c6",
+    "bayrate/stage_reports.py": "10c5c42205e0f90d4ea126cfce3047d7f5db69924a6b4f0468f7887ef3e8e6b1",
+    "bayrate_staging.html": "bd405af6a90b1e7c9f49775d884b53495cbe9d331d5f602490374c21ff81b6be",
+    "function_app.py": "c1a668769115ac2c7559e162fa2dc7afa3473b3462d58f62cdcfa047be64193a",
+    "host.json": "ec2996d80cdea271254a7fdfd6921053595cc8438ec197b32a3f320558ba9394",
+    "oryx-manifest.toml": "6da70f4e0f40e91ae6d7a24100f5bee7faa047550ca95dae1e6481115becdb50",
+    "requirements.txt": "c185fd675cae11b124c4f4909f672eaae228cdc960a58a111f85d66c95500a13"
+  },
+  "hostname": "aga-bayrate.azurewebsites.net",
+  "lastModified": "2026-09-01 13:38:59+00:00",
+  "name": "aga-bayrate",
+  "packageBytes": 7771270,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agabayrate-4644553/released-package.zip",
+  "packageSha256": "4b786bb0a273334764016caaf5d2f5449a88f2fc247ce1bbb65ef975dcd0ec9d",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "c1a668769115ac2c7559e162fa2dc7afa3473b3462d58f62cdcfa047be64193a",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

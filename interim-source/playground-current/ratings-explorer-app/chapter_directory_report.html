@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter Directory Report</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-soft: #f9fafb;
+      --border: #d8dee7;
+      --border-strong: #b8c2d0;
+      --text: #18202b;
+      --muted: #5f6d7d;
+      --blue: #2458a6;
+      --green: #1f7a4d;
+      --red: #b3261e;
+      --shadow: 0 8px 24px rgba(22, 34, 51, 0.08);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    input {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 7px 10px;
+    }
+
+    button,
+    .button-link {
+      min-height: 36px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      padding: 7px 11px;
+      text-decoration: none;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+      font-weight: 720;
+    }
+
+    button:hover,
+    .button-link:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    button.primary:hover {
+      color: #fff;
+      filter: brightness(.96);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar-inner {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .main {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 18px 0 28px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .toolbar,
+    .summary,
+    .table-shell {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .toolbar {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(160px, 210px) minmax(220px, 1fr) auto auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .metric {
+      min-width: 130px;
+      display: grid;
+      gap: 1px;
+    }
+
+    .metric strong {
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status.error {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .table-shell {
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 300px);
+      min-height: 320px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty {
+      padding: 48px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.active {
+      border-color: #bdddc8;
+      background: #ecf8f0;
+      color: var(--green);
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner,
+      .main {
+        width: min(100vw - 20px, 1280px);
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .status {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <h1>Chapter Directory Report</h1>
+          <div class="meta" id="reportMeta">Ready</div>
+        </div>
+        <a class="button-link" href="/api/ratings-explorer/rewards">Chapter Rewards</a>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="toolbar" aria-label="Report controls">
+        <div class="field">
+          <label for="asOfDate">As Of</label>
+          <input id="asOfDate" type="date">
+        </div>
+        <div class="field">
+          <label for="searchBox">Search</label>
+          <input id="searchBox" type="search" autocomplete="off">
+        </div>
+        <button class="primary" id="loadButton" type="button">Load</button>
+        <a class="button-link" id="jsonLink" href="#">JSON</a>
+        <a class="button-link" id="csvLink" href="#">CSV</a>
+      </section>
+
+      <section class="summary" aria-label="Report summary">
+        <div class="metric">
+          <strong id="chapterCount">0</strong>
+          <span>Chapters</span>
+        </div>
+        <div class="metric">
+          <strong id="memberCount">0</strong>
+          <span>Members</span>
+        </div>
+        <div class="metric">
+          <strong id="voteCount">0</strong>
+          <span>Votes</span>
+        </div>
+        <div class="metric">
+          <strong id="missingLeaderCount">0</strong>
+          <span>Missing Leaders</span>
+        </div>
+        <div class="metric">
+          <strong id="missingEmailCount">0</strong>
+          <span>Missing Emails</span>
+        </div>
+        <div class="status" id="statusText">Ready</div>
+      </section>
+
+      <section class="table-shell">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="num">ChapterID</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th class="num">Members</th>
+                <th class="num">Votes</th>
+                <th>Chapter Status</th>
+                <th class="num">Leader AGAID</th>
+                <th>Leader</th>
+                <th>Email</th>
+                <th>Leader Status</th>
+              </tr>
+            </thead>
+            <tbody id="reportBody">
+              <tr><td class="empty" colspan="10">No rows loaded</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const liveReportUrl = "https://aga-ratings-explorer.azurewebsites.net/api/ratings-explorer/reports/chapters";
+    const isLocalFilePage = window.location.protocol === "file:";
+    if (isLocalFilePage) {
+      window.location.replace(liveReportUrl);
+    }
+    const dataEndpointOrigin = isLocalFilePage ? new URL(liveReportUrl).origin : window.location.origin;
+    const dataEndpoint = new URL("/api/ratings-explorer/reports/chapters/data", dataEndpointOrigin);
+    const els = {
+      asOfDate: document.getElementById("asOfDate"),
+      searchBox: document.getElementById("searchBox"),
+      loadButton: document.getElementById("loadButton"),
+      jsonLink: document.getElementById("jsonLink"),
+      csvLink: document.getElementById("csvLink"),
+      reportMeta: document.getElementById("reportMeta"),
+      chapterCount: document.getElementById("chapterCount"),
+      memberCount: document.getElementById("memberCount"),
+      voteCount: document.getElementById("voteCount"),
+      missingLeaderCount: document.getElementById("missingLeaderCount"),
+      missingEmailCount: document.getElementById("missingEmailCount"),
+      statusText: document.getElementById("statusText"),
+      reportBody: document.getElementById("reportBody"),
+    };
+    const state = {
+      rows: [],
+      filtered: [],
+      payload: null,
+    };
+
+    function todayText() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset();
+      const local = new Date(now.getTime() - offset * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function html(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;",
+      }[char]));
+    }
+
+    function numberText(value) {
+      return Number(value || 0).toLocaleString();
+    }
+
+    function setStatus(text, isError = false) {
+      els.statusText.textContent = text || "";
+      els.statusText.classList.toggle("error", Boolean(isError));
+    }
+
+    function reportUrl(format) {
+      const url = new URL(dataEndpoint.toString());
+      const params = url.searchParams;
+      if (els.asOfDate.value) params.set("as_of", els.asOfDate.value);
+      if (format) params.set("format", format);
+      return url.toString();
+    }
+
+    async function getJson(url) {
+      let response;
+      try {
+        response = await fetch(url, { credentials: "same-origin" });
+      } catch (error) {
+        throw new Error(`Could not reach the report data endpoint: ${url}`);
+      }
+      const text = await response.text();
+      let payload = null;
+      if (text) {
+        try {
+          payload = JSON.parse(text);
+        } catch (error) {
+          payload = { error: text };
+        }
+      }
+      if (!response.ok) {
+        throw new Error((payload && payload.error) || response.statusText || `HTTP ${response.status}`);
+      }
+      if (payload && payload.ok === false) {
+        throw new Error(payload.error || "Report data request failed.");
+      }
+      return payload || {};
+    }
+
+    async function loadReport() {
+      setStatus("Loading");
+      els.loadButton.disabled = true;
+      try {
+        const payload = await getJson(reportUrl(""));
+        state.payload = payload;
+        state.rows = Array.isArray(payload.chapters) ? payload.chapters : [];
+        els.jsonLink.href = reportUrl("");
+        els.csvLink.href = reportUrl("csv");
+        renderSummary(payload);
+        applyFilter();
+        setStatus("Loaded");
+      } catch (error) {
+        state.payload = null;
+        state.rows = [];
+        state.filtered = [];
+        renderSummary(null);
+        renderRows();
+        setStatus(error.message || String(error), true);
+      } finally {
+        els.loadButton.disabled = false;
+      }
+    }
+
+    function renderSummary(payload) {
+      const summary = payload && payload.summary || {};
+      els.chapterCount.textContent = numberText(summary.chapter_count);
+      els.memberCount.textContent = numberText(summary.total_member_count);
+      els.voteCount.textContent = numberText(summary.total_votes);
+      els.missingLeaderCount.textContent = numberText(summary.missing_leader_count);
+      els.missingEmailCount.textContent = numberText(summary.missing_leader_email_count);
+      if (payload) {
+        const requested = payload.requested_as_of_date || "";
+        const snapshot = payload.snapshot_date || "";
+        els.reportMeta.textContent = snapshot && requested && snapshot !== requested
+          ? `Requested ${requested}; snapshot ${snapshot}`
+          : `Snapshot ${snapshot || requested}`;
+      } else {
+        els.reportMeta.textContent = "Ready";
+      }
+    }
+
+    function applyFilter() {
+      const query = els.searchBox.value.trim().toLowerCase();
+      state.filtered = state.rows.filter(row => {
+        if (!query) return true;
+        return [
+          row.chapter_id,
+          row.chapter_name,
+          row.chapter_code,
+          row.chapter_status,
+          row.leader_agaid,
+          row.leader_name,
+          row.leader_email,
+          row.leader_status,
+        ].some(value => String(value ?? "").toLowerCase().includes(query));
+      });
+      renderRows();
+    }
+
+    function statusPill(value) {
+      const text = value || "";
+      const cls = text.trim().toLowerCase() === "active" ? " active" : "";
+      return `<span class="pill${cls}">${html(text)}</span>`;
+    }
+
+    function renderRows() {
+      if (!state.filtered.length) {
+        els.reportBody.innerHTML = `<tr><td class="empty" colspan="10">${state.rows.length ? "No matching rows" : "No rows loaded"}</td></tr>`;
+        return;
+      }
+      els.reportBody.innerHTML = state.filtered.map(row => `
+        <tr>
+          <td class="num">${html(row.chapter_id)}</td>
+          <td>${html(row.chapter_name)}</td>
+          <td>${html(row.chapter_code)}</td>
+          <td class="num">${numberText(row.member_count)}</td>
+          <td class="num">${numberText(row.votes)}</td>
+          <td>${statusPill(row.chapter_status)}</td>
+          <td class="num">${html(row.leader_agaid || "")}</td>
+          <td>${html(row.leader_name)}</td>
+          <td>${html(row.leader_email)}</td>
+          <td>${statusPill(row.leader_status)}</td>
+        </tr>
+      `).join("");
+    }
+
+    els.asOfDate.value = todayText();
+    els.jsonLink.href = reportUrl("");
+    els.csvLink.href = reportUrl("csv");
+    els.loadButton.addEventListener("click", loadReport);
+    els.searchBox.addEventListener("input", applyFilter);
+    els.asOfDate.addEventListener("change", () => {
+      els.jsonLink.href = reportUrl("");
+      els.csvLink.href = reportUrl("csv");
+    });
+    if (isLocalFilePage) {
+      setStatus("Opening the live report");
+    } else {
+      loadReport();
+    }
+  </script>
+</body>
+</html>

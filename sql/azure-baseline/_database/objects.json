@@ -1,0 +1,6554 @@
+[
+  {
+    "is_ms_shipped": false,
+    "name": "sp_lookup_members",
+    "object_id": 1314103722,
+    "parent_object_id": 0,
+    "schema_name": "api",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_current_ratings",
+    "object_id": 1282103608,
+    "parent_object_id": 0,
+    "schema_name": "api",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_member_lookup",
+    "object_id": 1298103665,
+    "parent_object_id": 0,
+    "schema_name": "api",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_administrator_assignment_versions",
+    "object_id": 1373247947,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_administrator_assignments",
+    "object_id": 1101246978,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_administrator_sync_runs",
+    "object_id": 813245952,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_entries",
+    "object_id": 1904725838,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_entry_versions",
+    "object_id": 2128726636,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_sync_runs",
+    "object_id": 1632724869,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_update_access_links",
+    "object_id": 1485248346,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_update_push_attempts",
+    "object_id": 557245040,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_update_request_fields",
+    "object_id": 445244641,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_finder_update_requests",
+    "object_id": 93243387,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_administrator_assignment_versions_Change_Type",
+    "object_id": 1421248118,
+    "parent_object_id": 1373247947,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_administrator_assignment_versions_Member_Match_Status",
+    "object_id": 1437248175,
+    "parent_object_id": 1373247947,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_administrator_assignments_Duplicate_Ordinal",
+    "object_id": 1277247605,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_administrator_assignments_Member_Match_Status",
+    "object_id": 1293247662,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_administrator_sync_runs_Status",
+    "object_id": 1085246921,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_entries_Raw_Point_Json",
+    "object_id": 2080726465,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_entry_versions_Change_Type",
+    "object_id": 29243159,
+    "parent_object_id": 2128726636,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_entry_versions_Raw_Point_Json",
+    "object_id": 45243216,
+    "parent_object_id": 2128726636,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_sync_runs_Run_Type",
+    "object_id": 1856725667,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_sync_runs_Status",
+    "object_id": 1872725724,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_sync_runs_Summary_Json",
+    "object_id": 1888725781,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_access_links_Use_Count",
+    "object_id": 1613248802,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_push_attempts_Payload_Json",
+    "object_id": 669245439,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_push_attempts_Result_Json",
+    "object_id": 685245496,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_push_attempts_Status",
+    "object_id": 653245382,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_request_fields_Change_Type",
+    "object_id": 525244926,
+    "parent_object_id": 445244641,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Base_Administrator_Json",
+    "object_id": 1661248973,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Changed_Field_Count",
+    "object_id": 381244413,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Field_Diff_Json",
+    "object_id": 349244299,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Last_Push_Result_Json",
+    "object_id": 365244356,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Normalized_Proposed_Json",
+    "object_id": 333244242,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Proposed_Administrator_Json",
+    "object_id": 1677249030,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Proposed_Json",
+    "object_id": 317244185,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Push_Attempt_Count",
+    "object_id": 397244470,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Push_Status",
+    "object_id": 301244128,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_finder_update_requests_Status",
+    "object_id": 285244071,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_external_news_translation_cache_Hit_Count",
+    "object_id": 1296723672,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_archive_runs_Article_Count",
+    "object_id": 260195977,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_archive_runs_Asset_Count",
+    "object_id": 276196034,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_archive_runs_Run_Type",
+    "object_id": 228195863,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_archive_runs_Status",
+    "object_id": 244195920,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_archive_runs_Summary_Json",
+    "object_id": 292196091,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_article_assets_Asset_Class",
+    "object_id": 884198200,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_article_assets_Capture_Status",
+    "object_id": 900198257,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_article_snapshots_Asset_Manifest_Json",
+    "object_id": 756197744,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_article_snapshots_Configure_Form_Json",
+    "object_id": 724197630,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_article_snapshots_Manager_Row_Json",
+    "object_id": 708197573,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_news_article_snapshots_Rendered_Metadata_Json",
+    "object_id": 740197687,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignment_versions_Created_At",
+    "object_id": 1405248061,
+    "parent_object_id": 1373247947,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Created_At",
+    "object_id": 1245247491,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Duplicate_Ordinal",
+    "object_id": 1149247149,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_First_Seen_At",
+    "object_id": 1181247263,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Is_Current",
+    "object_id": 1229247434,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Last_Changed_At",
+    "object_id": 1213247377,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Last_Seen_At",
+    "object_id": 1197247320,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Member_Match_Candidate_Count",
+    "object_id": 1165247206,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_assignments_Updated_At",
+    "object_id": 1261247548,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Ambiguous_Count",
+    "object_id": 1037246750,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Assignment_Count",
+    "object_id": 941246408,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Chapter_Count",
+    "object_id": 909246294,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Chapters_With_Administrators_Count",
+    "object_id": 925246351,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Club_ID",
+    "object_id": 861246123,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Created_At",
+    "object_id": 1069246864,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Inserted_Count",
+    "object_id": 957246465,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Marked_Inactive_Count",
+    "object_id": 1005246636,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Matched_Unique_Count",
+    "object_id": 1021246693,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Started_At",
+    "object_id": 877246180,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Status",
+    "object_id": 893246237,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Unchanged_Count",
+    "object_id": 989246579,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Unmatched_Count",
+    "object_id": 1053246807,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_administrator_sync_runs_Updated_Count",
+    "object_id": 973246522,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_Club_ID",
+    "object_id": 1952726009,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_Created_At",
+    "object_id": 2048726351,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_First_Seen_At",
+    "object_id": 1984726123,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_Is_Current",
+    "object_id": 2032726294,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_Last_Changed_At",
+    "object_id": 2016726237,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_Last_Seen_At",
+    "object_id": 2000726180,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_On_ClubExpress",
+    "object_id": 1968726066,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entries_Updated_At",
+    "object_id": 2064726408,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_entry_versions_Created_At",
+    "object_id": 13243102,
+    "parent_object_id": 2128726636,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Created_At",
+    "object_id": 1840725610,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Detail_Failure_Count",
+    "object_id": 1760725325,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Detail_Success_Count",
+    "object_id": 1744725268,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Inserted_Count",
+    "object_id": 1776725382,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Marked_Inactive_Count",
+    "object_id": 1824725553,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Point_Count",
+    "object_id": 1728725211,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Run_Type",
+    "object_id": 1680725040,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Started_At",
+    "object_id": 1696725097,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Status",
+    "object_id": 1712725154,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Unchanged_Count",
+    "object_id": 1808725496,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_sync_runs_Updated_Count",
+    "object_id": 1792725439,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_access_links_Club_ID",
+    "object_id": 1533248517,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_access_links_Created_At",
+    "object_id": 1581248688,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_access_links_Is_Active",
+    "object_id": 1549248574,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_access_links_Updated_At",
+    "object_id": 1597248745,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_access_links_Use_Count",
+    "object_id": 1565248631,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_push_attempts_Created_At",
+    "object_id": 637245325,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_push_attempts_Started_At",
+    "object_id": 605245211,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_push_attempts_Status",
+    "object_id": 621245268,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_request_fields_Created_At",
+    "object_id": 509244869,
+    "parent_object_id": 445244641,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_request_fields_Display_Order",
+    "object_id": 493244812,
+    "parent_object_id": 445244641,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Changed_Field_Count",
+    "object_id": 205243786,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Club_ID",
+    "object_id": 157243615,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Created_At",
+    "object_id": 253243957,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Push_Attempt_Count",
+    "object_id": 237243900,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Push_Status",
+    "object_id": 221243843,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Request_Key",
+    "object_id": 141243558,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Request_Source",
+    "object_id": 173243672,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Status",
+    "object_id": 189243729,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_finder_update_requests_Updated_At",
+    "object_id": 269244014,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_source_items_created_at",
+    "object_id": 1440724185,
+    "parent_object_id": 1376723957,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_source_items_first_seen_at",
+    "object_id": 1408724071,
+    "parent_object_id": 1376723957,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_source_items_last_seen_at",
+    "object_id": 1424724128,
+    "parent_object_id": 1376723957,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_source_items_updated_at",
+    "object_id": 1456724242,
+    "parent_object_id": 1376723957,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_translation_cache_Created_At",
+    "object_id": 1264723558,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_translation_cache_Hit_Count",
+    "object_id": 1248723501,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_translation_cache_Target_Language",
+    "object_id": 1232723444,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_external_news_translation_cache_Updated_At",
+    "object_id": 1280723615,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_runs_Article_Count",
+    "object_id": 180195692,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_runs_Asset_Count",
+    "object_id": 196195749,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_runs_Created_At",
+    "object_id": 212195806,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_runs_Run_Type",
+    "object_id": 132195521,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_runs_Started_At",
+    "object_id": 148195578,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_runs_Status",
+    "object_id": 164195635,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_assets_Asset_Class",
+    "object_id": 804197915,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_assets_Capture_Status",
+    "object_id": 820197972,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_assets_Created_At",
+    "object_id": 836198029,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_links_Created_At",
+    "object_id": 964198485,
+    "parent_object_id": 916198314,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_links_Link_Source",
+    "object_id": 948198428,
+    "parent_object_id": 916198314,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Asset_Captured_Count",
+    "object_id": 628197288,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Asset_Failure_Count",
+    "object_id": 644197345,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Created_At",
+    "object_id": 660197402,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_External_Image_Count",
+    "object_id": 612197231,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Managed_Image_Count",
+    "object_id": 596197174,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Rendered_Image_Count",
+    "object_id": 564197060,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Rendered_Link_Count",
+    "object_id": 580197117,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_article_snapshots_Rendered_Text_Length",
+    "object_id": 548197003,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_articles_Club_ID",
+    "object_id": 356196319,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_articles_Created_At",
+    "object_id": 420196547,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_articles_First_Seen_At",
+    "object_id": 372196376,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_articles_Is_Current",
+    "object_id": 404196490,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_articles_Last_Seen_At",
+    "object_id": 388196433,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_articles_Updated_At",
+    "object_id": 436196604,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "external_news_source_items",
+    "object_id": 1376723957,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "external_news_translation_cache",
+    "object_id": 1184723273,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_administrator_assignment_versions_Assignment",
+    "object_id": 1453248232,
+    "parent_object_id": 1373247947,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_administrator_assignment_versions_Run",
+    "object_id": 1469248289,
+    "parent_object_id": 1373247947,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_administrator_assignments_Entry",
+    "object_id": 1309247719,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_administrator_assignments_First_Run",
+    "object_id": 1341247833,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_administrator_assignments_Last_Run",
+    "object_id": 1357247890,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_administrator_assignments_Member",
+    "object_id": 1325247776,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_entries_First_Run",
+    "object_id": 2096726522,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_entries_Last_Run",
+    "object_id": 2112726579,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_entry_versions_Entry",
+    "object_id": 61243273,
+    "parent_object_id": 2128726636,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_entry_versions_Run",
+    "object_id": 77243330,
+    "parent_object_id": 2128726636,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_update_access_links_Entry",
+    "object_id": 1629248859,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_update_push_attempts_Request",
+    "object_id": 701245553,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_update_request_fields_Request",
+    "object_id": 541244983,
+    "parent_object_id": 445244641,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_update_requests_Access_Link",
+    "object_id": 1645248916,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_update_requests_Entry",
+    "object_id": 413244527,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_finder_update_requests_Verification_Run",
+    "object_id": 429244584,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_assets_Article",
+    "object_id": 868198143,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_assets_Snapshot",
+    "object_id": 852198086,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_links_Article",
+    "object_id": 996198599,
+    "parent_object_id": 916198314,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_links_Snapshot",
+    "object_id": 980198542,
+    "parent_object_id": 916198314,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_snapshots_Article",
+    "object_id": 676197459,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_snapshots_Run",
+    "object_id": 692197516,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_article_snapshots_ThumbnailAsset",
+    "object_id": 1584724698,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_articles_First_Run",
+    "object_id": 452196661,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_news_articles_Last_Run",
+    "object_id": 468196718,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "news_archive_runs",
+    "object_id": 84195350,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "news_article_assets",
+    "object_id": 772197801,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "news_article_links",
+    "object_id": 916198314,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "news_article_snapshots",
+    "object_id": 484196775,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "news_articles",
+    "object_id": 308196148,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_administrator_assignment_versions",
+    "object_id": 1389248004,
+    "parent_object_id": 1373247947,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_administrator_assignments",
+    "object_id": 1117247035,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_administrator_sync_runs",
+    "object_id": 829246009,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_entries",
+    "object_id": 1920725895,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_entry_versions",
+    "object_id": 2144726693,
+    "parent_object_id": 2128726636,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_sync_runs",
+    "object_id": 1648724926,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_update_access_links",
+    "object_id": 1501248403,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_update_push_attempts",
+    "object_id": 573245097,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_update_request_fields",
+    "object_id": 461244698,
+    "parent_object_id": 445244641,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_finder_update_requests",
+    "object_id": 109243444,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_external_news_source_items",
+    "object_id": 1392724014,
+    "parent_object_id": 1376723957,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_external_news_translation_cache",
+    "object_id": 1200723330,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_news_archive_runs",
+    "object_id": 100195407,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_news_article_assets",
+    "object_id": 788197858,
+    "parent_object_id": 772197801,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_news_article_links",
+    "object_id": 932198371,
+    "parent_object_id": 916198314,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_news_article_snapshots",
+    "object_id": 500196832,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_news_articles",
+    "object_id": 324196205,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_approve_chapter_finder_update_request",
+    "object_id": 749245724,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_complete_chapter_finder_update_push_attempt",
+    "object_id": 797245895,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_reject_chapter_finder_update_request",
+    "object_id": 765245781,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_start_chapter_finder_update_push_attempt",
+    "object_id": 781245838,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_administrator_assignments_Entry_Key",
+    "object_id": 1133247092,
+    "parent_object_id": 1101246978,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_administrator_sync_runs_Run_Key",
+    "object_id": 845246066,
+    "parent_object_id": 813245952,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_entries_Club_Finder",
+    "object_id": 1936725952,
+    "parent_object_id": 1904725838,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_sync_runs_Run_Key",
+    "object_id": 1664724983,
+    "parent_object_id": 1632724869,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_update_access_links_Token_Hash",
+    "object_id": 1517248460,
+    "parent_object_id": 1485248346,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_update_push_attempts_Request_Attempt",
+    "object_id": 589245154,
+    "parent_object_id": 557245040,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_update_request_fields_Request_Field",
+    "object_id": 477244755,
+    "parent_object_id": 445244641,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_finder_update_requests_Request_Key",
+    "object_id": 125243501,
+    "parent_object_id": 93243387,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_external_news_translation_cache_Item_Content",
+    "object_id": 1216723387,
+    "parent_object_id": 1184723273,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_news_archive_runs_Run_Key",
+    "object_id": 116195464,
+    "parent_object_id": 84195350,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_news_article_snapshots_Run_Article",
+    "object_id": 532196946,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_news_article_snapshots_Snapshot_Key",
+    "object_id": 516196889,
+    "parent_object_id": 484196775,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_news_articles_Club_Item",
+    "object_id": 340196262,
+    "parent_object_id": 308196148,
+    "schema_name": "clubexpress",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_chapter_finder_update_portal_review",
+    "object_id": 1693249087,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_chapter_finder_update_push_queue",
+    "object_id": 733245667,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_chapter_finder_update_review",
+    "object_id": 717245610,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_news_article_latest_snapshots",
+    "object_id": 1012198656,
+    "parent_object_id": 0,
+    "schema_name": "clubexpress",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_game_duplicate_review_CreatedDate",
+    "object_id": 1506104406,
+    "parent_object_id": 1442104178,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_game_duplicate_review_LastRefreshed",
+    "object_id": 1522104463,
+    "parent_object_id": 1442104178,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_game_duplicate_review_Status",
+    "object_id": 1490104349,
+    "parent_object_id": 1442104178,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_games_clean_CreatedDate",
+    "object_id": 1698105090,
+    "parent_object_id": 1666104976,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_games_clean_LastRefreshed",
+    "object_id": 1714105147,
+    "parent_object_id": 1666104976,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_tournament_duplicate_review_CreatedDate",
+    "object_id": 1410104064,
+    "parent_object_id": 1346103836,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_tournament_duplicate_review_LastRefreshed",
+    "object_id": 1426104121,
+    "parent_object_id": 1346103836,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_tournament_duplicate_review_Status",
+    "object_id": 1394104007,
+    "parent_object_id": 1346103836,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_tournaments_clean_CreatedDate",
+    "object_id": 1634104862,
+    "parent_object_id": 1602104748,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_tournaments_clean_LastRefreshed",
+    "object_id": 1650104919,
+    "parent_object_id": 1602104748,
+    "schema_name": "competition",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "game_duplicate_review",
+    "object_id": 1442104178,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "games_clean",
+    "object_id": 1666104976,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_game_duplicate_review",
+    "object_id": 1458104235,
+    "parent_object_id": 1442104178,
+    "schema_name": "competition",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_games_clean",
+    "object_id": 1682105033,
+    "parent_object_id": 1666104976,
+    "schema_name": "competition",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_tournament_duplicate_review",
+    "object_id": 1362103893,
+    "parent_object_id": 1346103836,
+    "schema_name": "competition",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_tournaments_clean",
+    "object_id": 1618104805,
+    "parent_object_id": 1602104748,
+    "schema_name": "competition",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_mark_obvious_duplicate_review",
+    "object_id": 1586104691,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_refresh_clean_competition",
+    "object_id": 1730105204,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_refresh_duplicate_review",
+    "object_id": 1570104634,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_refresh_game_duplicate_review",
+    "object_id": 1554104577,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_refresh_tournament_duplicate_review",
+    "object_id": 1538104520,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "tournament_duplicate_review",
+    "object_id": 1346103836,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "tournaments_clean",
+    "object_id": 1602104748,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UX_game_duplicate_review_ReviewType_ReviewKey",
+    "object_id": 1474104292,
+    "parent_object_id": 1442104178,
+    "schema_name": "competition",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UX_tournament_duplicate_review_ReviewType_ReviewKey",
+    "object_id": 1378103950,
+    "parent_object_id": 1346103836,
+    "schema_name": "competition",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "vw_rated_games_analysis",
+    "object_id": 1746105261,
+    "parent_object_id": 0,
+    "schema_name": "competition",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "fn_diagramobjects",
+    "object_id": 498100815,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "FN",
+    "type_desc": "SQL_SCALAR_FUNCTION"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__sysdiagr__C2B05B61E4D424FF",
+    "object_id": 370100359,
+    "parent_object_id": 354100302,
+    "schema_name": "dbo",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_alterdiagram",
+    "object_id": 466100701,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_creatediagram",
+    "object_id": 434100587,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_dropdiagram",
+    "object_id": 482100758,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_helpdiagramdefinition",
+    "object_id": 418100530,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_helpdiagrams",
+    "object_id": 402100473,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_renamediagram",
+    "object_id": 450100644,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_upgraddiagrams",
+    "object_id": 338100245,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sysdiagrams",
+    "object_id": 354100302,
+    "parent_object_id": 0,
+    "schema_name": "dbo",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UK_principal_name",
+    "object_id": 386100416,
+    "parent_object_id": 354100302,
+    "schema_name": "dbo",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__generatio__gener__58D1FB74",
+    "object_id": 1490156404,
+    "parent_object_id": 1442156233,
+    "schema_name": "dbrepl_meta",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__generatio__incar__57DDD73B",
+    "object_id": 1474156347,
+    "parent_object_id": 1442156233,
+    "schema_name": "dbrepl_meta",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "ensure_capture",
+    "object_id": 1506156461,
+    "parent_object_id": 0,
+    "schema_name": "dbrepl_meta",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "generations",
+    "object_id": 1442156233,
+    "parent_object_id": 0,
+    "schema_name": "dbrepl_meta",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__generati__3DC088B52837C2C4",
+    "object_id": 1458156290,
+    "parent_object_id": 1442156233,
+    "schema_name": "dbrepl_meta",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "audit_log",
+    "object_id": 2009774217,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK__rehearsal__stage__5827EFFE",
+    "object_id": 1479012350,
+    "parent_object_id": 1431012179,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_attendance",
+    "object_id": 664389436,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_audit_detail_json",
+    "object_id": 2105774559,
+    "parent_object_id": 2009774217,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_email_status",
+    "object_id": 1128391089,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_events_lifecycle",
+    "object_id": 1273771595,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_events_selection_max",
+    "object_id": 1305771709,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_events_selection_mode",
+    "object_id": 1289771652,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_events_single_max",
+    "object_id": 1321771766,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_occurrences_capacity",
+    "object_id": 1673773020,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_occurrences_dates",
+    "object_id": 1641772906,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_occurrences_lifecycle",
+    "object_id": 1689773077,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_occurrences_registration_dates",
+    "object_id": 1657772963,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_organizers_type",
+    "object_id": 969770512,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_public_occurrence_limit",
+    "object_id": 2137774673,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_registration_occurrences_status",
+    "object_id": 1993774160,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_registrations_payment",
+    "object_id": 1849773647,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_registrations_status",
+    "object_id": 1833773590,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_versions_form_json",
+    "object_id": 1449772222,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_events_versions_policy_json",
+    "object_id": 1465772279,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_workshop_followup",
+    "object_id": 840390063,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_workshop_meeting_source",
+    "object_id": 952390462,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_workshop_meeting_sync",
+    "object_id": 968390519,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_workshop_reminders",
+    "object_id": 824390006,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__email_out__attem__4159993F",
+    "object_id": 1096390975,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__email_out__creat__424DBD78",
+    "object_id": 1112391032,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__email_out__statu__40657506",
+    "object_id": 1080390918,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__rehearsal__updat__591C1437",
+    "object_id": 1495012407,
+    "parent_object_id": 1431012179,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___email__302F0D3D",
+    "object_id": 808389949,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___follo__2E46C4CB",
+    "object_id": 776389835,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___follo__2F3AE904",
+    "object_id": 792389892,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___instr__2C5E7C59",
+    "object_id": 744389721,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___remin__2D52A092",
+    "object_id": 760389778,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___sende__2B6A5820",
+    "object_id": 728389664,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___sourc__35E7E693",
+    "object_id": 904390291,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___sync___36DC0ACC",
+    "object_id": 920390348,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__workshop___updat__37D02F05",
+    "object_id": 936390405,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_attendance",
+    "object_id": 648389379,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_audit_created",
+    "object_id": 2057774388,
+    "parent_object_id": 2009774217,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_audit_detail",
+    "object_id": 2041774331,
+    "parent_object_id": 2009774217,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_created",
+    "object_id": 1225771424,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_lifecycle",
+    "object_id": 1193771310,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_memberships_active",
+    "object_id": 1081770911,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_memberships_created",
+    "object_id": 1097770968,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_memberships_finance",
+    "object_id": 1065770854,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_memberships_manage",
+    "object_id": 1033770740,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_memberships_registrations",
+    "object_id": 1049770797,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_occurrences_created",
+    "object_id": 1577772678,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_occurrences_lifecycle",
+    "object_id": 1561772621,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_occurrences_updated",
+    "object_id": 1593772735,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_occurrences_waitlist",
+    "object_id": 1545772564,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_organizers_active",
+    "object_id": 921770341,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_organizers_created",
+    "object_id": 937770398,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_organizers_type",
+    "object_id": 905770284,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_organizers_updated",
+    "object_id": 953770455,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_public_occurrence_limit",
+    "object_id": 2121774616,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_registrations_created",
+    "object_id": 1769773362,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_registrations_payment",
+    "object_id": 1753773305,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_registrations_updated",
+    "object_id": 1785773419,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_selection_mode",
+    "object_id": 1209771367,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_time_zone",
+    "object_id": 1177771253,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_updated",
+    "object_id": 1241771481,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_versions_created",
+    "object_id": 1417772108,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_versions_form",
+    "object_id": 1385771994,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_events_versions_policy",
+    "object_id": 1401772051,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_workshop_is_test",
+    "object_id": 1674489044,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "email_outbox",
+    "object_id": 984390576,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "event_occurrences",
+    "object_id": 1497772393,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "event_versions",
+    "object_id": 1337771823,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "events",
+    "object_id": 1129771082,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK__email_out__event__3D89085B",
+    "object_id": 1032390747,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK__email_out__occur__3F7150CD",
+    "object_id": 1064390861,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK__email_out__regis__3E7D2C94",
+    "object_id": 1048390804,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK__rehearsal__occur__5733CBC5",
+    "object_id": 1463012293,
+    "parent_object_id": 1431012179,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK__workshop___event__2A7633E7",
+    "object_id": 712389607,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK__workshop___occur__34F3C25A",
+    "object_id": 888390234,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_audit_event",
+    "object_id": 2073774445,
+    "parent_object_id": 2009774217,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_audit_registration",
+    "object_id": 2089774502,
+    "parent_object_id": 2009774217,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_events_current_version",
+    "object_id": 1481772336,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_events_organizer",
+    "object_id": 1257771538,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_memberships_organizer",
+    "object_id": 1113771025,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_occurrences_event",
+    "object_id": 1609772792,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_occurrences_version",
+    "object_id": 1625772849,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_registration_contacts_registration",
+    "object_id": 1897773818,
+    "parent_object_id": 1865773704,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_registration_occurrences_occurrence",
+    "object_id": 1977774103,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_registration_occurrences_registration",
+    "object_id": 1961774046,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_registrations_event",
+    "object_id": 1801773476,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_registrations_version",
+    "object_id": 1817773533,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_events_versions_event",
+    "object_id": 1433772165,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "organizer_memberships",
+    "object_id": 985770569,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "organizers",
+    "object_id": 857770113,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__email_ou__3FEF87668BBE6C7E",
+    "object_id": 1000390633,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__rehearsa__674D4A800C13F8CD",
+    "object_id": 1447012236,
+    "parent_object_id": 1431012179,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__workshop__2370F727067CA724",
+    "object_id": 696389550,
+    "parent_object_id": 680389493,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__workshop__674D4A808ABF4CC8",
+    "object_id": 872390177,
+    "parent_object_id": 856390120,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_audit_log",
+    "object_id": 2025774274,
+    "parent_object_id": 2009774217,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_event_versions",
+    "object_id": 1353771880,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_events",
+    "object_id": 1145771139,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_occurrences",
+    "object_id": 1513772450,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_organizer_memberships",
+    "object_id": 1001770626,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_organizers",
+    "object_id": 873770170,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_registration_contacts",
+    "object_id": 1881773761,
+    "parent_object_id": 1865773704,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_registration_occurrences",
+    "object_id": 1929773932,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_events_registrations",
+    "object_id": 1721773191,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "registration_contacts",
+    "object_id": 1865773704,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "registration_occurrences",
+    "object_id": 1913773875,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "registrations",
+    "object_id": 1705773134,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "rehearsal_clocks",
+    "object_id": 1431012179,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ__email_ou__BBDAFDB809E4CC3A",
+    "object_id": 1016390690,
+    "parent_object_id": 984390576,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_events_slug",
+    "object_id": 1161771196,
+    "parent_object_id": 1129771082,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_memberships_scope",
+    "object_id": 1017770683,
+    "parent_object_id": 985770569,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_occurrences_key",
+    "object_id": 1529772507,
+    "parent_object_id": 1497772393,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_organizers_key",
+    "object_id": 889770227,
+    "parent_object_id": 857770113,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_registration_occurrences_choice",
+    "object_id": 1945773989,
+    "parent_object_id": 1913773875,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_registrations_idempotency",
+    "object_id": 1737773248,
+    "parent_object_id": 1705773134,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_events_versions_number",
+    "object_id": 1369771937,
+    "parent_object_id": 1337771823,
+    "schema_name": "events",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "workshop_meetings",
+    "object_id": 856390120,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "workshop_settings",
+    "object_id": 680389493,
+    "parent_object_id": 0,
+    "schema_name": "events",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "clubexpress_email_log",
+    "object_id": 658101385,
+    "parent_object_id": 0,
+    "schema_name": "integration",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_email_log_CreatedDate",
+    "object_id": 706101556,
+    "parent_object_id": 658101385,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_email_log_LastUpdated",
+    "object_id": 722101613,
+    "parent_object_id": 658101385,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_email_log_Status",
+    "object_id": 690101499,
+    "parent_object_id": 658101385,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_journal_article_member_match_CreatedDate",
+    "object_id": 59147256,
+    "parent_object_id": 27147142,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_journal_review_member_match_CreatedDate",
+    "object_id": 123147484,
+    "parent_object_id": 91147370,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_article_member_match_created_at",
+    "object_id": 1536724527,
+    "parent_object_id": 1504724413,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_news_archive_article_member_match_updated_at",
+    "object_id": 1552724584,
+    "parent_object_id": 1504724413,
+    "schema_name": "integration",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_journal_article_member_match_member",
+    "object_id": 75147313,
+    "parent_object_id": 27147142,
+    "schema_name": "integration",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_journal_review_member_match_member",
+    "object_id": 139147541,
+    "parent_object_id": 91147370,
+    "schema_name": "integration",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "journal_article_member_match",
+    "object_id": 27147142,
+    "parent_object_id": 0,
+    "schema_name": "integration",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "journal_review_member_match",
+    "object_id": 91147370,
+    "parent_object_id": 0,
+    "schema_name": "integration",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "news_archive_article_member_match",
+    "object_id": 1504724413,
+    "parent_object_id": 0,
+    "schema_name": "integration",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_clubexpress_email_log",
+    "object_id": 674101442,
+    "parent_object_id": 658101385,
+    "schema_name": "integration",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_journal_article_member_match",
+    "object_id": 43147199,
+    "parent_object_id": 27147142,
+    "schema_name": "integration",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_journal_review_member_match",
+    "object_id": 107147427,
+    "parent_object_id": 91147370,
+    "schema_name": "integration",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_news_archive_article_member_match",
+    "object_id": 1520724470,
+    "parent_object_id": 1504724413,
+    "schema_name": "integration",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "categories",
+    "object_id": 1026102696,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_membership_history",
+    "object_id": 2085582468,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapters",
+    "object_id": 1845581613,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_clubexpress_parsed_event_attempts_Status",
+    "object_id": 2135678656,
+    "parent_object_id": 2071678428,
+    "schema_name": "membership",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_clubexpress_parsed_events_Attempt_Count",
+    "object_id": 2055678371,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_clubexpress_parsed_events_Item_Count",
+    "object_id": 2039678314,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_clubexpress_parsed_events_Status",
+    "object_id": 2023678257,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "clubexpress_parsed_event_attempts",
+    "object_id": 2071678428,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "clubexpress_parsed_events",
+    "object_id": 1895677801,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__chapter_m__Creat__7E37BEF6",
+    "object_id": 2117582582,
+    "parent_object_id": 2085582468,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__chapters__Create__70DDC3D8",
+    "object_id": 1893581784,
+    "parent_object_id": 1845581613,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__members__Created__73BA3083",
+    "object_id": 1941581955,
+    "parent_object_id": 1909581841,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__membershi__Creat__797309D9",
+    "object_id": 2037582297,
+    "parent_object_id": 1989582126,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF__membershi__Event__787EE5A0",
+    "object_id": 2021582240,
+    "parent_object_id": 1989582126,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_categories_CreatedDate",
+    "object_id": 1074102867,
+    "parent_object_id": 1026102696,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_categories_LastUpdated",
+    "object_id": 1090102924,
+    "parent_object_id": 1026102696,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_parsed_event_attempts_Recorded_At",
+    "object_id": 2103678542,
+    "parent_object_id": 2071678428,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_parsed_events_Attempt_Count",
+    "object_id": 1975678086,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_parsed_events_Created_At",
+    "object_id": 1991678143,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_parsed_events_Item_Count",
+    "object_id": 1943677972,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_parsed_events_Status",
+    "object_id": 1959678029,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_clubexpress_parsed_events_Updated_At",
+    "object_id": 2007678200,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_member_categories_CreatedDate",
+    "object_id": 1138103095,
+    "parent_object_id": 1106102981,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_member_categories_LastUpdated",
+    "object_id": 1154103152,
+    "parent_object_id": 1106102981,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_members_LastUpdated",
+    "object_id": 994102582,
+    "parent_object_id": 1909581841,
+    "schema_name": "membership",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_membership_chapter",
+    "object_id": 2099048,
+    "parent_object_id": 2085582468,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_membership_member",
+    "object_id": 2133582639,
+    "parent_object_id": 2085582468,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_rep",
+    "object_id": 1973582069,
+    "parent_object_id": 1845581613,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_clubexpress_parsed_event_attempts_Event_ID",
+    "object_id": 2119678599,
+    "parent_object_id": 2071678428,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_member_categories_category",
+    "object_id": 1186103266,
+    "parent_object_id": 1106102981,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_member_categories_member",
+    "object_id": 1170103209,
+    "parent_object_id": 1106102981,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_member_chapter",
+    "object_id": 1957582012,
+    "parent_object_id": 1909581841,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_membership_events_member",
+    "object_id": 2053582354,
+    "parent_object_id": 1989582126,
+    "schema_name": "membership",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "member_categories",
+    "object_id": 1106102981,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "members",
+    "object_id": 1909581841,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "membership_events",
+    "object_id": 1989582126,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__chapter___4D7B4ADD9A066E77",
+    "object_id": 2101582525,
+    "parent_object_id": 2085582468,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__chapters__0893A34A1CC044CA",
+    "object_id": 1861581670,
+    "parent_object_id": 1845581613,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__members__E1A33BDC2CDDD5B8",
+    "object_id": 1925581898,
+    "parent_object_id": 1909581841,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK__membersh__7944C870A83F10F1",
+    "object_id": 2005582183,
+    "parent_object_id": 1989582126,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_categories",
+    "object_id": 1042102753,
+    "parent_object_id": 1026102696,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_clubexpress_parsed_event_attempts",
+    "object_id": 2087678485,
+    "parent_object_id": 2071678428,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_clubexpress_parsed_events",
+    "object_id": 1911677858,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_member_categories",
+    "object_id": 1122103038,
+    "parent_object_id": 1106102981,
+    "schema_name": "membership",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_find_invalid_youth_members",
+    "object_id": 1330103779,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_chapters",
+    "object_id": 903674267,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_member_categories",
+    "object_id": 1218103380,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_memchap",
+    "object_id": 2069582411,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_log_clubexpress_email",
+    "object_id": 1010102639,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_journal_news_email",
+    "object_id": 2094630505,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_membership_renewal",
+    "object_id": 754101727,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_new_member_email",
+    "object_id": 738101670,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_record_clubexpress_parsed_event",
+    "object_id": 4195065,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_update_clubexpress_parsed_event_status",
+    "object_id": 20195122,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_categories_CategoryName",
+    "object_id": 1058102810,
+    "parent_object_id": 1026102696,
+    "schema_name": "membership",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_clubexpress_parsed_events_Event_Key",
+    "object_id": 1927677915,
+    "parent_object_id": 1895677801,
+    "schema_name": "membership",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "admin_permissions",
+    "object_id": 1767677345,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_admins",
+    "object_id": 1611152785,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_reward_reconciliations",
+    "object_id": 1174295243,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_run_id_seq",
+    "object_id": 1067150847,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "SO",
+    "type_desc": "SEQUENCE_OBJECT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_runs",
+    "object_id": 1083150904,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_staged_games",
+    "object_id": 1435152158,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_staged_ratings",
+    "object_id": 1531152500,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_staged_tournaments",
+    "object_id": 1323151759,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_reward_reconciliations_Json",
+    "object_id": 1238295471,
+    "parent_object_id": 1174295243,
+    "schema_name": "ratings",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_stage_runs_Status",
+    "object_id": 1307151702,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_staged_games_Validation_Status",
+    "object_id": 1515152443,
+    "parent_object_id": 1435152158,
+    "schema_name": "ratings",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_staged_ratings_Event_Source",
+    "object_id": 1595152728,
+    "parent_object_id": 1531152500,
+    "schema_name": "ratings",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_staged_tournaments_Code_Source",
+    "object_id": 1419152101,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_staged_tournaments_Validation_Status",
+    "object_id": 1403152044,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_1234103437",
+    "object_id": 2114158627,
+    "parent_object_id": 1234103437,
+    "schema_name": "ratings",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_1250103494",
+    "object_id": 2146158741,
+    "parent_object_id": 1250103494,
+    "schema_name": "ratings",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_1266103551",
+    "object_id": 14675150,
+    "parent_object_id": 1266103551,
+    "schema_name": "ratings",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_1854629650",
+    "object_id": 430676632,
+    "parent_object_id": 1854629650,
+    "schema_name": "ratings",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_1870629707",
+    "object_id": 478676803,
+    "parent_object_id": 1870629707,
+    "schema_name": "ratings",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_admin_permissions_Created_At",
+    "object_id": 1831677573,
+    "parent_object_id": 1767677345,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_admin_permissions_Created_By",
+    "object_id": 1847677630,
+    "parent_object_id": 1767677345,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_admin_permissions_Is_Active",
+    "object_id": 1815677516,
+    "parent_object_id": 1767677345,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_admins_Created_At",
+    "object_id": 1675153013,
+    "parent_object_id": 1611152785,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_admins_Created_By",
+    "object_id": 1691153070,
+    "parent_object_id": 1611152785,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_admins_Is_Active",
+    "object_id": 1659152956,
+    "parent_object_id": 1611152785,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_control_CreatedDate",
+    "object_id": 1774629365,
+    "parent_object_id": 1710629137,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_control_FreezeBeforeCutover",
+    "object_id": 1758629308,
+    "parent_object_id": 1710629137,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_control_LastUpdated",
+    "object_id": 1790629422,
+    "parent_object_id": 1710629137,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_control_SnapshotSeedEnabled",
+    "object_id": 1742629251,
+    "parent_object_id": 1710629137,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_event_game_results_CreatedDate",
+    "object_id": 1342627826,
+    "parent_object_id": 1310627712,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_event_index_CreatedDate",
+    "object_id": 1214627370,
+    "parent_object_id": 1150627142,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_event_index_Dirty",
+    "object_id": 1198627313,
+    "parent_object_id": 1150627142,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_event_index_LastUpdated",
+    "object_id": 1230627427,
+    "parent_object_id": 1150627142,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_event_player_ratings_CreatedDate",
+    "object_id": 1278627598,
+    "parent_object_id": 1246627484,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_player_checkpoint_CreatedDate",
+    "object_id": 1422628111,
+    "parent_object_id": 1374627940,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_player_checkpoint_MomentumStreak",
+    "object_id": 1406628054,
+    "parent_object_id": 1374627940,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_reward_reconciliations_Created_At",
+    "object_id": 1206295357,
+    "parent_object_id": 1174295243,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_run_metrics_CreatedDate",
+    "object_id": 1486628339,
+    "parent_object_id": 1454628225,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_runs_CreatedDate",
+    "object_id": 1118627028,
+    "parent_object_id": 1070626857,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_runs_LastUpdated",
+    "object_id": 1134627085,
+    "parent_object_id": 1070626857,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_runs_StartedAt",
+    "object_id": 1102626971,
+    "parent_object_id": 1070626857,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Created_At",
+    "object_id": 1131151075,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Created_By",
+    "object_id": 1163151189,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Game_Count",
+    "object_id": 1227151417,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Last_Updated_At",
+    "object_id": 1147151132,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Needs_Review_Count",
+    "object_id": 1275151588,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Ready_Tournament_Count",
+    "object_id": 1259151531,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_RunID",
+    "object_id": 1115151018,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Source_Report_Count",
+    "object_id": 1195151303,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Status",
+    "object_id": 1179151246,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Tournament_Count",
+    "object_id": 1211151360,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Validation_Error_Count",
+    "object_id": 1243151474,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_stage_runs_Validation_Failed_Count",
+    "object_id": 1291151645,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_staged_games_Created_At",
+    "object_id": 1483152329,
+    "parent_object_id": 1435152158,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_staged_games_Validation_Status",
+    "object_id": 1467152272,
+    "parent_object_id": 1435152158,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_staged_ratings_Created_At",
+    "object_id": 1563152614,
+    "parent_object_id": 1531152500,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_staged_tournaments_Created_At",
+    "object_id": 1371151930,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_staged_tournaments_Reward_Is_State_Championship",
+    "object_id": 919674324,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_staged_tournaments_Validation_Status",
+    "object_id": 1355151873,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_GameSgfStateBackup_Saved_At",
+    "object_id": 235147883,
+    "parent_object_id": 203147769,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_tournaments_Reward_Is_State_Championship",
+    "object_id": 935674381,
+    "parent_object_id": 1234103437,
+    "schema_name": "ratings",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_event_game_results_RunID",
+    "object_id": 1358627883,
+    "parent_object_id": 1310627712,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_event_player_ratings_RunID",
+    "object_id": 1294627655,
+    "parent_object_id": 1246627484,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_player_checkpoint_RunID",
+    "object_id": 1438628168,
+    "parent_object_id": 1374627940,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_reward_reconciliations_RunID",
+    "object_id": 1222295414,
+    "parent_object_id": 1174295243,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_run_metrics_RunID",
+    "object_id": 1502628396,
+    "parent_object_id": 1454628225,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_staged_games_Tournament",
+    "object_id": 1499152386,
+    "parent_object_id": 1435152158,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_staged_ratings_RunID",
+    "object_id": 1579152671,
+    "parent_object_id": 1531152500,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_staged_tournaments_RunID",
+    "object_id": 1387151987,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "games",
+    "object_id": 1266103551,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "GameSgfStateBackup",
+    "object_id": 203147769,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "newgames03252026",
+    "object_id": 1854629650,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "newtournaments03252026",
+    "object_id": 1870629707,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_admin_permissions",
+    "object_id": 1783677402,
+    "parent_object_id": 1767677345,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_admins",
+    "object_id": 1627152842,
+    "parent_object_id": 1611152785,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_control",
+    "object_id": 1726629194,
+    "parent_object_id": 1710629137,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_event_game_results",
+    "object_id": 1326627769,
+    "parent_object_id": 1310627712,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_event_index",
+    "object_id": 1166627199,
+    "parent_object_id": 1150627142,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_event_player_ratings",
+    "object_id": 1262627541,
+    "parent_object_id": 1246627484,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_player_checkpoint",
+    "object_id": 1390627997,
+    "parent_object_id": 1374627940,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_reward_reconciliations",
+    "object_id": 1190295300,
+    "parent_object_id": 1174295243,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_run_metrics",
+    "object_id": 1470628282,
+    "parent_object_id": 1454628225,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_runs",
+    "object_id": 1086626914,
+    "parent_object_id": 1070626857,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_stage_runs",
+    "object_id": 1099150961,
+    "parent_object_id": 1083150904,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_staged_games",
+    "object_id": 1451152215,
+    "parent_object_id": 1435152158,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_staged_ratings",
+    "object_id": 1547152557,
+    "parent_object_id": 1531152500,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_staged_tournaments",
+    "object_id": 1339151816,
+    "parent_object_id": 1323151759,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_GameSgfStateBackup",
+    "object_id": 219147826,
+    "parent_object_id": 203147769,
+    "schema_name": "ratings",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "ratings",
+    "object_id": 1250103494,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "RestoreGamesSgfState",
+    "object_id": 267147997,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "SaveGamesSgfState",
+    "object_id": 251147940,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_complete_run",
+    "object_id": 1678629023,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_fail_run",
+    "object_id": 1694629080,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_get_checkpoint_before_event",
+    "object_id": 1614628795,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_get_cutover_control",
+    "object_id": 1806629479,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_get_replay_boundary",
+    "object_id": 1598628738,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_get_snapshot_seed_before_event",
+    "object_id": 1838629593,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_mark_dirty_from_event",
+    "object_id": 1566628624,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_mark_dirty_from_tournament",
+    "object_id": 1582628681,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_mark_event_computed",
+    "object_id": 1646628909,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_purge_from_event",
+    "object_id": 1630628852,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_refresh_event_index",
+    "object_id": 1550628567,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_set_cutover_control",
+    "object_id": 1822629536,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_bayrate_start_run",
+    "object_id": 1662628966,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_grant_admin_permission",
+    "object_id": 1863677687,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_complete_run",
+    "object_id": 1006626629,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_fail_run",
+    "object_id": 1022626686,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_get_checkpoint_before_event",
+    "object_id": 942626401,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_get_replay_boundary",
+    "object_id": 926626344,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_mark_dirty_from_event",
+    "object_id": 910626287,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_mark_dirty_from_tournament",
+    "object_id": 1054626800,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_mark_event_computed",
+    "object_id": 974626515,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_purge_from_event",
+    "object_id": 958626458,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_refresh_event_index",
+    "object_id": 1038626743,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_legacy_bayrate_start_run",
+    "object_id": 990626572,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_revoke_admin_permission",
+    "object_id": 1879677744,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "tournaments",
+    "object_id": 1234103437,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_admin_permissions_Principal_Permission",
+    "object_id": 1799677459,
+    "parent_object_id": 1767677345,
+    "schema_name": "ratings",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_bayrate_admins_Principal_Name",
+    "object_id": 1643152899,
+    "parent_object_id": 1611152785,
+    "schema_name": "ratings",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UX_bayrate_event_index_Model_EventKey",
+    "object_id": 1182627256,
+    "parent_object_id": 1150627142,
+    "schema_name": "ratings",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "vw_bayrate_games_source",
+    "object_id": 1518628453,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "vw_bayrate_snapshots_source",
+    "object_id": 1534628510,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "vw_legacy_bayrate_games_source",
+    "object_id": 430624577,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "vw_legacy_bayrate_snapshots_source",
+    "object_id": 446624634,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_control",
+    "object_id": 1710629137,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_event_game_results",
+    "object_id": 1310627712,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_event_index",
+    "object_id": 1150627142,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_event_player_ratings",
+    "object_id": 1246627484,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_player_checkpoint",
+    "object_id": 1374627940,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_run_metrics",
+    "object_id": 1454628225,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "zz_20260325_bayrate_runs",
+    "object_id": 1070626857,
+    "parent_object_id": 0,
+    "schema_name": "ratings",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "bayrate_reconciliation_applications",
+    "object_id": 1414296098,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_daily_snapshot",
+    "object_id": 2091154495,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_eligibility_periods",
+    "object_id": 1915153868,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_renewal_notice_results",
+    "object_id": 1223675407,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapter_transfers",
+    "object_id": 1862297694,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_reconciliation_applications_Counts",
+    "object_id": 1510296440,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_reconciliation_applications_Status",
+    "object_id": 1494296383,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_bayrate_reconciliation_applications_SummaryJson",
+    "object_id": 1526296497,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_daily_snapshot_Active_Member_Count",
+    "object_id": 23671132,
+    "parent_object_id": 2091154495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_daily_snapshot_Multiplier",
+    "object_id": 39671189,
+    "parent_object_id": 2091154495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_eligibility_periods_Date_Range",
+    "object_id": 2011154210,
+    "parent_object_id": 1915153868,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_renewal_notice_results_Available_Points",
+    "object_id": 1303675692,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_renewal_notice_results_Decision",
+    "object_id": 1319675749,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_renewal_notice_results_Points_Required",
+    "object_id": 1287675635,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_transfers_Different_Chapters",
+    "object_id": 1990298150,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_transfers_Points",
+    "object_id": 1974298093,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_transfers_Source_Payload",
+    "object_id": 2022298264,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_chapter_transfers_Status",
+    "object_id": 2006298207,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_lot_allocations_Points_Allocated",
+    "object_id": 679673469,
+    "parent_object_id": 583673127,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_membership_events_Base_Points",
+    "object_id": 199671759,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_membership_events_Credit_Deadline",
+    "object_id": 231671873,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_membership_events_Event_Type",
+    "object_id": 167671645,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_membership_events_Status",
+    "object_id": 183671702,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_membership_events_Term_Years",
+    "object_id": 215671816,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_point_lots_Expires_On",
+    "object_id": 567673070,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_point_lots_Original_Points",
+    "object_id": 535672956,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_point_lots_Remaining_Points",
+    "object_id": 551673013,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_redemption_receipts_Content_Length",
+    "object_id": 1703677117,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_redemption_requests_Amount_USD",
+    "object_id": 1063674837,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_redemption_requests_Category",
+    "object_id": 1079674894,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_redemption_requests_Payment_Mode",
+    "object_id": 1095674951,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_redemption_requests_Points",
+    "object_id": 1047674780,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_redemption_requests_Status",
+    "object_id": 1111675008,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_reward_runs_Run_Type",
+    "object_id": 1883153754,
+    "parent_object_id": 1803153469,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_reward_runs_Status",
+    "object_id": 1899153811,
+    "parent_object_id": 1803153469,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_transactions_Chapter_Active_Member_Count",
+    "object_id": 439672614,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_transactions_Earned_Date",
+    "object_id": 407672500,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_transactions_Multiplier",
+    "object_id": 423672557,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_transactions_Points_Delta_Nonzero",
+    "object_id": 375672386,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_transactions_Points_Delta_Sign",
+    "object_id": 391672443,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "CK_transactions_Type",
+    "object_id": 359672329,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "C ",
+    "type_desc": "CHECK_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_bayrate_reconciliation_applications_Applied_At",
+    "object_id": 1462296269,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_daily_snapshot_Created_At",
+    "object_id": 2139154666,
+    "parent_object_id": 2091154495,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_daily_snapshot_Is_Current",
+    "object_id": 2123154609,
+    "parent_object_id": 2091154495,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_eligibility_periods_Created_At",
+    "object_id": 1979154096,
+    "parent_object_id": 1915153868,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_eligibility_periods_Created_By",
+    "object_id": 1995154153,
+    "parent_object_id": 1915153868,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_eligibility_periods_Is_Current",
+    "object_id": 1947153982,
+    "parent_object_id": 1915153868,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_eligibility_periods_Source",
+    "object_id": 1963154039,
+    "parent_object_id": 1915153868,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_renewal_notice_results_Created_At",
+    "object_id": 1271675578,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_transfers_Created_At",
+    "object_id": 1926297922,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_chapter_transfers_Status",
+    "object_id": 1910297865,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_lot_allocations_Allocated_At",
+    "object_id": 631673298,
+    "parent_object_id": 583673127,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_member_daily_snapshot_Created_At",
+    "object_id": 2059154381,
+    "parent_object_id": 2027154267,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_membership_events_Created_At",
+    "object_id": 135671531,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_membership_events_Status",
+    "object_id": 119671474,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_membership_events_Term_Years",
+    "object_id": 103671417,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_membership_events_Updated_At",
+    "object_id": 151671588,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_point_lots_Created_At",
+    "object_id": 503672842,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_redemption_receipts_Is_Deleted",
+    "object_id": 1655676946,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_redemption_receipts_Uploaded_At",
+    "object_id": 1639676889,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_redemption_requests_Created_At",
+    "object_id": 1031674723,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_redemption_requests_Legacy_Gap",
+    "object_id": 999674609,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_redemption_requests_Status",
+    "object_id": 1015674666,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_reward_runs_Run_Type",
+    "object_id": 1835153583,
+    "parent_object_id": 1803153469,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_reward_runs_Started_At",
+    "object_id": 1851153640,
+    "parent_object_id": 1803153469,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_reward_runs_Status",
+    "object_id": 1867153697,
+    "parent_object_id": 1803153469,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_transactions_Created_By",
+    "object_id": 327672215,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_transactions_Posted_At",
+    "object_id": 295672101,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "DF_transactions_Rule_Version",
+    "object_id": 311672158,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "D ",
+    "type_desc": "DEFAULT_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_reconciliation_applications_Bayrate_RunID",
+    "object_id": 1542296554,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_bayrate_reconciliation_applications_Reward_RunID",
+    "object_id": 1478296326,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_daily_snapshot_RunID",
+    "object_id": 7671075,
+    "parent_object_id": 2091154495,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_renewal_notice_results_RedemptionID",
+    "object_id": 1335675806,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_renewal_notice_results_RunID",
+    "object_id": 1367675920,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_renewal_notice_results_TransactionID",
+    "object_id": 1351675863,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_transfers_Out_TransactionID",
+    "object_id": 1958298036,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_chapter_transfers_RunID",
+    "object_id": 1942297979,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_lot_allocations_Debit_TransactionID",
+    "object_id": 647673355,
+    "parent_object_id": 583673127,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_lot_allocations_LotID",
+    "object_id": 663673412,
+    "parent_object_id": 583673127,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_member_daily_snapshot_RunID",
+    "object_id": 2075154438,
+    "parent_object_id": 2027154267,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_membership_events_Credited_TransactionID",
+    "object_id": 695673526,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_point_lots_Earn_TransactionID",
+    "object_id": 519672899,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_redemption_receipts_Posted_TransactionID",
+    "object_id": 1687677060,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_redemption_receipts_RedemptionID",
+    "object_id": 1671677003,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_redemption_requests_Posted_TransactionID",
+    "object_id": 1127675065,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "FK_transactions_RunID",
+    "object_id": 343672272,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "F ",
+    "type_desc": "FOREIGN_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "lot_allocations",
+    "object_id": 583673127,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "member_daily_snapshot",
+    "object_id": 2027154267,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "membership_events",
+    "object_id": 55671246,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_bayrate_reconciliation_applications",
+    "object_id": 1430296155,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_daily_snapshot",
+    "object_id": 2107154552,
+    "parent_object_id": 2091154495,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_eligibility_periods",
+    "object_id": 1931153925,
+    "parent_object_id": 1915153868,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_renewal_notice_results",
+    "object_id": 1239675464,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_chapter_transfers",
+    "object_id": 1878297751,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_lot_allocations",
+    "object_id": 599673184,
+    "parent_object_id": 583673127,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_member_daily_snapshot",
+    "object_id": 2043154324,
+    "parent_object_id": 2027154267,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_membership_events",
+    "object_id": 71671303,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_point_lots",
+    "object_id": 471672728,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_redemption_receipts",
+    "object_id": 1607676775,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_redemption_requests",
+    "object_id": 983674552,
+    "parent_object_id": 967674495,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_reward_runs",
+    "object_id": 1819153526,
+    "parent_object_id": 1803153469,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "PK_transactions",
+    "object_id": 263671987,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "PK",
+    "type_desc": "PRIMARY_KEY_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "point_lots",
+    "object_id": 455672671,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "redemption_receipts",
+    "object_id": 1591676718,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "redemption_requests",
+    "object_id": 967674495,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "reward_runs",
+    "object_id": 1803153469,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_add_redemption_receipt",
+    "object_id": 1719677174,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_apply_bayrate_reward_reconciliation",
+    "object_id": 1558296611,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_backfill_chapter_renewal_confirmations",
+    "object_id": 1415676091,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_create_daily_snapshot",
+    "object_id": 727673640,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_delete_redemption_receipt",
+    "object_id": 1735677231,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_get_pending_chapter_renewals",
+    "object_id": 1431676148,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_legacy_gap_membership_awards",
+    "object_id": 1191675293,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_legacy_gap_tournament_awards",
+    "object_id": 1207675350,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_legacy_redemptions",
+    "object_id": 1143675122,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_legacy_redemptions_with_adjustments",
+    "object_id": 1159675179,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_import_opening_balances",
+    "object_id": 855674096,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_post_chapter_transfer",
+    "object_id": 2038298321,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_post_manual_redemption",
+    "object_id": 1575676661,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_chapter_renewal_notices",
+    "object_id": 1383675977,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_legacy_gap_rated_game_awards",
+    "object_id": 1175675236,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_membership_awards",
+    "object_id": 743673697,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_point_expirations",
+    "object_id": 871674153,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_rated_game_awards",
+    "object_id": 759673754,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_process_tournament_awards",
+    "object_id": 951674438,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_record_chapter_renewal_confirmation",
+    "object_id": 1399676034,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_record_membership_event",
+    "object_id": 711673583,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "sp_update_redemption_notes",
+    "object_id": 1751677288,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "transactions",
+    "object_id": 247671930,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_bayrate_reconciliation_applications_Reward_RunID",
+    "object_id": 1446296212,
+    "parent_object_id": 1414296098,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_renewal_notice_results_Message_Chapter",
+    "object_id": 1255675521,
+    "parent_object_id": 1223675407,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_chapter_transfers_External",
+    "object_id": 1894297808,
+    "parent_object_id": 1862297694,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_lot_allocations_Debit_Lot",
+    "object_id": 615673241,
+    "parent_object_id": 583673127,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_membership_events_Message_AGAID_Type",
+    "object_id": 87671360,
+    "parent_object_id": 55671246,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_point_lots_Earn_TransactionID",
+    "object_id": 487672785,
+    "parent_object_id": 455672671,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_redemption_receipts_Blob",
+    "object_id": 1623676832,
+    "parent_object_id": 1591676718,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "UQ_transactions_Source",
+    "object_id": 279672044,
+    "parent_object_id": 247671930,
+    "schema_name": "rewards",
+    "type": "UQ",
+    "type_desc": "UNIQUE_CONSTRAINT"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_chapter_balances",
+    "object_id": 775673811,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_chapter_transaction_history",
+    "object_id": 791673868,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_membership_event_audit",
+    "object_id": 839674039,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_point_lot_aging",
+    "object_id": 807673925,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "v_reward_run_history",
+    "object_id": 823673982,
+    "parent_object_id": 0,
+    "schema_name": "rewards",
+    "type": "V ",
+    "type_desc": "VIEW"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "chapters",
+    "object_id": 887674210,
+    "parent_object_id": 0,
+    "schema_name": "staging",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_1202103323",
+    "object_id": 2082158513,
+    "parent_object_id": 1202103323,
+    "schema_name": "staging",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_18099105",
+    "object_id": 1522156518,
+    "parent_object_id": 18099105,
+    "schema_name": "staging",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "dbrepl_dirty_887674210",
+    "object_id": 1858157715,
+    "parent_object_id": 887674210,
+    "schema_name": "staging",
+    "type": "TR",
+    "type_desc": "SQL_TRIGGER"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "member_categories",
+    "object_id": 1202103323,
+    "parent_object_id": 0,
+    "schema_name": "staging",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  },
+  {
+    "is_ms_shipped": false,
+    "name": "memchap",
+    "object_id": 18099105,
+    "parent_object_id": 0,
+    "schema_name": "staging",
+    "type": "U ",
+    "type_desc": "USER_TABLE"
+  }
+]

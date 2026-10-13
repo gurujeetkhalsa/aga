@@ -1,0 +1,538 @@
+{
+  "authsettings": {
+    "aadClaimsAuthorization": null,
+    "additionalLoginParams": null,
+    "allowedAudiences": null,
+    "allowedExternalRedirectUrls": null,
+    "clientId": null,
+    "clientSecret": null,
+    "clientSecretCertificateThumbprint": null,
+    "clientSecretSettingName": null,
+    "configVersion": null,
+    "defaultProvider": null,
+    "enabled": null,
+    "facebookAppId": null,
+    "facebookAppSecret": null,
+    "facebookAppSecretSettingName": null,
+    "facebookOAuthScopes": null,
+    "gitHubClientId": null,
+    "gitHubClientSecret": null,
+    "gitHubClientSecretSettingName": null,
+    "gitHubOAuthScopes": null,
+    "googleClientId": null,
+    "googleClientSecret": null,
+    "googleClientSecretSettingName": null,
+    "googleOAuthScopes": null,
+    "isAadAutoProvisioned": false,
+    "issuer": null,
+    "microsoftAccountClientId": null,
+    "microsoftAccountClientSecret": null,
+    "microsoftAccountClientSecretSettingName": null,
+    "microsoftAccountOAuthScopes": null,
+    "tokenStoreEnabled": null,
+    "twitterConsumerKey": null,
+    "twitterConsumerSecret": null,
+    "twitterConsumerSecretSettingName": null,
+    "unauthenticatedClientAction": null
+  },
+  "authsettingsV2": {
+    "globalValidation": {
+      "unauthenticatedClientAction": "AllowAnonymous"
+    },
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "clientId": "319512c6-9f28-46e1-be91-f22d7189f928",
+          "clientSecretSettingName": "WEBSITE_AUTH_CLIENT_SECRET",
+          "openIdIssuer": "https://sts.windows.net/5f1a8692-caac-4040-9a1b-858e98f03e4b/"
+        },
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-chapter-rewards-admin.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "google": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-chapter-rewards-admin.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      },
+      "legacyMicrosoftAccount": {
+        "validation": {
+          "allowedAudiences": [
+            "https://aga-chapter-rewards-admin.azurewebsites.net/.auth/login/aad/callback"
+          ]
+        }
+      }
+    },
+    "login": {
+      "preserveUrlFragmentsForLogins": false,
+      "routes": {
+        "logoutEndpoint": "/.auth/logout"
+      },
+      "tokenStore": {
+        "enabled": true
+      }
+    },
+    "platform": {
+      "enabled": true,
+      "runtimeVersion": "~1"
+    }
+  },
+  "configurationCapturedAt": "2026-10-13T17:31:51.615986+00:00",
+  "connectionStrings": {},
+  "deploymentStorageAuthentication": {
+    "storageAccountConnectionStringName": "DEPLOYMENT_STORAGE_CONNECTION_STRING",
+    "type": "StorageAccountConnectionString",
+    "userAssignedIdentityResourceId": null
+  },
+  "functions": [
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/balances",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminBalances",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminBalances",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminBalances"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/chapter",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminChapter",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminChapter",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminChapter"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/debit",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminDebitPost",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminDebitPost",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminDebitPost"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/debit-preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminDebitPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminDebitPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminDebitPreview"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/me",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminMe",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminMe",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminMe"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/options",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminOptions",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminOptions",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminOptions"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminPage",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminPage",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminPage"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/receipt-delete",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminReceiptDelete",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminReceiptDelete",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminReceiptDelete"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/receipts/{receipt_id}",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminReceiptFile",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminReceiptFile",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminReceiptFile"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/receipt-upload",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminReceiptUpload",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminReceiptUpload",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminReceiptUpload"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "GET",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/redemption",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminRedemption",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminRedemption",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminRedemption"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/redemption-notes",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminRedemptionNotes",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminRedemptionNotes",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminRedemptionNotes"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/transfer",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminTransferPost",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminTransferPost",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminTransferPost"
+    },
+    {
+      "config": {
+        "bindings": [
+          {
+            "authLevel": "ANONYMOUS",
+            "direction": "IN",
+            "methods": [
+              "POST",
+              "OPTIONS"
+            ],
+            "name": "req",
+            "route": "chapter-rewards/admin/transfer-preview",
+            "type": "httpTrigger"
+          },
+          {
+            "direction": "OUT",
+            "name": "$return",
+            "type": "http"
+          }
+        ],
+        "entryPoint": "ChapterRewardsAdminTransferPreview",
+        "functionDirectory": "/home/site/wwwroot",
+        "language": "python",
+        "name": "ChapterRewardsAdminTransferPreview",
+        "scriptFile": "function_app.py"
+      },
+      "isDisabled": false,
+      "name": "ChapterRewardsAdminTransferPreview"
+    }
+  ],
+  "identity": null,
+  "settings": {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "<supplied securely>",
+    "AzureWebJobsStorage": "<supplied securely>",
+    "BAYRATE_TRUST_EASY_AUTH": "true",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "<supplied securely>",
+    "SQL_CONNECTION_STRING": "<supplied securely>"
+  },
+  "sqlTargets": [
+    "tcp:aga-sql-server.database.windows.net,1433"
+  ],
+  "storageAccounts": [
+    "agafunc0522"
+  ],
+  "web": {
+    "alwaysOn": false,
+    "appCommandLine": "",
+    "cors": null,
+    "ftpsState": "FtpsOnly",
+    "http20Enabled": true,
+    "ipSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ],
+    "linuxFxVersion": "",
+    "minTlsVersion": "1.2",
+    "scmIpSecurityRestrictions": [
+      {
+        "action": "Allow",
+        "description": "Allow all access",
+        "ipAddress": "Any",
+        "name": "Allow all",
+        "priority": 2147483647
+      }
+    ]
+  }
+}

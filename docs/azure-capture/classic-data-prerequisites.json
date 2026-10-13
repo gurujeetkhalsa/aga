@@ -1,0 +1,14 @@
+[
+  {
+    "path": "data/aga-ratings.csv",
+    "bytes": 7422419,
+    "sha256": "2dafbc6e4c373d86c11cbd37bc257bd6c6426101c1afc643963e84960e305a46",
+    "status": "present in original package; private production data excluded from Git"
+  },
+  {
+    "path": "data/legacy-bayrate-best-event-ratings.csv",
+    "bytes": 12514641,
+    "sha256": "fd7b1ccd2ab9eba87ff33d966570f0d531272f0ebe0483c4b4b8ebcf0d3ce609",
+    "status": "present in original package; private production data excluded from Git"
+  }
+]

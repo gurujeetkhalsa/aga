@@ -1,0 +1,153 @@
+{
+  "stagedFileCount": 1582,
+  "forbiddenFileCandidates": [],
+  "sourceHashesCheckedInGitIndex": 977,
+  "hashMismatches": [],
+  "secretScanAdjudication": [
+    {
+      "path": "docs/azure-capture/manifests/aga-bayrate.json",
+      "line": 24,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/manifests/aga-events.json",
+      "line": 25,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/manifests/aga-chapter-finder-update.json",
+      "line": 21,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/manifests/aga-ratings-explorer.json",
+      "line": 29,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/manifests/aga-chapter-rewards-admin.json",
+      "line": 21,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/manifests/aga-ratings-explorer-sgf-20260407t2105.json",
+      "line": 28,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/manifests/aga-ratings-sgf-upload.json",
+      "line": 21,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/session-notes/2026-05-03-bayrate-nyga-rewards-ops-summary.md",
+      "line": 113,
+      "rule": "generic-api-key",
+      "verdict": "public reward event identifier"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 26,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 79,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 127,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 365,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 691,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 767,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "docs/azure-capture/inventory.json",
+      "line": 842,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 15,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 37,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 70,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 81,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 149,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 260,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 415,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 435,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    },
+    {
+      "path": "interim-source/manifest.json",
+      "line": 457,
+      "rule": "generic-api-key",
+      "verdict": "SHA-256 manifest value"
+    }
+  ],
+  "scope": "Final precommit staging audit; excludes this audit record and final documentation-only additions"
+}

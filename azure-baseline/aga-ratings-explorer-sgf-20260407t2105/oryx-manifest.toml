@@ -1,0 +1,7 @@
+PythonVersion="3.13.11"
+pythonBuildCommandsFile="/tmp/zipdeploy/extracted/oryx-build-commands.txt"
+packagedir=".python_packages/lib/site-packages"
+OperationId="113bfe1a3ec64e9f"
+SourceDirectoryInBuildContainer="/tmp/zipdeploy/extracted"
+PlatformName="python"
+CompressDestinationDir="false"

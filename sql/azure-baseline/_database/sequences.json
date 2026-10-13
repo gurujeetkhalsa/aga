@@ -1,0 +1,17 @@
+[
+  {
+    "cache_size": null,
+    "increment": "1",
+    "is_cached": true,
+    "is_cycling": false,
+    "maximum_value": "2147483647",
+    "minimum_value": "-2147483648",
+    "name": "bayrate_run_id_seq",
+    "object_id": 1067150847,
+    "precision": 10,
+    "scale": 0,
+    "schema_name": "ratings",
+    "start_value": "1",
+    "type_name": "int"
+  }
+]

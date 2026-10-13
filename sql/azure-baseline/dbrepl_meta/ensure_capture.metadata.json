@@ -1,0 +1,41 @@
+{
+  "columns": [],
+  "dependencies": [
+    {
+      "is_ambiguous": false,
+      "is_caller_dependent": false,
+      "is_schema_bound_reference": false,
+      "referenced_class": 1,
+      "referenced_class_desc": "OBJECT_OR_COLUMN",
+      "referenced_database_name": null,
+      "referenced_entity_name": "generations",
+      "referenced_id": 1442156233,
+      "referenced_minor_id": 0,
+      "referenced_schema_name": "dbrepl_meta",
+      "referenced_server_name": null,
+      "referencing_class": 1,
+      "referencing_class_desc": "OBJECT_OR_COLUMN",
+      "referencing_id": 1506156461,
+      "referencing_minor_id": 0
+    }
+  ],
+  "moduleProperties": {
+    "execute_as_principal_id": -2,
+    "is_recompiled": false,
+    "is_schema_bound": false,
+    "null_on_null_input": false,
+    "object_id": 1506156461,
+    "uses_ansi_nulls": true,
+    "uses_database_collation": false,
+    "uses_quoted_identifier": true
+  },
+  "object": {
+    "is_ms_shipped": false,
+    "name": "ensure_capture",
+    "object_id": 1506156461,
+    "parent_object_id": 0,
+    "schema_name": "dbrepl_meta",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "archiveFormat": "squashfs",
+  "capturedAt": "2026-10-13T17:15:24.682695+00:00",
+  "etag": "\"0x8DE88312E5AD581\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    },
+    {
+      "path": "legacy_bayrate_baseline_10.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_perf_base20.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_perf_trigger20.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_recent_benchmark.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_recent_performance_sweep.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_recent_sweep.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_sigmafloor06_10.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_smoke.json",
+      "reason": "generated rating experiment output; production data excluded"
+    },
+    {
+      "path": "legacy_bayrate_smoke_one.json",
+      "reason": "generated rating experiment output; production data excluded"
+    }
+  ],
+  "files": {
+    "__init__.py": "79fd83cfa4c8f04026d267140a1ca4c8197961feb6d6fb616ba7bdf8971c6b9c",
+    "export_legacy_event_ratings.py": "8672a414575b457487468f747e7360a7506e11fe8cc75933d49426bb23653643",
+    "extract_legacy_player_history.py": "ba95d7bc950ba337e374c731b31ea92240037010f73b4af40785d47d1b68d426",
+    "extract_legacy_player_history_from_table.py": "b8c53f783f563c01468f6bb93c06ec66b78b4d8edd5f089ab606f6deb6329226",
+    "function_app.py": "52b08cd53c19b0e68dfdcf63b7a196264676c5d76079906e1e9d6b7354086a7b",
+    "host.json": "c59959b38cd380c8ed87e5798a4f65b9b5e7143d8198b9257e456bb68007634e",
+    "legacy_bayrate.py": "b4dabafdeca015e39c3ea9bf6a05cc01e532c4c3983f1966a4e08c5e5457f075",
+    "oryx-manifest.toml": "e00410f186dad22fe3eaca570f160d50147aee7f86be46e1680c157c22573067",
+    "plot_legacy_player_history.py": "138a73b0d11d50d21acf21268e6f241aca5090d053bdd25521c8464a94bfb484",
+    "requirements.txt": "4f509a7479ca1630bfe6add63917d16b8abf40112a3fdbf1f11e77bd427eea42",
+    "run_legacy_bayrate.py": "61906c26809968706579faca9c07f38acb4c03683ad3121d055e3173712455dd",
+    "sweep_legacy_bayrate.py": "91dec190b19c2bd31aa90373f40a03ceeb0e6bfae53f409d95d0ada61bb34ca9",
+    "sweep_legacy_bayrate_performance.py": "108635ef4a4b18320c508789df2a117ee61b17f9a6354058f6c9450854804909"
+  },
+  "hostname": "aga-membership-functions3.azurewebsites.net",
+  "lastModified": "2026-03-22 16:36:34+00:00",
+  "name": "aga-membership-functions3",
+  "packageBytes": 15388672,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/scm-releases/scm-latest-aga-membership-functions3.zip",
+  "packageSha256": "217f5480e2b9bec79a70ddc69121d6d6e8dde494a7b0b5d6101224a45614dc0a",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "linuxFxVersion": "Python|3.11"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "52b08cd53c19b0e68dfdcf63b7a196264676c5d76079906e1e9d6b7354086a7b",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered current SCM SquashFS; runtime entry verified"
+}

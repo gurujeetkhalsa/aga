@@ -2,6 +2,13 @@
 
 # AGA Functions Monorepo
 
+For the Azure-to-VM preparation baseline, start with the complete
+[Azure source map](docs/azure-source-map.md),
+[PREMIGRATION publication record](docs/baseline-revision.md), and
+[later-Azure-change reconciliation procedure](docs/reconcile-azure-changes.md).
+Exact deployed copies are kept separately under `azure-baseline/`; the folders
+described below are development/reference sources and may differ from deployments.
+
 This repository contains the AGA Azure Functions codebase split into focused,
 deployable apps.
 

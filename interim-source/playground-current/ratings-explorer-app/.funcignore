@@ -1,0 +1,9 @@
+# Copyright 2026, American Go Association, All rights reserved
+
+__pycache__/
+*.pyc
+.python_packages/
+.venv/
+data/
+sql/
+*.csv

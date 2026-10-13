@@ -1,0 +1,14 @@
+[
+  {
+    "member_name": "dbo",
+    "role_name": "db_owner"
+  },
+  {
+    "member_name": "robert.qi@usgo.org",
+    "role_name": "db_owner"
+  },
+  {
+    "member_name": "robertqisql",
+    "role_name": "db_owner"
+  }
+]

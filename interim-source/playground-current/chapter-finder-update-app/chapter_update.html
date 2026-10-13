@@ -1,0 +1,430 @@
+<!doctype html>
+<!-- Copyright 2026, American Go Association, All rights reserved -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGA Chapter Listing Update</title>
+  <style>
+    :root {
+      --page: #f4f6f8;
+      --surface: #ffffff;
+      --surface-soft: #f8fafb;
+      --border: #d6dde5;
+      --border-strong: #aeb9c6;
+      --text: #17202b;
+      --muted: #5c6978;
+      --blue: #1f5b99;
+      --blue-dark: #174674;
+      --green: #23744a;
+      --green-soft: #eaf6ef;
+      --amber: #9a6300;
+      --amber-soft: #fff6df;
+      --red: #b42318;
+      --red-soft: #fff0ee;
+      --focus: #1769c2;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--page);
+      line-height: 1.45;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body { background: var(--page); }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: wait; opacity: .58; }
+    input, textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+    input:focus-visible, textarea:focus-visible, button:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .topbar-inner {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 17px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    h1 { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: 0; }
+    .chapter-name { margin-top: 3px; color: var(--muted); font-size: 14px; }
+    .badge {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border: 1px solid #d6b25f;
+      border-radius: 999px;
+      background: var(--amber-soft);
+      color: #704700;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    main { max-width: 1040px; margin: 0 auto; padding: 18px 22px 34px; }
+    .status {
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 8px 11px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .status.error { color: var(--red); border-color: #e4a29b; background: var(--red-soft); font-weight: 650; }
+    .status.success { color: var(--green); border-color: #9cc9ae; background: var(--green-soft); font-weight: 650; }
+    .shell {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(22, 34, 51, .07);
+    }
+    .section { padding: 22px; border-top: 1px solid var(--border); }
+    .section:first-child { border-top: 0; }
+    .section:nth-child(even) { background: var(--surface-soft); }
+    .section-header { margin-bottom: 14px; }
+    h2 { margin: 0; font-size: 17px; letter-spacing: 0; }
+    .section-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+    .grid.three { grid-template-columns: 1.4fr .7fr .8fr; }
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
+    .required::after { content: " *"; color: var(--red); }
+    .admin-list { border-top: 1px solid var(--border); }
+    .admin-row {
+      min-height: 48px;
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 2px;
+    }
+    .admin-row input[type="checkbox"] { width: 17px; min-height: 17px; accent-color: var(--blue); }
+    .admin-name { font-weight: 680; min-width: 0; overflow-wrap: anywhere; }
+    .admin-id { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .admin-row.added { grid-template-columns: minmax(0, 1fr) auto; }
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--red);
+      font-size: 21px;
+      line-height: 1;
+      padding: 0;
+    }
+    .add-admin { display: grid; grid-template-columns: minmax(150px, 260px) auto; gap: 9px; margin-top: 14px; align-items: end; }
+    .button {
+      min-height: 40px;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .button:hover { border-color: var(--blue); color: var(--blue); }
+    .button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .button.primary:hover { background: var(--blue-dark); color: #fff; }
+    .actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+    .actions .button { min-width: 170px; }
+    .fine { color: var(--muted); font-size: 12px; }
+    .success-panel { display: none; padding: 28px 22px; text-align: center; }
+    .success-panel h2 { color: var(--green); font-size: 20px; }
+    .success-panel p { color: var(--muted); margin: 8px auto 0; max-width: 560px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 720px) {
+      .topbar-inner, main { padding-left: 14px; padding-right: 14px; }
+      .topbar-inner { align-items: flex-start; }
+      h1 { font-size: 19px; }
+      .grid, .grid.three { grid-template-columns: minmax(0, 1fr); }
+      .field.full { grid-column: auto; }
+      .section { padding: 18px 14px; }
+      .add-admin { grid-template-columns: minmax(0, 1fr) auto; }
+      .actions { align-items: stretch; flex-direction: column; }
+      .actions .button { width: 100%; }
+      .fine { order: 2; text-align: center; }
+      .admin-row { grid-template-columns: 22px minmax(0, 1fr); }
+      .admin-id { grid-column: 2; white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1>AGA Chapter Listing Update</h1>
+        <div class="chapter-name" id="chapter-name">Loading chapter</div>
+      </div>
+      <span class="badge">Approval required</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="status" id="status" role="status" aria-live="polite">Loading current chapter information...</div>
+    <form class="shell" id="update-form" hidden>
+      <section class="section">
+        <div class="section-header"><h2>Chapter</h2></div>
+        <div class="grid">
+          <div class="field full">
+            <label class="required" for="chapter_name">Chapter name</label>
+            <input id="chapter_name" name="chapter_name" maxlength="50" required>
+          </div>
+          <div class="field full">
+            <label for="address_text">Street or meeting address</label>
+            <textarea id="address_text" name="address_text" maxlength="101"></textarea>
+          </div>
+          <div class="field full">
+            <label for="postal_text">Location line</label>
+            <input id="postal_text" name="postal_text" maxlength="512" readonly aria-readonly="true">
+          </div>
+        </div>
+        <div class="grid three" style="margin-top:14px">
+          <div class="field"><label for="city">City</label><input id="city" name="city" maxlength="30"></div>
+          <div class="field"><label for="state_province">State</label><input id="state_province" name="state_province" maxlength="64"></div>
+          <div class="field"><label for="postal_code">Postal code</label><input id="postal_code" name="postal_code" maxlength="10"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header"><h2>Public contact</h2></div>
+        <div class="grid">
+          <div class="field"><label for="contact_name">Contact name</label><input id="contact_name" name="contact_name" maxlength="256" autocomplete="name"></div>
+          <div class="field"><label for="contact_email">Contact email</label><input id="contact_email" name="contact_email" type="email" maxlength="100" autocomplete="email"></div>
+          <div class="field"><label for="contact_phone">Contact phone</label><input id="contact_phone" name="contact_phone" maxlength="24" autocomplete="tel"></div>
+          <div class="field"><label for="website_url">Website URL</label><input id="website_url" name="website_url" type="url" maxlength="100" placeholder="https://"></div>
+          <div class="field full"><label for="website_label">Website label</label><input id="website_label" name="website_label" maxlength="512" readonly aria-readonly="true"></div>
+          <div class="field full"><label for="description_text">Description and meeting details</label><textarea id="description_text" name="description_text" maxlength="500" style="min-height:150px"></textarea></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h2>Chapter administrators</h2>
+          <div class="section-meta">Selected members remain assigned.</div>
+        </div>
+        <div class="admin-list" id="current-admins"></div>
+        <div class="admin-list" id="added-admins"></div>
+        <div class="add-admin">
+          <div class="field"><label for="new-agaid">Add by AGA ID</label><input id="new-agaid" inputmode="numeric" pattern="[0-9]*" maxlength="10"></div>
+          <button class="button" type="button" id="add-admin">Add</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header"><h2>Submitted by</h2></div>
+        <div class="grid">
+          <div class="field"><label class="required" for="submitted_by_name">Your name</label><input id="submitted_by_name" maxlength="256" required autocomplete="name"></div>
+          <div class="field"><label class="required" for="submitted_by_email">Your email</label><input id="submitted_by_email" type="email" maxlength="320" required autocomplete="email"></div>
+          <div class="field full"><label for="submitted_by_role">Chapter role</label><input id="submitted_by_role" maxlength="128"></div>
+          <div class="field full"><label for="submitter_notes">Notes for reviewer</label><textarea id="submitter_notes" maxlength="4000"></textarea></div>
+        </div>
+      </section>
+
+      <section class="section actions">
+        <span class="fine">Changes remain pending until approved.</span>
+        <button class="button primary" type="submit" id="submit-button">Submit for review</button>
+      </section>
+    </form>
+
+    <section class="shell success-panel" id="success-panel">
+      <h2>Update submitted</h2>
+      <p id="success-message"></p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const fieldNames = [
+        "chapter_name", "address_text", "postal_text", "city", "state_province", "postal_code",
+        "contact_name", "contact_email", "contact_phone", "website_url", "website_label", "description_text"
+      ];
+      const state = { token: "", context: null, added: [] };
+      const status = document.getElementById("status");
+      const form = document.getElementById("update-form");
+      const submitButton = document.getElementById("submit-button");
+      const basePath = window.location.pathname.replace(/\/$/, "");
+
+      function setStatus(message, type = "") {
+        status.textContent = message;
+        status.className = `status${type ? ` ${type}` : ""}`;
+      }
+
+      function refreshLocationLine() {
+        const city = document.getElementById("city").value.trim();
+        const region = document.getElementById("state_province").value.trim();
+        const postal = document.getElementById("postal_code").value.trim();
+        let location = city;
+        if (region) location = location ? `${location}, ${region}` : region;
+        if (postal) location = location ? `${location} ${postal}` : postal;
+        document.getElementById("postal_text").value = location;
+      }
+
+      async function api(path, options = {}) {
+        const headers = { Authorization: `Bearer ${state.token}`, ...(options.headers || {}) };
+        const response = await fetch(`${basePath}${path}`, { ...options, headers, cache: "no-store" });
+        const body = await response.json().catch(() => ({ error: "The server returned an invalid response." }));
+        if (!response.ok) throw new Error(body.error || "The request failed.");
+        return body;
+      }
+
+      function renderCurrentAdmins() {
+        const host = document.getElementById("current-admins");
+        host.replaceChildren();
+        const administrators = state.context.administrators || [];
+        for (const item of administrators) {
+          const row = document.createElement("label");
+          row.className = "admin-row";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = true;
+          checkbox.dataset.assignmentId = String(item.assignment_id);
+          const name = document.createElement("span");
+          name.className = "admin-name";
+          name.textContent = item.display_name;
+          const id = document.createElement("span");
+          id.className = "admin-id";
+          id.textContent = item.membership_agaid ? `AGA ${item.membership_agaid}` : "Member ID needs review";
+          row.append(checkbox, name, id);
+          host.append(row);
+        }
+      }
+
+      function renderAddedAdmins() {
+        const host = document.getElementById("added-admins");
+        host.replaceChildren();
+        for (const item of state.added) {
+          const row = document.createElement("div");
+          row.className = "admin-row added";
+          const text = document.createElement("div");
+          const name = document.createElement("div");
+          name.className = "admin-name";
+          name.textContent = item.display_name;
+          const id = document.createElement("div");
+          id.className = "admin-id";
+          id.textContent = `AGA ${item.agaid}`;
+          text.append(name, id);
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "icon-button";
+          remove.textContent = "×";
+          remove.title = `Remove ${item.display_name}`;
+          remove.setAttribute("aria-label", `Remove ${item.display_name}`);
+          remove.addEventListener("click", () => {
+            state.added = state.added.filter(candidate => candidate.agaid !== item.agaid);
+            renderAddedAdmins();
+          });
+          row.append(text, remove);
+          host.append(row);
+        }
+      }
+
+      async function loadContext() {
+        const hash = new URLSearchParams(window.location.hash.slice(1));
+        state.token = hash.get("token") || "";
+        if (!state.token) throw new Error("This chapter link is missing its access token.");
+        const body = await api("/context");
+        state.context = body;
+        document.getElementById("chapter-name").textContent = body.fields.chapter_name || "Chapter listing";
+        for (const name of fieldNames) document.getElementById(name).value = body.fields[name] || "";
+        refreshLocationLine();
+        renderCurrentAdmins();
+        renderAddedAdmins();
+        form.hidden = false;
+        setStatus("Current chapter information loaded.", "success");
+      }
+
+      document.getElementById("add-admin").addEventListener("click", async () => {
+        const input = document.getElementById("new-agaid");
+        const value = input.value.trim();
+        if (!/^\d+$/.test(value)) {
+          setStatus("Enter a valid AGA ID.", "error");
+          input.focus();
+          return;
+        }
+        const agaid = Number(value);
+        const currentIds = (state.context.administrators || []).map(item => item.membership_agaid).filter(Boolean);
+        if (currentIds.includes(agaid) || state.added.some(item => item.agaid === agaid)) {
+          setStatus("That administrator is already listed.", "error");
+          return;
+        }
+        const button = document.getElementById("add-admin");
+        button.disabled = true;
+        try {
+          const body = await api(`/member?agaid=${encodeURIComponent(value)}`);
+          state.added.push(body.member);
+          input.value = "";
+          renderAddedAdmins();
+          setStatus(`${body.member.display_name} added to the proposed administrator list.`, "success");
+        } catch (error) {
+          setStatus(error.message, "error");
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      for (const name of ["city", "state_province", "postal_code"]) {
+        document.getElementById(name).addEventListener("input", refreshLocationLine);
+      }
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        refreshLocationLine();
+        submitButton.disabled = true;
+        setStatus("Submitting update...");
+        const fields = Object.fromEntries(fieldNames.map(name => [name, document.getElementById(name).value]));
+        const retained = [...document.querySelectorAll("#current-admins input[type=checkbox]:checked")]
+          .map(input => Number(input.dataset.assignmentId));
+        const payload = {
+          base_content_sha256: state.context.base_content_sha256,
+          base_administrator_sha256: state.context.base_administrator_sha256,
+          fields,
+          retained_assignment_ids: retained,
+          added_administrator_agaids: state.added.map(item => item.agaid),
+          submitted_by_name: document.getElementById("submitted_by_name").value,
+          submitted_by_email: document.getElementById("submitted_by_email").value,
+          submitted_by_role: document.getElementById("submitted_by_role").value,
+          submitter_notes: document.getElementById("submitter_notes").value
+        };
+        try {
+          const body = await api("/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          form.hidden = true;
+          status.hidden = true;
+          document.getElementById("success-message").textContent =
+            `${body.chapter_name} request ${body.request_id} is awaiting review.`;
+          document.getElementById("success-panel").style.display = "block";
+        } catch (error) {
+          setStatus(error.message, "error");
+          submitButton.disabled = false;
+        }
+      });
+
+      loadContext().catch(error => setStatus(error.message, "error"));
+    })();
+  </script>
+</body>
+</html>

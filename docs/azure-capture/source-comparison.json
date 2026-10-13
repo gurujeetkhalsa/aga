@@ -1,0 +1,2029 @@
+{
+  "aga-bayrate": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/COPYING",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/COPYING",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/NOTICE.md",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/NOTICE.md",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate/__init__.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/__init__.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate/auth.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/auth.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate/commit_staged_run.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/commit_staged_run.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/core.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/core.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate/replay_staged_run.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/replay_staged_run.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate/report_parser.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/report_parser.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/reward_reconciliation.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/reward_reconciliation.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "bayrate/snapshot_refresh.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/snapshot_refresh.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "bayrate/sql_adapter.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/sql_adapter.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate/stage_reports.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/stage_reports.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "bayrate_staging.html",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate-app/bayrate_staging.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate-app/function_app.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate-app/host.json",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "bayrate-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate-app/requirements.txt",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    }
+  ],
+  "aga-chapter-finder-update": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/README.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "admin_auth.py",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/admin_auth.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_finder_update_support.py",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/chapter_finder_update_support.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_review.html",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/chapter_review.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_update.html",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/chapter_update.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/function_app.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/host.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/requirements.txt",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql_adapter.py",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-finder-update-app/sql_adapter.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-chapter-rewards-admin": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-admin-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "admin_auth.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-admin-app/admin_auth.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_rewards_admin.html",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-admin-app/chapter_rewards_admin.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_rewards_admin_support.py",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-admin-app/chapter_rewards_admin_support.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-admin-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-admin-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "chapter-rewards-admin-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-admin-app/requirements.txt",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql_adapter.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-admin-app/sql_adapter.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "tests/test_transfer_support.py",
+      "developmentComparison": "absent",
+      "developmentPath": "chapter-rewards-admin-app/tests/test_transfer_support.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-chapter-rewards-automation": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-automation-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-automation-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-automation-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "chapter-rewards-automation-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-automation-app/requirements.txt",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "tests/test_automation_params.py",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-automation-app/tests/test_automation_params.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    }
+  ],
+  "aga-chapter-rewards-display": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-display-app/README.md",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_rewards.html",
+      "developmentComparison": "identical",
+      "developmentPath": "chapter-rewards-display-app/chapter_rewards.html",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_rewards_support.py",
+      "developmentComparison": "different",
+      "developmentPath": "chapter-rewards-display-app/chapter_rewards_support.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-display-app/function_app.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-display-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "chapter-rewards-display-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "line endings only",
+      "developmentPath": "chapter-rewards-display-app/requirements.txt",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-clubexpress-mail": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/README.md",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "clubexpress_csv_parsers.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/clubexpress_csv_parsers.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "clubexpress_parsers.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/clubexpress_parsers.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "clubexpress_replay.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/clubexpress_replay.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "clubexpress_staged_processor.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/clubexpress_staged_processor.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "clubexpress_staging.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/clubexpress_staging.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "clubexpress-mail-app/function_app.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/host.json",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "clubexpress-mail-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/requirements.txt",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "sql/clubexpress_parsed_event_staging.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/sql/clubexpress_parsed_event_staging.sql",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "tests/test_clubexpress_csv_parsers.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/tests/test_clubexpress_csv_parsers.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "tests/test_clubexpress_parsers.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/tests/test_clubexpress_parsers.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "tests/test_clubexpress_replay.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/tests/test_clubexpress_replay.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "tests/test_clubexpress_staging.py",
+      "developmentComparison": "identical",
+      "developmentPath": "clubexpress-mail-app/tests/test_clubexpress_staging.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "line endings only"
+    },
+    {
+      "deployedFile": "tests/test_journal_parser.py",
+      "developmentComparison": "different",
+      "developmentPath": "clubexpress-mail-app/tests/test_journal_parser.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    }
+  ],
+  "aga-clubexpress-sso-probe": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "clubexpress-sso-probe-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "clubexpress-sso-probe-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "clubexpress-sso-probe-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "clubexpress-sso-probe-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "different",
+      "developmentPath": "clubexpress-sso-probe-app/requirements.txt",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    }
+  ],
+  "aga-events": [
+    {
+      "deployedFile": ".funcignore",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/.funcignore",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "OPERATIONS.md",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/OPERATIONS.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/README.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "VERIFICATION.md",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/VERIFICATION.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "auth/app-roles.json",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/auth/app-roles.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "auth/authsettings.json",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/auth/authsettings.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "build_package.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/build_package.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "downloads/free-beginners-workshop-qr.png",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/downloads/free-beginners-workshop-qr.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "downloads/free-beginners-workshop-qr.svg",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/downloads/free-beginners-workshop-qr.svg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "event_domain.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/event_domain.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "event_manage.html",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/event_manage.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "event_registration.html",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/event_registration.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/function_app.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/host.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/requirements.txt",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/001_repeating_event_foundation.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/001_repeating_event_foundation.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/002_beginner_online_workshop_seed.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/002_beginner_online_workshop_seed.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/003_workshop_editor_and_contact_location.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/003_workshop_editor_and_contact_location.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/004_workshop_operations.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/004_workshop_operations.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/005_registrant_ogs_handle.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/005_registrant_ogs_handle.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/006_workshop_test_mode.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/006_workshop_test_mode.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/007_rehearsal_clock.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/007_rehearsal_clock.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/008_registration_chapter_referral.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql/008_registration_chapter_referral.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql_repository.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/sql_repository.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "tests/browser_admin.cjs",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/browser_admin.cjs",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "tests/browser_qr.cjs",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/browser_qr.cjs",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "tests/browser_registration.cjs",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/browser_registration.cjs",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "tests/browser_waitlist.cjs",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/browser_waitlist.cjs",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "tests/test_event_domain.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/test_event_domain.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "tests/test_qr.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/test_qr.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "tests/test_sql_workshop.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/test_sql_workshop.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "tests/test_workshop.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/tests/test_workshop.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "workshop_admin.js",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_admin.js",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_chapter_qr.html",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_chapter_qr.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_domain.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_domain.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_messages.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_messages.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_providers.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_providers.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_qr.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_qr.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_qr_page.html",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_qr_page.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_qr_share.js",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_qr_share.js",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_repository.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_repository.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "workshop_worker.py",
+      "developmentComparison": "identical",
+      "developmentPath": "events-app/workshop_worker.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-membership-functions": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "membership-data-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "membership-data-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-data-app/host.json",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "membership-data-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "line endings only",
+      "developmentPath": "membership-data-app/requirements.txt",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/chapter_import.sql",
+      "developmentComparison": "line endings only",
+      "developmentPath": "membership-data-app/sql/chapter_import.sql",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-membership-functions3": [
+    {
+      "deployedFile": "__init__.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/__init__.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "export_legacy_event_ratings.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/export_legacy_event_ratings.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "extract_legacy_player_history.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/extract_legacy_player_history.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "extract_legacy_player_history_from_table.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/extract_legacy_player_history_from_table.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/function_app.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/host.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "legacy_bayrate.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/legacy_bayrate.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "plot_legacy_player_history.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/plot_legacy_player_history.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/requirements.txt",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "run_legacy_bayrate.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/run_legacy_bayrate.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "sweep_legacy_bayrate.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/sweep_legacy_bayrate.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "sweep_legacy_bayrate_performance.py",
+      "developmentComparison": "identical",
+      "developmentPath": "membership-functions3-app/sweep_legacy_bayrate_performance.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    }
+  ],
+  "aga-news-archive-viewer": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/README.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/aga-news-card-default-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/aga-news-card-default-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/aga-news-card-default-v2-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/aga-news-card-default-v2-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/aga-news-card-default-v2.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/aga-news-card-default-v2.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/aga-news-card-default.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/aga-news-card-default.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v2-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v2-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v2.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v2.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v3-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v3-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v3.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v3.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v4-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v4-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v4.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v4.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v5-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v5-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v5.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v5.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v6-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v6-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v6.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v6.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v7-1200x675.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v7-1200x675.jpg",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card-v7.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card-v7.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/international-go-news-digest-card.png",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/assets/international-go-news-digest-card.png",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "external_go_news_sources.py",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/external_go_news_sources.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/function_app.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/host.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "news_archive_external_sync.py",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/news_archive_external_sync.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "news_archive_player_context_sync.py",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/news_archive_player_context_sync.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "news_archive_public_sync.py",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/news_archive_public_sync.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/requirements.txt",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/backfill_article_thumbnails_from_captured_images.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/sql/backfill_article_thumbnails_from_captured_images.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/external_news_source_item_ledger.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/sql/external_news_source_item_ledger.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sql/news_archive_article_member_match.sql",
+      "developmentComparison": "identical",
+      "developmentPath": "news-article-archive-viewer-app/sql/news_archive_article_member_match.sql",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-ratings-explorer": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.min.js",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wgo.min.js",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.player.css",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wgo.player.css",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.player.min.js",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wgo.player.min.js",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wood1.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wood1.jpg",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/COPYING",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/COPYING",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/NOTICE.md",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/NOTICE.md",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/README.md",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/README.md",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/__init__.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/__init__.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/auth.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/auth.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/commit_staged_run.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/commit_staged_run.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/compare_replay_to_production.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/compare_replay_to_production.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/core.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/core.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/merge_member_ratings.py",
+      "developmentComparison": "absent",
+      "developmentPath": "bayrate/merge_member_ratings.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/operator.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/operator.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/replay_staged_run.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/replay_staged_run.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/report_parser.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/report_parser.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/run_bayrate.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/run_bayrate.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/snapshot_refresh.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/snapshot_refresh.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "bayrate/sql_adapter.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/sql_adapter.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/stage_reports.py",
+      "developmentComparison": "line endings only",
+      "developmentPath": "bayrate/stage_reports.py",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate_redirect.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/bayrate_redirect.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "bayrate_staging.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/bayrate_staging.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bulk_upload_sgf_csv.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/bulk_upload_sgf_csv.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "chapter_directory_report.html",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/chapter_directory_report.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "clubexpress_sgf_popup_test.html",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/clubexpress_sgf_popup_test.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "go_services_directory_prototype.html",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/go_services_directory_prototype.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "ratings-explorer-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import.html",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/README.md",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/README.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/__init__.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/__init__.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/archive_workflow.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/archive_workflow.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/build_leago_sgf_manifest.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/build_leago_sgf_manifest.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/download_leago_aga_sgfs.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/download_leago_aga_sgfs.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/test_archive_workflow.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/test_archive_workflow.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/workflow.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/workflow.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "ratings_explorer.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/ratings_explorer.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "ratings_explorer_mobile.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/ratings_explorer_mobile.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "ratings_explorer_support.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/ratings_explorer_support.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/requirements.txt",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "rewards_report.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/rewards_report.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "tests/test_bayrate_redirect.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/tests/test_bayrate_redirect.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "wgo_embedded_assets.py",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/wgo_embedded_assets.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-ratings-explorer-display": [
+    {
+      "deployedFile": "DEPLOYED_BASELINE.md",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-display-app/DEPLOYED_BASELINE.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.min.js",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-display-app/assets/wgo/wgo.min.js",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.player.css",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/assets/wgo/wgo.player.css",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.player.min.js",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-display-app/assets/wgo/wgo.player.min.js",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wood1.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-display-app/assets/wgo/wood1.jpg",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "ratings-explorer-display-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-display-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "ratings_explorer.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/ratings_explorer.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "ratings_explorer_display_support.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/ratings_explorer_display_support.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "ratings_explorer_mobile.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/ratings_explorer_mobile.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/requirements.txt",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "wgo_embedded_assets.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-display-app/wgo_embedded_assets.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    }
+  ],
+  "aga-ratings-explorer-sgf-20260407t2105": [
+    {
+      "deployedFile": "README.md",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.min.js",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wgo.min.js",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.player.css",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wgo.player.css",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wgo.player.min.js",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wgo.player.min.js",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "assets/wgo/wood1.jpg",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/assets/wgo/wood1.jpg",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/COPYING",
+      "developmentComparison": "identical",
+      "developmentPath": "bayrate/COPYING",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/README.md",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/README.md",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/__init__.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/__init__.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/auth.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/auth.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/commit_staged_run.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/commit_staged_run.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/compare_replay_to_production.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/compare_replay_to_production.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/core.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/core.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/merge_member_ratings.py",
+      "developmentComparison": "absent",
+      "developmentPath": "bayrate/merge_member_ratings.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bayrate/operator.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/operator.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/replay_staged_run.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/replay_staged_run.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/report_parser.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/report_parser.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/run_bayrate.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/run_bayrate.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/sql_adapter.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/sql_adapter.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate/stage_reports.py",
+      "developmentComparison": "different",
+      "developmentPath": "bayrate/stage_reports.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "bayrate_staging.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/bayrate_staging.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "bulk_upload_sgf_csv.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/bulk_upload_sgf_csv.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "clubexpress_sgf_popup_test.html",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/clubexpress_sgf_popup_test.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/function_app.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "line endings only",
+      "developmentPath": "ratings-explorer-app/host.json",
+      "githubAtCaptureComparison": "line endings only",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import.html",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "leago_sgf_import/README.md",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/README.md",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "leago_sgf_import/__init__.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/__init__.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/build_leago_sgf_manifest.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/build_leago_sgf_manifest.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/download_leago_aga_sgfs.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/download_leago_aga_sgfs.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "leago_sgf_import/workflow.py",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/leago_sgf_import/workflow.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "absent",
+      "developmentPath": "ratings-explorer-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "ratings_explorer.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/ratings_explorer.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "ratings_explorer_mobile.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/ratings_explorer_mobile.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "ratings_explorer_support.py",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/ratings_explorer_support.py",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/requirements.txt",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "rewards_report.html",
+      "developmentComparison": "different",
+      "developmentPath": "ratings-explorer-app/rewards_report.html",
+      "githubAtCaptureComparison": "different",
+      "localSnapshotComparison": "different"
+    },
+    {
+      "deployedFile": "wgo_embedded_assets.py",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-explorer-app/wgo_embedded_assets.py",
+      "githubAtCaptureComparison": "identical",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "aga-ratings-sgf-upload": [
+    {
+      "deployedFile": ".funcignore",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/.funcignore",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "auth.py",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/auth.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/function_app.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/host.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "importer.py",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/importer.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/requirements.txt",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "sgf_upload.html",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/sgf_upload.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    },
+    {
+      "deployedFile": "storage.py",
+      "developmentComparison": "identical",
+      "developmentPath": "ratings-sgf-upload-app/storage.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "identical"
+    }
+  ],
+  "go-weiqi-baduk-news-index": [
+    {
+      "deployedFile": "additional_sources.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/additional_sources.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "archive_discovery.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/archive_discovery.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "function_app.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/function_app.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "history_backfill.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/history_backfill.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "host.json",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/host.json",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "index.html",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/index.html",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "index_core.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/index_core.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "legacy_sources.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/legacy_sources.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "name_index.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/name_index.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "national_sources.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/national_sources.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "oryx-manifest.toml",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/oryx-manifest.toml",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "requirements.txt",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/requirements.txt",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "source_discovery.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/source_discovery.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "tournament_index.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/tournament_index.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "translation_budget.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/translation_budget.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    },
+    {
+      "deployedFile": "translation_pacing.py",
+      "developmentComparison": "identical",
+      "developmentPath": "go-weiqi-baduk-news-index-app/translation_pacing.py",
+      "githubAtCaptureComparison": "absent",
+      "localSnapshotComparison": "absent"
+    }
+  ]
+}

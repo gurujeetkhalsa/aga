@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "enabled": true,
+    "runtimeVersion": "~1",
+    "unauthenticatedClientAction": "AllowAnonymous",
+    "tokenStoreEnabled": true,
+    "clientId": "cf20a3f1-6664-4bc6-9c4f-0a17473f96d3",
+    "clientSecretSettingName": "EVENTS_AUTH_CLIENT_SECRET",
+    "issuer": "https://login.microsoftonline.com/5f1a8692-caac-4040-9a1b-858e98f03e4b/v2.0",
+    "additionalLoginParams": ["scope=openid profile email"],
+    "allowedAudiences": [
+      "https://aga-events.azurewebsites.net/.auth/login/aad/callback"
+    ]
+  }
+}

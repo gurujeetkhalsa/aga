@@ -1,0 +1,8 @@
+.git*
+.venv/
+__pycache__/
+tests/
+local.settings.json
+.test-deps/
+test-results/
+*.zip

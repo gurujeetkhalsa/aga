@@ -1,0 +1,54 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-09-28T19:59:18.7731484Z",
+    "Id": "17b155c7-e361-4605-91c5-bdd80d0ad374",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:17:38.401701+00:00",
+  "etag": "\"0x8DF1D9AD6ABB8C7\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "additional_sources.py": "6e44d6164e26ab02b0ecc0da4dc725e8b8862f5fa5ddaa91f34e33377fd93368",
+    "archive_discovery.py": "7680629a282e193af32017f9ea78a02f5a0661e1a2dc8b6aa17cae45940c09f3",
+    "function_app.py": "b506dc057673b5826971abb6435c4c171c6f696db82c8f6c362931bf5ce6a079",
+    "history_backfill.py": "63c4b8d54b36ca9775a0f597e5071a22c36723bcced207208a2a20c6bdbca75a",
+    "host.json": "23d61a86f5a1e8bba22c75300878de758681d5d81260489eb35bc286639d6e56",
+    "index.html": "7882a347fc8292b9781834edefd01a0db5a5daf2445f6bb3ff3a54f095539306",
+    "index_core.py": "23574d2e69044b1cb3a8b4df1693a54642463655765be081bbfd56d222e1252b",
+    "legacy_sources.py": "a575c98da88c1b15e0e346f097d3e599d2dd38ab4c0a86a74cca72c99393a6db",
+    "name_index.py": "b4a82dff580634bd0755dedbb3b07018d170978673059d975137a40dca27a64f",
+    "national_sources.py": "a7615b6fbe8c639e5bdc5b2a05b90ae34e14f705075283e384aa14106a22f592",
+    "oryx-manifest.toml": "c4c2773c0ddaabf0610938108869551b1d54f9a4b4d043154ba5ae6b0ca6f16a",
+    "requirements.txt": "bb0fd98f745f92a72f41b95e2981c4799f105ee26cdbb08b558d2c88fee37678",
+    "source_discovery.py": "f5d6d5a8bb8bfade1c4546ffe21dd9c1c9bdca19618f47325747fd4acc18b40d",
+    "tournament_index.py": "e923e0a618836bda23073a11c5a4a454d655183a21add38fc7a46d0d53b1de26",
+    "translation_budget.py": "c809e294c6d673e71a4e8e68042b33694abcc0e602b78080b4d2d226ad17117e",
+    "translation_pacing.py": "4b3adc6b600d1775f1e99133a5edf185578683663b173fd018af6c958445147b"
+  },
+  "hostname": "go-weiqi-baduk-news-index.azurewebsites.net",
+  "lastModified": "2026-09-28 19:58:17+00:00",
+  "name": "go-weiqi-baduk-news-index",
+  "packageBytes": 137634960,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/go-news-index-deployment/released-package.zip",
+  "packageSha256": "54ff2e136b39c88b3da3bf325b250380d6968ef1a3a06b065c252a30bebc17a9",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.11"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "b506dc057673b5826971abb6435c4c171c6f696db82c8f6c362931bf5ce6a079",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

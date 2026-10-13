@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClubExpress SGF Popup Test</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #182b3a;
+      --muted: #637485;
+      --line: #cbd8e4;
+      --panel: #ffffff;
+      --bg: #f4f8fb;
+      --accent: #014a7d;
+      --accent-strong: #0b3f66;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(980px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.45rem;
+    }
+
+    h2 {
+      margin: 22px 0 8px;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .article-shell {
+      max-width: 760px;
+      margin: 18px 0 26px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .article-shell h2 {
+      margin-top: 0;
+      font-size: 1.12rem;
+    }
+
+    .aga-sgf-popup-link {
+      font-weight: 700;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.14em;
+    }
+
+    .aga-sgf-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 18px 24px 24px;
+      background: rgba(9, 18, 31, 0.58);
+    }
+
+    .aga-sgf-modal[hidden] {
+      display: none;
+    }
+
+    .aga-sgf-modal-dialog {
+      width: min(980px, 100%);
+      max-height: calc(100vh - 48px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #ffffff;
+      border: 1px solid rgba(11, 32, 61, 0.12);
+      border-radius: 22px;
+      box-shadow: 0 24px 72px rgba(8, 15, 28, 0.28);
+      overflow: hidden;
+    }
+
+    .aga-sgf-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px 4px;
+      border-bottom: 1px solid var(--accent-strong);
+      background: #ffffff;
+    }
+
+    .aga-sgf-modal-head > div {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .aga-sgf-modal-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 0.96rem;
+      font-weight: 700;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .aga-sgf-modal-subtitle {
+      margin-top: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .aga-sgf-modal-close {
+      border: 0;
+      background: transparent;
+      color: var(--accent-strong);
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .aga-sgf-modal-body {
+      padding: 6px 12px 12px;
+      overflow: auto;
+      background: #ffffff;
+    }
+
+    .aga-sgf-modal-frame {
+      display: block;
+      width: 100%;
+      min-height: min(560px, calc(100vh - 180px));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #f6fbff;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .snippet {
+      max-width: 980px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+      overflow: auto;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 24px, 980px);
+        margin: 18px auto;
+      }
+
+      .article-shell {
+        padding: 16px;
+      }
+
+      .aga-sgf-modal {
+        padding: 10px 12px 12px;
+      }
+
+      .aga-sgf-modal-dialog {
+        max-height: calc(100vh - 24px);
+      }
+
+      .aga-sgf-modal-head,
+      .aga-sgf-modal-body {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ClubExpress SGF Popup Test</h1>
+    <p>
+      This page is hosted by Ratings Explorer, so it can be opened from ClubExpress or any public browser.
+      The popup link uses the full SGF viewer, with metadata displayed beside the board.
+    </p>
+
+    <div class="article-shell">
+      <h2>Article-style popup link</h2>
+      <p>
+        This is ordinary article prose with one SGF link:
+        <a
+          class="aga-sgf-popup-link"
+          href="__SGF_VIEWER_URL__"
+          data-sgf-popup-title="Yiyu Zhang vs Dongha Lee"
+          data-sgf-popup-subtitle="2026 NGC Cherry Blossom | Game 1294849"
+          target="_blank"
+          rel="noopener"
+        >review the SGF for game 1294849</a>.
+      </p>
+    </div>
+
+    <div class="links">
+      <a href="__SGF_VIEWER_URL__" target="_blank" rel="noopener">Open viewer directly</a>
+      <a href="__SGF_RAW_URL__" target="_blank" rel="noopener">Open raw SGF</a>
+    </div>
+
+    <h2>ClubExpress test snippet</h2>
+    <pre class="snippet"><code>&lt;p&gt;
+  This is ordinary article prose with one SGF link:
+  &lt;a
+    class="aga-sgf-popup-link"
+    href="__SGF_VIEWER_URL__"
+    data-sgf-popup-title="Yiyu Zhang vs Dongha Lee"
+    data-sgf-popup-subtitle="2026 NGC Cherry Blossom | Game 1294849"
+    target="_blank"
+    rel="noopener"
+  &gt;review the SGF for game 1294849&lt;/a&gt;.
+&lt;/p&gt;</code></pre>
+  </main>
+
+  <div class="aga-sgf-modal" id="aga-sgf-modal" hidden aria-hidden="true">
+    <div class="aga-sgf-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="aga-sgf-modal-title">
+      <div class="aga-sgf-modal-head">
+        <div>
+          <h3 class="aga-sgf-modal-title" id="aga-sgf-modal-title">SGF Viewer</h3>
+          <div class="aga-sgf-modal-subtitle" id="aga-sgf-modal-subtitle"></div>
+        </div>
+        <button type="button" class="aga-sgf-modal-close" id="aga-sgf-modal-close" aria-label="Close SGF viewer">&times;</button>
+      </div>
+      <div class="aga-sgf-modal-body" id="aga-sgf-modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var modal = document.getElementById("aga-sgf-modal");
+      var modalBody = document.getElementById("aga-sgf-modal-body");
+      var modalTitle = document.getElementById("aga-sgf-modal-title");
+      var modalSubtitle = document.getElementById("aga-sgf-modal-subtitle");
+      var closeButton = document.getElementById("aga-sgf-modal-close");
+      var lastFocusedElement = null;
+
+      function openSgfPopup(link) {
+        var viewerUrl = link.href;
+        var title = link.getAttribute("data-sgf-popup-title") || link.textContent || "SGF Viewer";
+        var subtitle = link.getAttribute("data-sgf-popup-subtitle") || "";
+
+        lastFocusedElement = document.activeElement;
+        modalTitle.textContent = title;
+        modalSubtitle.textContent = subtitle;
+        modalBody.innerHTML = "";
+
+        var iframe = document.createElement("iframe");
+        iframe.className = "aga-sgf-modal-frame";
+        iframe.src = viewerUrl;
+        iframe.title = title;
+        iframe.loading = "lazy";
+        iframe.referrerPolicy = "no-referrer-when-downgrade";
+        modalBody.appendChild(iframe);
+
+        modal.hidden = false;
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        closeButton.focus();
+      }
+
+      function closeSgfPopup() {
+        modal.hidden = true;
+        modal.setAttribute("aria-hidden", "true");
+        modalBody.innerHTML = "";
+        document.body.style.overflow = "";
+        if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+          lastFocusedElement.focus();
+        }
+      }
+
+      document.querySelectorAll(".aga-sgf-popup-link").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          event.preventDefault();
+          openSgfPopup(link);
+        });
+      });
+
+      closeButton.addEventListener("click", closeSgfPopup);
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) closeSgfPopup();
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !modal.hidden) closeSgfPopup();
+      });
+    })();
+  </script>
+</body>
+</html>

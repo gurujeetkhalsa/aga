@@ -1,0 +1,168 @@
+# SPDX-FileCopyrightText: 2010 Philip Waldron
+# SPDX-FileCopyrightText: 2026 American Go Association
+# SPDX-License-Identifier: GPL-3.0-or-later
+import base64
+import json
+import unittest
+
+from bayrate.auth import authorize_admin_permission, authorize_bayrate_admin, extract_bayrate_principal
+
+
+class FakeAuthAdapter:
+    """Represent fake auth adapter."""
+    def __init__(self, rows=None, error=None) -> None:
+        """Initialize the fake auth adapter instance."""
+        self.rows = list(rows or [])
+        self.error = error
+        self.queries = []
+
+    def query_rows(self, query, params=()):
+        """Query rows."""
+        self.queries.append((query, tuple(params)))
+        if self.error is not None:
+            raise self.error
+        return list(self.rows)
+
+
+def encoded_principal(**claims):
+    """Execute the encoded principal routine."""
+    payload = {
+        "auth_typ": "aad",
+        "identityProvider": "aad",
+        "userDetails": claims.get("preferred_username"),
+        "claims": [
+            {"typ": key, "val": value}
+            for key, value in claims.items()
+            if value is not None
+        ],
+    }
+    return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("ascii")
+
+
+class BayRateAuthTest(unittest.TestCase):
+    """Represent bay rate auth test."""
+    def test_extracts_easy_auth_principal_claims(self) -> None:
+        """Verify that extracts easy auth principal claims."""
+        principal = extract_bayrate_principal(
+            {
+                "X-MS-CLIENT-PRINCIPAL": encoded_principal(
+                    preferred_username="admin@example.org",
+                    oid="object-123",
+                    name="Example Admin",
+                ),
+                "X-MS-CLIENT-PRINCIPAL-NAME": "fallback@example.org",
+                "X-MS-CLIENT-PRINCIPAL-IDP": "aad",
+            },
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertIsNotNone(principal)
+        self.assertEqual(principal.principal_name, "admin@example.org")
+        self.assertEqual(principal.principal_id, "object-123")
+        self.assertEqual(principal.display_name, "Example Admin")
+        self.assertEqual(principal.identity_provider, "aad")
+        self.assertIn("admin@example.org", principal.lookup_names)
+
+    def test_azure_runtime_requires_explicit_easy_auth_trust_setting(self) -> None:
+        """Verify that azure runtime requires explicit easy auth trust setting."""
+        result = authorize_bayrate_admin(
+            {
+                "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
+            },
+            FakeAuthAdapter(rows=[{"AdminID": 1}]),
+            environ={"WEBSITE_SITE_NAME": "aga-ratings-explorer"},
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.status_code, 503)
+        self.assertFalse(result.principal)
+
+    def test_missing_principal_requires_sign_in(self) -> None:
+        """Verify that missing principal requires sign in."""
+        result = authorize_bayrate_admin(
+            {},
+            FakeAuthAdapter(rows=[{"AdminID": 1}]),
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.status_code, 401)
+
+    def test_active_scoped_permission_is_authorized(self) -> None:
+        """Verify that active scoped permission is authorized."""
+        adapter = FakeAuthAdapter(
+            rows=[{"AdminPermissionID": 7, "Principal_Name": "admin@example.org", "Permission_Code": "bayrate_run"}]
+        )
+
+        result = authorize_bayrate_admin(
+            {
+                "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
+            },
+            adapter,
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.admin_row["AdminPermissionID"], 7)
+        self.assertEqual(adapter.queries[0][1], ("bayrate_run", "admin_all", "admin@example.org", "bayrate_run"))
+
+    def test_admin_all_authorizes_specific_feature(self) -> None:
+        """Verify that admin all authorizes specific feature."""
+        adapter = FakeAuthAdapter(
+            rows=[{"AdminPermissionID": 8, "Principal_Name": "admin@example.org", "Permission_Code": "admin_all"}]
+        )
+
+        result = authorize_admin_permission(
+            {
+                "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
+            },
+            adapter,
+            required_permission="rewards_redemptions",
+            feature_label="Chapter Rewards",
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.admin_row["Permission_Code"], "admin_all")
+
+    def test_non_admin_is_forbidden(self) -> None:
+        """Verify that non admin is forbidden."""
+        result = authorize_bayrate_admin(
+            {
+                "X-MS-CLIENT-PRINCIPAL-NAME": "viewer@example.org",
+            },
+            FakeAuthAdapter(rows=[]),
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.status_code, 403)
+
+    def test_missing_admin_table_is_configuration_error(self) -> None:
+        """Verify that missing admin table is configuration error."""
+        result = authorize_bayrate_admin(
+            {
+                "X-MS-CLIENT-PRINCIPAL-NAME": "admin@example.org",
+            },
+            FakeAuthAdapter(error=RuntimeError("Invalid object name 'ratings.admin_permissions'.")),
+            environ={"BAYRATE_TRUST_EASY_AUTH": "true"},
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.status_code, 503)
+        self.assertIn("bayrate_authorization_schema.sql", result.error)
+
+    def test_local_dev_email_can_supply_principal(self) -> None:
+        """Verify that local dev email can supply principal."""
+        result = authorize_bayrate_admin(
+            {},
+            FakeAuthAdapter(rows=[{"AdminPermissionID": 9, "Permission_Code": "bayrate_run"}]),
+            environ={"BAYRATE_DEV_AUTH_EMAIL": "local-admin@example.org"},
+        )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.principal.principal_name, "local-admin@example.org")
+
+
+if __name__ == "__main__":
+    unittest.main()

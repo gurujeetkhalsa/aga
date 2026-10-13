@@ -1,0 +1,92 @@
+{
+  "columns": [],
+  "dependencies": [
+    {
+      "is_ambiguous": false,
+      "is_caller_dependent": false,
+      "is_schema_bound_reference": false,
+      "referenced_class": 1,
+      "referenced_class_desc": "OBJECT_OR_COLUMN",
+      "referenced_database_name": null,
+      "referenced_entity_name": "categories",
+      "referenced_id": 1026102696,
+      "referenced_minor_id": 0,
+      "referenced_schema_name": "membership",
+      "referenced_server_name": null,
+      "referencing_class": 1,
+      "referencing_class_desc": "OBJECT_OR_COLUMN",
+      "referencing_id": 1218103380,
+      "referencing_minor_id": 0
+    },
+    {
+      "is_ambiguous": false,
+      "is_caller_dependent": false,
+      "is_schema_bound_reference": false,
+      "referenced_class": 1,
+      "referenced_class_desc": "OBJECT_OR_COLUMN",
+      "referenced_database_name": null,
+      "referenced_entity_name": "member_categories",
+      "referenced_id": 1106102981,
+      "referenced_minor_id": 0,
+      "referenced_schema_name": "membership",
+      "referenced_server_name": null,
+      "referencing_class": 1,
+      "referencing_class_desc": "OBJECT_OR_COLUMN",
+      "referencing_id": 1218103380,
+      "referencing_minor_id": 0
+    },
+    {
+      "is_ambiguous": false,
+      "is_caller_dependent": false,
+      "is_schema_bound_reference": false,
+      "referenced_class": 1,
+      "referenced_class_desc": "OBJECT_OR_COLUMN",
+      "referenced_database_name": null,
+      "referenced_entity_name": "member_categories",
+      "referenced_id": 1202103323,
+      "referenced_minor_id": 0,
+      "referenced_schema_name": "staging",
+      "referenced_server_name": null,
+      "referencing_class": 1,
+      "referencing_class_desc": "OBJECT_OR_COLUMN",
+      "referencing_id": 1218103380,
+      "referencing_minor_id": 0
+    },
+    {
+      "is_ambiguous": false,
+      "is_caller_dependent": false,
+      "is_schema_bound_reference": false,
+      "referenced_class": 1,
+      "referenced_class_desc": "OBJECT_OR_COLUMN",
+      "referenced_database_name": null,
+      "referenced_entity_name": "members",
+      "referenced_id": 1909581841,
+      "referenced_minor_id": 0,
+      "referenced_schema_name": "membership",
+      "referenced_server_name": null,
+      "referencing_class": 1,
+      "referencing_class_desc": "OBJECT_OR_COLUMN",
+      "referencing_id": 1218103380,
+      "referencing_minor_id": 0
+    }
+  ],
+  "moduleProperties": {
+    "execute_as_principal_id": null,
+    "is_recompiled": false,
+    "is_schema_bound": false,
+    "null_on_null_input": false,
+    "object_id": 1218103380,
+    "uses_ansi_nulls": true,
+    "uses_database_collation": false,
+    "uses_quoted_identifier": true
+  },
+  "object": {
+    "is_ms_shipped": false,
+    "name": "sp_import_member_categories",
+    "object_id": 1218103380,
+    "parent_object_id": 0,
+    "schema_name": "membership",
+    "type": "P ",
+    "type_desc": "SQL_STORED_PROCEDURE"
+  }
+}

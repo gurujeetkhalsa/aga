@@ -1,0 +1,48 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-07-10T18:05:20.4169854Z",
+    "Id": "545c7178-9055-4866-9ac2-d8a1881f2649",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:10:19.376779+00:00",
+  "etag": "\"0x8DEDEADAA5D3C43\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "a53ac2da698e23fac603832e8bf33d7885a052aa7e3f6806dbf396114e4849b3",
+    "admin_auth.py": "45470bff7793fc8151357dde7f2d66279d56aa389d6245aa80a1ea9b0eb58021",
+    "chapter_finder_update_support.py": "c323b48333aa7849887dbe4870304b8d092c4bb1db427245888ae6d77799d49c",
+    "chapter_review.html": "066ffee7766d077c6a41cf5d96dd9ce73f7cbe9c42793788a02f783498bf8a92",
+    "chapter_update.html": "df9bdba9ec4a77c6f8613b8ec6f5f31c3b18fc7570d379f5dbbb974e456b6a26",
+    "function_app.py": "6dd75f96bc8e02034cf153f30fde5309a33860e8f52a1374f4f39538b1d78fad",
+    "host.json": "057778a146ab00423220241a6cb36ab4967a36fb619a95c7a655a7491cb7a63e",
+    "oryx-manifest.toml": "a3654db4e1303e933541f0782cc6731501875991c6685d22f7e0bc036154d29f",
+    "requirements.txt": "c6c0d9251a279b1b71a8bb49f88038a5cf74efa8fa2d1b98d143214b898e1fac",
+    "sql_adapter.py": "bd93ef82e4b1ca70de3e39cc139e10f9faa676a15a940c83c0719e5f1cdafd3d"
+  },
+  "hostname": "aga-chapter-finder-update.azurewebsites.net",
+  "lastModified": "2026-07-10 18:04:20+00:00",
+  "name": "aga-chapter-finder-update",
+  "packageBytes": 1864688,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterfinderupdate-8306138/released-package.zip",
+  "packageSha256": "6d02a1cb46bc426b7e9e396caceddf67549df6e73cccdbd4c7bb70abd440cae6",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "6dd75f96bc8e02034cf153f30fde5309a33860e8f52a1374f4f39538b1d78fad",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

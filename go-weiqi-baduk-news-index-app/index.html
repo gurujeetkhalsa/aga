@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go/Weiqi/Baduk News Index</title>
+<meta name="description" content="Search Go, Weiqi and Baduk news from around the world, including the E-Journal. Full-text English search with translations of foreign-language articles.">
+<style>
+:root{color-scheme:light;--ink:#172b2b;--muted:#586a69;--accent:#126a5b;--line:#d5dfda;--paper:#fafaf6}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 system-ui,sans-serif}header{border-top:6px solid var(--accent);background:#edf3ed;padding:42px 24px 32px}.wrap{max-width:1040px;margin:auto}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}h1{font:clamp(30px,4vw,47px)/1.2 Georgia,serif;margin:10px 0 14px;letter-spacing:-.025em}header p{max-width:740px;color:var(--muted);margin:0}main{padding:28px 24px 60px}form{border:1px solid var(--line);border-radius:12px;background:white;padding:22px}.searchline{display:flex;gap:10px}label{display:block;font-size:13px;font-weight:650;margin-bottom:5px}input,select,button{font:inherit;border-radius:6px;padding:11px 13px;border:1px solid #9aacaa;background:white;color:var(--ink);min-width:0}input:focus,select:focus,button:focus-visible,a:focus-visible{outline:3px solid #a4d5c4;outline-offset:2px}#q{flex:1;width:100%}button{cursor:pointer;background:var(--accent);border-color:var(--accent);color:white;font-weight:650}button:disabled{opacity:.45;cursor:default}.hint{font-size:12px;color:var(--muted);margin:9px 0 0}.resultbar{display:flex;justify-content:space-between;align-items:center;margin:25px 0 5px;gap:15px}#count{font-weight:650}.quiet{font-size:13px;color:var(--muted)}.result{padding:23px 0;border-bottom:1px solid var(--line)}.meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}.source{font-weight:700;color:var(--accent)}h2{font:24px/1.35 Georgia,serif;margin:7px 0}a{color:var(--ink);text-underline-offset:4px}h2 a{text-decoration:none}h2 a:hover{text-decoration:underline}.article-summary{margin:10px 0;color:#344b48;font-size:15px;line-height:1.7}.snippet{border-left:3px solid var(--line);padding-left:12px;margin:9px 0;color:#435653;font-size:14px}.badge{border:1px solid var(--line);padding:0 7px;border-radius:4px;font-size:11px}.pending{color:#876023}.empty{padding:50px 20px;text-align:center;color:var(--muted)}.pages{display:flex;justify-content:center;align-items:center;gap:20px;margin-top:26px}.pages button{background:white;color:var(--accent)}details{margin-top:35px;border-top:1px solid var(--line);padding-top:20px}summary{cursor:pointer;font-weight:650}#coverage{display:grid;grid-template-columns:1fr 1fr;gap:8px 25px;margin-top:16px}.coverage-item{font-size:13px;padding:10px 0;border-bottom:1px solid var(--line)}.coverage-item strong{display:block}footer{font-size:12px;color:var(--muted);margin-top:30px}.error{color:#973d2d}.linkout{font-size:12px;color:var(--accent)}@media(max-width:600px){header{padding:28px 18px}main{padding:20px 18px}form{padding:16px}.searchline{flex-wrap:wrap}.searchline button{width:100%}.resultbar{align-items:flex-start;flex-direction:column;gap:3px}#coverage{grid-template-columns:1fr}h2{font-size:22px}}
+.name-search{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.secondary{background:white;color:var(--accent)}.namebrowse{margin:0;padding:0;border:0}.name-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:275px;overflow:auto;margin:12px 0}.person-choice{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;font-size:13px;font-weight:500;background:#f4f8f4;color:var(--ink);border-color:var(--line);padding:9px 11px}.person-choice span:last-child{white-space:nowrap;color:var(--muted);font-size:11px}.name-more{font-size:12px;padding:7px 12px}@media(max-width:600px){.name-list{grid-template-columns:1fr}}
+.source-picker{margin:0;padding:16px;border:1px solid var(--line);border-radius:8px;min-width:0}.source-picker legend{padding:0 7px;font-weight:700;font-size:14px}.source-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.source-actions button{font-size:12px;padding:7px 11px}.source-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px 14px;margin-top:12px;max-height:310px;overflow:auto}.source-choice{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:13px;margin:0;padding:7px 2px;cursor:pointer}.source-choice input{appearance:auto;width:17px;height:17px;padding:0;flex:0 0 17px;margin:3px 0 0;accent-color:var(--accent)}@media(max-width:800px){.source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.source-grid{grid-template-columns:1fr}}
+.tournament-tags{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.tournament-tag{font-size:12px;padding:4px 9px;background:#edf3ed;color:var(--accent);border-color:var(--line);text-align:left}.tournament-scope{display:block;color:var(--muted);font-size:11px;font-weight:400}.tournament-extra{margin:0;padding:0;border:0;width:100%}.tournament-extra summary{font-size:12px;color:var(--accent)}.tournament-extra .tournament-tags{margin:6px 0}
+.source-dropdown{position:relative;margin:0;padding:0;border:0}.source-dropdown>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;list-style:none;border:1px solid #9aacaa;border-radius:6px;padding:11px 13px;font-size:15px;font-weight:500;background:white}.source-dropdown>summary::-webkit-details-marker{display:none}.source-dropdown>summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(45deg);flex-shrink:0;margin:0 4px 4px}.source-dropdown[open]>summary::after{transform:rotate(225deg);margin-top:6px}.source-dropdown>summary:focus-visible{outline:3px solid #a4d5c4;outline-offset:2px}.source-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:5;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px #172b2b22;padding:14px}.source-menu .source-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:min(310px,45vh);overscroll-behavior:contain}.source-menu>button{font-size:12px;padding:7px 16px;margin-top:12px}.source-picker:disabled .source-dropdown>summary{opacity:.6;cursor:default}@media(max-width:600px){.source-menu .source-grid{grid-template-columns:1fr}}
+.search-filters{margin-top:16px;padding-top:14px}.search-filters>summary{font-size:15px}.search-filters>summary:focus-visible{outline:3px solid #a4d5c4;outline-offset:2px}.filter-fields{padding-top:16px}.sort-control{margin-bottom:18px}.sort-control select{min-width:170px}
+.top-controls{display:grid;grid-template-columns:minmax(0,1fr) repeat(2,minmax(150px,190px));gap:16px;align-items:end;max-width:900px}.top-controls .source-picker{padding:0;border:0}.top-controls .source-picker legend{padding:0;margin-bottom:5px;font-size:13px;font-weight:650}.from-date input{width:100%;height:48px}.source-dropdown>summary{min-height:48px}.source-summary{min-width:0}.top-controls .source-menu{width:min(620px,calc(100vw - 88px));right:auto}.top-controls .source-menu .source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:680px){.top-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.top-controls .source-picker{grid-column:1/-1}.source-dropdown>summary{font-size:13px;padding:11px 9px;gap:8px}.from-date input{padding:11px 8px;font-size:13px}.top-controls .source-menu .source-grid{grid-template-columns:1fr}}
+.selected-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.selected-filters[hidden]{display:none}.selected-filter{font-size:13px;padding:6px 10px;text-align:left;background:#edf3ed;color:var(--accent);border-color:var(--line)}
+.article-body{font-size:16px;line-height:1.8;color:#273f3b;overflow-wrap:anywhere}.article-body p{margin:1em 0}.article-body img{display:block;max-width:100%;height:auto;margin:18px auto}.article-body table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}.article-body td,.article-body th{padding:5px 9px;border:1px solid var(--line)}.article-body pre{white-space:pre-wrap}.article-body blockquote{border-left:3px solid var(--line);margin-left:0;padding-left:18px}.article-body-text{white-space:pre-line}.article-byline{font-size:13px;color:var(--muted)}
+.article-actions{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;margin-top:18px}.article-actions>a,.ej-share>summary{font-size:13px;color:var(--accent)}.ej-share{position:relative;margin:0;padding:0;border:0}.ej-share>summary{display:flex;align-items:center;gap:6px;list-style:none;font-weight:600;padding:5px 0}.ej-share>summary::-webkit-details-marker{display:none}.ej-share>summary:focus-visible{outline:3px solid #a4d5c4;outline-offset:3px}.ej-share svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}.ej-share>summary::after{content:'▾';font-size:11px}.ej-share-menu{position:absolute;left:0;bottom:calc(100% + 6px);z-index:4;background:white;min-width:195px;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 22px #172b2b22;padding:5px;max-height:min(390px,65vh);overflow:auto}.ej-share-menu a,.ej-share-menu button{display:block;width:100%;text-align:left;font-size:13px;font-weight:500;color:var(--ink);background:white;border:0;border-radius:4px;padding:8px 12px;text-decoration:none}.ej-share-menu a:hover,.ej-share-menu button:hover{background:#edf3ed}.article-action-status{flex-basis:100%;font-size:12px;color:var(--muted)}.article-action-status:empty{display:none}.ej-dialog{max-width:520px;width:calc(100% - 36px);border:1px solid var(--line);border-radius:12px;padding:24px;color:var(--ink)}.ej-dialog::backdrop{background:#172b2b88}.ej-dialog h3{margin-top:0}.ej-dialog p{font-size:14px}.ej-dialog textarea{width:100%;min-height:130px;font:13px/1.5 system-ui,sans-serif;padding:10px}.ej-dialog-actions{display:flex;align-items:center;gap:18px;margin-top:20px;flex-wrap:wrap}#ej-print-area{display:none}@media print{body:has(#ej-print-area)>*:not(#ej-print-area){display:none!important}#ej-print-area{display:block;color:black;background:white;font:12pt/1.5 Georgia,serif}#ej-print-area img{max-width:100%;height:auto;break-inside:avoid}#ej-print-area h2{font-size:20pt}#ej-print-area .print-source{overflow-wrap:anywhere;font-size:10pt}#ej-print-area .article-body{font-size:12pt;color:black}}
+</style></head>
+<body><header><div class="wrap"><div class="eyebrow">The game. Around the world.</div><h1>Go/Weiqi/Baduk News Index</h1><p>News from the E-Journal and Go organizations worldwide, together in one index. Search the full article text in English, including complete translations of foreign-language articles.</p></div></header>
+<main class="wrap"><form id="search"><div class="top-controls"><fieldset id="source-picker" class="source-picker" disabled><legend>News Sources</legend><details id="source-dropdown" class="source-dropdown"><summary id="source-toggle" aria-label="Choose news sources"><span id="source-summary">Loading sources…</span></summary><div class="source-menu"><div class="source-actions"><button type="button" id="check-all" class="secondary">Check all</button><button type="button" id="uncheck-all" class="secondary">Uncheck all</button><span id="source-selection" class="quiet" role="status" aria-live="polite">Loading sources…</span></div><div id="sources" class="source-grid"></div><button id="sources-done" type="button" class="secondary">Done</button></div></details></fieldset><div class="from-date"><label for="start">From Date</label><input type="date" id="start" name="start" aria-describedby="from-date-hint" disabled></div><div class="from-date"><label for="end">Through Date</label><input type="date" id="end" name="end" aria-describedby="from-date-hint" disabled></div></div><p class="hint" id="from-date-hint">Includes both dates. Defaults to the latest indexed article date and the six days before it. Dates use Eastern time.</p><details id="search-filters" class="search-filters"><summary>Search/Filters</summary><div class="filter-fields"><div class="sort-control"><label for="sort">Sort by</label><select id="sort" name="sort" disabled><option value="date">Date</option><option value="source">Source</option></select><p class="hint" id="sort-hint">Newest articles first.</p></div><label for="q">Search article text</label><div class="searchline"><input id="q" name="q" type="search" placeholder="Player, tournament, place, or other keywords" maxlength="300"><button type="submit">Search news</button></div><p class="hint">Every keyword must appear in the article’s title or full text. Results link to the original publisher.</p><div class="name-search"><details class="namebrowse" id="namebrowse"><summary>Browse names · most frequently mentioned first</summary><p class="hint">Select a name to combine it with the article-text search. Counts reflect the selected sources and displayed date range, with each person counted once per article. Names are detected automatically; spellings can vary.</p><p id="names-count" class="quiet" role="status" aria-live="polite">Loading names…</p><div id="names" class="name-list"></div><button id="more-names" class="secondary name-more" type="button" hidden>Show more names</button></details></div><div class="name-search"><details class="namebrowse" id="tournamentbrowse"><summary>Browse tournaments · most frequently mentioned first</summary><p class="hint">Select a tournament to combine it with the article-text search. Counts reflect the selected sources and displayed date range, once per article. Known aliases are grouped across editions; less certain names stay separate by publisher. Names are detected automatically and some may be missed.</p><p id="tournaments-count" class="quiet" role="status" aria-live="polite">Loading tournaments…</p><div id="tournaments" class="name-list"></div><button id="more-tournaments" class="secondary name-more" type="button" hidden>Show more tournaments</button></details></div></div></details><div id="selected-filters" class="selected-filters" aria-label="Selected name and tournament filters" hidden></div></form>
+<div class="resultbar"><span id="count" role="status" aria-live="polite">Loading articles…</span><span class="quiet" id="updated">Checked daily · Newest first</span></div><div id="results" aria-busy="true"></div><div class="pages"><button id="prev" type="button">← Previous</button><span id="page" class="quiet"></span><button id="next" type="button">Next →</button></div>
+<details><summary>Sources &amp; collection coverage</summary><p class="quiet" id="coverage-summary">Loading collection status…</p><div id="coverage"></div></details><footer>E-Journal articles from the latest completed daily collection appear in full when selected. Other paragraph summaries use opening sentences from the English article text. English translations are automated. Articles awaiting text extraction or translation are labeled and are excluded from keyword results until their full text is indexed. New articles are collected daily. Older articles are added in batches, working backward by publication date through each available source archive; historical coverage is still growing.</footer></main>
+<script>
+const $=id=>document.getElementById(id);let offset=0,total=0,requestId=0,namesOffset=0,namesRequestId=0;const base=location.pathname.replace(/\/$/,'');
+let tournamentsOffset=0,tournamentsRequestId=0,selectedPerson=null,selectedTournament=null;
+let sourceIds=[],sourcesReady=false,latestIndexedDate='';const sourceStorageKey='go-news-last-sources-v1';
+function node(tag,text,cls){const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
+async function api(path){const r=await fetch(base+path);const data=await r.json();if(!r.ok)throw new Error(data.error||'Please try again shortly.');return data;}
+function params(){const p=new URLSearchParams();if($('q').value)p.set('q',$('q').value);p.set('start',$('start').value);p.set('end',$('end').value);p.set('sort',$('sort').value);if(offset)p.set('offset',offset);p.set('source',sourceValue());if(selectedPerson){if(selectedPerson.key)p.set('person',selectedPerson.key);p.set('name',selectedPerson.name);}if(selectedTournament){if(selectedTournament.key)p.set('tournament_id',selectedTournament.key);p.set('tournament',selectedTournament.name);}return p;}
+async function search(){const id=++requestId;$('count').textContent='Searching…';$('results').setAttribute('aria-busy','true');$('prev').disabled=$('next').disabled=true;try{const p=params();history.replaceState(null,'',location.pathname+(p.size?'?'+p:''));const data=await api('/search?'+p);if(id!==requestId)return;total=data.total;$('results').replaceChildren();for(const item of data.items){const card=node('article',null,'result'),meta=node('div',null,'meta');meta.append(node('span',item.source_name,'source'));if(item.published)meta.append(node('span',item.published_day||item.published.slice(0,10)));meta.append(node('span',item.status==='ready'?(item.full_text?'Full article · Latest daily collection':item.translated?'English translation indexed':'Full text indexed'):'Full text pending','badge '+(item.status==='ready'?'':'pending')));const h=node('h2'),a=node('a',item.title);a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';h.append(a);card.append(meta,h);if(item.tournaments?.length){const tags=node('div',null,'tournament-tags');for(const event of item.tournaments.slice(0,6)){const tag=node('button',event.name,'tournament-tag');tag.type='button';tag.title='Find articles mentioning '+event.name;tag.onclick=()=>selectTournament(event);tags.append(tag);}if(item.tournaments.length>6){const more=node('details',null,'tournament-extra');more.append(node('summary',(item.tournaments.length-6)+' more tournament mentions'));const rest=node('div',null,'tournament-tags');for(const event of item.tournaments.slice(6)){const tag=node('button',event.name,'tournament-tag');tag.type='button';tag.onclick=()=>selectTournament(event);rest.append(tag);}more.append(rest);tags.append(more);}card.append(tags);}appendArticleContent(card,item);if(!item.full_text&&item.snippet&&!item.summary?.includes(item.snippet))card.append(node('p','Matching passage: '+item.snippet,'snippet'));appendArticleActions(card,item);$('results').append(card);}if(!data.items.length)$('results').append(node('div',sourceValue()==='none'?'No sources selected. Choose one or more sources from the dropdown above.':'No articles found. Try fewer keywords, a wider date range, or remove a selected name or tournament.','empty'));$('count').textContent=total.toLocaleString()+' article'+(total===1?'':'s')+(($('q').value||selectedPerson||selectedTournament)?' matching your search':'');$('page').textContent=total?`${offset+1}–${Math.min(offset+20,total)} of ${total}`:'';$('prev').disabled=offset===0;$('next').disabled=offset+20>=total;}catch(e){if(id===requestId){$('count').textContent='Search unavailable';$('results').replaceChildren(node('p',e.message,'error'));}}finally{if(id===requestId)$('results').setAttribute('aria-busy','false');}}
+function appendArticleContent(card,item){
+  if(item.source_id==='ej'&&item.full_text){
+    if(item.byline)card.append(node('p',item.byline,'article-byline'));
+    const body=node('div',null,'article-body');
+    // Only the server's allowlisted E-Journal markup is rendered as HTML.
+    if(item.full_html)body.innerHTML=item.full_html;
+    else{body.textContent=item.full_text;body.classList.add('article-body-text');}
+    card.append(body);
+  }else card.append(node('p',item.summary||'Summary unavailable while full article text is pending.',item.summary?'article-summary':'quiet'));
+}
+function mailLink(recipient,subject,body=''){
+  return 'mailto:'+recipient+'?subject='+encodeURIComponent(subject)+(body?'&body='+encodeURIComponent(body):'');
+}
+function articleExport(item){
+  const content=node('article');
+  content.append(node('h2',item.title));
+  content.append(node('p','American Go E-Journal'+(item.byline?' · '+item.byline:'')));
+  const body=node('div',null,'article-body');
+  if(item.full_html)body.innerHTML=item.full_html;
+  else{body.textContent=item.full_text;body.style.whiteSpace='pre-line';}
+  // Inline presentation survives pasting into email editors.
+  for(const img of body.querySelectorAll('img')){img.style.maxWidth='100%';img.style.height='auto';img.loading='eager';}
+  content.append(body);
+  const source=node('p','Read at source: ','print-source'),link=node('a',item.url);
+  link.href=item.url;source.append(link);content.append(source);
+  return {content,text:item.title+'\nAmerican Go E-Journal'+(item.byline?' · '+item.byline:'')+'\n\n'+item.full_text+'\n\nRead at source: '+item.url};
+}
+async function copyArticleValue(text,html=''){
+  try{
+    if(html&&navigator.clipboard?.write&&window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]);return;
+    }
+    if(!html&&navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);return;}
+  }catch(e){/* Try the selection fallback when clipboard permissions are restricted. */}
+  const field=node(html?'div':'textarea'),previous=document.activeElement;
+  field.style.cssText='position:fixed;left:-10000px;top:0;width:600px';
+  if(html){field.contentEditable='true';field.innerHTML=html;}else field.value=text;
+  document.body.append(field);
+  try{
+    field.focus();
+    if(html){const range=document.createRange();range.selectNodeContents(field);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);}
+    else field.select();
+    if(!document.execCommand('copy'))throw new Error('Copy unavailable');
+  }finally{if(html)window.getSelection()?.removeAllRanges();field.remove();previous?.focus();}
+}
+function articleDialog(title,message,{text='',email='',returnFocus=null}={}){
+  const dialog=node('dialog',null,'ej-dialog'),heading=node('h3',title),description=node('p',message);
+  heading.id='ej-dialog-title';dialog.setAttribute('aria-labelledby',heading.id);dialog.append(heading,description);
+  if(text){const field=node('textarea');field.value=text;field.readOnly=true;field.setAttribute('aria-label','Text to copy');field.onclick=()=>field.select();dialog.append(field);}
+  const actions=node('div',null,'ej-dialog-actions');
+  if(email){const open=node('a','Open email');open.href=email;actions.append(open);}
+  const close=node('button','Close');close.type='button';close.onclick=()=>dialog.close();actions.append(close);dialog.append(actions);
+  dialog.addEventListener('close',()=>{dialog.remove();returnFocus?.focus();},{once:true});
+  dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+  document.body.append(dialog);dialog.showModal();
+}
+async function printEJArticle(item){
+  $('ej-print-area')?.remove();
+  const {content}=articleExport(item);content.id='ej-print-area';document.body.append(content);
+  const cleanup=()=>content.remove();window.addEventListener('afterprint',cleanup,{once:true});
+  // Give remote article pictures a chance to finish before print preview opens.
+  await Promise.race([Promise.all(Array.from(content.querySelectorAll('img'),img=>img.decode?.().catch(()=>{}))),new Promise(resolve=>setTimeout(resolve,2000))]);
+  try{window.print();}catch(e){cleanup();throw e;}
+}
+function appendArticleActions(card,item){
+  const row=node('div',null,'article-actions'),link=node('a','Read at source ↗','linkout');
+  link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';row.append(link);card.append(row);
+  if(item.source_id!=='ej'||!item.full_text)return;
+  const share=node('details',null,'ej-share'),toggle=node('summary','Share');
+  toggle.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5m-7.6 6.9 7.6 4.5"/></svg><span>Share</span>';
+  toggle.setAttribute('aria-label','Share article: '+item.title);
+  const menu=node('div',null,'ej-share-menu'),status=node('span',null,'article-action-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+  function action(label,handler){const button=node('button',label);button.type='button';button.onclick=async()=>{button.disabled=true;status.textContent='';try{await handler();}catch(e){status.textContent='This action is unavailable. Please try again.';}finally{button.disabled=false;}};menu.append(button);}
+  function closeShare(){share.open=false;toggle.focus();}
+  action('Print',async()=>{closeShare();await printEJArticle(item);});
+  action('Email full article',async()=>{
+    const exported=articleExport(item);let copied=false;
+    try{await copyArticleValue(exported.text,exported.content.outerHTML);copied=true;}catch(e){}
+    closeShare();
+    articleDialog(copied?'Article copied for email':'Copy article for email',copied?'The complete article is on your clipboard. Open your email, then paste it into the message body.':'Automatic copying is unavailable. Select and copy the article below, then open your email and paste it into the message body.',
+      {text:copied?'':exported.text,email:mailLink('',item.title),returnFocus:toggle});
+  });
+  action('Copy link',async()=>{
+    try{await copyArticleValue(item.url);status.textContent='Article link copied.';closeShare();}
+    catch(e){closeShare();articleDialog('Copy article link','Select and copy the link below.',{text:item.url,returnFocus:toggle});}
+  });
+  const encoded=encodeURIComponent(item.url),title=encodeURIComponent(item.title);
+  for(const [label,url] of [
+    ['Facebook','https://www.facebook.com/sharer/sharer.php?u='+encoded],
+    ['LinkedIn','https://www.linkedin.com/sharing/share-offsite/?url='+encoded],
+    ['Bluesky','https://bsky.app/intent/compose?text='+encodeURIComponent(item.title+'\n'+item.url)],
+    ['X','https://twitter.com/intent/tweet?text='+title+'&url='+encoded]]){
+    const a=node('a',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.onclick=()=>{share.open=false;};menu.append(a);
+  }
+  share.append(toggle,menu);row.append(share);
+  share.addEventListener('toggle',()=>{
+    if(!share.open)return;
+    for(const other of document.querySelectorAll('.ej-share[open]'))if(other!==share)other.open=false;
+    requestAnimationFrame(()=>{
+      menu.style.left='0px';const bounds=menu.getBoundingClientRect();
+      if(bounds.right>window.innerWidth-18)menu.style.left=(window.innerWidth-18-bounds.right)+'px';
+      menu.scrollIntoView({block:'nearest',inline:'nearest'});
+    });
+  });
+  const correction=node('a','Send a correction');
+  correction.href=mailLink('journal@usgo.org','EJ correction: '+item.title,'Article: '+item.title+'\n'+item.url+'\n\nSuggested correction:\n\nSupporting information or source:\n\nYour name:');
+  correction.title='Email the E-Journal editors at journal@usgo.org';
+  const submit=node('a','Submit an article');
+  submit.href=mailLink('journal@usgo.org','EJ article submission','Proposed title:\n\nYour name / byline:\n\nArticle text:\n\nPhoto captions and credits (attach photos if applicable):\n\nContact information:');
+  submit.title='Email your article to journal@usgo.org';row.append(correction,submit,status);
+}
+document.addEventListener('click',event=>{for(const share of document.querySelectorAll('.ej-share[open]'))if(!share.contains(event.target))share.open=false;});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const share of document.querySelectorAll('.ej-share[open]')){share.open=false;if(share.contains(document.activeElement))share.querySelector('summary').focus();}});
+function sourceChecks(){return Array.from(document.querySelectorAll('#sources input'));}
+function sourceValue(){
+  if(!sourcesReady)return 'all';
+  const selected=sourceChecks().filter(c=>c.checked).map(c=>c.value);
+  return selected.length===sourceIds.length?'all':selected.length?selected.join(','):'none';
+}
+function updateSourceControls(){
+  const selected=sourceChecks().filter(c=>c.checked).length;
+  $('source-selection').textContent=`${selected} of ${sourceIds.length} selected`;
+  $('source-summary').textContent=selected===sourceIds.length?'All news sources':selected===0?'Choose news sources':selected===1?sourceChecks().find(c=>c.checked).nextElementSibling.textContent:`${selected} news sources selected`;
+}
+function sourcesChanged(){
+  updateSourceControls();rememberSources();offset=0;loadNames();loadTournaments();search();
+}
+function rememberSources(){
+  if(!sourcesReady)return;
+  try{
+    const value=sourceValue();
+    localStorage.setItem(sourceStorageKey,JSON.stringify(value==='all'?'all':sourceChecks().filter(c=>c.checked).map(c=>c.value)));
+  }catch(e){/* Source selection still works when browser storage is unavailable. */}
+}
+function restoreSources(){
+  const p=new URLSearchParams(location.search);let selected=sourceIds;
+  if(p.has('source')){
+    const raw=p.get('source');
+    selected=(!raw||raw==='all')?sourceIds:raw==='none'?[]:raw.split(',').map(s=>s.trim()).filter(id=>sourceIds.includes(id));
+  }else{
+    try{
+      const saved=JSON.parse(localStorage.getItem(sourceStorageKey)??localStorage.getItem('go-news-startup-sources-v1'));
+      if(Array.isArray(saved)&&saved.every(id=>typeof id==='string')){
+        const known=saved.filter(id=>sourceIds.includes(id));
+        if(!saved.length||known.length)selected=known;
+      }
+    }catch(e){/* A new browser or unavailable storage starts with all sources. */}
+  }
+  for(const checkbox of sourceChecks())checkbox.checked=selected.includes(checkbox.value);
+  updateSourceControls();rememberSources();
+}
+async function coverage(){
+  try{
+    const data=await api('/status');latestIndexedDate=data.latest_indexed_date||'';let ready=0,pending=0;sourceIds=data.sources.map(s=>s.id);
+    for(const s of data.sources){
+      const label=node('label',null,'source-choice'),checkbox=node('input');
+      checkbox.type='checkbox';checkbox.name='source';checkbox.value=s.id;checkbox.checked=true;
+      checkbox.addEventListener('change',sourcesChanged);label.append(checkbox,node('span',s.name));$('sources').append(label);
+      ready+=s.ready;pending+=s.pending;
+      const row=node('div',null,'coverage-item');row.append(node('strong',s.name));
+      row.append(node('span',`${s.ready} indexed · ${s.pending} pending${s.issue?' · Source check needs attention':s.refresh_issues?' · Some refreshes need attention':''}`));
+      if(s.oldest)row.append(node('div','Oldest searchable article: '+s.oldest,'quiet'));
+      const b=s.backfill;
+      if(b&&b.status){
+        const text=b.status==='archive scanned'?'Available archive scanned':b.status==='retrying'?'Older archive check will retry':`Working backward${b.current_day||b.through_day?' from '+(b.current_day||b.through_day):''}`;
+        row.append(node('div',text+(b.pending?` · ${b.pending} older articles pending`:''),'quiet'));
+      }
+      if(s.checked_at)row.append(node('div','Last checked '+new Date(s.checked_at).toLocaleString(),'quiet'));
+      $('coverage').append(row);
+    }
+    sourcesReady=true;$('source-picker').disabled=false;restoreSources();
+    $('coverage-summary').textContent=`${ready.toLocaleString()} articles have searchable full text. ${pending} await extraction or translation. ${data.sources.length} sources are checked daily.`;
+  }catch(e){$('coverage-summary').textContent=e.message;$('source-selection').textContent='Source choices unavailable. Reload to try again.';$('source-summary').textContent='Sources unavailable — reload to try again';}
+}
+$('sources-done').onclick=()=>{$('source-dropdown').open=false;$('source-toggle').focus();};
+$('source-dropdown').addEventListener('keydown',e=>{if(e.key==='Escape'){$('source-dropdown').open=false;$('source-toggle').focus();e.preventDefault();}});
+document.addEventListener('click',e=>{if(!$('source-dropdown').contains(e.target))$('source-dropdown').open=false;});
+$('source-toggle').addEventListener('click',e=>{if(!sourcesReady)e.preventDefault();});
+$('check-all').onclick=()=>{for(const c of sourceChecks())c.checked=true;sourcesChanged();};
+$('uncheck-all').onclick=()=>{for(const c of sourceChecks())c.checked=false;sourcesChanged();};
+async function loadNames(reset=true){
+  if(reset){namesOffset=0;$('names').replaceChildren();}
+  const id=++namesRequestId, p=new URLSearchParams({name:'',offset:String(namesOffset),source:sourceValue(),start:$('start').value,end:$('end').value});
+  $('names-count').textContent='Loading names…';$('more-names').disabled=true;
+  try{
+    const data=await api('/names?'+p);if(id!==namesRequestId)return;
+    for(const item of data.items){
+      const choice=node('button',null,'person-choice');choice.type='button';
+      choice.append(node('span',item.name),node('span',item.articles+' article'+(item.articles===1?'':'s')));
+      choice.onclick=()=>selectPerson(item);
+      $('names').append(choice);
+    }
+    namesOffset+=data.items.length;
+    $('names-count').textContent=data.total?`${namesOffset} of ${data.total.toLocaleString()} names`:sourceValue()==='none'?'Select one or more sources to browse names.':'No names found in this date range and source selection.';
+    $('more-names').hidden=namesOffset>=data.total;
+  }catch(e){if(id===namesRequestId){$('names-count').textContent=e.message;$('more-names').hidden=true;}}
+  finally{if(id===namesRequestId)$('more-names').disabled=false;}
+}
+$('more-names').onclick=()=>loadNames(false);
+function renderSelectedFilters(){
+  const container=$('selected-filters');container.replaceChildren();
+  for(const [type,item] of [['Name',selectedPerson],['Tournament',selectedTournament]]){
+    if(!item)continue;
+    const remove=node('button',`${type}: ${item.name} ×`,'selected-filter');remove.type='button';
+    remove.setAttribute('aria-label',`Remove ${type.toLowerCase()} filter: ${item.name}`);
+    remove.onclick=()=>{if(type==='Name')selectedPerson=null;else selectedTournament=null;offset=0;renderSelectedFilters();search();};
+    container.append(remove);
+  }
+  container.hidden=!selectedPerson&&!selectedTournament;
+}
+function selectPerson(item){selectedPerson={key:item.key,name:item.name};offset=0;renderSelectedFilters();search();}
+function selectTournament(item){selectedTournament={key:item.key,name:item.name};offset=0;renderSelectedFilters();search();}
+async function loadTournaments(reset=true){
+  if(reset){tournamentsOffset=0;$('tournaments').replaceChildren();}
+  const id=++tournamentsRequestId,p=new URLSearchParams({tournament:'',offset:String(tournamentsOffset),source:sourceValue(),start:$('start').value,end:$('end').value});
+  $('tournaments-count').textContent='Loading tournaments…';$('more-tournaments').disabled=true;
+  try{
+    const data=await api('/tournaments?'+p);if(id!==tournamentsRequestId)return;
+    for(const item of data.items){
+      const choice=node('button',null,'person-choice'),label=node('span',item.name);choice.type='button';
+      if(item.scope)label.append(node('small',item.scope,'tournament-scope'));
+      choice.append(label,node('span',item.articles+' article'+(item.articles===1?'':'s')));
+      choice.onclick=()=>selectTournament(item);$('tournaments').append(choice);
+    }
+    tournamentsOffset+=data.items.length;
+    $('tournaments-count').textContent=data.total?`${tournamentsOffset} of ${data.total.toLocaleString()} tournament names`:sourceValue()==='none'?'Select one or more sources to browse tournaments.':'No tournament names found in this date range and source selection.';
+    $('more-tournaments').hidden=tournamentsOffset>=data.total;
+  }catch(e){if(id===tournamentsRequestId){$('tournaments-count').textContent=e.message;$('more-tournaments').hidden=true;}}
+  finally{if(id===tournamentsRequestId)$('more-tournaments').disabled=false;}
+}
+$('more-tournaments').onclick=()=>loadTournaments(false);
+function updateSortLabel(){
+  const source=$('sort').value==='source';
+  $('sort-hint').textContent=source?'Sources A–Z, newest articles first within each source.':'Newest articles first.';
+  $('updated').textContent=source?'Checked daily · Source A–Z':'Checked daily · Newest first';
+}
+$('sort').addEventListener('change',()=>{offset=0;updateSortLabel();search();});
+$('search').addEventListener('submit',e=>{e.preventDefault();offset=0;search();});
+$('prev').onclick=()=>{offset=Math.max(0,offset-20);search();};
+$('next').onclick=()=>{offset+=20;search();};
+function todayDate(now=new Date()){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+  const value=type=>parts.find(p=>p.type===type).value;
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+function defaultThroughDate(latest,today=todayDate()){
+  return /^\d{4}-\d{2}-\d{2}$/.test(latest)&&latest<=today?latest:today;
+}
+function defaultFromDate(latest,today=todayDate()){
+  const anchor=defaultThroughDate(latest,today);
+  const date=new Date(anchor+'T00:00:00Z');date.setUTCDate(date.getUTCDate()-6);
+  return date.toISOString().slice(0,10);
+}
+for(const field of ['start','end'])$(field).addEventListener('change',()=>{offset=0;loadNames();loadTournaments();search();});
+(async()=>{await coverage();const p=new URLSearchParams(location.search);$('start').value=p.has('start')?p.get('start'):defaultFromDate(latestIndexedDate);$('end').value=p.has('end')?p.get('end'):defaultThroughDate(latestIndexedDate);$('start').disabled=$('end').disabled=false;$('q').value=p.get('q')||'';$('sort').value=p.get('sort')==='source'?'source':'date';$('sort').disabled=false;updateSortLabel();selectedPerson=p.get('person')||p.get('name')?{key:p.get('person')||'',name:p.get('name')||p.get('person')}:null;selectedTournament=p.get('tournament_id')||p.get('tournament')?{key:p.get('tournament_id')||'',name:p.get('tournament')||p.get('tournament_id')}:null;renderSelectedFilters();$('search-filters').open=!!$('q').value||$('sort').value==='source';offset=Math.max(0,Number(p.get('offset'))||0);await Promise.all([search(),loadNames(),loadTournaments()]);})();
+</script></body></html>

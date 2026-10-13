@@ -1,0 +1,12 @@
+[
+  {
+    "allowedMemberTypes": [
+      "User"
+    ],
+    "description": "Create and edit event occurrences for assigned AGA organizers.",
+    "displayName": "Events Organizer",
+    "id": "39572bfe-7e7c-460f-a410-c1ccbcb7e753",
+    "isEnabled": true,
+    "value": "Events.Organizer"
+  }
+]

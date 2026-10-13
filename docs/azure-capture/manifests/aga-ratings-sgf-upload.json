@@ -1,0 +1,47 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-08-07T16:50:30.2446369Z",
+    "Id": "de00ea32-993a-4a8e-bc86-cd5b14df311c",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:17:12.636637+00:00",
+  "etag": "\"0x8DEF4A3D9815740\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    ".funcignore": "31dc0e8047edadb3711cac180e2e7621ad322c3151f7499e52510a804dfa16ee",
+    "auth.py": "b90d75acdedd02987b4ad51f5207e913260387fd5cb8bf2464a69990e0f6cc6f",
+    "function_app.py": "cc2914beed9ea709954d9644590c964ae2d5577ebc7d50c6a399c2751ae78f18",
+    "host.json": "c8a6f4e0fc4814bf71ac094112fd3faf0efc75e004cf66de17a24a472a8594c0",
+    "importer.py": "a5c9d6c8658554d1e3b1ba36a368d48c368dc40e26f268db529dd3b6a455a0b9",
+    "oryx-manifest.toml": "6aa51b099df88d38b1ed292eaa434571a760fcbeccaea283bbacb3b12ca532d1",
+    "requirements.txt": "23328fc78ddc594d0d4835d525e9a066aa31486de423348a5d3cc117254fd7df",
+    "sgf_upload.html": "94b6616d6f5717aafa547331d49fe4e76bcc11070e95e7017cff4b504679b7b1",
+    "storage.py": "e861fc20494c2cc2a1dbbc763c55315d56f0bfd9381d5e92cd0f14b0f9eae169"
+  },
+  "hostname": "aga-ratings-sgf-upload.azurewebsites.net",
+  "lastModified": "2026-08-07 16:49:29+00:00",
+  "name": "aga-ratings-sgf-upload",
+  "packageBytes": 11580010,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agaratingssgfupload-0967613/released-package.zip",
+  "packageSha256": "f3e74443971408e25878dc2aa515be66a5b28fab8e30824b524f8f13e6be9cea",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "cc2914beed9ea709954d9644590c964ae2d5577ebc7d50c6a399c2751ae78f18",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

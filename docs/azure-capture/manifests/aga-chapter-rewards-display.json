@@ -1,0 +1,45 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-09-01T13:07:43.5872154Z",
+    "Id": "8db9f00a-8174-4f08-b36f-121708404357",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:10:50.538422+00:00",
+  "etag": "\"0x8DF0829DEBBAE8A\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "6168470232b79d87d689f793021e0c33c887da97091dc69d38e0b041f5a25499",
+    "chapter_rewards.html": "399c9a929f041d562ce0e772be2f4a7bf41bf6a3b021598f429e18cc332604d0",
+    "chapter_rewards_support.py": "12a196c57ad08dfbf45003e38cb80bb468ac4cc7d55dddcfad0c8271b67c3bc3",
+    "function_app.py": "a3345e0be62e8f6c3bd8c558c05cf9b83dd716c2955fd38bd4b8591da3763d6d",
+    "host.json": "03bbd8a15ac88acc8ae46581b69142aecab3c02c04bcce19de5a60e28fc4e1fd",
+    "oryx-manifest.toml": "992d88981e41c2673b9203c91dd7403a43056b8fa5d6a5634fce2b14c8730be8",
+    "requirements.txt": "c6c0d9251a279b1b71a8bb49f88038a5cf74efa8fa2d1b98d143214b898e1fac"
+  },
+  "hostname": "aga-chapter-rewards-display.azurewebsites.net",
+  "lastModified": "2026-09-01 13:06:43+00:00",
+  "name": "aga-chapter-rewards-display",
+  "packageBytes": 1878294,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterrewardsdisplay-5880534/released-package.zip",
+  "packageSha256": "f69b8237d6364bc819f570ade8f7b5ddaed6f545ef892c5789d4766316c20fd0",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "a3345e0be62e8f6c3bd8c558c05cf9b83dd716c2955fd38bd4b8591da3763d6d",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

@@ -1,0 +1,44 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-06-28T17:39:12.5945971Z",
+    "Id": "f582528a-1b08-4e04-a67d-fbdc10f9f75e",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:13:20.138725+00:00",
+  "etag": "\"0x8DED53C065DE736\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "d0a00efd2e896b5b057243649f70b87ea4838a1f10366bd4c957d3f6a34bbd35",
+    "function_app.py": "b1a4a86fd5d51f223fc87233ae25ef780c881a606bccd772a3f62933813b10eb",
+    "host.json": "fac28cd35d536a67ff49d191a09e12f7103e832bc8243f2b74efaeb63b806aa5",
+    "oryx-manifest.toml": "f5a412055c7f3d8a1eba677763451a6cfb733fef3b27bbd9ef1e316458b073a6",
+    "requirements.txt": "325d94dd1d2c6821fecc08ad8633c17b11296d80381d2534f36755e9d315b54e",
+    "sql/chapter_import.sql": "d1cf2239c40b3f8f6d9273c646de4f9d0f2c22569f8b763829df7596289715f7"
+  },
+  "hostname": "aga-membership-functions-fmgchkbxa3hxd8h0.westus-01.azurewebsites.net",
+  "lastModified": "2026-06-28 17:38:11+00:00",
+  "name": "aga-membership-functions",
+  "packageBytes": 114233813,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-aga-membership-functions-6cf36d2/released-package.zip",
+  "packageSha256": "aceeeb18f5bc92ed9a63e392132c020e6c15652f7a266486abefb58508138119",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "b1a4a86fd5d51f223fc87233ae25ef780c881a606bccd772a3f62933813b10eb",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

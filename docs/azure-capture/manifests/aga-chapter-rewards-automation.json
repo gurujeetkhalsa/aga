@@ -1,0 +1,44 @@
+{
+  "activeDeployment": {
+    "Complete": true,
+    "EndTime": "2026-06-26T17:36:21.443945Z",
+    "Id": "9b2469db-072e-4cbd-996e-e0243bda913b",
+    "RemoteBuild": true,
+    "Status": 4,
+    "UploadedPackageName": "released-package.zip",
+    "sourcePackage": "b''"
+  },
+  "capturedAt": "2026-10-13T17:10:43.086398+00:00",
+  "etag": "\"0x8DED3A94C0C1A04\"",
+  "excluded": [
+    {
+      "path": ".ostype",
+      "reason": "not source allowlist; review if required asset"
+    }
+  ],
+  "files": {
+    "README.md": "29d4d9332178efb3926f2a666a6f6f95c463b1ec3cc7e080b2436fc3204f1454",
+    "function_app.py": "2126987c69d8ccaa2797e23ddfde576cab7dedc8b7e5f52d00a369890ecc49d5",
+    "host.json": "13afb1d31f4e36fd52c51479aaff6b088cfb01d95aa42ffbd2d58ca1d24784f4",
+    "oryx-manifest.toml": "130a965892de922c06e4feecb9375856ea51b8b064d64f08195fade337b51dc9",
+    "requirements.txt": "285faddd0bfce28b20b1efbc18eed711d8391e16b85fd754315905b320a317bc",
+    "tests/test_automation_params.py": "574117b5d8fa0d391e7171bf44356cdf34b2298381e3783481108bff3d831b87"
+  },
+  "hostname": "aga-chapter-rewards-automation.azurewebsites.net",
+  "lastModified": "2026-06-26 17:35:21+00:00",
+  "name": "aga-chapter-rewards-automation",
+  "packageBytes": 1423868,
+  "packageLocation": "https://agafunc0522.blob.core.windows.net/app-package-agachapterrewardsautomation-4113466/released-package.zip",
+  "packageSha256": "3b92c41675b8da5217771487513c072f12161234e4b16293dc7e73f47d908b92",
+  "resourceGroup": "aga-data-platform",
+  "runtime": {
+    "name": "python",
+    "version": "3.13"
+  },
+  "runtimeEntryMatches": true,
+  "runtimeEntrySha256": "2126987c69d8ccaa2797e23ddfde576cab7dedc8b7e5f52d00a369890ecc49d5",
+  "runtimeVfsStatus": 200,
+  "secret_review_required": [],
+  "state": "Running",
+  "status": "recovered active deployment"
+}

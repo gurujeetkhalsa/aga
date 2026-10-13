@@ -1,0 +1,1451 @@
+[
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 1202103323,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 1234103437,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 1250103494,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 1266103551,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 18099105,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 1854629650,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 1870629707,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 0,
+    "object_id": 887674210,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1026102696,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1070626857,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1083150904,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1101246978,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1106102981,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1129771082,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1150627142,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1174295243,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1184723273,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1223675407,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1246627484,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1310627712,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1323151759,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1337771823,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1346103836,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1373247947,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1374627940,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1376723957,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1414296098,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1431012179,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1435152158,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1442104178,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1442156233,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1454628225,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1485248346,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1497772393,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1504724413,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1531152500,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1591676718,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1602104748,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1611152785,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1632724869,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1666104976,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1705773134,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1710629137,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1767677345,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1803153469,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1845581613,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1862297694,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1865773704,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1895677801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1904725838,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1909581841,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1913773875,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1915153868,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 1989582126,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 2009774217,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 2027154267,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 203147769,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 2071678428,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 2085582468,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 2091154495,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 2128726636,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 247671930,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 27147142,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 308196148,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 354100302,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 445244641,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 455672671,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 484196775,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 55671246,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 557245040,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 583673127,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 658101385,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 680389493,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 772197801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 813245952,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 84195350,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 856390120,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 857770113,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 91147370,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 916198314,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 93243387,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 967674495,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 984390576,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 1,
+    "object_id": 985770569,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 10,
+    "object_id": 1223675407,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 12,
+    "object_id": 1266103551,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 13,
+    "object_id": 1234103437,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 15,
+    "object_id": 484196775,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 17,
+    "object_id": 1266103551,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 19,
+    "object_id": 1266103551,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1026102696,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1101246978,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1129771082,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1150627142,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1184723273,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1202103323,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1223675407,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1250103494,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1323151759,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1337771823,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1346103836,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1373247947,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1376723957,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1414296098,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1435152158,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1442104178,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1485248346,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1497772393,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1504724413,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1531152500,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1591676718,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1611152785,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1632724869,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1666104976,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1705773134,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1767677345,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1803153469,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 18099105,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1845581613,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1862297694,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1865773704,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1895677801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1904725838,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1909581841,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1913773875,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1915153868,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 1989582126,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 2009774217,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 2027154267,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 2071678428,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 2085582468,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 2091154495,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 2128726636,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 247671930,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 308196148,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 354100302,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 445244641,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 455672671,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 484196775,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 55671246,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 557245040,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 583673127,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 658101385,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 772197801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 813245952,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 84195350,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 856390120,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 857770113,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 916198314,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 93243387,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 967674495,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 984390576,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 2,
+    "object_id": 985770569,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 20,
+    "object_id": 1266103551,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1101246978,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1184723273,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1223675407,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1234103437,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1266103551,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1346103836,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1376723957,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1442104178,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1485248346,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1497772393,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1504724413,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1531152500,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1591676718,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1611152785,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1705773134,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1767677345,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1862297694,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1895677801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1904725838,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1909581841,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1913773875,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 1989582126,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 2027154267,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 2085582468,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 247671930,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 308196148,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 455672671,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 484196775,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 55671246,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 583673127,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 772197801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 93243387,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 967674495,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 3,
+    "object_id": 984390576,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 30,
+    "object_id": 1909581841,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 31,
+    "object_id": 1909581841,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1101246978,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1234103437,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1250103494,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1376723957,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1767677345,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1862297694,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1895677801,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1904725838,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 1909581841,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 247671930,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 484196775,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 55671246,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 4,
+    "object_id": 93243387,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 5,
+    "object_id": 1323151759,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 5,
+    "object_id": 1376723957,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 5,
+    "object_id": 484196775,
+    "partition_number": 1
+  },
+  {
+    "data_compression": 0,
+    "data_compression_desc": "NONE",
+    "index_id": 5,
+    "object_id": 93243387,
+    "partition_number": 1
+  }
+]

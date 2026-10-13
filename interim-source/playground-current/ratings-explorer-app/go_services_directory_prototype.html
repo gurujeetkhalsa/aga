@@ -1,0 +1,1623 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGA Go Services Directory</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --soft: #f9fafb;
+      --border: #d9e0ea;
+      --border-strong: #b7c2d0;
+      --text: #17202c;
+      --muted: #5d6878;
+      --blue: #2458a6;
+      --green: #1d7a4d;
+      --amber: #a86405;
+      --red: #b3261e;
+      --shadow: 0 8px 24px rgba(17, 31, 52, 0.08);
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    .button-link {
+      min-height: 36px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      padding: 7px 11px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    button:hover,
+    .button-link:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    button.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+      font-weight: 720;
+    }
+
+    button.primary:hover {
+      color: #fff;
+      filter: brightness(.96);
+    }
+
+    button.danger:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 7px 10px;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    fieldset {
+      margin: 0;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    legend {
+      padding: 0 6px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 780;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar-inner,
+    .main {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      padding: 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .main {
+      padding: 18px 0 32px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .tabs,
+    .toolbar,
+    .summary,
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .tabs {
+      padding: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border-color: transparent;
+      background: transparent;
+      min-width: 128px;
+    }
+
+    .tab.active {
+      border-color: var(--blue);
+      background: #edf4ff;
+      color: var(--blue);
+      font-weight: 760;
+    }
+
+    .view {
+      display: none;
+      gap: 14px;
+    }
+
+    .view.active {
+      display: grid;
+    }
+
+    .toolbar {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(180px, 1.4fr) minmax(120px, .7fr) minmax(160px, .9fr) minmax(160px, .9fr) minmax(160px, .9fr) auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .summary {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .metric {
+      min-width: 116px;
+      display: grid;
+      gap: 1px;
+    }
+
+    .metric strong {
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .directory-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .results {
+      display: grid;
+      gap: 10px;
+    }
+
+    .result {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .result:hover,
+    .result.selected {
+      border-color: var(--blue);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .result-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .result-title h2 {
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .location-line,
+    .quiet {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badges,
+    .tags,
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .badge,
+    .tag {
+      min-height: 24px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 720;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge.chapter {
+      border-color: #bdddc8;
+      background: #ecf8f0;
+      color: var(--green);
+    }
+
+    .badge.applicant {
+      border-color: #f3d59e;
+      background: #fff7e8;
+      color: var(--amber);
+    }
+
+    .badge.stale {
+      border-color: #f0b7b3;
+      background: #fff1f0;
+      color: var(--red);
+    }
+
+    .result-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .detail-title {
+      display: grid;
+      gap: 6px;
+    }
+
+    .detail-title h2 {
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .detail-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .detail-section h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      color: var(--muted);
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .detail-row {
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      display: grid;
+      gap: 2px;
+      font-size: 13px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: 1 / -1; }
+
+    .checks {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .check {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--soft);
+      padding: 7px 9px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text);
+      font-size: 13px;
+      text-transform: none;
+      font-weight: 600;
+    }
+
+    .check input {
+      width: auto;
+      min-height: auto;
+      margin: 0;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .notice {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 9px 11px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .notice.error {
+      border-color: #f0b7b3;
+      background: #fff1f0;
+      color: var(--red);
+      font-weight: 680;
+    }
+
+    .review-table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    td.actions {
+      white-space: nowrap;
+    }
+
+    .empty {
+      padding: 44px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      .toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .directory-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .checks {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .topbar-inner,
+      .main {
+        width: min(100vw - 20px, 1280px);
+      }
+
+      .toolbar,
+      .fields,
+      .checks {
+        grid-template-columns: 1fr;
+      }
+
+      .span-2,
+      .span-3,
+      .span-4,
+      .span-5,
+      .span-6,
+      .span-8,
+      .span-12 {
+        grid-column: 1 / -1;
+      }
+
+      .status {
+        margin-left: 0;
+      }
+
+      .tab {
+        min-width: 0;
+        flex: 1 1 130px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <h1>AGA Go Services Directory</h1>
+          <div class="meta" id="pageMeta">Prototype data</div>
+        </div>
+        <a class="button-link" href="/api/ratings-explorer/reports/chapters">Chapter Report</a>
+      </div>
+    </header>
+
+    <main class="main">
+      <nav class="tabs" aria-label="Directory sections">
+        <button class="tab active" type="button" data-view="directoryView">Directory</button>
+        <button class="tab" type="button" data-view="submitView">Submit Update</button>
+        <button class="tab" type="button" data-view="reviewView">Review Queue</button>
+      </nav>
+
+      <section class="view active" id="directoryView">
+        <section class="toolbar" aria-label="Directory filters">
+          <div class="field">
+            <label for="searchInput">Search</label>
+            <input id="searchInput" type="search" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="stateFilter">State</label>
+            <select id="stateFilter"></select>
+          </div>
+          <div class="field">
+            <label for="serviceFilter">Service</label>
+            <select id="serviceFilter"></select>
+          </div>
+          <div class="field">
+            <label for="relationshipFilter">Affiliation</label>
+            <select id="relationshipFilter">
+              <option value="">All listings</option>
+              <option value="aga_chapter">AGA chapters</option>
+              <option value="chapter_applicant">Applying</option>
+              <option value="independent">Independent</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="freshnessFilter">Updated</label>
+            <select id="freshnessFilter">
+              <option value="">Any time</option>
+              <option value="recent">Within 6 months</option>
+              <option value="current">Within 12 months</option>
+              <option value="needs_confirmation">Needs confirmation</option>
+            </select>
+          </div>
+          <button id="resetFiltersButton" type="button">Reset</button>
+          <button id="exportButton" type="button">JSON</button>
+        </section>
+
+        <section class="summary" aria-label="Directory summary">
+          <div class="metric">
+            <strong id="resultCount">0</strong>
+            <span>Listings</span>
+          </div>
+          <div class="metric">
+            <strong id="chapterCount">0</strong>
+            <span>AGA Chapters</span>
+          </div>
+          <div class="metric">
+            <strong id="applicantCount">0</strong>
+            <span>Applying</span>
+          </div>
+          <div class="metric">
+            <strong id="staleCount">0</strong>
+            <span>Needs Check</span>
+          </div>
+          <div class="status" id="directoryStatus">Ready</div>
+        </section>
+
+        <section class="directory-grid">
+          <div class="results" id="resultsList"></div>
+          <aside class="panel" id="detailPanel" aria-label="Selected listing"></aside>
+        </section>
+      </section>
+
+      <section class="view" id="submitView">
+        <form class="form-grid" id="submissionForm">
+          <fieldset>
+            <legend>Submitter</legend>
+            <div class="fields">
+              <div class="field span-4">
+                <label for="submitterName">Name</label>
+                <input id="submitterName" name="submitterName" autocomplete="name" required>
+              </div>
+              <div class="field span-4">
+                <label for="submitterEmail">Email</label>
+                <input id="submitterEmail" name="submitterEmail" type="email" autocomplete="email" required>
+              </div>
+              <div class="field span-2">
+                <label for="submitterAgaid">AGA ID</label>
+                <input id="submitterAgaid" name="submitterAgaid" inputmode="numeric">
+              </div>
+              <div class="field span-2">
+                <label for="submitterRole">Role</label>
+                <input id="submitterRole" name="submitterRole">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Organization</legend>
+            <div class="fields">
+              <div class="field span-5">
+                <label for="organizationName">Listing Name</label>
+                <input id="organizationName" name="organizationName" required>
+              </div>
+              <div class="field span-3">
+                <label for="relationship">Affiliation</label>
+                <select id="relationship" name="relationship">
+                  <option value="independent">Independent</option>
+                  <option value="aga_chapter">Existing AGA chapter</option>
+                  <option value="chapter_applicant">Applying to become a chapter</option>
+                </select>
+              </div>
+              <div class="field span-2">
+                <label for="chapterCode">Chapter Code</label>
+                <input id="chapterCode" name="chapterCode">
+              </div>
+              <div class="field span-2">
+                <label for="publicEmail">Public Email</label>
+                <input id="publicEmail" name="publicEmail" type="email">
+              </div>
+              <div class="field span-12">
+                <label for="description">Description</label>
+                <textarea id="description" name="description"></textarea>
+              </div>
+              <div class="checks" id="serviceChecks"></div>
+            </div>
+          </fieldset>
+
+          <fieldset id="chapterApplicationSection" class="hidden">
+            <legend>Chapter Application</legend>
+            <div class="fields">
+              <div class="field span-4">
+                <label for="repName">Representative Name</label>
+                <input id="repName" name="repName">
+              </div>
+              <div class="field span-4">
+                <label for="repEmail">Representative Email</label>
+                <input id="repEmail" name="repEmail" type="email">
+              </div>
+              <div class="field span-2">
+                <label for="repAgaid">Rep AGA ID</label>
+                <input id="repAgaid" name="repAgaid" inputmode="numeric">
+              </div>
+              <div class="field span-2">
+                <label for="activePlayers">Active Players</label>
+                <input id="activePlayers" name="activePlayers" inputmode="numeric">
+              </div>
+              <div class="field span-12">
+                <label for="applicationNotes">Application Notes</label>
+                <textarea id="applicationNotes" name="applicationNotes"></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Location</legend>
+            <div class="fields">
+              <div class="field span-4">
+                <label for="venueName">Venue</label>
+                <input id="venueName" name="venueName">
+              </div>
+              <div class="field span-4">
+                <label for="addressLine1">Address</label>
+                <input id="addressLine1" name="addressLine1" autocomplete="street-address">
+              </div>
+              <div class="field span-2">
+                <label for="city">City</label>
+                <input id="city" name="city" autocomplete="address-level2" required>
+              </div>
+              <div class="field span-1">
+                <label for="state">State</label>
+                <select id="state" name="state" required></select>
+              </div>
+              <div class="field span-1">
+                <label for="postalCode">ZIP</label>
+                <input id="postalCode" name="postalCode" autocomplete="postal-code">
+              </div>
+              <div class="field span-6">
+                <label for="accessibilityNotes">Accessibility</label>
+                <textarea id="accessibilityNotes" name="accessibilityNotes"></textarea>
+              </div>
+              <div class="field span-6">
+                <label for="parkingNotes">Parking/Transit</label>
+                <textarea id="parkingNotes" name="parkingNotes"></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Schedule</legend>
+            <div class="fields">
+              <div class="field span-3">
+                <label for="eventName">Meeting Name</label>
+                <input id="eventName" name="eventName">
+              </div>
+              <div class="field span-2">
+                <label for="dayOfWeek">Day</label>
+                <select id="dayOfWeek" name="dayOfWeek">
+                  <option value="">Varies</option>
+                  <option>Sunday</option>
+                  <option>Monday</option>
+                  <option>Tuesday</option>
+                  <option>Wednesday</option>
+                  <option>Thursday</option>
+                  <option>Friday</option>
+                  <option>Saturday</option>
+                </select>
+              </div>
+              <div class="field span-2">
+                <label for="startTime">Start</label>
+                <input id="startTime" name="startTime" type="time">
+              </div>
+              <div class="field span-2">
+                <label for="endTime">End</label>
+                <input id="endTime" name="endTime" type="time">
+              </div>
+              <div class="field span-3">
+                <label for="timeZone">Time Zone</label>
+                <select id="timeZone" name="timeZone">
+                  <option>America/New_York</option>
+                  <option>America/Chicago</option>
+                  <option>America/Denver</option>
+                  <option>America/Los_Angeles</option>
+                  <option>America/Anchorage</option>
+                  <option>Pacific/Honolulu</option>
+                </select>
+              </div>
+              <div class="field span-4">
+                <label for="recurrence">Recurrence</label>
+                <input id="recurrence" name="recurrence" placeholder="Weekly, first Saturday, monthly">
+              </div>
+              <div class="field span-3">
+                <label for="mode">Mode</label>
+                <select id="mode" name="mode">
+                  <option value="physical">Physical</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="online">Online</option>
+                </select>
+              </div>
+              <div class="field span-5">
+                <label for="scheduleNotes">Schedule Notes</label>
+                <input id="scheduleNotes" name="scheduleNotes">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Links</legend>
+            <div class="fields">
+              <div class="field span-4">
+                <label for="websiteUrl">Website</label>
+                <input id="websiteUrl" name="websiteUrl" type="url">
+              </div>
+              <div class="field span-4">
+                <label for="meetupUrl">Meetup</label>
+                <input id="meetupUrl" name="meetupUrl" type="url">
+              </div>
+              <div class="field span-4">
+                <label for="discordUrl">Discord</label>
+                <input id="discordUrl" name="discordUrl" type="url">
+              </div>
+              <label class="check span-4">
+                <input id="beginnerFriendly" name="beginnerFriendly" type="checkbox">
+                Beginner friendly
+              </label>
+              <label class="check span-4">
+                <input id="youthFriendly" name="youthFriendly" type="checkbox">
+                Youth/family friendly
+              </label>
+              <label class="check span-4">
+                <input id="publishConsent" name="publishConsent" type="checkbox" required>
+                Publish public fields
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-actions">
+            <button class="primary" type="submit">Submit</button>
+            <button id="clearFormButton" type="button">Clear</button>
+            <div class="notice" id="formNotice">Ready</div>
+          </div>
+        </form>
+      </section>
+
+      <section class="view" id="reviewView">
+        <section class="summary" aria-label="Submission summary">
+          <div class="metric">
+            <strong id="pendingCount">0</strong>
+            <span>Pending</span>
+          </div>
+          <div class="metric">
+            <strong id="approvedCount">0</strong>
+            <span>Approved</span>
+          </div>
+          <div class="metric">
+            <strong id="rejectedCount">0</strong>
+            <span>Rejected</span>
+          </div>
+          <div class="status" id="reviewStatus">Ready</div>
+        </section>
+        <div class="review-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Submitted</th>
+                <th>Listing</th>
+                <th>Affiliation</th>
+                <th>Location</th>
+                <th>Submitter</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="reviewBody">
+              <tr><td class="empty" colspan="7">No submissions</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_RECORDS = "agaGoServicesDirectoryRecords";
+    const STORAGE_SUBMISSIONS = "agaGoServicesSubmissions";
+    const SERVICE_OPTIONS = [
+      ["casual_play", "Casual play"],
+      ["beginner_lessons", "Beginner lessons"],
+      ["youth_program", "Youth program"],
+      ["tournaments", "Tournaments"],
+      ["aga_rated_games", "AGA rated games"],
+      ["teaching", "Teaching"],
+      ["school_program", "School program"],
+      ["library_program", "Library program"],
+      ["online_play", "Online play"],
+      ["equipment_library", "Equipment/library"],
+      ["professional_services", "Professional services"],
+      ["special_events", "Special events"],
+    ];
+    const STATES = [
+      ["", "All states"],
+      ["AL", "AL"], ["AK", "AK"], ["AZ", "AZ"], ["AR", "AR"], ["CA", "CA"], ["CO", "CO"],
+      ["CT", "CT"], ["DE", "DE"], ["DC", "DC"], ["FL", "FL"], ["GA", "GA"], ["HI", "HI"],
+      ["ID", "ID"], ["IL", "IL"], ["IN", "IN"], ["IA", "IA"], ["KS", "KS"], ["KY", "KY"],
+      ["LA", "LA"], ["ME", "ME"], ["MD", "MD"], ["MA", "MA"], ["MI", "MI"], ["MN", "MN"],
+      ["MS", "MS"], ["MO", "MO"], ["MT", "MT"], ["NE", "NE"], ["NV", "NV"], ["NH", "NH"],
+      ["NJ", "NJ"], ["NM", "NM"], ["NY", "NY"], ["NC", "NC"], ["ND", "ND"], ["OH", "OH"],
+      ["OK", "OK"], ["OR", "OR"], ["PA", "PA"], ["RI", "RI"], ["SC", "SC"], ["SD", "SD"],
+      ["TN", "TN"], ["TX", "TX"], ["UT", "UT"], ["VT", "VT"], ["VA", "VA"], ["WA", "WA"],
+      ["WV", "WV"], ["WI", "WI"], ["WY", "WY"], ["REMOTE", "Remote"]
+    ];
+    const RELATIONSHIP_LABELS = {
+      aga_chapter: "AGA Chapter",
+      chapter_applicant: "Applying",
+      independent: "Independent",
+      pending_match: "Pending Match",
+    };
+    const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const seedRecords = [
+      {
+        id: "sample-aga-metro",
+        name: "Sample Metro Go Club",
+        description: "Regular in-person Go meetings with casual games, beginner help, rated games, and seasonal tournaments.",
+        relationship: "aga_chapter",
+        chapterCode: "MET",
+        city: "Portland",
+        state: "OR",
+        services: ["casual_play", "beginner_lessons", "tournaments", "aga_rated_games"],
+        publicEmail: "chapter@example.org",
+        links: {
+          website: "https://example.org/metro-go",
+          meetup: "https://example.org/metro-go-meetup",
+          discord: ""
+        },
+        locations: [
+          {
+            venueName: "Community Game Room",
+            addressLine1: "100 Main Street",
+            city: "Portland",
+            state: "OR",
+            postalCode: "97201",
+            accessibilityNotes: "Step-free public entrance.",
+            parkingNotes: "Street parking and nearby transit."
+          }
+        ],
+        events: [
+          {
+            name: "Club Night",
+            dayOfWeek: "Tuesday",
+            timeText: "18:30-21:30",
+            recurrence: "Weekly",
+            mode: "physical",
+            timeZone: "America/Los_Angeles",
+            beginnerFriendly: true,
+            youthFriendly: true,
+            ratedGames: true,
+            tournaments: true,
+            notes: "Rated games by arrangement."
+          }
+        ],
+        lastUpdated: "2026-06-18T16:30:00Z",
+        lastConfirmed: "2026-06-18T16:30:00Z"
+      },
+      {
+        id: "sample-library",
+        name: "Sample Library Go Night",
+        description: "A volunteer-run library program with boards available for walk-in casual games and beginner instruction.",
+        relationship: "independent",
+        chapterCode: "",
+        city: "Columbus",
+        state: "OH",
+        services: ["casual_play", "beginner_lessons", "library_program", "equipment_library"],
+        publicEmail: "library-go@example.org",
+        links: {
+          website: "https://example.org/library-go",
+          meetup: "",
+          discord: ""
+        },
+        locations: [
+          {
+            venueName: "North Branch Library",
+            addressLine1: "200 Library Avenue",
+            city: "Columbus",
+            state: "OH",
+            postalCode: "43215",
+            accessibilityNotes: "Public library accessibility services.",
+            parkingNotes: "Free parking lot."
+          }
+        ],
+        events: [
+          {
+            name: "Library Go Night",
+            dayOfWeek: "Thursday",
+            timeText: "18:00-20:00",
+            recurrence: "Second and fourth Thursday",
+            mode: "physical",
+            timeZone: "America/New_York",
+            beginnerFriendly: true,
+            youthFriendly: true,
+            ratedGames: false,
+            tournaments: false,
+            notes: ""
+          }
+        ],
+        lastUpdated: "2026-03-04T19:00:00Z",
+        lastConfirmed: "2026-03-04T19:00:00Z"
+      },
+      {
+        id: "sample-applicant",
+        name: "Sample Campus Go League",
+        description: "University-area club preparing an AGA chapter application and hosting casual weekly play during the academic year.",
+        relationship: "chapter_applicant",
+        chapterCode: "",
+        city: "Raleigh",
+        state: "NC",
+        services: ["casual_play", "school_program", "beginner_lessons", "special_events"],
+        publicEmail: "campus-go@example.edu",
+        links: {
+          website: "https://example.edu/go",
+          meetup: "",
+          discord: "https://example.org/campus-discord"
+        },
+        locations: [
+          {
+            venueName: "Student Union",
+            addressLine1: "1 Campus Drive",
+            city: "Raleigh",
+            state: "NC",
+            postalCode: "27695",
+            accessibilityNotes: "",
+            parkingNotes: "Visitor parking after 5 PM."
+          }
+        ],
+        events: [
+          {
+            name: "Campus Club",
+            dayOfWeek: "Wednesday",
+            timeText: "19:00-22:00",
+            recurrence: "Weekly during term",
+            mode: "physical",
+            timeZone: "America/New_York",
+            beginnerFriendly: true,
+            youthFriendly: false,
+            ratedGames: false,
+            tournaments: false,
+            notes: "Room changes during exam weeks."
+          }
+        ],
+        lastUpdated: "2025-12-10T21:00:00Z",
+        lastConfirmed: "2025-12-10T21:00:00Z"
+      },
+      {
+        id: "sample-online",
+        name: "Sample Online Teaching Circle",
+        description: "Remote group lessons, review sessions, and online community play for players across the United States.",
+        relationship: "independent",
+        chapterCode: "",
+        city: "Remote",
+        state: "REMOTE",
+        services: ["online_play", "teaching", "beginner_lessons", "professional_services"],
+        publicEmail: "lessons@example.org",
+        links: {
+          website: "https://example.org/go-lessons",
+          meetup: "",
+          discord: "https://example.org/online-go"
+        },
+        locations: [],
+        events: [
+          {
+            name: "Online Reviews",
+            dayOfWeek: "Sunday",
+            timeText: "16:00-18:00",
+            recurrence: "Weekly",
+            mode: "online",
+            timeZone: "America/New_York",
+            beginnerFriendly: true,
+            youthFriendly: false,
+            ratedGames: false,
+            tournaments: false,
+            notes: "Discord voice and online board."
+          }
+        ],
+        lastUpdated: "2026-06-01T13:45:00Z",
+        lastConfirmed: "2026-06-01T13:45:00Z"
+      }
+    ];
+
+    const els = {
+      pageMeta: document.getElementById("pageMeta"),
+      tabs: Array.from(document.querySelectorAll(".tab")),
+      views: Array.from(document.querySelectorAll(".view")),
+      searchInput: document.getElementById("searchInput"),
+      stateFilter: document.getElementById("stateFilter"),
+      serviceFilter: document.getElementById("serviceFilter"),
+      relationshipFilter: document.getElementById("relationshipFilter"),
+      freshnessFilter: document.getElementById("freshnessFilter"),
+      resetFiltersButton: document.getElementById("resetFiltersButton"),
+      exportButton: document.getElementById("exportButton"),
+      resultCount: document.getElementById("resultCount"),
+      chapterCount: document.getElementById("chapterCount"),
+      applicantCount: document.getElementById("applicantCount"),
+      staleCount: document.getElementById("staleCount"),
+      directoryStatus: document.getElementById("directoryStatus"),
+      resultsList: document.getElementById("resultsList"),
+      detailPanel: document.getElementById("detailPanel"),
+      submissionForm: document.getElementById("submissionForm"),
+      relationship: document.getElementById("relationship"),
+      chapterApplicationSection: document.getElementById("chapterApplicationSection"),
+      serviceChecks: document.getElementById("serviceChecks"),
+      state: document.getElementById("state"),
+      formNotice: document.getElementById("formNotice"),
+      clearFormButton: document.getElementById("clearFormButton"),
+      pendingCount: document.getElementById("pendingCount"),
+      approvedCount: document.getElementById("approvedCount"),
+      rejectedCount: document.getElementById("rejectedCount"),
+      reviewStatus: document.getElementById("reviewStatus"),
+      reviewBody: document.getElementById("reviewBody"),
+    };
+
+    const state = {
+      records: [],
+      submissions: [],
+      filtered: [],
+      selectedId: null,
+    };
+
+    function html(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;",
+      }[char]));
+    }
+
+    function parseStored(key, fallback) {
+      try {
+        const text = localStorage.getItem(key);
+        return text ? JSON.parse(text) : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveStored() {
+      localStorage.setItem(STORAGE_RECORDS, JSON.stringify(state.records));
+      localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(state.submissions));
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(date);
+    }
+
+    function monthsSince(value) {
+      if (!value) return 999;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 999;
+      const now = Date.now();
+      return (now - date.getTime()) / (1000 * 60 * 60 * 24 * 30.4375);
+    }
+
+    function freshness(record) {
+      const months = monthsSince(record.lastConfirmed || record.lastUpdated);
+      if (months <= 6) return "recent";
+      if (months <= 12) return "current";
+      return "needs_confirmation";
+    }
+
+    function freshnessLabel(record) {
+      const key = freshness(record);
+      if (key === "recent") return "Recently confirmed";
+      if (key === "current") return "Current";
+      return "Needs confirmation";
+    }
+
+    function serviceLabel(value) {
+      const found = SERVICE_OPTIONS.find(option => option[0] === value);
+      return found ? found[1] : value;
+    }
+
+    function fillSelect(select, options, includeBlankForForm = false) {
+      select.innerHTML = options.map(([value, label]) => `<option value="${html(value)}">${html(label)}</option>`).join("");
+      if (includeBlankForForm) {
+        select.querySelector('option[value=""]').textContent = "";
+      }
+    }
+
+    function setupControls() {
+      fillSelect(els.stateFilter, STATES);
+      fillSelect(els.state, STATES, true);
+      els.serviceFilter.innerHTML = `<option value="">All services</option>` + SERVICE_OPTIONS
+        .map(([value, label]) => `<option value="${html(value)}">${html(label)}</option>`)
+        .join("");
+      els.serviceChecks.innerHTML = SERVICE_OPTIONS.map(([value, label]) => `
+        <label class="check">
+          <input type="checkbox" name="services" value="${html(value)}">
+          ${html(label)}
+        </label>
+      `).join("");
+    }
+
+    function loadData() {
+      state.records = parseStored(STORAGE_RECORDS, seedRecords);
+      state.submissions = parseStored(STORAGE_SUBMISSIONS, []);
+      state.records = state.records.filter(record => record && record.id && record.name);
+      state.submissions = state.submissions.filter(item => item && item.id && item.payload);
+      if (!state.records.length) {
+        state.records = seedRecords.slice();
+      }
+    }
+
+    function relationshipBadge(record) {
+      const label = RELATIONSHIP_LABELS[record.relationship] || "Independent";
+      const cls = record.relationship === "aga_chapter"
+        ? " chapter"
+        : record.relationship === "chapter_applicant"
+          ? " applicant"
+          : "";
+      return `<span class="badge${cls}">${html(label)}${record.chapterCode ? ` ${html(record.chapterCode)}` : ""}</span>`;
+    }
+
+    function freshnessBadge(record) {
+      const stale = freshness(record) === "needs_confirmation";
+      return `<span class="badge${stale ? " stale" : ""}">${html(freshnessLabel(record))}</span>`;
+    }
+
+    function recordSearchText(record) {
+      const parts = [
+        record.name,
+        record.description,
+        record.city,
+        record.state,
+        record.chapterCode,
+        record.publicEmail,
+        ...(record.services || []).map(serviceLabel),
+        ...(record.locations || []).flatMap(location => [location.venueName, location.addressLine1, location.city, location.state]),
+        ...(record.events || []).flatMap(event => [event.name, event.dayOfWeek, event.recurrence, event.notes, event.mode]),
+        ...Object.values(record.links || {}),
+      ];
+      return parts.filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function applyFilters() {
+      const query = els.searchInput.value.trim().toLowerCase();
+      const selectedState = els.stateFilter.value;
+      const selectedService = els.serviceFilter.value;
+      const selectedRelationship = els.relationshipFilter.value;
+      const selectedFreshness = els.freshnessFilter.value;
+
+      state.filtered = state.records.filter(record => {
+        if (query && !recordSearchText(record).includes(query)) return false;
+        if (selectedState && record.state !== selectedState) return false;
+        if (selectedService && !(record.services || []).includes(selectedService)) return false;
+        if (selectedRelationship && record.relationship !== selectedRelationship) return false;
+        if (selectedFreshness) {
+          const key = freshness(record);
+          if (selectedFreshness === "recent" && key !== "recent") return false;
+          if (selectedFreshness === "current" && !["recent", "current"].includes(key)) return false;
+          if (selectedFreshness === "needs_confirmation" && key !== "needs_confirmation") return false;
+        }
+        return true;
+      });
+      if (!state.filtered.some(record => record.id === state.selectedId)) {
+        state.selectedId = state.filtered[0] ? state.filtered[0].id : null;
+      }
+      renderDirectory();
+    }
+
+    function renderSummary() {
+      els.resultCount.textContent = state.filtered.length.toLocaleString();
+      els.chapterCount.textContent = state.filtered.filter(record => record.relationship === "aga_chapter").length.toLocaleString();
+      els.applicantCount.textContent = state.filtered.filter(record => record.relationship === "chapter_applicant").length.toLocaleString();
+      els.staleCount.textContent = state.filtered.filter(record => freshness(record) === "needs_confirmation").length.toLocaleString();
+      els.directoryStatus.textContent = `Generated ${formatDate(new Date().toISOString())}`;
+      els.pageMeta.textContent = `${state.records.length} prototype listings, ${state.submissions.length} saved submissions`;
+    }
+
+    function renderDirectory() {
+      renderSummary();
+      if (!state.filtered.length) {
+        els.resultsList.innerHTML = `<div class="panel empty">No matching listings</div>`;
+        els.detailPanel.innerHTML = `<div class="empty">No listing selected</div>`;
+        return;
+      }
+      els.resultsList.innerHTML = state.filtered.map(record => {
+        const selected = record.id === state.selectedId ? " selected" : "";
+        const events = (record.events || []).slice(0, 2).map(event => `${event.dayOfWeek || "Varies"} ${event.timeText || ""}`).join("; ");
+        return `
+          <article class="result${selected}" tabindex="0" role="button" data-id="${html(record.id)}">
+            <div class="result-header">
+              <div class="result-title">
+                <h2>${html(record.name)}</h2>
+                <div class="location-line">${html(record.city || "")}${record.city && record.state ? ", " : ""}${html(record.state || "")}</div>
+              </div>
+              <div class="badges">${relationshipBadge(record)}${freshnessBadge(record)}</div>
+            </div>
+            <div class="tags">${(record.services || []).slice(0, 6).map(value => `<span class="tag">${html(serviceLabel(value))}</span>`).join("")}</div>
+            <div class="result-meta">
+              <span>${html(events || "Schedule varies")}</span>
+              <span>Updated ${html(formatDate(record.lastUpdated))}</span>
+              <span>Confirmed ${html(formatDate(record.lastConfirmed))}</span>
+            </div>
+          </article>
+        `;
+      }).join("");
+      els.resultsList.querySelectorAll(".result").forEach(item => {
+        item.addEventListener("click", () => selectRecord(item.dataset.id));
+        item.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectRecord(item.dataset.id);
+          }
+        });
+      });
+      renderDetail();
+    }
+
+    function linkMarkup(label, url) {
+      if (!url) return "";
+      return `<a class="button-link" target="_blank" rel="noreferrer" href="${html(url)}">${html(label)}</a>`;
+    }
+
+    function renderDetail() {
+      const record = state.records.find(item => item.id === state.selectedId);
+      if (!record) {
+        els.detailPanel.innerHTML = `<div class="empty">No listing selected</div>`;
+        return;
+      }
+      const events = (record.events || []).map(event => `
+        <div class="detail-row">
+          <strong>${html(event.name || "Meeting")}</strong>
+          <span>${html(event.dayOfWeek || "Varies")} ${html(event.timeText || "")} ${html(event.timeZone || "")}</span>
+          <span>${html(event.recurrence || "")}${event.mode ? `, ${html(event.mode)}` : ""}</span>
+          <span>${event.beginnerFriendly ? "Beginner friendly. " : ""}${event.youthFriendly ? "Youth/family friendly. " : ""}${event.ratedGames ? "AGA rated games. " : ""}${event.tournaments ? "Tournaments. " : ""}${html(event.notes || "")}</span>
+        </div>
+      `).join("");
+      const locations = (record.locations || []).map(location => `
+        <div class="detail-row">
+          <strong>${html(location.venueName || "Location")}</strong>
+          <span>${html(location.addressLine1 || "")}</span>
+          <span>${html(location.city || record.city || "")}${(location.city || record.city) && (location.state || record.state) ? ", " : ""}${html(location.state || record.state || "")} ${html(location.postalCode || "")}</span>
+          <span>${html(location.accessibilityNotes || "")}</span>
+          <span>${html(location.parkingNotes || "")}</span>
+        </div>
+      `).join("");
+      els.detailPanel.innerHTML = `
+        <div class="detail-title">
+          <h2>${html(record.name)}</h2>
+          <div class="badges">${relationshipBadge(record)}${freshnessBadge(record)}</div>
+          <p class="quiet">${html(record.description || "")}</p>
+        </div>
+        <div class="detail-section">
+          <h3>Services</h3>
+          <div class="tags">${(record.services || []).map(value => `<span class="tag">${html(serviceLabel(value))}</span>`).join("")}</div>
+        </div>
+        <div class="detail-section">
+          <h3>Schedule</h3>
+          <div class="detail-list">${events || `<div class="quiet">Schedule varies</div>`}</div>
+        </div>
+        <div class="detail-section">
+          <h3>Location</h3>
+          <div class="detail-list">${locations || `<div class="quiet">${html(record.city || "Remote")}${record.state ? `, ${html(record.state)}` : ""}</div>`}</div>
+        </div>
+        <div class="detail-section">
+          <h3>Links</h3>
+          <div class="links">
+            ${linkMarkup("Website", record.links && record.links.website)}
+            ${linkMarkup("Meetup", record.links && record.links.meetup)}
+            ${linkMarkup("Discord", record.links && record.links.discord)}
+            ${record.publicEmail ? `<a class="button-link" href="mailto:${html(record.publicEmail)}">Email</a>` : ""}
+          </div>
+        </div>
+        <div class="detail-section">
+          <h3>Dates</h3>
+          <div class="quiet">Updated ${html(formatDate(record.lastUpdated))}; confirmed ${html(formatDate(record.lastConfirmed))}</div>
+        </div>
+      `;
+    }
+
+    function selectRecord(id) {
+      state.selectedId = id;
+      renderDirectory();
+    }
+
+    function getFormValue(name) {
+      const element = els.submissionForm.elements[name];
+      if (!element) return "";
+      return String(element.value || "").trim();
+    }
+
+    function selectedServices() {
+      return Array.from(els.submissionForm.querySelectorAll('input[name="services"]:checked')).map(item => item.value);
+    }
+
+    function formPayload() {
+      const now = new Date().toISOString();
+      const relationship = getFormValue("relationship");
+      const startTime = getFormValue("startTime");
+      const endTime = getFormValue("endTime");
+      return {
+        id: `submission-${Date.now()}`,
+        submittedAt: now,
+        status: "received",
+        payload: {
+          id: `local-${Date.now()}`,
+          name: getFormValue("organizationName"),
+          relationship,
+          chapterCode: getFormValue("chapterCode"),
+          description: getFormValue("description"),
+          city: getFormValue("city"),
+          state: getFormValue("state"),
+          services: selectedServices().length ? selectedServices() : ["casual_play"],
+          publicEmail: getFormValue("publicEmail"),
+          links: {
+            website: getFormValue("websiteUrl"),
+            meetup: getFormValue("meetupUrl"),
+            discord: getFormValue("discordUrl"),
+          },
+          locations: [{
+            venueName: getFormValue("venueName"),
+            addressLine1: getFormValue("addressLine1"),
+            city: getFormValue("city"),
+            state: getFormValue("state"),
+            postalCode: getFormValue("postalCode"),
+            accessibilityNotes: getFormValue("accessibilityNotes"),
+            parkingNotes: getFormValue("parkingNotes"),
+          }],
+          events: [{
+            name: getFormValue("eventName"),
+            dayOfWeek: getFormValue("dayOfWeek"),
+            timeText: startTime || endTime ? `${startTime || "?"}-${endTime || "?"}` : "",
+            recurrence: getFormValue("recurrence"),
+            mode: getFormValue("mode"),
+            timeZone: getFormValue("timeZone"),
+            beginnerFriendly: document.getElementById("beginnerFriendly").checked,
+            youthFriendly: document.getElementById("youthFriendly").checked,
+            ratedGames: selectedServices().includes("aga_rated_games"),
+            tournaments: selectedServices().includes("tournaments"),
+            notes: getFormValue("scheduleNotes"),
+          }],
+          application: relationship === "chapter_applicant" ? {
+            representativeName: getFormValue("repName"),
+            representativeEmail: getFormValue("repEmail"),
+            representativeAgaid: getFormValue("repAgaid"),
+            activePlayers: getFormValue("activePlayers"),
+            notes: getFormValue("applicationNotes"),
+          } : null,
+          submitter: {
+            name: getFormValue("submitterName"),
+            email: getFormValue("submitterEmail"),
+            agaid: getFormValue("submitterAgaid"),
+            role: getFormValue("submitterRole"),
+          },
+          lastUpdated: now,
+          lastConfirmed: now,
+        }
+      };
+    }
+
+    function setNotice(text, isError = false) {
+      els.formNotice.textContent = text;
+      els.formNotice.classList.toggle("error", Boolean(isError));
+    }
+
+    function submitForm(event) {
+      event.preventDefault();
+      const payload = formPayload();
+      if (!payload.payload.name || !payload.payload.city || !payload.payload.state) {
+        setNotice("Listing name, city, and state are required.", true);
+        return;
+      }
+      state.submissions.unshift(payload);
+      saveStored();
+      els.submissionForm.reset();
+      toggleChapterApplication();
+      setNotice(`Submitted ${formatDate(payload.submittedAt)}`);
+      renderReview();
+      showView("reviewView");
+    }
+
+    function approveSubmission(id) {
+      const submission = state.submissions.find(item => item.id === id);
+      if (!submission) return;
+      submission.status = "approved";
+      submission.reviewedAt = new Date().toISOString();
+      const record = Object.assign({}, submission.payload, {
+        id: submission.payload.id || `local-${Date.now()}`,
+        lastUpdated: submission.reviewedAt,
+        lastConfirmed: submission.reviewedAt,
+      });
+      state.records = [record, ...state.records.filter(item => item.id !== record.id)];
+      state.selectedId = record.id;
+      saveStored();
+      applyFilters();
+      renderReview();
+    }
+
+    function rejectSubmission(id) {
+      const submission = state.submissions.find(item => item.id === id);
+      if (!submission) return;
+      submission.status = "rejected";
+      submission.reviewedAt = new Date().toISOString();
+      saveStored();
+      renderReview();
+    }
+
+    function renderReview() {
+      const pending = state.submissions.filter(item => item.status === "received" || item.status === "needs_review");
+      const approved = state.submissions.filter(item => item.status === "approved");
+      const rejected = state.submissions.filter(item => item.status === "rejected");
+      els.pendingCount.textContent = pending.length.toLocaleString();
+      els.approvedCount.textContent = approved.length.toLocaleString();
+      els.rejectedCount.textContent = rejected.length.toLocaleString();
+      els.reviewStatus.textContent = `Updated ${formatDate(new Date().toISOString())}`;
+      if (!state.submissions.length) {
+        els.reviewBody.innerHTML = `<tr><td class="empty" colspan="7">No submissions</td></tr>`;
+        return;
+      }
+      els.reviewBody.innerHTML = state.submissions.map(item => {
+        const payload = item.payload || {};
+        const canReview = item.status === "received" || item.status === "needs_review";
+        return `
+          <tr>
+            <td>${html(formatDate(item.submittedAt))}</td>
+            <td><strong>${html(payload.name)}</strong><br><span class="quiet">${html((payload.services || []).map(serviceLabel).join(", "))}</span></td>
+            <td>${html(RELATIONSHIP_LABELS[payload.relationship] || payload.relationship || "")}${payload.chapterCode ? `<br><span class="quiet">${html(payload.chapterCode)}</span>` : ""}</td>
+            <td>${html(payload.city || "")}${payload.city && payload.state ? ", " : ""}${html(payload.state || "")}</td>
+            <td>${html(payload.submitter && payload.submitter.name || "")}<br><span class="quiet">${html(payload.submitter && payload.submitter.email || "")}</span></td>
+            <td>${html(item.status)}</td>
+            <td class="actions">
+              <button class="primary" type="button" data-action="approve" data-id="${html(item.id)}" ${canReview ? "" : "disabled"}>Approve</button>
+              <button class="danger" type="button" data-action="reject" data-id="${html(item.id)}" ${canReview ? "" : "disabled"}>Reject</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+      els.reviewBody.querySelectorAll("button[data-action]").forEach(button => {
+        button.addEventListener("click", () => {
+          if (button.dataset.action === "approve") approveSubmission(button.dataset.id);
+          if (button.dataset.action === "reject") rejectSubmission(button.dataset.id);
+        });
+      });
+    }
+
+    function resetFilters() {
+      els.searchInput.value = "";
+      els.stateFilter.value = "";
+      els.serviceFilter.value = "";
+      els.relationshipFilter.value = "";
+      els.freshnessFilter.value = "";
+      applyFilters();
+    }
+
+    function exportJson() {
+      const payload = {
+        generated_at: new Date().toISOString(),
+        records: state.filtered,
+        submissions: state.submissions,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "aga-go-services-directory-prototype.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function toggleChapterApplication() {
+      els.chapterApplicationSection.classList.toggle("hidden", els.relationship.value !== "chapter_applicant");
+    }
+
+    function showView(id) {
+      els.tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.view === id));
+      els.views.forEach(view => view.classList.toggle("active", view.id === id));
+      if (id === "directoryView") applyFilters();
+      if (id === "reviewView") renderReview();
+    }
+
+    function bindEvents() {
+      els.tabs.forEach(tab => tab.addEventListener("click", () => showView(tab.dataset.view)));
+      [els.searchInput, els.stateFilter, els.serviceFilter, els.relationshipFilter, els.freshnessFilter].forEach(element => {
+        element.addEventListener("input", applyFilters);
+        element.addEventListener("change", applyFilters);
+      });
+      els.resetFiltersButton.addEventListener("click", resetFilters);
+      els.exportButton.addEventListener("click", exportJson);
+      els.relationship.addEventListener("change", toggleChapterApplication);
+      els.submissionForm.addEventListener("submit", submitForm);
+      els.clearFormButton.addEventListener("click", () => {
+        els.submissionForm.reset();
+        toggleChapterApplication();
+        setNotice("Ready");
+      });
+    }
+
+    setupControls();
+    loadData();
+    bindEvents();
+    toggleChapterApplication();
+    applyFilters();
+    renderReview();
+  </script>
+</body>
+</html>
