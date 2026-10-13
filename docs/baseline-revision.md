@@ -2,10 +2,14 @@
 
 Repository: https://github.com/gurujeetkhalsa/aga (public, existing visibility).
 
-The annotated `PREMIGRATION` tag identifies this source/schema baseline. Its exact
-commit will be recorded in a publication-only follow-up commit after the immutable
-tag is created; a commit cannot contain its own hash. No source recapture or tag
-movement is implied by that publication record.
+| Repository | Annotated tag | Exact baseline commit | Publication |
+|---|---|---|---|
+| [gurujeetkhalsa/aga](https://github.com/gurujeetkhalsa/aga) | [PREMIGRATION](https://github.com/gurujeetkhalsa/aga/tree/PREMIGRATION) | [`d4cbecdfafdd7b71f97b92e804fbdc6f6753ebaf`](https://github.com/gurujeetkhalsa/aga/commit/d4cbecdfafdd7b71f97b92e804fbdc6f6753ebaf) | Published on `migration`, fast-forwarded into `main`; no pending baseline PR |
+
+`main` and `migration` include a documentation-only follow-up recording this exact
+revision. PREMIGRATION continues to identify the original source/schema commit;
+it was not moved. There are no additional repositories in this baseline.
+The original `master` and feature-branch histories remain available.
 
 Source recovered: 16/16 Function Apps. Live SQL: 187 application/tooling objects,
 with full table/index/constraint/permission metadata and no unavailable module

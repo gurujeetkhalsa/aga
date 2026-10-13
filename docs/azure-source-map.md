@@ -6,7 +6,7 @@ Repository: [gurujeetkhalsa/aga](https://github.com/gurujeetkhalsa/aga) (existin
 
 GitHub default branch fetched and compared at capture: [`master`, 246da58d53dc4abc7e1575ca1d83090407c5e4e1](https://github.com/gurujeetkhalsa/aga/commit/246da58d53dc4abc7e1575ca1d83090407c5e4e1). Per-file comparisons distinguish this GitHub version, deployed bytes, newly seeded development folders and preserved local source.
 
-Baseline revision: see [baseline publication record](baseline-revision.md). Immutable tag: [PREMIGRATION](https://github.com/gurujeetkhalsa/aga/tree/PREMIGRATION). Reconciliation: [read-only capture and three-way procedure](reconcile-azure-changes.md).
+Baseline revision: [`d4cbecdfafdd7b71f97b92e804fbdc6f6753ebaf`](https://github.com/gurujeetkhalsa/aga/commit/d4cbecdfafdd7b71f97b92e804fbdc6f6753ebaf), annotated tag [PREMIGRATION](https://github.com/gurujeetkhalsa/aga/tree/PREMIGRATION). [Publication record](baseline-revision.md). Reconciliation: [read-only capture and three-way procedure](reconcile-azure-changes.md). `main` and `migration` include a documentation-only publication follow-up; the tag was not moved.
 
 Capture window: 2026-10-13T17:10:03.455329+00:00 through 2026-10-13T17:20:02.317523+00:00; SQL final capture: 2026-10-13T17:23:34.510952+00:00. Explicit AGA subscription `4dcce4a0-c902-4012-91fe-6dbbddfd6fb7`, tenant `5f1a8692-caac-4040-9a1b-858e98f03e4b`.
 
